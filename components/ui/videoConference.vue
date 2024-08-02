@@ -1,20 +1,12 @@
 <template>
-    <!-- <div class="col-span-12 md:col-span-4">
-        <video ref="localVideo" autoplay muted></video>
-    </div>
-    <div class="col-span-12 md:col-span-4" v-for="stream in remoteStreams" :key="stream.id">
-        <video :srcObject="stream" autoplay></video>
-    </div> -->
 
-    <div class="col-span-12 md:col-span-4">
-        <video ref="myVideo" autoplay></video>
-    </div>
-    <div v-for="peerVideo in peerVideos" :key="peerVideo.id" class="col-span-12 md:col-span-4">
-        <video :ref="peerVideo.ref" autoplay></video>
+    <div class="col-span-12 md:col-span-4" v-for="stream in streams" :key="stream.id">
+        <video :srcObject="stream.stream" :muted="!stream.remote" autoplay></video>
+        {{ stream.remote }}
     </div>
 
     <div class="col-span-12">
-        <p>My User ID: {{ userId }}</p>
+        <p>My User ID: <span>{{ userId }}</span></p>
         <div class="form-group-border active mb-5">
             <i class="pi pi-at"></i>
             <input v-model="message" type="text" placeholder=" " />
@@ -35,101 +27,107 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import Peer from 'peerjs';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 
-const { $socketPlugin } = useNuxtApp();
+const { $socketPlugin, $peerPlugin } = useNuxtApp();
 const user = useSanctumUser();
 
-const myVideo = ref(null);
-const peerVideos = ref([]);
+const localStream = ref(null);
+const streams = ref([]);
+const peers = {};
 
 const roomId = 'my-room';
-const userId = Math.random().toString(36).substring(2);
-let peer;
+const userId = user.value.user_id;
+
 
 const message = ref('');
 const messages = ref([]);
 
-const initializePeer = () => {
-    try {
-        peer = new Peer(userId, {
-            host: 'localhost',
-            port: 9000,
-            path: '/peerjs'
-        });
-
-        peer.on('open', id => {
-            console.log('PeerJS connected with ID:', id);
-            $socketPlugin.emit('join-room', roomId, userId);
-        });
-
-        peer.on('error', err => {
-            console.error('PeerJS Error:', err);
-        });
-    } catch (error) {
-        console.error('Failed to initialize PeerJS:', error);
-    }
-};
-
 onMounted(() => {
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        .then(stream => {
-            myVideo.value.srcObject = stream;
+        .then((stream) => {
+            localStream.value = stream;
+            streams.value.push({
+                remote: false,
+                stream: stream
+            });
 
-            initializePeer();
-
-            peer.on('call', call => {
+            $peerPlugin.on('call', (call) => {
                 call.answer(stream);
-                const videoElement = document.createElement('video');
-                call.on('stream', userVideoStream => {
-                    videoElement.srcObject = userVideoStream;
-                    peerVideos.value.push({ id: call.peer, ref: videoElement });
+                call.on('stream', (remoteStream) => {
+                    streams.value.push({
+                        remote: true,
+                        stream: remoteStream
+                    });
                 });
             });
 
-            $socketPlugin.on('user-connected', newUserId => {
-                alert('user-connected: ' + newUserId)
-                const call = peer.call(newUserId, stream);
-                const videoElement = document.createElement('video');
-                call.on('stream', userVideoStream => {
-                    videoElement.srcObject = userVideoStream;
-                    peerVideos.value.push({ id: newUserId, ref: videoElement });
-                });
+            $socketPlugin.on('user-connected', (userId) => {
+                connectToNewUser(userId, stream);
             });
         })
-        .catch(error => {
-            console.error('Failed to get user media:', error);
+        .catch((error) => {
+            console.error(error);
         });
 
-    $socketPlugin.on('new-message', data => {
-        messages.value.push(data)
-    });
+    $socketPlugin.emit('join-room', roomId, userId);
 
-    $socketPlugin.on('user-disconnected', userId => {
-        alert('user-disconnected: ' + userId)
-        const index = peerVideos.value.findIndex(v => v.id === userId);
-        if (index !== -1) {
-            peerVideos.value.splice(index, 1);
+    $socketPlugin.on('user-disconnected', (userId) => {
+        console.log(userId + ' disconnected')
+        if (peers[userId]) {
+            peers[userId].close();
+            delete peers[userId];
         }
     });
+
+    $socketPlugin.on('new-message', (data) => {
+        messages.value.push(data);
+    })
 });
 
-onUnmounted(() => {
-    $socketPlugin.disconnect();
-    if (peer) {
-        peer.destroy();
+onBeforeUnmount(() => {
+    $socketPlugin.emit('user-disconnect', roomId, userId);
+
+    if (localStream.value !== null) {
+        localStream.value.getTracks().forEach(track => track.stop());
     }
 });
+
+const connectToNewUser = (userId, stream) => {
+    const call = $peerPlugin.call(userId, stream);
+    call.on('stream', (remoteStream) => {
+        streams.value.push({
+            remote: true,
+            stream: remoteStream
+        });
+    });
+    call.on('close', () => {
+        streams.value = streams.value.filter(s => s.id !== call.peer);
+    });
+    peers[userId] = call;
+}
+
+// const addVideoStream = (stream) => {
+//     videoStreams.value.push(stream);
+// };
+
+// const removeVideoStream = (stream) => {
+//     const index = videoStreams.value.findIndex(s => s.id === stream.id);
+//     if (index !== -1) {
+//         videoStreams.value.splice(index, 1);
+//     }
+// };
 
 const sendMessage = () => {
     if (message.value !== '') {
-        $socketPlugin.emit('message', roomId, {
+        const messageData = {
             user_id: user.value.user_id,
             user_name: user.value.first_name,
             message: message.value
-        });
+        }
 
+        messages.value.push(messageData);
+        $socketPlugin.emit('message', roomId, messageData);
         message.value = '';
     }
 }

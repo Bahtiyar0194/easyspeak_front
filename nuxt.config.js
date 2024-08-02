@@ -26,6 +26,7 @@ export default defineNuxtConfig({
     public: {
       apiBase: process.env.NODE_ENV === 'development' ? process.env.DEV_API_URL : process.env.PROD_API_URL,
       socketBase: process.env.NODE_ENV === 'development' ? process.env.DEV_SOCKET_URL : process.env.PROD_SOCKET_URL,
+      peerBase: process.env.NODE_ENV === 'development' ? process.env.DEV_PEER_URL : process.env.PROD_PEER_URL,
       sanctum: {
         mode: 'token',
         baseUrl: process.env.NODE_ENV === 'development' ? process.env.DEV_API_URL : process.env.PROD_API_URL,
