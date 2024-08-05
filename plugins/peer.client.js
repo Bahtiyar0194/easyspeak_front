@@ -4,10 +4,10 @@ import { defineNuxtPlugin, useRuntimeConfig } from "nuxt/app";
 export default defineNuxtPlugin((nuxtApp) => {
     const config = useRuntimeConfig();
 
+    console.log(config.public)
+
     const peer = new Peer(undefined, {
-        host: 'localhost',
-        port: 9000,
-        path: '/peerjs'
+        host: config.public.peerBase
     });
 
     nuxtApp.provide('peerPlugin', peer);
