@@ -52,6 +52,22 @@ onMounted(() => {
                 stream: stream
             });
 
+            $socketPlugin.on('user-connected', (userId) => {
+                const call = $peerPlugin.call(userId, stream);
+                console.log($peerPlugin)
+                call.on('stream', (remoteStream) => {
+                    streams.value.push({
+                        remote: true,
+                        stream: remoteStream
+                    });
+                });
+                call.on('close', () => {
+                    streams.value = streams.value.filter(s => s.id !== call.peer);
+                });
+
+                peers[userId] = call;
+            });
+
             $peerPlugin.on('call', (call) => {
                 call.answer(stream);
                 call.on('stream', (remoteStream) => {
@@ -61,30 +77,13 @@ onMounted(() => {
                     });
                 });
             });
-
-            $peerPlugin.on('open', () => {
-                $socketPlugin.emit('join-room', roomId, userId);
-            });
         })
         .catch((error) => {
             console.error(error);
         });
 
-
-    $socketPlugin.on('user-connected', (userId) => {
-        const call = $peerPlugin.call(userId, localStream.value);
-        console.log($peerPlugin)
-        call.on('stream', (remoteStream) => {
-            streams.value.push({
-                remote: true,
-                stream: remoteStream
-            });
-        });
-        call.on('close', () => {
-            streams.value = streams.value.filter(s => s.id !== call.peer);
-        });
-
-        peers[userId] = call;
+    $peerPlugin.on('open', () => {
+        $socketPlugin.emit('join-room', roomId, userId);
     });
 
     $socketPlugin.on('user-disconnected', (userId) => {
