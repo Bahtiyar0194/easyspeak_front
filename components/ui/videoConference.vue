@@ -53,8 +53,8 @@ onMounted(() => {
             });
 
             $socketPlugin.on('user-connected', (userId) => {
+                console.log(userId + ' connected')
                 const call = $peerPlugin.call(userId, stream);
-                console.log($peerPlugin)
                 call.on('stream', (remoteStream) => {
                     streams.value.push({
                         remote: true,
@@ -82,7 +82,8 @@ onMounted(() => {
             console.error(error);
         });
 
-    $peerPlugin.on('open', () => {
+    $peerPlugin.on('open', id => {
+        console.log('Peer is open ' + id);
         $socketPlugin.emit('join-room', roomId, userId);
     });
 
