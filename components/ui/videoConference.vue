@@ -46,7 +46,6 @@ const messages = ref([]);
 onMounted(() => {
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         .then((stream) => {
-            console.log(stream)
             localStream.value = stream;
             streams.value.push({
                 remote: false,
@@ -64,14 +63,18 @@ onMounted(() => {
             });
 
             $socketPlugin.on('user-connected', (userId) => {
-                connectToNewUser(userId, stream);
+                connectToNewUser(userId);
             });
         })
         .catch((error) => {
             console.error(error);
         });
 
-    $socketPlugin.emit('join-room', roomId, userId);
+
+    $peerPlugin.on('open', id => {
+        alert(id)
+        $socketPlugin.emit('join-room', roomId, userId);
+    });
 
     $socketPlugin.on('user-disconnected', (userId) => {
         console.log(userId + ' disconnected')
@@ -95,8 +98,8 @@ onBeforeUnmount(() => {
 });
 
 const connectToNewUser = (userId, stream) => {
-console.log(stream)
     const call = $peerPlugin.call(userId, stream);
+    console.log($peerPlugin)
     call.on('stream', (remoteStream) => {
         streams.value.push({
             remote: true,
