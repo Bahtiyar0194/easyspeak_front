@@ -82,10 +82,10 @@ onMounted(() => {
             console.error(error);
         });
 
-    $peerPlugin.on('open', id => {
-        console.log('Peer is open ' + id);
+
+
         $socketPlugin.emit('join-room', roomId, userId);
-    });
+    
 
     $socketPlugin.on('user-disconnected', (userId) => {
         console.log(userId + ' disconnected')
