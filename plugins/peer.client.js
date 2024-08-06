@@ -6,8 +6,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     
     const peer = new Peer(undefined, {
         host: config.public.peerBase,
-        secure: true,
-        path: '/peerjs/app/'
+        secure: true
     });
 
     nuxtApp.provide('peerPlugin', peer);

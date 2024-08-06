@@ -46,6 +46,7 @@ const messages = ref([]);
 onMounted(() => {
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         .then((stream) => {
+            console.log(stream)
             localStream.value = stream;
             streams.value.push({
                 remote: false,
@@ -94,6 +95,7 @@ onBeforeUnmount(() => {
 });
 
 const connectToNewUser = (userId, stream) => {
+console.log(stream)
     const call = $peerPlugin.call(userId, stream);
     call.on('stream', (remoteStream) => {
         streams.value.push({
