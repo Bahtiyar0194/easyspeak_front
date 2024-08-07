@@ -1,35 +1,19 @@
 <template>
-
     <div class="col-span-12 md:col-span-4" v-for="stream in streams" :key="stream.id">
         <video :srcObject="stream.stream" :muted="!stream.remote" autoplay></video>
-        {{ stream.remote }}
-    </div>
-
-    <div class="col-span-12">
-        <p>My User ID: <span>{{ userId }}</span></p>
-        <div class="form-group-border active mb-5">
-            <i class="pi pi-at"></i>
-            <input v-model="message" type="text" placeholder=" " />
-            <label>
-                Введите сообщение
-            </label>
-        </div>
-        <button @click="sendMessage" class="btn btn-primary mb-5">Отправить</button>
-
-        <h5>Сообщения</h5>
-        <ul class="list-group">
-            <li v-for="(item, index) in messages" :key="index">
-                <p class="font-medium mb-2">{{ item.user_name }}</p>
-                <p class="mb-0">{{ item.message }}</p>
-            </li>
-        </ul>
     </div>
 </template>
 
 <script setup>
+import Peer from 'peerjs';
 import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { useRuntimeConfig } from "nuxt/app";
 
-const { $socketPlugin, $peerPlugin } = useNuxtApp();
+
+const { $socketPlugin } = useNuxtApp();
+
+const config = useRuntimeConfig();
+
 const user = useSanctumUser();
 
 const localStream = ref(null);
@@ -39,14 +23,17 @@ const peers = {};
 const roomId = 'my-room';
 const userId = user.value.user_id;
 
+const peer = new Peer(userId, {
+    host: config.public.peerBase,
+    path: '/peerjs/myapp',
+    secure: true
+});
 
-const message = ref('');
-const messages = ref([]);
-
-onMounted(() => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+onMounted(async () => {
+    await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
         .then((stream) => {
             localStream.value = stream;
+
             streams.value.push({
                 remote: false,
                 stream: stream
@@ -54,7 +41,14 @@ onMounted(() => {
 
             $socketPlugin.on('user-connected', (userId) => {
                 console.log(userId + ' connected')
-                const call = $peerPlugin.call(userId, stream);
+
+                // const conn = peer.connect(userId); // Замените на ID другого пира
+                // conn.on('open', () => {
+                //     console.log(conn)
+                //     conn.send('Hello!');
+                // });
+
+                const call = peer.call(userId, stream);
                 call.on('stream', (remoteStream) => {
                     streams.value.push({
                         remote: true,
@@ -68,7 +62,7 @@ onMounted(() => {
                 peers[userId] = call;
             });
 
-            $peerPlugin.on('call', (call) => {
+            peer.on('call', call => {
                 call.answer(stream);
                 call.on('stream', (remoteStream) => {
                     streams.value.push({
@@ -83,9 +77,13 @@ onMounted(() => {
         });
 
 
+    peer.on('open', id => {
+        console.log('My peer ID is: ' + id);
+    });
 
-        $socketPlugin.emit('join-room', roomId, userId);
-    
+
+    $socketPlugin.emit('join-room', roomId, userId);
+
 
     $socketPlugin.on('user-disconnected', (userId) => {
         console.log(userId + ' disconnected')
@@ -98,6 +96,16 @@ onMounted(() => {
     $socketPlugin.on('new-message', (data) => {
         messages.value.push(data);
     })
+
+    peer.on('call', call => {
+        call.answer(localStream.value);
+        call.on('stream', remoteStream => {
+            streams.value.push({
+                remote: true,
+                stream: remoteStream
+            });
+        });
+    });
 });
 
 onBeforeUnmount(() => {
@@ -107,31 +115,6 @@ onBeforeUnmount(() => {
         localStream.value.getTracks().forEach(track => track.stop());
     }
 });
-
-// const addVideoStream = (stream) => {
-//     videoStreams.value.push(stream);
-// };
-
-// const removeVideoStream = (stream) => {
-//     const index = videoStreams.value.findIndex(s => s.id === stream.id);
-//     if (index !== -1) {
-//         videoStreams.value.splice(index, 1);
-//     }
-// };
-
-const sendMessage = () => {
-    if (message.value !== '') {
-        const messageData = {
-            user_id: user.value.user_id,
-            user_name: user.value.first_name,
-            message: message.value
-        }
-
-        messages.value.push(messageData);
-        $socketPlugin.emit('message', roomId, messageData);
-        message.value = '';
-    }
-}
 </script>
 
 <style scoped>
@@ -141,4 +124,4 @@ video {
     border-radius: 10px;
     transform: scale(-1, 1);
 }
-</style>
+</style> -->
