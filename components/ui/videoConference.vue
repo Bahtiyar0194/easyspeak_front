@@ -10,7 +10,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRuntimeConfig } from "nuxt/app";
 
 
-const { $socketPlugin } = useNuxtApp();
+const { $socketPlugin, $peerPlugin } = useNuxtApp();
 
 const config = useRuntimeConfig();
 
@@ -22,12 +22,6 @@ const peers = {};
 
 const roomId = 'my-room';
 const userId = user.value.user_id;
-
-const peer = new Peer(userId, {
-    host: config.public.peerBase,
-    path: '/peerjs/myapp',
-    secure: true
-});
 
 onMounted(async () => {
     await navigator.mediaDevices.getUserMedia({ video: true, audio: true })
@@ -48,7 +42,7 @@ onMounted(async () => {
                 //     conn.send('Hello!');
                 // });
 
-                const call = peer.call(userId, stream);
+                const call = $peerPlugin.call(userId, stream);
                 call.on('stream', (remoteStream) => {
                     streams.value.push({
                         remote: true,
@@ -62,7 +56,7 @@ onMounted(async () => {
                 peers[userId] = call;
             });
 
-            peer.on('call', call => {
+            $peerPlugin.on('call', call => {
                 call.answer(stream);
                 call.on('stream', (remoteStream) => {
                     streams.value.push({
@@ -77,7 +71,7 @@ onMounted(async () => {
         });
 
 
-    peer.on('open', id => {
+    $peerPlugin.on('open', id => {
         console.log('My peer ID is: ' + id);
     });
 
@@ -97,7 +91,7 @@ onMounted(async () => {
         messages.value.push(data);
     })
 
-    peer.on('call', call => {
+    $peerPlugin.on('call', call => {
         call.answer(localStream.value);
         call.on('stream', remoteStream => {
             streams.value.push({
