@@ -1,13 +1,19 @@
 <template>
 
-    <div class="col-span-12 md:col-span-4" v-for="stream in streams" :key="stream.id">
-        <video :srcObject="stream.stream" :muted="!stream.remote" autoplay></video>
+    <div class="col-span-12 md:col-span-3 relative rounded-xl overflow-hidden" v-for="stream in streams"
+        :key="stream.peer_id">
+        <div class="absolute py-0.5 px-1 bg-black bg-opacity-50 z-10 text-white rounded-md text-xs left-2 top-2">{{
+        stream.user_name }}</div>
+        <video :ref="el => setVideoStream(el, stream.stream)" :muted="!stream.remote" autoplay playsinline></video>
     </div>
 
     {{ streams.length }}
 
+    <div v-if="errorMessage" class="error-message">
+        {{ errorMessage }}
+    </div>
+
     <div class="col-span-12">
-        <p>My User ID: <span>{{ userId }}</span></p>
         <div class="form-group-border active mb-5">
             <i class="pi pi-at"></i>
             <input v-model="message" type="text" placeholder=" " />
@@ -32,122 +38,130 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 
 const { $socketPlugin, $peerPlugin } = useNuxtApp();
 const user = useSanctumUser();
+const peer = $peerPlugin;
 
 const localStream = ref(null);
 const streams = ref([]);
-const peers = {};
+const errorMessage = ref('');
 
 const roomId = 'my-room';
-const userId = ref($peerPlugin?.id || null);
-
 
 const message = ref('');
 const messages = ref([]);
 
-onMounted(() => {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        .then((stream) => {
-            localStream.value = stream;
-            streams.value.push({
-                remote: false,
-                stream: stream
-            });
-
-            $socketPlugin.on('user-connected', (userId) => {
-                console.log(userId + ' connected')
-
-                // const conn = $peerPlugin.connect(2); // Замените на ID другого пира
-                // conn.on('open', () => {
-                //     console.log(conn)
-                //     conn.send('Hello!');
-                // });
-
-                const call = $peerPlugin.call(userId, stream);
-                console.log(call)
-                call.on('stream', (remoteStream) => {
-                    streams.value.push({
-                        remote: true,
-                        stream: remoteStream
-                    });
-                });
-                call.on('close', () => {
-                    streams.value = streams.value.filter(s => s.id !== call.peer);
-                });
-
-                peers[userId] = call;
-            });
-
-            $peerPlugin.on('call', call => {
-                call.answer(stream);
-                call.on('stream', (remoteStream) => {
-                    streams.value.push({
-                        remote: true,
-                        stream: remoteStream
-                    });
-                });
-            });
-        })
-        .catch((error) => {
-            console.error(error);
+onMounted(async () => {
+    try {
+        localStream.value = await navigator.mediaDevices.getUserMedia({
+            video: {
+                width: 720,
+                height: 1280
+            },
+            audio: true
         });
 
-
-
-    $socketPlugin.emit('join-room', roomId, userId.value);
-
-
-    $socketPlugin.on('user-disconnected', (userId) => {
-        console.log(userId + ' disconnected')
-        if (peers[userId]) {
-            peers[userId].close();
-            delete peers[userId];
+        if (localStream.value) {
+            await $socketPlugin.connect();
+            addStream(false, localStream.value, peer.id, user.value.first_name);
+            $socketPlugin.emit('join-room', roomId, peer.id, user.value.first_name);
         }
+
+        $socketPlugin.on('user-connected', (peerId, userName) => {
+            console.log(peerId + ' connected');
+
+            const outgoingCall = peer.call(peerId, localStream.value, {
+                metadata: { userName: user.value.first_name }
+            });
+
+            outgoingCall.on('stream', (remoteStream) => {
+                addStream(true, remoteStream, outgoingCall.peer, userName);
+            });
+
+            outgoingCall.on('error', (error) => {
+                handleError(error, 'outgoing call');
+            });
+        });
+
+    } catch (error) {
+        handleError(error, 'getUserMedia');
+    }
+
+    peer.on('call', call => {
+        call.answer(localStream.value);
+        call.on('stream', (remoteStream) => {
+            addStream(true, remoteStream, call.peer, call.metadata.userName || 'Unknown');
+        });
+
+        call.on('error', (error) => {
+            handleError(error, 'incoming call');
+        });
+    });
+
+    $socketPlugin.on('user-disconnected', (peerId) => {
+        console.log(peerId + ' disconnected');
+        streams.value = streams.value.filter(s => s.peer_id !== peerId);
     });
 
     $socketPlugin.on('new-message', (data) => {
         messages.value.push(data);
-    })
+    });
+
+    $socketPlugin.on('connect_error', (error) => {
+        handleError(error, 'Socket connection');
+    });
 });
 
 onBeforeUnmount(() => {
-    $socketPlugin.emit('user-disconnect', roomId, userId.value);
-
+    $socketPlugin.disconnect();
     if (localStream.value !== null) {
         localStream.value.getTracks().forEach(track => track.stop());
     }
 });
 
-// const addVideoStream = (stream) => {
-//     videoStreams.value.push(stream);
-// };
+const addStream = (remote, stream, peer_id, user_name) => {
+    if (!streams.value.some(existingStream => existingStream.peer_id === peer_id)) {
+        streams.value.push({
+            remote,
+            stream,
+            peer_id,
+            user_name
+        });
+    }
+};
 
-// const removeVideoStream = (stream) => {
-//     const index = videoStreams.value.findIndex(s => s.id === stream.id);
-//     if (index !== -1) {
-//         videoStreams.value.splice(index, 1);
-//     }
-// };
+const setVideoStream = (videoElement, stream) => {
+    if (videoElement) {
+        videoElement.srcObject = stream;
+        videoElement.onloadedmetadata = () => {
+            videoElement.play().catch(err => {
+                console.error('Failed to play video:', err);
+            });
+        };
+    }
+};
 
 const sendMessage = () => {
     if (message.value !== '') {
         const messageData = {
-            user_id: user.value.user_id,
             user_name: user.value.first_name,
             message: message.value
-        }
+        };
 
-        messages.value.push(messageData);
-        $socketPlugin.emit('message', roomId, messageData);
+        messages.value.push(roomId, messageData);
+        $socketPlugin.emit('message', messageData);
         message.value = '';
     }
-}
+};
+
+const handleError = (error, context = '') => {
+    console.error(`Error in ${context}:`, error);
+    errorMessage.value = `An error occurred: ${error.message}`;
+};
 </script>
 
 <style scoped>
 video {
     width: 100%;
     height: auto;
-    border-radius: 10px;
     transform: scale(-1, 1);
 }
 </style>
