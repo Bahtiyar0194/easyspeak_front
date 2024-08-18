@@ -1,9 +1,12 @@
 export default defineNuxtConfig({
   devtools: { enabled: false },
   css: [
-    '@/assets/css/main.css',
     '@fortawesome/fontawesome-free/css/all.css',
-    'primeicons/primeicons.css'
+    'primeicons/primeicons.css',
+    'bootstrap-icons/font/bootstrap-icons.css',
+    'vue3-carousel/dist/carousel.css',
+    'vue-toastification/dist/index.css',
+    '@/assets/css/main.css',
   ],
 
   app: {
@@ -13,7 +16,7 @@ export default defineNuxtConfig({
     }
   },
 
-  modules: ["@nuxtjs/i18n", 'nuxt-auth-sanctum', '@pinia/nuxt'],
+  modules: ["@nuxtjs/i18n", 'nuxt-auth-sanctum', '@pinia/nuxt', 'vue3-carousel-nuxt'],
 
   postcss: {
     plugins: {
@@ -75,6 +78,12 @@ export default defineNuxtConfig({
     strategy: 'no_prefix',
     defaultLocale: 'ru',
   },
+
+  build: {
+    // vue-toastification - old commonjs module 
+    transpile: ['vue-toastification'],
+  },
+
 
   compatibilityDate: '2024-07-24'
 })

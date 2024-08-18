@@ -49,6 +49,9 @@ export default {
         },
         dashboard: {
             title: 'Жеке кабинет'
+        },
+        conference: {
+            title: 'Видеоконференция'
         }
     }
 }

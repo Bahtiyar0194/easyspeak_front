@@ -171,6 +171,10 @@
     @apply border-green-500;
 }
 
+.border-inset-success{
+    @apply outline-2 outline-green-500 outline;
+}
+
 .border-danger{
     @apply border-red-500;
 }
@@ -494,7 +498,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .form-group-border {
-    @apply relative border border-corp rounded-lg;
+    @apply relative border-2 border-corp rounded-lg;
 }
 
 .form-group-border.active{
@@ -725,7 +729,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .btn {
-    @apply flex gap-1 items-center rounded-lg px-4 py-2 duration-200 text-center; 
+    @apply rounded-lg px-4 py-2 duration-200 text-center text-base; 
 }
 
 .no-px{
@@ -749,7 +753,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .btn.btn-lg{
-    @apply px-3 py-2;
+    @apply px-3 py-2 text-lg;
 }
 
 .btn.btn-lg.btn-square{
@@ -772,8 +776,8 @@ select.error:has(option:checked:disabled) {
     @apply flex gap-2 flex-wrap;
 }
 
-.btn-wrap-lg{
-    @apply flex max-md:flex-col gap-4;
+.btn-wrap.lg{
+    @apply gap-4;
 }
 
 .btn-transparent{
@@ -955,6 +959,10 @@ a.btn-primary:hover, .btn-primary:hover{
 
 .alert.outline-danger{
     @apply border border-danger text-danger;
+}
+
+.custom-toast{
+    @apply p-4;
 }
 
 .card {
@@ -1425,6 +1433,18 @@ a.btn-primary:hover, .btn-primary:hover{
 
 .dark .main-fade-slider-dark{
     @apply block;
+}
+
+.carousel__track{
+   @apply mb-0 gap-1.5;
+}
+
+.carousel__prev, .carousel__next{
+    @apply rounded-full bg-black bg-opacity-50;
+}
+
+.carousel__icon{
+    @apply fill-white;
 }
 
 .hamburger {
