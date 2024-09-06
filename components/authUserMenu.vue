@@ -1,5 +1,5 @@
 <template>
-    <dropdownMenu>
+    <dropdownMenu :dropdown-arrow="true">
         <template v-slot:btn_content>
             <div class="flex items-center gap-1">
                 <userAvatar :padding="0.5" :className="'w-8 h-8'" />

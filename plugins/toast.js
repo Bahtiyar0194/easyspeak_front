@@ -7,7 +7,8 @@ export default defineNuxtPlugin(nuxtApp => {
         hideProgressBar: true,
         position: 'top-right',
         icon: false,
-        closeButton: false,
+        closeButton: 'i',
+        closeButtonClassName: "close-button",
         closeOnClick: true,
         pauseOnHover: true
     });

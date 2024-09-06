@@ -3,7 +3,7 @@
         <div class="db__header">
             <div class="w-32 lg:w-56">
                 <!-- <img class="w-full" src="~/public/logo.svg"> -->
-                 <span class="font-medium text-corp sm:text-xl md:text-2xl">NURBOLASHAK</span>
+                <span class="font-medium text-corp sm:text-xl md:text-2xl">NURBOLASHAK</span>
             </div>
 
             <div class="btn-wrap items-center">
@@ -21,6 +21,9 @@
             <div class="db__content">
                 <loader v-if="pending" class="full-overlay" />
                 <div class="custom-grid">
+                    <div class="col-span-12">
+                        <breadcrumb />
+                    </div>
                     <NuxtPage />
                 </div>
             </div>
@@ -29,6 +32,7 @@
 </template>
 
 <script setup>
+import breadcrumb from "../components/ui/breadcrumb.vue";
 import loader from "../components/ui/loader.vue";
 import selectLocale from "../components/ui/selectLocale.vue";
 import authUserMenu from "../components/authUserMenu.vue";

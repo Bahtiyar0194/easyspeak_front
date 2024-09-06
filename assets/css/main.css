@@ -112,7 +112,7 @@
 }
 
 .bg-info{
-    @apply bg-blue-500;
+    @apply bg-corp;
 }
 
 .bg-danger{
@@ -729,7 +729,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .btn {
-    @apply rounded-lg px-4 py-2 duration-200 text-center text-base; 
+    @apply rounded-lg px-4 py-2 duration-200 text-center text-base w-fit; 
 }
 
 .no-px{
@@ -869,6 +869,22 @@ a.btn-primary:hover, .btn-primary:hover{
     animation: 0.75s linear infinite spinner-border;
 }
 
+.btn-circle{
+    @apply flex justify-center items-center rounded-full w-10 h-10 shadow-lg bg-active border duration-100;
+}
+
+.btn-circle i{
+    @apply md:text-lg;
+}
+
+.btn-circle:hover{
+    @apply bg-corp;
+}
+
+.btn-circle:hover i{
+    @apply text-white;
+}
+
 .pagination-wrap{
     @apply flex flex-wrap gap-x-2 gap-y-4;
 }
@@ -962,11 +978,35 @@ a.btn-primary:hover, .btn-primary:hover{
 }
 
 .custom-toast{
-    @apply p-4;
+    @apply flex items-center gap-5 min-h-max px-4 py-3;
+}
+
+.custom-toast i{
+    @apply text-3xl m-0;
+}
+
+.custom-toast .close-button{
+    @apply font-medium opacity-50 text-2xl;
+}
+
+.custom-toast.info{
+    @apply bg-corp;
+}
+
+.custom-toast.warning{
+    @apply bg-warning;
+}
+
+.custom-toast.danger{
+    @apply bg-danger;
 }
 
 .card {
     @apply bg-active rounded-xl max-w-full relative border-inactive overflow-hidden shadow-lg;
+}
+
+.card.card-sm{
+    @apply rounded;
 }
 
 .card.card-lg{
@@ -1213,27 +1253,27 @@ a.btn-primary:hover, .btn-primary:hover{
 }
 
 .breadcrumb{
-    @apply text-inactive my-4;
+    @apply text-inactive mb-2 flex flex-wrap list-none p-0;
 }
 
-.breadcrumb > a{
+.breadcrumb a{
     @apply inline-block mr-6 relative text-corp;
 }
 
-.breadcrumb > a:after{
+.breadcrumb a:after{
     content: "\203A";
     @apply absolute -right-3.5 text-inactive pointer-events-none;
 }
 
 .db__header{
     @apply w-full bg-active flex justify-between items-center px-3 border-b-inactive;
-    height: 80px;
+    height: 65px;
 }
 
 .db__sidebar__menu{
     @apply bg-active px-3 fixed z-30 border-r-inactive;
-    height: calc(100vh - 79px);
-    top: 79px;
+    height: calc(100vh - 64px);
+    top: 64px;
 }
 
 .db__sidebar__menu a{

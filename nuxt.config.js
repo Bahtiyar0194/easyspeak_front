@@ -6,7 +6,7 @@ export default defineNuxtConfig({
     'bootstrap-icons/font/bootstrap-icons.css',
     'vue3-carousel/dist/carousel.css',
     'vue-toastification/dist/index.css',
-    '@/assets/css/main.css',
+    '@/assets/css/main.css'
   ],
 
   app: {
