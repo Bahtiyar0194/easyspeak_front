@@ -51,7 +51,7 @@
             </div>
 
             <p>{{ $t("pages.register.have_an_account") }} 
-                <nuxt-link :to="localePath('/auth/sign-in')">
+                <nuxt-link :to="localePath('/auth/login')">
                     {{ $t('pages.login.sign_in') }}
                 </nuxt-link>
             </p>
@@ -104,7 +104,7 @@ async function signUp() {
         password_confirmation: password_confirmation.value,
         lang: localeProperties.value.code
     }).then((res) => {
-        router.push('/auth/sign-in')
+        router.push('/auth/login')
     }).catch((err) => {
         errors.value = err.response.data;
         pending.value = false;

@@ -27,12 +27,12 @@
             </div>
 
             <p>{{ $t("pages.login.forgot_password") }}
-                <nuxt-link :to="localePath('/auth/sign-in')">
+                <nuxt-link :to="localePath('/auth/login')">
                     {{ $t('pages.login.password_recovery') }}
                 </nuxt-link>
             </p>
             <p>{{ $t("pages.login.dont_have_an_account") }} 
-                <nuxt-link :to="localePath('/auth/sign-up')">
+                <nuxt-link :to="localePath('/auth/register')">
                     {{ $t('pages.register.title') }}
                 </nuxt-link>
             </p>
