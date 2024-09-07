@@ -1,57 +1,62 @@
 <template>
-    <div ref="container" class="canvas-container card">
-        <canvas ref="canvas" @mousedown="startDrawing($event.clientX, $event.clientY, true)"
-            @mousemove="draw($event.clientX, $event.clientY, true)" @mouseup="stopDrawing('mouseup', true)"
-            @mouseleave="stopDrawing('mouseleave', true)"></canvas>
-        <div class="controls flex flex-col justify-between">
+    <div class="col-span-12">
+        <div ref="container" class="canvas-container card">
+            <canvas ref="canvas" @mousedown="startDrawing($event.clientX, $event.clientY, true)"
+                @touchstart="startDrawing($event.clientX, $event.clientY, true)"
+                @mousemove="draw($event.clientX, $event.clientY, true)"
+                @touchmove="draw($event.clientX, $event.clientY, true)" @mouseup="stopDrawing('mouseup', true)"
+                @touchend="stopDrawing('mouseup', true)" @mouseleave="stopDrawing('mouseleave', true)"></canvas>
+            <div class="controls flex flex-col justify-between">
 
-            <div class="flex gap-1 w-fit">
-                <button @click="undo(true)" class="btn btn-light btn-square btn-sm">
-                    <i class="bi bi-arrow-counterclockwise"></i>
-                </button>
-                <button @click="redo(true)" class="btn btn-light btn-square btn-sm">
-                    <i class="bi bi-arrow-clockwise"></i>
-                </button>
-                <button @click="clearCanvas(true)" class="btn btn-light btn-square btn-sm">
-                    <i class="bi bi-trash"></i>
-                </button>
-                <button @click="saveAsImage" class="btn btn-light btn-square btn-sm">
-                    <i class="bi bi-save"></i>
-                </button>
-            </div>
-
-            <div class="flex flex-col gap-1 w-fit justify-center">
-                <button v-for="item in tools" :key="item.tool_name" class='btn btn-square btn-sm'
-                    :class="tool.tool_name === item.tool_name ? 'btn-outline-primary' : 'btn-light'"
-                    @click="selectTool(item)">
-                    <i :class="item.tool_icon"></i>
-                </button>
-            </div>
-
-            <div v-if="filteredShapeStylingTools.length > 1" class="flex flex-col gap-1 w-fit justify-center">
-                <button v-for="item in filteredShapeStylingTools" :key="item.tool_name" class='btn btn-square btn-sm'
-                    :class="shapeStylingTool.tool_name === item.tool_name ? 'btn-primary' : 'btn-light'"
-                    @click="selectShapeStylingTool(item)">
-                    <i :class="item.tool_icon"></i>
-                </button>
-            </div>
-
-            <client-only>
-                <Compact v-if="shapeStylingTool.tool_name === 'border_color' && tool.palette === true"
-                    v-model="borderColor" />
-                <Compact v-else-if="shapeStylingTool.tool_name === 'fill_color' && tool.palette_fill === true"
-                    v-model="fillColor" />
-
-                <div v-else-if="shapeStylingTool.tool_name === 'border_width' && tool.border === true"
-                    class="card card-sm w-fit rounded-sm flex px-2 py-1">
-                    <div v-for="width in widths" :key="width" @click="selectWidth(width)"
-                        class="px-3 flex justify-center items-center h-8 rotate-45 hover:cursor-pointer">
-                        <div class="h-full" :style="{ width: width + 'px' }"
-                            :class="lineWidth === width ? 'bg-corp' : 'bg-active-inverse'"></div>
-                    </div>
+                <div class="flex gap-1 w-fit">
+                    <button @click="undo(true)" class="btn btn-light btn-square btn-sm">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </button>
+                    <button @click="redo(true)" class="btn btn-light btn-square btn-sm">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                    <button @click="clearCanvas(true)" class="btn btn-light btn-square btn-sm">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                    <button @click="saveAsImage" class="btn btn-light btn-square btn-sm">
+                        <i class="bi bi-save"></i>
+                    </button>
                 </div>
-            </client-only>
 
+                <div class="flex flex-col gap-1 w-fit justify-center">
+                    <button v-for="item in tools" :key="item.tool_name" class='btn btn-square btn-sm'
+                        :class="tool.tool_name === item.tool_name ? 'btn-outline-primary' : 'btn-light'"
+                        @click="selectTool(item)">
+                        <i :class="item.tool_icon"></i>
+                    </button>
+                </div>
+
+                <div v-if="filteredShapeStylingTools.length > 1" class="flex flex-col gap-1 w-fit justify-center">
+                    <button v-for="item in filteredShapeStylingTools" :key="item.tool_name"
+                        class='btn btn-square btn-sm'
+                        :class="shapeStylingTool.tool_name === item.tool_name ? 'btn-primary' : 'btn-light'"
+                        @click="selectShapeStylingTool(item)">
+                        <i :class="item.tool_icon"></i>
+                    </button>
+                </div>
+
+                <client-only>
+                    <Compact v-if="shapeStylingTool.tool_name === 'border_color' && tool.palette === true"
+                        v-model="borderColor" />
+                    <Compact v-else-if="shapeStylingTool.tool_name === 'fill_color' && tool.palette_fill === true"
+                        v-model="fillColor" />
+
+                    <div v-else-if="shapeStylingTool.tool_name === 'border_width' && tool.border === true"
+                        class="card card-sm w-fit rounded-sm flex px-2 py-1">
+                        <div v-for="width in widths" :key="width" @click="selectWidth(width)"
+                            class="px-3 flex justify-center items-center h-8 rotate-45 hover:cursor-pointer">
+                            <div class="h-full" :style="{ width: width + 'px' }"
+                                :class="lineWidth === width ? 'bg-corp' : 'bg-active-inverse'"></div>
+                        </div>
+                    </div>
+                </client-only>
+
+            </div>
         </div>
     </div>
 </template>
@@ -62,8 +67,8 @@ import { Compact } from '@ckpack/vue-color';
 import LZString from 'lz-string';
 
 const props = defineProps({
-    streams: {
-        type: Array,
+    streams_length: {
+        type: Number,
         required: true
     }
 });
@@ -171,7 +176,7 @@ const filteredShapeStylingTools = computed(() => {
 const selectTool = (selectedTool) => {
     tool.value = selectedTool;
 
-    if(tool.value.tool_name === 'eraser'){
+    if (tool.value.tool_name === 'eraser') {
         lineWidth.value = widths[widths.length - 1];
     }
 
@@ -260,11 +265,8 @@ onMounted(() => {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('keydown', handleKeyDown); // Добавляем обработчик нажатия клавиш
+
     updateCursorSVG();
-
-    $socketPlugin.connect();
-    $socketPlugin.removeAllListeners();
-
 
     $socketPlugin.on('startDrawing', (compressedData) => {
         const data = JSON.parse(LZString.decompress(compressedData));
@@ -329,7 +331,7 @@ const startDrawing = (clientX, clientY, local) => {
     startPos.x = (local === true ? (clientX - rect.left) : clientX);
     startPos.y = (local === true ? (clientY - rect.top) : clientY);
 
-    if (local === true && props.streams.length > 1) {
+    if (local === true && props.streams_length > 1) {
         //Отправляем событие начала рисования
         const drawingData = {
             tool: tool.value,
@@ -411,7 +413,7 @@ const draw = (clientX, clientY, local) => {
         }
     }
 
-    if (local === true && props.streams.length > 1) {
+    if (local === true && props.streams_length > 1) {
         const drawingData = {
             currentPos: { x: currentX, y: currentY }
         };
@@ -432,7 +434,7 @@ const stopDrawing = (action, local) => {
 
     context.value.beginPath(); // Начинаем новый путь после остановки рисования
 
-    if (local === true && props.streams.length > 1) {
+    if (local === true && props.streams_length > 1) {
         //Отправляем событие окончания рисования
         $socketPlugin.emit('stopDrawing', {
             action: action
@@ -449,7 +451,7 @@ const undo = (local) => {
             context.value.clearRect(0, 0, canvas.value.width, canvas.value.height);
         }
 
-        if (local === true && props.streams.length > 1) {
+        if (local === true && props.streams_length > 1) {
             $socketPlugin.emit('undoDrawing');
         }
     }
@@ -461,7 +463,7 @@ const redo = (local) => {
         history.value.push(lastUndoneState);
         context.value.putImageData(lastUndoneState, 0, 0);
 
-        if (local === true && props.streams.length > 1) {
+        if (local === true && props.streams_length > 1) {
             $socketPlugin.emit('redoDrawing');
         }
     }
@@ -471,7 +473,7 @@ const clearCanvas = (local) => {
     context.value.clearRect(0, 0, canvas.value.width, canvas.value.height);
     saveState();
 
-    if (local === true && props.streams.length > 1) {
+    if (local === true && props.streams_length > 1) {
         $socketPlugin.emit('clearDrawing');
     }
 };
@@ -490,6 +492,7 @@ const saveAsImage = () => {
     width: 100%;
     height: 75vh;
     position: relative;
+    margin-bottom: 80px;
 }
 
 canvas {

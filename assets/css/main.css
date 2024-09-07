@@ -92,19 +92,19 @@
 /*STYLES*/
 
 .bg-active {
-    @apply bg-white dark:bg-dark-500;
+    @apply bg-white dark:bg-slate-800;
 }
 
 .bg-active-inverse {
-    @apply bg-dark-500 dark:bg-white;
+    @apply bg-slate-800 dark:bg-white;
 }
 
 .bg-inactive {
-    @apply bg-gray-50 dark:bg-dark-900;
+    @apply bg-gray-50 dark:bg-slate-900;
 }
 
 .bg-inactive-inverse {
-    @apply bg-dark-900 dark:bg-gray-50;
+    @apply bg-slate-900 dark:bg-gray-50;
 }
 
 .bg-success{
@@ -128,43 +128,43 @@
 }
 
 .border-active{
-    @apply border border-dark-500 dark:border-white;
+    @apply border border-slate-800 dark:border-white;
 }
 
 .border-t-active{
-    @apply border-t border-dark-500 dark:border-white;
+    @apply border-t border-slate-800 dark:border-white;
 }
 
 .border-r-active{
-    @apply border-r border-dark-500 dark:border-white;
+    @apply border-r border-slate-800 dark:border-white;
 }
 
 .border-b-active{
-    @apply border-b border-dark-500 dark:border-white;
+    @apply border-b border-slate-800 dark:border-white;
 }
 
 .border-l-active{
-    @apply border-l border-dark-500 dark:border-white;
+    @apply border-l border-slate-800 dark:border-white;
 }
 
 .border-inactive{
-    @apply border border-gray-300 dark:border-dark-200;
+    @apply border border-gray-300 dark:border-slate-700;
 }
 
 .border-t-inactive{
-    @apply border-t border-gray-300 dark:border-dark-200;
+    @apply border-t border-gray-300 dark:border-slate-700;
 }
 
 .border-r-inactive{
-    @apply border-r border-gray-300 dark:border-dark-200;
+    @apply border-r border-gray-300 dark:border-slate-700;
 }
 
 .border-b-inactive{
-    @apply border-b border-gray-300 dark:border-dark-200;
+    @apply border-b border-gray-300 dark:border-slate-700;
 }
 
 .border-l-inactive{
-    @apply border-l border-gray-300 dark:border-dark-200;
+    @apply border-l border-gray-300 dark:border-slate-700;
 }
 
 .border-success{
@@ -184,11 +184,11 @@
 }
 
 .fill-active{
-    @apply fill-dark-200 dark:fill-white;
+    @apply fill-slate-500 dark:fill-white;
 }
 
 .stroke-active{
-    @apply stroke-dark-200 dark:stroke-white;
+    @apply stroke-slate-500 dark:stroke-white;
 }
 
 .text-success{
@@ -200,7 +200,7 @@
 }
 
 .text-inactive {
-    @apply text-neutral-500 dark:text-neutral-400;
+    @apply text-neutral-500 dark:text-slate-500;
 }
 
 .text-success{
@@ -937,6 +937,10 @@ a.btn-primary:hover, .btn-primary:hover{
     @apply text-base px-2.5 py-1.5 rounded-xl;
 }
 
+.badge.count{
+    @apply absolute rounded-full right-0 top-0 flex justify-center items-center px-0 py-0 min-w-4 h-4 text-[8px];
+}
+
 .badge > i{
     @apply inline text-lg;
 }
@@ -1253,7 +1257,7 @@ a.btn-primary:hover, .btn-primary:hover{
 }
 
 .breadcrumb{
-    @apply text-inactive mb-2 flex flex-wrap list-none p-0;
+    @apply text-inactive flex flex-wrap list-none p-0;
 }
 
 .breadcrumb a{
@@ -1301,8 +1305,36 @@ a.btn-primary:hover, .btn-primary:hover{
 }
 
 .db__content{
-    @apply pt-3 pb-3 pr-3 w-full relative overflow-auto pl-14;
-    height: calc(100vh - 80px);
+    @apply py-3 pr-3 pl-14 w-full relative overflow-auto;
+    height: calc(100vh - 65px);
+}
+
+.db__footer__menu{
+    @apply py-3 pr-3 pl-14 bg-active fixed bottom-0 left-0 right-0 border-t-inactive flex justify-between md:justify-center;
+}
+
+.db__footer__menu button{
+    @apply px-3 duration-200 text-inactive flex items-center flex-col md:min-w-14 relative;
+}
+
+.db__footer__menu button:first-child{
+    @apply pl-0;
+}
+
+.db__footer__menu button:last-child{
+    @apply pr-0;
+}
+
+.db__footer__menu button:hover{
+    @apply text-corp;
+}
+
+.db__footer__menu button span{
+    @apply text-[12px] md:text-sm;
+}
+
+.db__footer__menu i{
+    @apply text-xl md:text-2xl;
 }
 
 .content-center{

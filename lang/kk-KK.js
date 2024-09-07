@@ -59,15 +59,21 @@ export default {
         },
         conference: {
             title: 'Видеоконференция',
+            mic: 'Микрофон',
             mic_turn_on: 'Микрофонды іске қосу',
             mic_turn_off: 'Микрофонды өшіру',
+            video: 'Бейне',
             video_turn_on: 'Бейнені іске қосу',
             video_turn_off: 'Бейнені өшіру',
+            demo: 'Демо',
             demo_turn_on: 'Демонстрацияны іске қосу',
             demo_turn_off: 'Демонстрацияны өшіру',
+            board: 'Тақта',
+            participants: 'Қатысушылар',
+            chat: 'Чат',
             mode: {
                 grid: 'Кесте',
-                reporter: 'Баяндама'
+                slider: 'Карусель'
             }
         }
     }

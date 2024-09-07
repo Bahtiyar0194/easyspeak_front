@@ -1,92 +1,71 @@
 <template>
-    <div class="col-span-12">
-        <gridConference v-if="confMode === 'grid'" :streams="streams" />
 
-        <div v-else class="custom-grid">
-            <div v-if="mainStream" class="col-span-12 md:col-span-6">
-                <div class="relative rounded-lg overflow-hidden">
-                    <video :srcObject="mainStream" :muted="true" autoplay playsinline></video>
-                </div>
-            </div>
-            <div v-if="streams.length > 1" class="col-span-12">
-                <Carousel :breakpoints="{
-            0: {
-                itemsToShow: 3.5,
-            },
-            768: {
-                itemsToShow: 10.5,
-            },
-        }" :snapAlign="'start'">
-                    <Slide v-for="stream in streams" :key="stream.peer_id">
-                        <div class="relative rounded-lg overflow-hidden border-2 hover:cursor-pointer" :class="stream.volume > 50 ? 'border-success' : 'border-transparent'
-            " @click="setMainStream(stream)">
-                            <div
-                                class="absolute py-1 px-1.5 bg-black bg-opacity-50 z-10 text-white rounded-md left-2 top-2 flex gap-1">
-                                <span class="text-xs">{{ stream.userInfo.first_name }}</span>
-                            </div>
-                            <video :srcObject="stream.stream" :muted="!stream.remote" autoplay playsinline></video>
-                        </div>
-                    </Slide>
-                </Carousel>
-            </div>
-        </div>
+    <div class="col-span-12">
+        <gridMode v-if="confMode === 'grid'" :streams="streams" />
+        <sliderMode v-else-if="confMode === 'slider'" :streams="streams" />
     </div>
 
-    <div class="col-span-12">
-        <div class="btn-wrap">
-            <button v-if="localStream" class="btn-circle" :class="volume > 50 && 'border-success'" @click="toggleMute"
-                :title="isMuted
+    <div v-if="showBoard === true" class="col-span-12">
+        <drawingBoard :streams_length="streams.length" />
+    </div>
+
+    <div class="db__footer__menu">
+        <button v-if="localStream" @click="toggleMute" :title="isMuted
             ? $t('pages.conference.mic_turn_on')
             : $t('pages.conference.mic_turn_off')
             ">
-                <i v-if="isMuted" class="bi bi-mic-mute text-danger"></i>
-                <div v-else>
-                    <i v-if="volume > 50" class="bi bi-mic-fill text-success"></i>
-                    <i v-else class="bi bi-mic text-success"></i>
-                </div>
-            </button>
+            <i v-if="isMuted" class="bi bi-mic-mute text-danger"></i>
+            <div v-else>
+                <i v-if="volume > 50" class="bi bi-mic-fill text-success"></i>
+                <i v-else class="bi bi-mic text-success"></i>
+            </div>
 
-            <button v-if="localStream" class="btn-circle" @click="toggleStream" :title="isStream
+            <span :class="isMuted ? 'text-danger' : 'text-success'">{{ $t('pages.conference.mic') }}</span>
+        </button>
+
+        <button v-if="localStream" @click="toggleStream" :title="isStream
             ? $t('pages.conference.video_turn_off')
             : $t('pages.conference.video_turn_on')
             ">
-                <i class="bi" :class="isStream
+            <i class="bi" :class="isStream
             ? 'bi-camera-video text-success'
-            : 'bi-camera-video-off text-danger'
+            : 'bi-camera-video-off-fill text-danger'
             "></i>
-            </button>
 
+            <span :class="isStream ? 'text-success' : 'text-danger'">{{ $t('pages.conference.video') }}</span>
+        </button>
 
-            <button class="btn-circle" @click="toggleScreenSharing" :title="isScreenSharing
+        
+        <button>
+            <i class="bi bi-people-fill"></i>
+            <countBadge :count="streams.length" :class="'badge-sm badge-light'" />
+            <span>{{ $t('pages.conference.participants') }}</span>
+        </button>
+
+        <button @click="toggleScreenSharing" :title="isScreenSharing
             ? $t('pages.conference.demo_turn_off')
             : $t('pages.conference.demo_turn_on')
             ">
-                <i class="bi" :class="isScreenSharing
-            ? 'bi-display text-success'
-            : 'bi-display text-inactive'
+            <i class="bi" :class="isScreenSharing
+            ? 'bi-display-fill text-success'
+            : 'bi-display'
             "></i>
-            </button>
 
-            <button class="btn-circle">
-                <i class="bi bi-pencil-square text-inactive"></i>
-            </button>
+            <span>{{ $t('pages.conference.demo') }}</span>
+        </button>
 
-            <button class="btn-circle">
-                <i class="bi bi-people text-inactive"></i>
-            </button>
+        <button>
+            <i class="bi bi-chat"></i>
+            <span>{{ $t('pages.conference.chat') }}</span>
+        </button>
 
-            <button class="btn-circle">
-                <i class="bi bi-chat text-inactive"></i>
-            </button>
-
-            <button v-if="streams.length > 1" class="btn-circle"
-                @click="confMode = confMode === 'grid' ? 'reporter' : 'grid'">
-                <i class="bi text-inactive" :class="confMode === 'grid' ? 'bi-grid-3x2' : 'bi-collection-play'"></i>
-            </button>
-        </div>
+        <button @click="toggleBoard()">
+            <i class="bi bi-easel2"></i>
+            <span>{{ $t('pages.conference.board') }}</span>
+        </button>
     </div>
 
-    <div class="col-span-4">
+    <!-- <div class="col-span-4">
         <div class="card p-4">
             <h4>Участники</h4>
 
@@ -100,9 +79,9 @@
                 Онлайн: <b>{{ streams.length }}</b>
             </p>
         </div>
-    </div>
+    </div> -->
 
-    <div class="col-span-12">
+    <!-- <div class="col-span-12">
         <div class="form-group-border active mb-5">
             <i class="pi pi-at"></i>
             <input v-model="message" type="text" placeholder=" " />
@@ -117,12 +96,13 @@
                 <p class="mb-0">{{ item.message }}</p>
             </li>
         </ul>
-    </div>
+    </div> -->
 
-    <div class="col-span-12">
+    <!-- <div class="col-span-12">
         <drawingBoard :streams="streams" />
-    </div>
+    </div> -->
 </template>
+
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from "vue";
@@ -130,26 +110,27 @@ import { monitorNetworkAndAdjustQuality } from "../../utils/networkQuality";
 import { useToast } from "vue-toastification";
 import Peer from "peerjs";
 import { useRuntimeConfig } from "nuxt/app";
-import gridConference from "../../components/conference/gridConference.vue";
+import gridMode from "../../components/conference/modes/gridMode.vue";
+import sliderMode from "../../components/conference/modes/sliderMode.vue";
 import drawingBoard from "../../components/conference/drawingBoard.vue";
+import countBadge from "../../components/ui/countBadge.vue";
 const { t } = useI18n();
 const config = useRuntimeConfig();
 const toast = useToast();
 const { $socketPlugin } = useNuxtApp();
-const user = useSanctumUser();
+const authUser = useSanctumUser();
 
-const userInfo = {
-    first_name: user.value.first_name,
-    last_name: user.value.last_name,
+const authUserInfo = {
+    first_name: authUser.value.first_name,
+    last_name: authUser.value.last_name,
 };
 
 let myPeer;
 const peers = {};
 
-// grid or reporter
+// grid or slider
 const confMode = ref("grid");
 
-const mainStream = ref(null);
 const localStream = ref(null);
 const myStream = ref(null);
 const screenStream = ref(null); // Поток экрана
@@ -160,13 +141,14 @@ const volume = ref(0);
 const isStream = ref(false); // Состояние видео
 const isScreenSharing = ref(false); // Состояние демонстрации экрана
 
+const showBoard = ref(false); // Состояние доски
+
 const connectError = ref(false); // Состояние соединения
 
 const roomId = "my-room";
 
 const message = ref("");
 const messages = ref([]);
-
 
 useHead({
     title: t("pages.conference.title"),
@@ -182,8 +164,8 @@ onMounted(async () => {
     try {
         localStream.value = await navigator.mediaDevices.getUserMedia({
             video: {
-                width: 1024,
-                height: 768,
+                width: 1280,
+                height: 720,
                 facingMode: "user",
             },
             audio: true,
@@ -196,12 +178,18 @@ onMounted(async () => {
             secure: process.env.NODE_ENV === "development" ? false : true,
         });
 
-        myPeer.on('open', (id) => {
+        myPeer.on("open", (id) => {
             monitorNetworkAndAdjustQuality(myPeer);
-            mainStream.value = localStream.value;
 
-
-            addStream(false, localStream.value, myPeer.id, userInfo, isStream.value, isMuted.value);
+            addStream(
+                false,
+                localStream.value,
+                myPeer.id,
+                authUser.value.user_id,
+                authUserInfo,
+                isStream.value,
+                isMuted.value
+            );
             myStream.value = streams.value.find((s) => s.peer_id === id);
 
             if (isStream.value === false) {
@@ -212,7 +200,7 @@ onMounted(async () => {
             joinToRoom();
         });
 
-        myPeer.on('error', () => {
+        myPeer.on("error", () => {
             toast(t("errors.server.peer_error"), {
                 toastClassName: ["custom-toast", "danger"],
                 timeout: 10000,
@@ -228,7 +216,15 @@ onMounted(async () => {
     myPeer.on("call", (call) => {
         call.answer(isScreenSharing.value ? screenStream.value : localStream.value);
         call.on("stream", (remoteStream) => {
-            addStream(true, remoteStream, call.peer, call.metadata.userInfo, call.metadata.isStream, call.metadata.isMuted);
+            addStream(
+                true,
+                remoteStream,
+                call.peer,
+                call.metadata.userId,
+                call.metadata.userInfo,
+                call.metadata.isStream,
+                call.metadata.isMuted
+            );
         });
 
         call.on("error", (error) => {
@@ -238,8 +234,10 @@ onMounted(async () => {
         peers[call.peer] = call;
     });
 
+    $socketPlugin.off("user-connected");
+
     $socketPlugin.on("user-connected", (connectedUserInfo) => {
-        toast((connectedUserInfo.first_name + " " + t("on_air").toLowerCase()), {
+        toast(connectedUserInfo.first_name + " " + t("on_air").toLowerCase(), {
             toastClassName: ["custom-toast", "info"],
             timeout: 10000,
         });
@@ -271,7 +269,7 @@ onMounted(async () => {
         if (connectError.value === false) {
             connectError.value = true;
 
-            streams.value = streams.value.filter(stream => !stream.remote);
+            streams.value = streams.value.filter((stream) => !stream.remote);
 
             toast(t("errors.server.error"), {
                 toastClassName: ["custom-toast", "danger"],
@@ -288,70 +286,82 @@ onMounted(async () => {
 onBeforeUnmount(() => {
     $socketPlugin.disconnect();
 
-    if (localStream.value !== null) {
-        localStream.value.getTracks().forEach((track) => track.stop());
-    }
-
-    if (screenStream.value !== null) {
-        screenStream.value.getTracks().forEach((track) => track.stop());
-    }
+    stopLocalStream();
 });
 
-const joinToRoom = () => {
-    $socketPlugin.emit("join-room", roomId, myPeer.id, userInfo, isStream.value, isMuted.value, (response) => {
-        if (response.success) {
-            connectError.value = false;
-            $socketPlugin.emit("get-room-info", (roomInfo) => {
-                roomInfo.forEach((user) => {
-                    if (user.peerId !== myPeer.id) {
-                        const outgoingCall = myPeer.call(
-                            user.peerId,
-                            isScreenSharing.value ? screenStream.value : localStream.value,
-                            {
-                                metadata: {
-                                    userInfo: userInfo,
-                                    isStream: isStream.value,
-                                    isMuted: isMuted.value
-                                },
-                            }
-                        );
+const joinToRoom = async () => {
+    await $socketPlugin.connect();
+    $socketPlugin.emit(
+        "join-room",
+        roomId,
+        myPeer.id,
+        authUser.value.user_id,
+        authUserInfo,
+        isStream.value,
+        isMuted.value,
+        (response) => {
+            if (response.success) {
+                connectError.value = false;
+                $socketPlugin.emit("get-room-info", (roomInfo) => {
+                    roomInfo.forEach((user) => {
+                        if (user.peerId !== myPeer.id) {
+                            const outgoingCall = myPeer.call(
+                                user.peerId,
+                                isScreenSharing.value ? screenStream.value : localStream.value,
+                                {
+                                    metadata: {
+                                        userId: authUser.value.user_id,
+                                        userInfo: authUserInfo,
+                                        isStream: isStream.value,
+                                        isMuted: isMuted.value
+                                    },
+                                }
+                            );
 
-                        outgoingCall.on("stream", (remoteStream) => {
-                            addStream(true, remoteStream, outgoingCall.peer, user.userInfo, user.isStream, user.isMuted);
-                        });
+                            outgoingCall.on("stream", (remoteStream) => {
+                                addStream(
+                                    true,
+                                    remoteStream,
+                                    outgoingCall.peer,
+                                    user.userId,
+                                    user.userInfo,
+                                    user.isStream,
+                                    user.isMuted
+                                );
+                            });
 
-                        outgoingCall.on("error", (error) => {
-                            handleError(error, "outgoing call");
-                        });
+                            outgoingCall.on("error", (error) => {
+                                handleError(error, "outgoing call");
+                            });
 
-                        peers[user.peerId] = outgoingCall;
-                    }
+                            peers[user.peerId] = outgoingCall;
+                        }
+                    });
                 });
-            });
-        }
-        else {
-            if (response.message === 'peer_is_null') {
-                toast(t("errors.server.peer_error"), {
-                    toastClassName: ["custom-toast", "danger"],
-                    timeout: 10000,
-                });
+            } else {
+                if (response.message === "peer_is_null") {
+                    toast(t("errors.server.peer_error"), {
+                        toastClassName: ["custom-toast", "danger"],
+                        timeout: 10000,
+                    });
+                } else {
+                    toast(t("errors.server.room_error"), {
+                        toastClassName: ["custom-toast", "danger"],
+                        timeout: 10000,
+                    });
+                }
             }
-            else {
-                toast(t("errors.server.room_error"), {
-                    toastClassName: ["custom-toast", "danger"],
-                    timeout: 10000,
-                });
-            }
         }
-    });
-}
+    );
+};
 
-const addStream = (remote, stream, peer_id, userInfo, isStream, isMuted) => {
+const addStream = (remote, stream, peer_id, user_id, userInfo, isStream, isMuted) => {
     if (!streams.value.some((stream) => stream.peer_id === peer_id)) {
         streams.value.push({
             remote,
             stream,
             peer_id,
+            user_id,
             userInfo,
             isStream,
             isMuted
@@ -359,27 +369,34 @@ const addStream = (remote, stream, peer_id, userInfo, isStream, isMuted) => {
     }
 };
 
+const stopLocalStream = () => {
+    if (localStream.value !== null) {
+        localStream.value.getTracks().forEach((track) => track.stop());
+    }
+
+    if (screenStream.value !== null) {
+        screenStream.value.getTracks().forEach((track) => track.stop());
+    }
+    localStream.value = null;
+    screenStream.value = null;
+    streams.value = [];
+    $socketPlugin.disconnect();
+}
+
 const removeStream = (peerId) => {
     const streamToRemove = streams.value.find((s) => s.peer_id === peerId);
 
     if (streamToRemove) {
-        // Если основной поток принадлежит участнику, который покинул чат
-        if (mainStream.value === streamToRemove.stream) {
-            // Устанавливаем основной поток на ваш собственный поток
-            mainStream.value = localStream.value;
-        }
-
-        // Удаляем поток из списка
         streams.value = streams.value.filter((s) => s.peer_id !== peerId);
 
         if (peers[peerId]) {
             peers[peerId].close();
         }
     }
-};
 
-const setMainStream = (stream) => {
-    mainStream.value = stream.stream;
+    if (peerId === myPeer.id) {
+        stopLocalStream();
+    }
 };
 
 const toggleStream = () => {
@@ -393,7 +410,7 @@ const toggleStream = () => {
         if (streams.value.length > 1) {
             $socketPlugin.emit("toggle-video", {
                 peerId: myPeer.id,
-                isStream: isStream.value
+                isStream: isStream.value,
             });
         }
     } else {
@@ -412,13 +429,24 @@ const toggleMute = () => {
         if (streams.value.length > 1) {
             $socketPlugin.emit("toggle-audio", {
                 peerId: myPeer.id,
-                isMuted: isMuted.value
+                isMuted: isMuted.value,
             });
         }
     } else {
         console.error("Local stream is not available");
     }
 };
+
+const toggleBoard = () => {
+    showBoard.value = !showBoard.value;
+
+    if (showBoard.value === true) {
+        confMode.value = 'slider';
+    }
+    else {
+        confMode.value = 'grid';
+    }
+}
 
 const replaceTrackInConnections = (newTrack, kind = "video") => {
     const activeConnections = Object.keys(myPeer.connections);
@@ -513,7 +541,7 @@ const updateVolume = (() => {
 const sendMessage = () => {
     if (message.value !== "") {
         const messageData = {
-            user_name: user.value.first_name,
+            user_name: authUser.value.first_name,
             message: message.value,
         };
 

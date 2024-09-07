@@ -59,15 +59,21 @@ export default {
         },
         conference: {
             title: 'Видеоконференция',
+            mic: 'Микрофон',
             mic_turn_on: 'Включить микрофон',
             mic_turn_off: 'Отключить микрофон',
+            video: 'Видео',
             video_turn_on: 'Включить видео',
             video_turn_off: 'Отключить видео',
-            demo_turn_on: 'Запустить демонстрацию',
-            demo_turn_off: 'Остановить демонстрацию',
+            demo: 'Демо',
+            demo_turn_on: 'Запустить демонстрацию экрана',
+            demo_turn_off: 'Остановить демонстрацию экрана',
+            board: 'Доска',
+            participants: 'Участники',
+            chat: 'Чат',
             mode: {
                 grid: 'Сетка',
-                reporter: 'Репортаж'
+                slider: 'Карусель'
             }
         }
     }

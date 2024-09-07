@@ -66,7 +66,7 @@
 
 <script setup>
 import authCard from "../../components/authCard.vue";
-import { useRouter } from 'vue-router'
+import { useRouter } from 'vue-router';
 
 const { t, localeProperties } = useI18n();
 const { $axiosPlugin } = useNuxtApp();

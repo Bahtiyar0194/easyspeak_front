@@ -1,6 +1,6 @@
 <template>
-    <div class="grid gap-1" :class="gridClass">
-        <div class="border-2 relative overflow-hidden rounded-lg" v-for="stream in streams" :key="stream.peer_id"
+    <div class="grid" :class="gridClass">
+        <div class="border-2 relative overflow-hidden rounded-lg" v-for="stream in props.streams" :key="stream.peer_id"
             :class="stream.volume > 50 ? 'border-success' : 'border-transparent'">
 
             <div v-if="stream.isStream"
@@ -41,16 +41,16 @@ const gridClass = computed(() => {
     const count = props.streams.length;
 
     if (count === 1) {
-        return 'grid-cols-1 md:grid-cols-2';
+        return 'grid-cols-1';
     }
     else if (count === 2) {
-        return 'grid-cols-2 md:grid-cols-2';
+        return 'grid-cols-1 md:grid-cols-2';
     }
     else if (count === 3) {
-        return 'grid-cols-2 md:grid-cols-3';
+        return 'grid-cols-1 md:grid-cols-3';
     }
     else {
-        return 'grid-cols-2 md:grid-cols-4';
+        return 'grid-cols-2';
     }
 });
 </script>
