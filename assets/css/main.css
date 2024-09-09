@@ -447,7 +447,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .custom-grid{
-    @apply grid grid-cols-12 gap-4;
+    @apply grid grid-cols-12 gap-4 relative;
 }
 
 .form-group {
@@ -938,7 +938,7 @@ a.btn-primary:hover, .btn-primary:hover{
 }
 
 .badge.count{
-    @apply absolute rounded-full right-0 top-0 flex justify-center items-center px-0 py-0 min-w-4 h-4 text-[8px];
+    @apply absolute rounded-full right-3 top-0 flex justify-center items-center px-0 py-0 min-w-4 h-4 text-[8px];
 }
 
 .badge > i{
@@ -1330,7 +1330,7 @@ a.btn-primary:hover, .btn-primary:hover{
 }
 
 .db__footer__menu button span{
-    @apply text-[12px] md:text-sm;
+    @apply text-[8px] md:text-sm;
 }
 
 .db__footer__menu i{

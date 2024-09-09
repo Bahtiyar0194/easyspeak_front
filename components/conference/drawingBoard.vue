@@ -1,62 +1,55 @@
 <template>
-    <div class="col-span-12">
-        <div ref="container" class="canvas-container card">
-            <canvas ref="canvas" @mousedown="startDrawing($event.clientX, $event.clientY, true)"
-                @touchstart="startDrawing($event.clientX, $event.clientY, true)"
-                @mousemove="draw($event.clientX, $event.clientY, true)"
-                @touchmove="draw($event.clientX, $event.clientY, true)" @mouseup="stopDrawing('mouseup', true)"
-                @touchend="stopDrawing('mouseup', true)" @mouseleave="stopDrawing('mouseleave', true)"></canvas>
-            <div class="controls flex flex-col justify-between">
+    <div ref="container" class="canvas-container card">
+        <canvas ref="canvas"></canvas>
+        <div class="controls flex flex-col justify-between">
 
-                <div class="flex gap-1 w-fit">
-                    <button @click="undo(true)" class="btn btn-light btn-square btn-sm">
-                        <i class="bi bi-arrow-counterclockwise"></i>
-                    </button>
-                    <button @click="redo(true)" class="btn btn-light btn-square btn-sm">
-                        <i class="bi bi-arrow-clockwise"></i>
-                    </button>
-                    <button @click="clearCanvas(true)" class="btn btn-light btn-square btn-sm">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                    <button @click="saveAsImage" class="btn btn-light btn-square btn-sm">
-                        <i class="bi bi-save"></i>
-                    </button>
-                </div>
-
-                <div class="flex flex-col gap-1 w-fit justify-center">
-                    <button v-for="item in tools" :key="item.tool_name" class='btn btn-square btn-sm'
-                        :class="tool.tool_name === item.tool_name ? 'btn-outline-primary' : 'btn-light'"
-                        @click="selectTool(item)">
-                        <i :class="item.tool_icon"></i>
-                    </button>
-                </div>
-
-                <div v-if="filteredShapeStylingTools.length > 1" class="flex flex-col gap-1 w-fit justify-center">
-                    <button v-for="item in filteredShapeStylingTools" :key="item.tool_name"
-                        class='btn btn-square btn-sm'
-                        :class="shapeStylingTool.tool_name === item.tool_name ? 'btn-primary' : 'btn-light'"
-                        @click="selectShapeStylingTool(item)">
-                        <i :class="item.tool_icon"></i>
-                    </button>
-                </div>
-
-                <client-only>
-                    <Compact v-if="shapeStylingTool.tool_name === 'border_color' && tool.palette === true"
-                        v-model="borderColor" />
-                    <Compact v-else-if="shapeStylingTool.tool_name === 'fill_color' && tool.palette_fill === true"
-                        v-model="fillColor" />
-
-                    <div v-else-if="shapeStylingTool.tool_name === 'border_width' && tool.border === true"
-                        class="card card-sm w-fit rounded-sm flex px-2 py-1">
-                        <div v-for="width in widths" :key="width" @click="selectWidth(width)"
-                            class="px-3 flex justify-center items-center h-8 rotate-45 hover:cursor-pointer">
-                            <div class="h-full" :style="{ width: width + 'px' }"
-                                :class="lineWidth === width ? 'bg-corp' : 'bg-active-inverse'"></div>
-                        </div>
-                    </div>
-                </client-only>
-
+            <div class="flex gap-1 w-fit">
+                <button @click="undo(true)" class="btn btn-light btn-square btn-sm">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                </button>
+                <button @click="redo(true)" class="btn btn-light btn-square btn-sm">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+                <button @click="clearCanvas(true)" class="btn btn-light btn-square btn-sm">
+                    <i class="bi bi-trash"></i>
+                </button>
+                <button @click="saveAsImage" class="btn btn-light btn-square btn-sm">
+                    <i class="bi bi-save"></i>
+                </button>
             </div>
+
+            <div class="flex flex-col gap-1 w-fit justify-center">
+                <button v-for="item in tools" :key="item.tool_name" class='btn btn-square btn-sm'
+                    :class="tool.tool_name === item.tool_name ? 'btn-outline-primary' : 'btn-light'"
+                    @click="selectTool(item)">
+                    <i :class="item.tool_icon"></i>
+                </button>
+            </div>
+
+            <div v-if="filteredShapeStylingTools.length > 1" class="flex flex-col gap-1 w-fit justify-center">
+                <button v-for="item in filteredShapeStylingTools" :key="item.tool_name" class='btn btn-square btn-sm'
+                    :class="shapeStylingTool.tool_name === item.tool_name ? 'btn-primary' : 'btn-light'"
+                    @click="selectShapeStylingTool(item)">
+                    <i :class="item.tool_icon"></i>
+                </button>
+            </div>
+
+            <client-only>
+                <Compact v-if="shapeStylingTool.tool_name === 'border_color' && tool.palette === true"
+                    v-model="borderColor" />
+                <Compact v-else-if="shapeStylingTool.tool_name === 'fill_color' && tool.palette_fill === true"
+                    v-model="fillColor" />
+
+                <div v-else-if="shapeStylingTool.tool_name === 'border_width' && tool.border === true"
+                    class="card card-sm w-fit rounded-sm flex px-2 py-1">
+                    <div v-for="width in widths" :key="width" @click="selectWidth(width)"
+                        class="px-3 flex justify-center items-center h-8 rotate-45 hover:cursor-pointer">
+                        <div class="h-full" :style="{ width: width + 'px' }"
+                            :class="lineWidth === width ? 'bg-corp' : 'bg-active-inverse'"></div>
+                    </div>
+                </div>
+            </client-only>
+
         </div>
     </div>
 </template>
@@ -73,7 +66,7 @@ const props = defineProps({
     }
 });
 
-const { $socketPlugin } = useNuxtApp();
+const { $socketPlugin, $hammer } = useNuxtApp();
 
 const canvas = ref(null);
 const context = ref(null);
@@ -261,12 +254,29 @@ const resizeCanvas = () => {
 };
 
 onMounted(() => {
+
+    const hammer = new $hammer(canvas.value);
     context.value = canvas.value.getContext('2d', { willReadFrequently: true });
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     window.addEventListener('keydown', handleKeyDown); // Добавляем обработчик нажатия клавиш
 
     updateCursorSVG();
+
+    // Настройка жестов для рисования
+    hammer.get('pan').set({ direction: $hammer.DIRECTION_ALL, threshold: 0 });
+
+    hammer.on('panstart', (e) => {
+        startDrawing(e.center.x, e.center.y, true)
+    });
+
+    hammer.on('panmove', (e) => {
+        draw(e.center.x, e.center.y, true);
+    });
+
+    hammer.on('panend', () => {
+        stopDrawing(true);
+    });
 
     $socketPlugin.on('startDrawing', (compressedData) => {
         const data = JSON.parse(LZString.decompress(compressedData));
@@ -284,8 +294,8 @@ onMounted(() => {
         draw(data.currentPos.x, data.currentPos.y, false);
     });
 
-    $socketPlugin.on('stopDrawing', (data) => {
-        stopDrawing(data.action, false);
+    $socketPlugin.on('stopDrawing', () => {
+        stopDrawing(false);
     });
 
     $socketPlugin.on('undoDrawing', () => {
@@ -424,21 +434,17 @@ const draw = (clientX, clientY, local) => {
     }
 };
 
-const stopDrawing = (action, local) => {
+const stopDrawing = (local) => {
     if (!drawing.value) return;
     drawing.value = false;
 
-    if (action === 'mouseup') {
-        saveState();
-    }
+    saveState();
 
     context.value.beginPath(); // Начинаем новый путь после остановки рисования
 
     if (local === true && props.streams_length > 1) {
         //Отправляем событие окончания рисования
-        $socketPlugin.emit('stopDrawing', {
-            action: action
-        });
+        $socketPlugin.emit('stopDrawing');
     }
 };
 

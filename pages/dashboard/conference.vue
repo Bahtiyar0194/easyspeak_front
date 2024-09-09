@@ -5,7 +5,7 @@
         <sliderMode v-else-if="confMode === 'slider'" :streams="streams" />
     </div>
 
-    <div v-if="showBoard === true" class="col-span-12">
+    <div v-if="showBoard" class="col-span-12">
         <drawingBoard :streams_length="streams.length" />
     </div>
 
@@ -35,7 +35,7 @@
             <span :class="isStream ? 'text-success' : 'text-danger'">{{ $t('pages.conference.video') }}</span>
         </button>
 
-        
+
         <button>
             <i class="bi bi-people-fill"></i>
             <countBadge :count="streams.length" :class="'badge-sm badge-light'" />
@@ -253,12 +253,16 @@ onMounted(async () => {
 
     $socketPlugin.on("toggle-video", (data) => {
         const findStream = streams.value.find((s) => s.peer_id === data.peerId);
-        findStream.isStream = data.isStream;
+        if (findStream) {
+            findStream.isStream = data.isStream;
+        }
     });
 
     $socketPlugin.on("toggle-audio", (data) => {
         const findStream = streams.value.find((s) => s.peer_id === data.peerId);
-        findStream.isMuted = data.isMuted;
+        if (findStream) {
+            findStream.isMuted = data.isMuted;
+        }
     });
 
     $socketPlugin.on("update-volume", (data) => {
