@@ -43,7 +43,7 @@ export default defineNuxtConfig({
           onLogin: '/dashboard',
           onLogout: '/auth/login',
           onAuthOnly: '/auth/login',
-          onGuestOnly: '/',
+          onGuestOnly: '/dashboard',
         },
       },
     },

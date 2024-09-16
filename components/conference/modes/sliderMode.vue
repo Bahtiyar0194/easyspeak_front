@@ -16,7 +16,7 @@
                             class="absolute py-1 px-1.5 bg-black bg-opacity-50 z-10 text-white rounded-md left-1 md:left-2 top-1 md:top-2 flex gap-1">
                             <span class="text-xs">{{ stream.userInfo.first_name }}</span>
                         </div>
-                        <video class="w-full h-full aspect-video object-cover" :srcObject="stream.stream" :muted="!stream.remote" autoplay playsinline></video>
+                        <video class="w-full h-full aspect-[4/3] md:aspect-video object-cover" :srcObject="stream.stream" :muted="!stream.remote" autoplay playsinline></video>
 
                         <div
                             class="absolute py-1 px-1.5 md:px-2 bg-black bg-opacity-50 z-10 text-white rounded-md right-2 bottom-2 flex gap-1 md:gap-2">

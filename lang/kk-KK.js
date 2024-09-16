@@ -7,6 +7,7 @@ export default {
     on_air: 'Байланыста',
     or: 'Немесе',
     back: 'Артқа',
+    close: 'Жабу',
 
     errors: {
         media: {
@@ -32,6 +33,33 @@ export default {
         street: 'Көше',
         house: 'Үй',
         flat: 'Пәтер'
+    },
+
+    board: {
+        show_tool_parameters: 'Құралдың сипаттамасын көрсету',
+        tool_parameters: 'Құралдың сипаттамасы',
+        font_size: 'Қаріптің өлшемі',
+        tools: {
+            pencil: 'Қарындаш',
+            brush: 'Қылқалам',
+            line: 'Сызық',
+            rectangle: 'Төртбұрыш',
+            circle: 'Шеңбер',
+            text: 'Мәтін',
+            eraser: 'Өшіргіш'
+        },
+        params: {
+            border_color: 'Жақтау түсі',
+            fill_color: 'Ішкі түсі',
+            border_width: 'Қалыңдығы',
+            text_params: 'Мәтіннің баптаулары'
+        },
+        actions: {
+            redo: 'Қайтару',
+            undo: 'Бас тарту',
+            clear: 'Тазарту',
+            save: 'Сақтау'
+        }
     },
 
     pages: {

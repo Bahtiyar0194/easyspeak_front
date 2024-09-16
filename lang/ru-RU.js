@@ -7,6 +7,7 @@ export default {
     on_air: 'На связи',
     or: 'Или',
     back: 'Назад',
+    close: 'Закрыть',
 
     errors: {
         media: {
@@ -32,6 +33,33 @@ export default {
         street: 'Улица',
         house: 'Дом',
         flat: 'Квартира'
+    },
+
+    board: {
+        show_tool_parameters: 'Показать свойства инструмента',
+        tool_parameters: 'Свойства инструмента',
+        font_size: 'Размер шрифта',
+        tools: {
+            pencil: 'Карандаш',
+            brush: 'Кисть',
+            line: 'Линия',
+            rectangle: 'Прямоугольник',
+            circle: 'Круг',
+            text: 'Текст',
+            eraser: 'Ластик'
+        },
+        params: {
+            border_color: 'Цвет обводки',
+            fill_color: 'Цвет заливки',
+            border_width: 'Толщина линии',
+            text_params: 'Параметры текста'
+        },
+        actions: {
+            redo: 'Вернуть',
+            undo: 'Отменить',
+            clear: 'Очистить',
+            save: 'Сохранить'
+        }
     },
 
     pages: {
