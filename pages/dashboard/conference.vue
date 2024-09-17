@@ -5,7 +5,7 @@
         <sliderMode v-else-if="confMode === 'slider'" :streams="streams" />
     </div>
 
-    <div class="col-span-12" :class="showBoard ? 'block' : 'hidden'">
+    <div v-if="showBoard" class="col-span-12">
         <drawingBoard :streams_length="streams.length" />
     </div>
 

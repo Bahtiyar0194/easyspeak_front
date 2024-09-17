@@ -40,6 +40,7 @@ export default {
         tool_parameters: 'Свойства инструмента',
         font_size: 'Размер шрифта',
         tools: {
+            move: 'Перемещение',
             pencil: 'Карандаш',
             brush: 'Кисть',
             line: 'Линия',

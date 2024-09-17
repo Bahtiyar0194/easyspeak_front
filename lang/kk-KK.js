@@ -40,6 +40,7 @@ export default {
         tool_parameters: 'Құралдың сипаттамасы',
         font_size: 'Қаріптің өлшемі',
         tools: {
+            move: 'Қозғау',
             pencil: 'Қарындаш',
             brush: 'Қылқалам',
             line: 'Сызық',

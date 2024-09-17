@@ -89,7 +89,7 @@ const scrollTop = ref(0);
 
 const canvas = ref(null);
 const context = ref(null);
-const scrollStep = ref(50); // Шаг увеличения холста при скролле
+const historyLength = ref(10);
 
 const isDrawing = ref(false);
 const iCanDraw = ref(true);
@@ -307,115 +307,13 @@ const resizeCanvas = (newWidth, newHeight) => {
     context.value.putImageData(imageData, 0, 0);
 }
 
-// Проверка на необходимость увеличения canvas
-const checkCanvasSize = (x, y) => {
-    if (x > (canvas.value.width - scrollStep.value)) {
-        resizeCanvas(canvas.value.width + 100, canvas.value.height);
+const saveState = () => {
+    if (history.value.length >= historyLength.value) {
+        history.value.shift();
     }
-    if (y > (canvas.value.height - scrollStep.value)) {
-        resizeCanvas(canvas.value.width, canvas.value.height + 100);
-    }
-}
-
-onMounted(() => {
-
-    const hammer = new $hammer(canvas.value);
-    context.value = canvas.value.getContext('2d', { willReadFrequently: true });
-    resizeCanvas();
-    canvasContainer.value.scrollLeft = (canvasContainer.value.scrollWidth - canvasContainer.value.clientWidth) / 2;
-    canvasContainer.value.scrollTop = (canvasContainer.value.scrollHeight - canvasContainer.value.clientHeight) / 2;
-    window.addEventListener('keydown', handleKeyDown);
-
-    updateCursorSVG();
-
-    // Настройка жестов для рисования
-    hammer.get('pan').set({ direction: $hammer.DIRECTION_ALL, threshold: 0 });
-
-    hammer.on('panstart', (e) => {
-        startDrawing(e.center.x, e.center.y, true);
-    });
-
-    hammer.on('panmove', (e) => {
-        draw(e.center.x, e.center.y, true);
-    });
-
-    hammer.on('panend', () => {
-        stopDrawing(true);
-    });
-
-    hammer.on('tap', (e) => {
-        if (tool.value.tool_name === 'text') {
-            if (textInput.value.style.display === 'block' && textInput.value.value != '') {
-                insertText(textInput.value.value, fontSize.value, lineColor.value, lastTextPos.value, true);
-                textInput.value.value = '';
-                textInput.value.style.display = 'none';
-            }
-            else {
-                lastTextPos.value = { x: e.srcEvent.offsetX, y: e.srcEvent.offsetY };
-                textInput.value.style.left = (e.srcEvent.offsetX) + 'px';
-                textInput.value.style.top = ((e.srcEvent.offsetY) - fontSize.value) + 'px';
-                textInput.value.style.display = 'block';
-                textInput.value.style.fontSize = fontSize.value + 'px';
-                textInput.value.style.color = lineColor.value;
-
-                if (lineColor.value === '#FFFFFF') {
-                    textInput.value.classList.add('text-stroke');
-                }
-                else {
-                    textInput.value.classList.remove('text-stroke');
-                }
-                textInput.value.focus();
-            }
-        }
-    });
-
-    $socketPlugin.on('startDrawing', (compressedData) => {
-        const data = JSON.parse(LZString.decompress(compressedData));
-
-        tool.value = data.tool;
-        fillColor.value = data.fillColor;
-        lineColor.value = data.lineColor;
-        lineWidth.value = data.lineWidth;
-
-        // Отключение 'pan' временно
-        hammer.get('pan').set({ enable: false });
-        iCanDraw.value = false;
-        startDrawing(data.currentPos.x, data.currentPos.y, false);
-    });
-
-    $socketPlugin.on('drawing', (compressedData) => {
-        const data = JSON.parse(LZString.decompress(compressedData));
-        draw(data.currentPos.x, data.currentPos.y, false);
-    });
-
-    $socketPlugin.on('stopDrawing', () => {
-        // Включение 'pan'
-        hammer.get('pan').set({ enable: true });
-        iCanDraw.value = true;
-        stopDrawing(false);
-    });
-
-    $socketPlugin.on('insertText', (compressedData) => {
-        const data = JSON.parse(LZString.decompress(compressedData));
-        insertText(data.text, data.size, data.color, data.position, false);
-    });
-
-    $socketPlugin.on('undoDrawing', () => {
-        undo(false);
-    });
-
-    $socketPlugin.on('redoDrawing', () => {
-        redo(false);
-    });
-
-    $socketPlugin.on('clearDrawing', () => {
-        clearCanvas(false);
-    });
-});
-
-onUnmounted(() => {
-    window.removeEventListener('keydown', handleKeyDown);
-});
+    history.value.push(context.value.getImageData(0, 0, canvas.value.width, canvas.value.height));
+    undoneHistory.value = [];
+};
 
 const handleKeyDown = (event) => {
     if (event.ctrlKey && event.key === 'z') {
@@ -426,14 +324,6 @@ const handleKeyDown = (event) => {
         redo(); // Вызываем функцию redo при Ctrl+Y
         event.preventDefault();
     }
-};
-
-const saveState = () => {
-    if (history.value.length >= 5) {
-        history.value.shift();
-    }
-    history.value.push(context.value.getImageData(0, 0, canvas.value.width, canvas.value.height));
-    undoneHistory.value = [];
 };
 
 const startDrawing = (clientX, clientY, local) => {
@@ -647,6 +537,107 @@ const saveAsImage = () => {
     link.click(); // Инициируем скачивание
     link.remove(); // Удаляем элемент после скачивания
 };
+
+
+onMounted(() => {
+
+    const hammer = new $hammer(canvas.value);
+    context.value = canvas.value.getContext('2d', { willReadFrequently: true });
+    resizeCanvas();
+    canvasContainer.value.scrollLeft = (canvasContainer.value.scrollWidth - canvasContainer.value.clientWidth) / 2;
+    canvasContainer.value.scrollTop = (canvasContainer.value.scrollHeight - canvasContainer.value.clientHeight) / 2;
+    window.addEventListener('keydown', handleKeyDown);
+
+    updateCursorSVG();
+
+    // Настройка жестов для рисования
+    hammer.get('pan').set({ direction: $hammer.DIRECTION_ALL, threshold: 0 });
+
+    hammer.on('panstart', (e) => {
+        startDrawing(e.center.x, e.center.y, true);
+    });
+
+    hammer.on('panmove', (e) => {
+        draw(e.center.x, e.center.y, true);
+    });
+
+    hammer.on('panend', () => {
+        stopDrawing(true);
+    });
+
+    hammer.on('tap', (e) => {
+        if (tool.value.tool_name === 'text') {
+            if (textInput.value.style.display === 'block' && textInput.value.value != '') {
+                insertText(textInput.value.value, fontSize.value, lineColor.value, lastTextPos.value, true);
+                textInput.value.value = '';
+                textInput.value.style.display = 'none';
+            }
+            else {
+                lastTextPos.value = { x: e.srcEvent.offsetX, y: e.srcEvent.offsetY };
+                textInput.value.style.left = (e.srcEvent.offsetX) + 'px';
+                textInput.value.style.top = ((e.srcEvent.offsetY) - fontSize.value) + 'px';
+                textInput.value.style.display = 'block';
+                textInput.value.style.fontSize = fontSize.value + 'px';
+                textInput.value.style.color = lineColor.value;
+
+                if (lineColor.value === '#FFFFFF') {
+                    textInput.value.classList.add('text-stroke');
+                }
+                else {
+                    textInput.value.classList.remove('text-stroke');
+                }
+                textInput.value.focus();
+            }
+        }
+    });
+
+    $socketPlugin.on('startDrawing', (compressedData) => {
+        const data = JSON.parse(LZString.decompress(compressedData));
+
+        tool.value = data.tool;
+        fillColor.value = data.fillColor;
+        lineColor.value = data.lineColor;
+        lineWidth.value = data.lineWidth;
+
+        // Отключение 'pan' временно
+        hammer.get('pan').set({ enable: false });
+        iCanDraw.value = false;
+        startDrawing(data.currentPos.x, data.currentPos.y, false);
+    });
+
+    $socketPlugin.on('drawing', (compressedData) => {
+        const data = JSON.parse(LZString.decompress(compressedData));
+        draw(data.currentPos.x, data.currentPos.y, false);
+    });
+
+    $socketPlugin.on('stopDrawing', () => {
+        // Включение 'pan'
+        hammer.get('pan').set({ enable: true });
+        iCanDraw.value = true;
+        stopDrawing(false);
+    });
+
+    $socketPlugin.on('insertText', (compressedData) => {
+        const data = JSON.parse(LZString.decompress(compressedData));
+        insertText(data.text, data.size, data.color, data.position, false);
+    });
+
+    $socketPlugin.on('undoDrawing', () => {
+        undo(false);
+    });
+
+    $socketPlugin.on('redoDrawing', () => {
+        redo(false);
+    });
+
+    $socketPlugin.on('clearDrawing', () => {
+        clearCanvas(false);
+    });
+});
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeyDown);
+});
 </script>
 
 <style scoped>
