@@ -812,10 +812,6 @@ select.error:has(option:checked:disabled) {
     @apply bg-corp border-corp border text-white;
 }
 
-a.btn-primary:hover, .btn-primary:hover{
-    @apply !bg-transparent text-corp;
-}
-
 .btn-outline-primary{
     @apply bg-transparent border border-corp text-corp;
 }
@@ -1622,4 +1618,37 @@ a.btn-primary:hover, .btn-primary:hover{
 
 .review-item:last-child{
     @apply pb-0;
+}
+
+
+.canvas-container {
+    @apply relative overflow-scroll w-full;
+    height: 75vh;
+}
+
+.canvas-container::-webkit-scrollbar {
+    width: 0px;
+}
+.canvas-container::-webkit-scrollbar-thumb {
+    width: 0px;
+}
+.canvas-container::-webkit-scrollbar:horizontal{
+    height: 0px;
+}
+.canvas-container::-webkit-scrollbar-thumb:horizontal{
+    height: 0px;
+}
+
+.canvas-container canvas {
+    display: block;
+    width: 2000px;
+    height: 2000px;
+    background-image: linear-gradient(90deg, #d1d5db 1px, transparent 1px),
+        linear-gradient(180deg, #d1d5db 1px, transparent 1px);
+    background-size: 30px 30px;
+}
+
+.dark .canvas-container canvas {
+    background-image: linear-gradient(90deg, #334155 1px, transparent 1px),
+    linear-gradient(180deg, #334155 1px, transparent 1px);
 }
