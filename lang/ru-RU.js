@@ -1,4 +1,5 @@
 export default {
+    you: 'это вы',
     all_rights: 'Все права защищены.',
     choose_your_language: 'Выберите Ваш язык',
     continue: 'Продолжить',
@@ -99,6 +100,7 @@ export default {
             demo_turn_off: 'Остановить демонстрацию экрана',
             board: 'Доска',
             participants: 'Участники',
+            participants_count: 'Количество участников',
             chat: 'Чат',
             mode: {
                 grid: 'Сетка',

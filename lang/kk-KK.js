@@ -1,4 +1,5 @@
 export default {
+    you: 'Бұл сіз',
     all_rights: 'Барлық құқықтар сақталған.',
     choose_your_language: 'Тілді таңдаңыз',
     continue: 'Жалғастыру',
@@ -99,6 +100,7 @@ export default {
             demo_turn_off: 'Демонстрацияны өшіру',
             board: 'Тақта',
             participants: 'Қатысушылар',
+            participants_count: 'Қатысушылар саны',
             chat: 'Чат',
             mode: {
                 grid: 'Кесте',

@@ -1146,12 +1146,28 @@ select.error:has(option:checked:disabled) {
     @apply bg-active rounded-lg border-inactive px-4;
 }
 
+.list-group.nowrap{
+    @apply px-0 border-0;
+}
+
 .list-group > li{
     @apply py-4 border-b-inactive duration-200 list-none;
 }
 
+.list-group.nowrap > li{
+    @apply py-2 border-b-0;
+}
+
 .list-group > li.section{
     @apply border-dashed border-b-2;
+}
+
+.list-group.nowrap > li:first-child{
+    @apply pt-0;
+}
+
+.list-group.nowrap > li:last-child{
+    @apply pb-0;
 }
 
 .list-group > li:last-child{
@@ -1350,7 +1366,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .db__footer__menu button span{
-    @apply text-[8px] md:text-sm;
+    @apply text-[8px] sm:text-sm md:text-sm;
 }
 
 .db__footer__menu i{
@@ -1620,10 +1636,9 @@ select.error:has(option:checked:disabled) {
     @apply pb-0;
 }
 
-
 .canvas-container {
-    @apply relative overflow-scroll w-full;
-    height: 75vh;
+    @apply relative overflow-scroll w-full border-inactive;
+    height: 80vh;
 }
 
 .canvas-container::-webkit-scrollbar {
@@ -1640,6 +1655,9 @@ select.error:has(option:checked:disabled) {
 }
 
 .canvas-container canvas {
+    position: absolute;
+    top: -1px;
+    left: -1px;
     display: block;
     width: 2000px;
     height: 2000px;

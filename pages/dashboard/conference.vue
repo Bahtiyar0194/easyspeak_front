@@ -5,10 +5,6 @@
         <sliderMode v-else-if="confMode === 'slider'" :streams="streams" />
     </div>
 
-    <div v-if="showBoard" class="col-span-12">
-        <drawingBoard :streams_length="streams.length" />
-    </div>
-
     <div class="db__footer__menu">
         <button v-if="localStream" @click="toggleMute" :title="isMuted
             ? $t('pages.conference.mic_turn_on')
@@ -28,15 +24,15 @@
             : $t('pages.conference.video_turn_on')
             ">
             <i class="bi" :class="isStream
-            ? 'bi-camera-video text-success'
-            : 'bi-camera-video-off-fill text-danger'
-            "></i>
+                ? 'bi-camera-video text-success'
+                : 'bi-camera-video-off-fill text-danger'
+                "></i>
 
             <span :class="isStream ? 'text-success' : 'text-danger'">{{ $t('pages.conference.video') }}</span>
         </button>
 
 
-        <button>
+        <button @click="participantsModalIsVisible = true;">
             <i class="bi bi-people-fill"></i>
             <countBadge :count="streams.length" :class="'badge-sm badge-light'" />
             <span>{{ $t('pages.conference.participants') }}</span>
@@ -47,9 +43,9 @@
             : $t('pages.conference.demo_turn_on')
             ">
             <i class="bi" :class="isScreenSharing
-            ? 'bi-display-fill text-success'
-            : 'bi-display'
-            "></i>
+                ? 'bi-display-fill text-success'
+                : 'bi-display'
+                "></i>
 
             <span>{{ $t('pages.conference.demo') }}</span>
         </button>
@@ -59,7 +55,7 @@
             <span>{{ $t('pages.conference.chat') }}</span>
         </button>
 
-        <button @click="toggleBoard()">
+        <button @click="drawingBoardModalIsVisible = true;">
             <i class="bi bi-easel2"></i>
             <span>{{ $t('pages.conference.board') }}</span>
         </button>
@@ -98,9 +94,44 @@
         </ul>
     </div> -->
 
-    <!-- <div class="col-span-12">
-        <drawingBoard :streams="streams" />
-    </div> -->
+    <modal :show="participantsModalIsVisible" :onClose="() => participantsModalIsVisible = false" :class="'modal-lg'">
+        <template v-slot:header_content>
+            <h4>{{ $t('pages.conference.participants') }}</h4>
+        </template>
+        <template v-slot:body_content>
+            <div class="flex flex-col gap-y-4">
+                <div>
+                    <p>{{ $t('pages.conference.participants_count') }}: <b>{{ streams.length }}</b></p>
+                    <ul class="list-group nowrap">
+                        <li v-for="stream in streams" :key="stream.peer_id">
+                            <div class="flex flex-wrap items-center justify-between gap-1">
+                                <div class="flex items-center gap-2">
+                                    <userAvatar :padding="0.5" :className="'w-8 h-8'" :user="stream.userInfo" />
+                                    <span class="font-medium">{{ stream.userInfo.last_name }} {{
+                                        stream.userInfo.first_name }} <i v-if="!stream.remote">({{ $t('you') }})</i></span>
+                                </div>
+                                <div class="flex gap-2">
+                                    <i class="bi"
+                                        :class="!stream.isMuted ? 'bi-mic text-success' : 'bi-mic-mute text-danger'"></i>
+                                    <i class="bi"
+                                        :class="stream.isStream ? 'bi-camera-video text-success' : 'bi-camera-video-off text-danger'"></i>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </template>
+    </modal>
+
+    <modal :show="drawingBoardModalIsVisible" :onClose="() => drawingBoardModalIsVisible = false">
+        <template v-slot:header_content>
+            <h4>{{ $t('pages.conference.board') }}</h4>
+        </template>
+        <template v-slot:body_content>
+            <drawingBoard :streams_length="streams.length" />
+        </template>
+    </modal>
 </template>
 
 
@@ -114,6 +145,8 @@ import gridMode from "../../components/conference/modes/gridMode.vue";
 import sliderMode from "../../components/conference/modes/sliderMode.vue";
 import drawingBoard from "../../components/conference/drawingBoard.vue";
 import countBadge from "../../components/ui/countBadge.vue";
+import modal from "../../components/ui/modal.vue";
+import userAvatar from "../../components/ui/userAvatar.vue";
 const { t } = useI18n();
 const config = useRuntimeConfig();
 const toast = useToast();
@@ -123,6 +156,7 @@ const authUser = useSanctumUser();
 const authUserInfo = {
     first_name: authUser.value.first_name,
     last_name: authUser.value.last_name,
+    avatar: authUser.avatar
 };
 
 let myPeer;
@@ -149,6 +183,10 @@ const roomId = "my-room";
 
 const message = ref("");
 const messages = ref([]);
+
+//Modals
+const participantsModalIsVisible = ref(false);
+const drawingBoardModalIsVisible = ref(false);
 
 useHead({
     title: t("pages.conference.title"),

@@ -1,5 +1,5 @@
 <template>
-    <div class="relative bg-active mb-20">
+    <div class="relative bg-active">
         <div class="controls flex flex-col">
             <div class="flex gap-1 w-fit">
                 <button v-for="item in actions" :key="item.action_name" class='btn btn-square btn-sm btn-light'
