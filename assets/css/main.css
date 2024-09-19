@@ -881,7 +881,7 @@ select.error:has(option:checked:disabled) {
     @apply ml-1;
 }
 
-.btn-loding-circle {
+.btn-loading-circle {
     animation: 0.75s linear infinite spinner-border;
 }
 
@@ -1282,10 +1282,14 @@ select.error:has(option:checked:disabled) {
     border-radius: inherit;
 }
 
-.overlay-loding-circle {
+.overlay-loading-circle {
     @apply w-10 h-10 border-4 border-corp rounded-full;
     border-bottom-color: transparent !important;
     animation: 0.75s linear infinite spinner-border;
+}
+
+.overlay-loading-circle.sm {
+    @apply w-6 h-6 border-2;
 }
 
 .breadcrumb{
@@ -1302,7 +1306,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .db__header{
-    @apply w-full bg-active flex justify-between items-center px-3 border-b-inactive;
+    @apply fixed top-0 left-0 w-full bg-active flex justify-between items-center px-3 border-b-inactive z-20;
     height: 65px;
 }
 
@@ -1341,7 +1345,8 @@ select.error:has(option:checked:disabled) {
 }
 
 .db__content{
-    @apply py-3 pr-3 pl-14 w-full relative overflow-auto;
+    @apply pb-3 pr-3 pl-14 w-full relative overflow-auto;
+    padding-top: 75px;
     height: calc(100vh - 65px);
 }
 
@@ -1661,9 +1666,9 @@ select.error:has(option:checked:disabled) {
     display: block;
     width: 2000px;
     height: 2000px;
-    background-image: linear-gradient(90deg, #d1d5db 1px, transparent 1px),
-        linear-gradient(180deg, #d1d5db 1px, transparent 1px);
-    background-size: 30px 30px;
+    background-image: linear-gradient(90deg, #e8ebee 1px, transparent 1px),
+        linear-gradient(180deg, #e8ebee 1px, transparent 1px);
+    background-size: 20px 20px;
 }
 
 .dark .canvas-container canvas {

@@ -1,137 +1,146 @@
 <template>
-
-    <div class="col-span-12">
-        <gridMode v-if="confMode === 'grid'" :streams="streams" />
-        <sliderMode v-else-if="confMode === 'slider'" :streams="streams" />
+    <div v-if="errorMessage" class="col-span-12">
+        <div class="card p-6 flex flex-col justify-center items-center">
+            <h5 class="text-danger mb-0">{{ t('an_error_occurred') }}</h5>
+            <p class="text-center">{{ errorMessage.message }}</p>
+            <button class="btn btn-sm btn-outline-primary" @click="reloadPage">{{ $t('restart') }}</button>
+        </div>
     </div>
-
-    <div class="db__footer__menu">
-        <button v-if="localStream" @click="toggleMute" :title="isMuted
-            ? $t('pages.conference.mic_turn_on')
-            : $t('pages.conference.mic_turn_off')
-            ">
-            <i v-if="isMuted" class="bi bi-mic-mute text-danger"></i>
-            <div v-else>
-                <i v-if="volume > 50" class="bi bi-mic-fill text-success"></i>
-                <i v-else class="bi bi-mic text-success"></i>
+    <div v-else-if="localStream" class="col-span-12">
+        <div class="custom-grid">
+            <div class="col-span-12">
+                <gridMode v-if="confMode === 'grid'" :streams="streams" />
+                <sliderMode v-else-if="confMode === 'slider'" :streams="streams" />
             </div>
 
-            <span :class="isMuted ? 'text-danger' : 'text-success'">{{ $t('pages.conference.mic') }}</span>
-        </button>
+            <div class="db__footer__menu">
+                <button @click="toggleMute" :title="isMuted
+                    ? $t('pages.conference.mic_turn_on')
+                    : $t('pages.conference.mic_turn_off')
+                    ">
+                    <i v-if="isMuted" class="bi bi-mic-mute text-danger"></i>
+                    <div v-else>
+                        <i v-if="volume > 50" class="bi bi-mic-fill text-success"></i>
+                        <i v-else class="bi bi-mic text-success"></i>
+                    </div>
 
-        <button v-if="localStream" @click="toggleStream" :title="isStream
-            ? $t('pages.conference.video_turn_off')
-            : $t('pages.conference.video_turn_on')
-            ">
-            <i class="bi" :class="isStream
-                ? 'bi-camera-video text-success'
-                : 'bi-camera-video-off-fill text-danger'
-                "></i>
+                    <span :class="isMuted ? 'text-danger' : 'text-success'">{{ $t('pages.conference.mic') }}</span>
+                </button>
 
-            <span :class="isStream ? 'text-success' : 'text-danger'">{{ $t('pages.conference.video') }}</span>
-        </button>
+                <button @click="toggleStream" :title="isStream
+                    ? $t('pages.conference.video_turn_off')
+                    : $t('pages.conference.video_turn_on')
+                    ">
+                    <i class="bi" :class="isStream
+                        ? 'bi-camera-video text-success'
+                        : 'bi-camera-video-off-fill text-danger'
+                        "></i>
+
+                    <span :class="isStream ? 'text-success' : 'text-danger'">{{ $t('pages.conference.video') }}</span>
+                </button>
 
 
-        <button @click="participantsModalIsVisible = true;">
-            <i class="bi bi-people-fill"></i>
-            <countBadge :count="streams.length" :class="'badge-sm badge-light'" />
-            <span>{{ $t('pages.conference.participants') }}</span>
-        </button>
+                <button @click="participantsModalIsVisible = true;">
+                    <i class="bi bi-people-fill"></i>
+                    <countBadge :count="streams.length" :class="'badge-sm badge-light'" />
+                    <span>{{ $t('pages.conference.participants') }}</span>
+                </button>
 
-        <button @click="toggleScreenSharing" :title="isScreenSharing
-            ? $t('pages.conference.demo_turn_off')
-            : $t('pages.conference.demo_turn_on')
-            ">
-            <i class="bi" :class="isScreenSharing
-                ? 'bi-display-fill text-success'
-                : 'bi-display'
-                "></i>
+                <button @click="toggleScreenSharing" :title="isScreenSharing
+                    ? $t('pages.conference.demo_turn_off')
+                    : $t('pages.conference.demo_turn_on')
+                    ">
+                    <i class="bi" :class="isScreenSharing
+                        ? 'bi-display-fill text-success'
+                        : 'bi-display'
+                        "></i>
 
-            <span>{{ $t('pages.conference.demo') }}</span>
-        </button>
+                    <span>{{ $t('pages.conference.demo') }}</span>
+                </button>
 
-        <button>
-            <i class="bi bi-chat"></i>
-            <span>{{ $t('pages.conference.chat') }}</span>
-        </button>
+                <button @click="messagesModalIsVisible = true">
+                    <i class="bi bi-chat"></i>
+                    <span>{{ $t('pages.conference.chat') }}</span>
+                </button>
 
-        <button @click="drawingBoardModalIsVisible = true;">
-            <i class="bi bi-easel2"></i>
-            <span>{{ $t('pages.conference.board') }}</span>
-        </button>
-    </div>
-
-    <!-- <div class="col-span-4">
-        <div class="card p-4">
-            <h4>Участники</h4>
-
-            <div class="form-group-border active mb-5">
-                <i class="pi pi-user"></i>
-                <input type="text" placeholder=" " />
-                <label> Поиск </label>
+                <button @click="drawingBoardModalIsVisible = true;">
+                    <i class="bi bi-easel2"></i>
+                    <span>{{ $t('pages.conference.board') }}</span>
+                </button>
             </div>
-
-            <p>
-                Онлайн: <b>{{ streams.length }}</b>
-            </p>
         </div>
-    </div> -->
 
-    <!-- <div class="col-span-12">
-        <div class="form-group-border active mb-5">
-            <i class="pi pi-at"></i>
-            <input v-model="message" type="text" placeholder=" " />
-            <label> Введите сообщение </label>
-        </div>
-        <button @click="sendMessage" class="btn btn-primary mb-5">Отправить</button>
-
-        <h5>Сообщения</h5>
-        <ul class="list-group">
-            <li v-for="(item, index) in messages" :key="index">
-                <p class="font-medium mb-2">{{ item.user_name }}</p>
-                <p class="mb-0">{{ item.message }}</p>
-            </li>
-        </ul>
-    </div> -->
-
-    <modal :show="participantsModalIsVisible" :onClose="() => participantsModalIsVisible = false" :class="'modal-lg'">
-        <template v-slot:header_content>
-            <h4>{{ $t('pages.conference.participants') }}</h4>
-        </template>
-        <template v-slot:body_content>
-            <div class="flex flex-col gap-y-4">
-                <div>
-                    <p>{{ $t('pages.conference.participants_count') }}: <b>{{ streams.length }}</b></p>
-                    <ul class="list-group nowrap">
-                        <li v-for="stream in streams" :key="stream.peer_id">
-                            <div class="flex flex-wrap items-center justify-between gap-1">
-                                <div class="flex items-center gap-2">
-                                    <userAvatar :padding="0.5" :className="'w-8 h-8'" :user="stream.userInfo" />
-                                    <span class="font-medium">{{ stream.userInfo.last_name }} {{
-                                        stream.userInfo.first_name }} <i v-if="!stream.remote">({{ $t('you') }})</i></span>
+        <modal :show="participantsModalIsVisible" :onClose="() => participantsModalIsVisible = false"
+            :class="'modal-lg'">
+            <template v-slot:header_content>
+                <h4>{{ $t('pages.conference.participants') }}</h4>
+            </template>
+            <template v-slot:body_content>
+                <div class="flex flex-col gap-y-4">
+                    <div>
+                        <p>{{ $t('pages.conference.participants_count') }}: <b>{{ streams.length }}</b></p>
+                        <ul class="list-group nowrap">
+                            <li v-for="stream in streams" :key="stream.peer_id">
+                                <div class="flex flex-wrap items-center justify-between gap-1">
+                                    <div class="flex items-center gap-2">
+                                        <userAvatar :padding="0.5" :className="'w-8 h-8'" :user="stream.userInfo" />
+                                        <span class="font-medium">{{ stream.userInfo.last_name }} {{
+                                            stream.userInfo.first_name }} <i v-if="!stream.remote">({{ $t('you')
+                                                }})</i></span>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <i class="bi"
+                                            :class="!stream.isMuted ? 'bi-mic text-success' : 'bi-mic-mute text-danger'"></i>
+                                        <i class="bi"
+                                            :class="stream.isStream ? 'bi-camera-video text-success' : 'bi-camera-video-off text-danger'"></i>
+                                    </div>
                                 </div>
-                                <div class="flex gap-2">
-                                    <i class="bi"
-                                        :class="!stream.isMuted ? 'bi-mic text-success' : 'bi-mic-mute text-danger'"></i>
-                                    <i class="bi"
-                                        :class="stream.isStream ? 'bi-camera-video text-success' : 'bi-camera-video-off text-danger'"></i>
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
-            </div>
-        </template>
-    </modal>
+            </template>
+        </modal>
 
-    <modal :show="drawingBoardModalIsVisible" :onClose="() => drawingBoardModalIsVisible = false">
-        <template v-slot:header_content>
-            <h4>{{ $t('pages.conference.board') }}</h4>
-        </template>
-        <template v-slot:body_content>
-            <drawingBoard :streams_length="streams.length" />
-        </template>
-    </modal>
+        <modal :show="drawingBoardModalIsVisible" :onClose="() => drawingBoardModalIsVisible = false">
+            <template v-slot:header_content>
+                <h4>{{ $t('pages.conference.board') }}</h4>
+            </template>
+            <template v-slot:body_content>
+                <drawingBoard :streams_length="streams.length" />
+            </template>
+        </modal>
+
+        <modal :show="messagesModalIsVisible" :onClose="() => messagesModalIsVisible = false" :class="'modal-2xl'">
+            <template v-slot:header_content>
+                <h4>{{ $t('pages.conference.chat') }}</h4>
+            </template>
+            <template v-slot:body_content>
+                <ul v-if="messages.length > 0" class="list-group mb-5 min-h-full overflow-y-scroll">
+                    <li v-for="(item, index) in messages" :key="index">
+                        <p class="font-medium mb-2">{{ item.user_name }}</p>
+                        <p class="mb-0">{{ item.message }}</p>
+                    </li>
+                </ul>
+                <div class="flex gap-2">
+                    <div class="form-group-border active w-full">
+                        <i class="pi pi-at"></i>
+                        <input v-model="message" type="text" placeholder=" " />
+                        <label>Введите сообщение</label>
+                    </div>
+                    <button @click="sendMessage" class="btn btn-square btn-primary">
+                        <i class="bi bi-send"></i>
+                    </button>
+                </div>
+            </template>
+        </modal>
+    </div>
+    <div v-else class="col-span-12">
+        <div class="card p-6 flex flex-col justify-center items-center">
+            <p class="text-center">{{ $t('pages.conference.messages.requesting_access') }}</p>
+            <div class="overlay-loading-circle sm"></div>
+        </div>
+    </div>
 </template>
 
 
@@ -147,6 +156,7 @@ import drawingBoard from "../../components/conference/drawingBoard.vue";
 import countBadge from "../../components/ui/countBadge.vue";
 import modal from "../../components/ui/modal.vue";
 import userAvatar from "../../components/ui/userAvatar.vue";
+
 const { t } = useI18n();
 const config = useRuntimeConfig();
 const toast = useToast();
@@ -161,6 +171,7 @@ const authUserInfo = {
 
 let myPeer;
 const peers = {};
+const roomId = "my-room";
 
 // grid or slider
 const confMode = ref("grid");
@@ -169,17 +180,11 @@ const localStream = ref(null);
 const myStream = ref(null);
 const screenStream = ref(null); // Поток экрана
 const streams = ref([]);
-const errorMessage = ref("");
+const errorMessage = ref(null);
 const isMuted = ref(false); // Состояние микрофона
 const volume = ref(0);
 const isStream = ref(false); // Состояние видео
 const isScreenSharing = ref(false); // Состояние демонстрации экрана
-
-const showBoard = ref(false); // Состояние доски
-
-const connectError = ref(false); // Состояние соединения
-
-const roomId = "my-room";
 
 const message = ref("");
 const messages = ref([]);
@@ -187,6 +192,7 @@ const messages = ref([]);
 //Modals
 const participantsModalIsVisible = ref(false);
 const drawingBoardModalIsVisible = ref(false);
+const messagesModalIsVisible = ref(false);
 
 useHead({
     title: t("pages.conference.title"),
@@ -244,91 +250,95 @@ onMounted(async () => {
                 timeout: 10000,
             });
         });
+
+        myPeer.on("call", (call) => {
+            call.answer(isScreenSharing.value ? screenStream.value : localStream.value);
+            call.on("stream", (remoteStream) => {
+                addStream(
+                    true,
+                    remoteStream,
+                    call.peer,
+                    call.metadata.userId,
+                    call.metadata.userInfo,
+                    call.metadata.isStream,
+                    call.metadata.isMuted
+                );
+            });
+
+            call.on("error", (error) => {
+                errorMessage.value = {
+                    message: error.message,
+                    pending: false
+                };
+            });
+
+            peers[call.peer] = call;
+        });
+
+        $socketPlugin.off("user-connected");
+
+        $socketPlugin.on("user-connected", (connectedUserInfo) => {
+            toast(connectedUserInfo.first_name + " " + t("on_air").toLowerCase(), {
+                toastClassName: ["custom-toast", "info"],
+                timeout: 10000,
+            });
+        });
+
+        $socketPlugin.on("user-disconnected", (peerId) => {
+            removeStream(peerId);
+        });
+
+        $socketPlugin.on("new-message", (data) => {
+            messages.value.push(data);
+        });
+
+        $socketPlugin.on("toggle-video", (data) => {
+            const findStream = streams.value.find((s) => s.peer_id === data.peerId);
+            if (findStream) {
+                findStream.isStream = data.isStream;
+            }
+        });
+
+        $socketPlugin.on("toggle-audio", (data) => {
+            const findStream = streams.value.find((s) => s.peer_id === data.peerId);
+            if (findStream) {
+                findStream.isMuted = data.isMuted;
+            }
+        });
+
+        $socketPlugin.on("update-volume", (data) => {
+            updateVolume(data);
+        });
+
+        $socketPlugin.on("connect_error", () => {
+            if (!errorMessage.value) {
+
+                errorMessage.value = {
+                    message: t("errors.server.error"),
+                    pending: true
+                };
+
+                streams.value = streams.value.filter((stream) => !stream.remote);
+
+                toast(t("errors.server.error"), {
+                    toastClassName: ["custom-toast", "danger"],
+                    timeout: 5000,
+                });
+            }
+        });
     } catch (error) {
         toast(t("errors.media.camera_error"), {
             toastClassName: ["custom-toast", "danger"],
             timeout: 10000,
         });
     }
-
-    myPeer.on("call", (call) => {
-        call.answer(isScreenSharing.value ? screenStream.value : localStream.value);
-        call.on("stream", (remoteStream) => {
-            addStream(
-                true,
-                remoteStream,
-                call.peer,
-                call.metadata.userId,
-                call.metadata.userInfo,
-                call.metadata.isStream,
-                call.metadata.isMuted
-            );
-        });
-
-        call.on("error", (error) => {
-            handleError(error, "incoming call");
-        });
-
-        peers[call.peer] = call;
-    });
-
-    $socketPlugin.off("user-connected");
-
-    $socketPlugin.on("user-connected", (connectedUserInfo) => {
-        toast(connectedUserInfo.first_name + " " + t("on_air").toLowerCase(), {
-            toastClassName: ["custom-toast", "info"],
-            timeout: 10000,
-        });
-    });
-
-    $socketPlugin.on("user-disconnected", (peerId) => {
-        removeStream(peerId);
-    });
-
-    $socketPlugin.on("new-message", (data) => {
-        messages.value.push(data);
-    });
-
-    $socketPlugin.on("toggle-video", (data) => {
-        const findStream = streams.value.find((s) => s.peer_id === data.peerId);
-        if (findStream) {
-            findStream.isStream = data.isStream;
-        }
-    });
-
-    $socketPlugin.on("toggle-audio", (data) => {
-        const findStream = streams.value.find((s) => s.peer_id === data.peerId);
-        if (findStream) {
-            findStream.isMuted = data.isMuted;
-        }
-    });
-
-    $socketPlugin.on("update-volume", (data) => {
-        updateVolume(data);
-    });
-
-    $socketPlugin.on("connect_error", () => {
-        if (connectError.value === false) {
-            connectError.value = true;
-
-            streams.value = streams.value.filter((stream) => !stream.remote);
-
-            toast(t("errors.server.error"), {
-                toastClassName: ["custom-toast", "danger"],
-                timeout: 5000,
-            });
-
-            setTimeout(() => {
-                joinToRoom();
-            }, 5000);
-        }
-    });
 });
 
 onBeforeUnmount(() => {
-    $socketPlugin.disconnect();
-
-    stopLocalStream();
+    if (localStream) {
+        $socketPlugin.disconnect();
+        stopLocalStream();
+    }
 });
 
 const joinToRoom = async () => {
@@ -343,7 +353,7 @@ const joinToRoom = async () => {
         isMuted.value,
         (response) => {
             if (response.success) {
-                connectError.value = false;
+                errorMessage.value = null;
                 $socketPlugin.emit("get-room-info", (roomInfo) => {
                     roomInfo.forEach((user) => {
                         if (user.peerId !== myPeer.id) {
@@ -373,7 +383,10 @@ const joinToRoom = async () => {
                             });
 
                             outgoingCall.on("error", (error) => {
-                                handleError(error, "outgoing call");
+                                errorMessage.value = {
+                                    message: error.message,
+                                    pending: false
+                                };
                             });
 
                             peers[user.peerId] = outgoingCall;
@@ -456,7 +469,10 @@ const toggleStream = () => {
             });
         }
     } else {
-        console.error("Local stream is not available");
+        toast(t("errors.media.camera_error"), {
+            toastClassName: ["custom-toast", "danger"],
+            timeout: 10000,
+        });
     }
 };
 
@@ -475,20 +491,12 @@ const toggleMute = () => {
             });
         }
     } else {
-        console.error("Local stream is not available");
+        toast(t("errors.media.camera_error"), {
+            toastClassName: ["custom-toast", "danger"],
+            timeout: 10000,
+        });
     }
 };
-
-const toggleBoard = () => {
-    showBoard.value = !showBoard.value;
-
-    if (showBoard.value === true) {
-        confMode.value = 'slider';
-    }
-    else {
-        confMode.value = 'grid';
-    }
-}
 
 const replaceTrackInConnections = (newTrack, kind = "video") => {
     const activeConnections = Object.keys(myPeer.connections);
@@ -516,7 +524,10 @@ const toggleScreenSharing = async () => {
 
             screenStream.value.getVideoTracks()[0].onended = stopScreenSharing;
         } catch (error) {
-            handleError(error, "screen sharing");
+            toast(t("errors.media.screen_sharing_error"), {
+                toastClassName: ["custom-toast", "danger"],
+                timeout: 10000,
+            });
         }
     } else {
         stopScreenSharing();
@@ -593,8 +604,7 @@ const sendMessage = () => {
     }
 };
 
-const handleError = (error, context = "") => {
-    console.error(`Error in ${context}:`, error);
-    errorMessage.value = `An error occurred: ${error.message}`;
-};
+const reloadPage = () => {
+    window.location.reload();
+}
 </script>

@@ -9,10 +9,12 @@ export default {
     or: 'Немесе',
     back: 'Артқа',
     close: 'Жабу',
+    an_error_occurred: 'Қателік орнады',
 
     errors: {
         media: {
-            camera_error: 'Камера мен микрофон қолжетімсіз.'
+            camera_error: 'Камера мен микрофон қолжетімсіз.',
+            screen_sharing_error: 'Демонстрация бұл құрылғыда қолжетімсіз.'
         },
         server: {
             error: 'Сервермен байланыс орнатылмады. Интернет байланысын тексеруіңізді өтінеміз.',
@@ -88,7 +90,7 @@ export default {
             title: 'Жеке кабинет'
         },
         conference: {
-            title: 'Видеоконференция',
+            title: 'Бейнеконференция',
             mic: 'Микрофон',
             mic_turn_on: 'Микрофонды іске қосу',
             mic_turn_off: 'Микрофонды өшіру',
@@ -101,10 +103,13 @@ export default {
             board: 'Тақта',
             participants: 'Қатысушылар',
             participants_count: 'Қатысушылар саны',
-            chat: 'Чат',
+            chat: 'Хабарлар',
             mode: {
                 grid: 'Кесте',
                 slider: 'Карусель'
+            },
+            messages:{
+                requesting_access: 'Камера мен микрофонға қолжетімділік сұралуда'
             }
         }
     }

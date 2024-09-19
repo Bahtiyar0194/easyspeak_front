@@ -1,5 +1,5 @@
 <template>
   <div class="overlay">
-    <div class="overlay-loding-circle"></div>
+    <div class="overlay-loading-circle"></div>
   </div>
 </template>

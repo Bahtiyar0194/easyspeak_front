@@ -9,10 +9,12 @@ export default {
     or: 'Или',
     back: 'Назад',
     close: 'Закрыть',
+    an_error_occurred: 'Произошла ошибка',
 
     errors: {
         media: {
-            camera_error: 'Не удается получить доступ к камере и микрофону.'
+            camera_error: 'Не удается получить доступ к камере и микрофону.',
+            screen_sharing_error: 'Демонстрация на этом устройстве недоступна либо ограничена.'
         },
         server: {
             error: 'Невозможно подключиться к серверу. Проверьте соединение с интернетом.',
@@ -101,10 +103,13 @@ export default {
             board: 'Доска',
             participants: 'Участники',
             participants_count: 'Количество участников',
-            chat: 'Чат',
+            chat: 'Сообщения',
             mode: {
                 grid: 'Сетка',
                 slider: 'Карусель'
+            },
+            messages: {
+                requesting_access: 'Получение доступа к камере и микрофону'
             }
         }
     }

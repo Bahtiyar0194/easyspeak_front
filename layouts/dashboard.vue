@@ -19,7 +19,6 @@
                 </nuxt-link>
             </div>
             <div class="db__content">
-                <loader v-if="pending" class="full-overlay" />
                 <div class="custom-grid">
                     <div class="col-span-12">
                         <breadcrumb />
@@ -33,7 +32,6 @@
 
 <script setup>
 import breadcrumb from "../components/ui/breadcrumb.vue";
-import loader from "../components/ui/loader.vue";
 import selectLocale from "../components/ui/selectLocale.vue";
 import authUserMenu from "../components/authUserMenu.vue";
 
@@ -49,6 +47,4 @@ const menu = ref([
         link: '/dashboard/conference'
     }
 ]);
-
-const pending = ref(false);
 </script>
