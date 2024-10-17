@@ -1,0 +1,541 @@
+<template>
+    <div class="custom-grid">
+        <div class="col-span-12">
+            <div class="btn-wrap">
+                <roleProvider :roles="[1, 2, 3]">
+                    <button @click="createModalIsVisible = true" class="btn btn-outline-primary">
+                        <i class="pi pi-plus"></i>
+                        <span>{{ $t("pages.groups.create_group") }}</span>
+                    </button>
+                </roleProvider>
+                <button @click="showHideGroupSearchFilter" class="btn btn-light">
+                    <i class="pi pi-search"></i>
+                    <span>{{ searchFilter === true ? $t("hide_search_filter") : $t("show_search_filter") }}</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="col-span-12 lg:col-span-3" :class="searchFilter ? 'block' : 'hidden'">
+            <stickyBox>
+                <div class="card p-4">
+                    <h5>{{ $t("pages.groups.search_filter") }}</h5>
+                    <form @submit.prevent="debounceReset" ref="searchFormRef">
+                        <div class="custom-grid">
+                            <div class="col-span-12">
+                                <div class="form-group-border active">
+                                    <i class="pi pi-users"></i>
+                                    <input type="text" name="group_name" placeholder=" " @input="debounceGroups" />
+                                    <label>{{ $t("pages.groups.group_name") }}</label>
+                                </div>
+                            </div>
+
+                            <div class="col-span-12">
+                                <div class="form-group-border active">
+                                    <i class="pi pi-calendar"></i>
+                                    <input type="date" name="created_at_from" @input="debounceGroups" placeholder=" " />
+                                    <label>{{ $t("created_at_from") }}</label>
+                                </div>
+                            </div>
+
+                            <div class="col-span-12">
+                                <div class="form-group-border active">
+                                    <i class="pi pi-calendar"></i>
+                                    <input type="date" name="created_at_to" @input="debounceGroups" placeholder=" " />
+                                    <label>{{ $t("created_at_to") }}</label>
+                                </div>
+                            </div>
+
+                            <div class="col-span-12">
+                                <div class="btn-wrap">
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">
+                                        <i class="pi pi-undo"></i>
+                                        <span>{{ $t("reset_search_filter") }}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </StickyBox>
+        </div>
+
+        <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
+            <template v-if="groups.data?.length > 0">
+                <div class="table table-sm selectable">
+                    <loader v-if="pending" class="overlay" />
+                    <table ref="tableRef">
+                        <thead>
+                            <tr>
+                                <th>{{ $t("pages.groups.group_name") }}</th>
+                                <th>{{ $t("pages.groups.group_category") }}</th>
+                                <th>{{ $t("operator") }}</th>
+                                <th>{{ $t("mentor") }}</th>
+                                <th>{{ $t("pages.groups.members") }}</th>
+                                <th>{{ $t("created_at") }}</th>
+                                <th>{{ $t("status") }}</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            <tr v-for="group in groups.data" :key="group.group_id" @click="getGroup(group.group_id)">
+                                <td>{{ group.group_name }}</td>
+                                <td>{{ group.category_name }}</td>
+                                <td>
+                                    <div class="flex gap-x-2 items-center">
+                                        <userAvatar :padding="0.5" :className="'w-6 h-6'" :user="{
+                                            last_name: group.operator_last_name,
+                                            first_name: group.operator_first_name,
+                                            avatar: group.operator_avatar
+                                        }" />
+                                        {{ group.operator_last_name }} {{ group.operator_first_name }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex gap-x-2 items-center">
+                                        <userAvatar :padding="0.5" :className="'w-6 h-6'" :user="{
+                                            last_name: group.mentor_last_name,
+                                            first_name: group.mentor_first_name,
+                                            avatar: group.mentor_avatar
+                                        }" />
+                                        {{ group.mentor_last_name }} {{ group.mentor_first_name }}
+                                    </div>
+                                </td>
+                                <td>{{ group.members_count }}</td>
+                                <td>{{ new Date(group.created_at).toLocaleString() }}</td>
+                                <td :class="group.status_color">{{ group.status_type_name }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="btn-wrap mt-6">
+                    <pagination :items="groups" :setItems="getGroups" :onSelect="(count) => perPage = count" />
+                    <client-only>
+                        <tableToExcelButton :table="tableRef"
+                            :fileName="$t('pages.groups.title') + ' - ' + new Date().toLocaleString()"
+                            :className="'btn-sm'" />
+                    </client-only>
+                </div>
+            </template>
+            <alert v-else :className="'light'">
+                <loader v-if="pending" class="overlay" />
+                <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
+            </alert>
+        </div>
+    </div>
+
+    <modal :show="groupModalIsVisible" :onClose="() => groupModalIsVisible = false" :className="'modal-2xl'"
+        :showLoader="pendingGroup" :closeOnClickSelf="true">
+        <template v-slot:header_content>
+            <h4>{{ currentGroup?.group_name }}</h4>
+        </template>
+        <template v-slot:body_content>
+            <div v-if="currentGroup" class="flex flex-col gap-y-3">
+                <p v-if="currentGroup.group_description" class="mb-0"><span class="text-inactive">{{
+                    $t("pages.groups.group_description") }}</span>: <b>{{
+                            currentGroup.group_description }}</b></p>
+                <p class="mb-0"><span class="text-inactive">{{ $t("pages.groups.group_category") }}</span>: <b>{{
+                    currentGroup.category_name }}</b></p>
+
+                <div class="flex gap-x-2 items-center">
+                    <p class="mb-0"><span class="text-inactive">{{ $t("mentor") }}</span>:</p>
+                    <userTag v-if="currentGroup.mentor" :user="currentGroup.mentor" />
+                </div>
+
+                <div class="flex gap-x-2 items-center">
+                    <p class="mb-0"><span class="text-inactive">{{ $t("operator") }}</span>:</p>
+                    <userTag v-if="currentGroup.operator" :user="currentGroup.operator" />
+                </div>
+                <p class="mb-0" v-if="currentGroup.group_members"><span class="text-inactive">{{
+                    $t("pages.groups.members_count") }}</span>: <b>{{
+                            currentGroup.group_members.length }}</b></p>
+                <p class="mb-0"><span class="text-inactive">{{ $t("pages.groups.members") }}</span>:</p>
+
+                <div v-if="currentGroup.group_members" class="btn-wrap">
+                    <userTag v-for="(member, index) in currentGroup.group_members" :key="index" :user="member" />
+                </div>
+
+                <roleProvider :roles="[1, 2, 3]">
+                    <div class="btn-wrap">
+                        <button @click="getEditGroup" class="btn btn-outline-primary">
+                            <i class="pi pi-pencil"></i>
+                            <span>{{ $t("edit") }}</span>
+                        </button>
+                    </div>
+                </roleProvider>
+            </div>
+        </template>
+    </modal>
+
+    <modal :show="createModalIsVisible" :onClose="() => closeModal('create')"
+        :className="currentStep != 2 ? 'modal-2xl' : ''" :showLoader="pendingCreate" :closeOnClickSelf="false">
+        <template v-slot:header_content>
+            <h4>{{ $t('pages.groups.create_group_title') }}</h4>
+        </template>
+        <template v-slot:body_content>
+            <subscription v-if="school?.subscription_expired" />
+            <steps v-else :currentStep="currentStep" :steps="newGroupSteps">
+                <form @submit.prevent="createGroupSubmit" class="mt-2" ref="createFormRef">
+
+                    <div v-for="(step, index) in newGroupSteps" :key="index"
+                        :class="currentStep === (index + 1) ? 'block' : 'hidden'">
+                        <component v-if="step.component" :is="step.component" v-bind="step.props"></component>
+                    </div>
+
+                    <div class="btn-wrap mt-4">
+                        <button v-if="currentStep > 1" class="btn btn-light" @click="currentStep = (currentStep - 1)"
+                            type="button">
+                            <i class="pi pi-arrow-left"></i>
+                            <span>{{ $t("back") }}</span>
+                        </button>
+
+                        <button class="btn btn-primary" type="submit">
+                            <template v-if="currentStep !== newGroupSteps.length">
+                                <i class="pi pi-arrow-right"></i>
+                                <span>{{ $t("continue") }}</span>
+                            </template>
+                            <template v-else>
+                                <i class="pi pi-check"></i>
+                                <span>{{ $t("save") }}</span>
+                            </template>
+                        </button>
+                    </div>
+                </form>
+            </steps>
+        </template>
+    </modal>
+
+    <modal :show="editModalIsVisible" :onClose="() => closeModal('edit')"
+        :className="currentStep != 2 ? 'modal-2xl' : ''" :showLoader="pendingEdit" :closeOnClickSelf="false">
+        <template v-slot:header_content>
+            <h4>{{ $t('pages.groups.edit_group_title') }}</h4>
+        </template>
+        <template v-slot:body_content>
+            <steps :currentStep="currentStep" :steps="editGroupSteps">
+                <form @submit.prevent="editGroupSubmit" class="mt-2" ref="editFormRef">
+
+                    <div v-for="(step, index) in editGroupSteps" :key="index"
+                        :class="currentStep === (index + 1) ? 'block' : 'hidden'">
+                        <component v-if="step.component" :is="step.component" v-bind="step.props"></component>
+                    </div>
+
+                    <div class="btn-wrap mt-4">
+                        <button v-if="currentStep > 1" class="btn btn-light" @click="currentStep = (currentStep - 1)"
+                            type="button">
+                            <i class="pi pi-arrow-left"></i>
+                            <span>{{ $t("back") }}</span>
+                        </button>
+
+                        <button class="btn btn-primary" type="submit">
+                            <template v-if="currentStep !== editGroupSteps.length">
+                                <i class="pi pi-arrow-right"></i>
+                                <span>{{ $t("continue") }}</span>
+                            </template>
+                            <template v-else>
+                                <i class="pi pi-check"></i>
+                                <span>{{ $t("save") }}</span>
+                            </template>
+                        </button>
+                    </div>
+                </form>
+            </steps>
+        </template>
+    </modal>
+</template>
+<script setup>
+import { useRouter } from 'nuxt/app';
+import modal from '../../ui/modal.vue';
+import subscription from '../../ui/subscription.vue';
+import loader from '../../ui/loader.vue';
+import alert from '../../ui/alert.vue';
+import userAvatar from '../../ui/userAvatar.vue';
+import userTag from '../../ui/userTag.vue';
+import stickyBox from '../../ui/stickyBox.vue';
+import pagination from '../../ui/pagination.vue';
+import tableToExcelButton from '../../ui/tableToExcelButton.vue';
+import { debounceHandler } from '../../../utils/debounceHandler';
+import steps from '../../ui/steps.vue';
+import createFirstStep from './components/createFirstStep.vue';
+import editFirstStep from './components/editFirstStep.vue';
+import secondStep from './components/secondStep.vue';
+import thirdStep from './components/thirdStep.vue';
+import roleProvider from '../../ui/roleProvider.vue';
+
+const router = useRouter();
+const { $axiosPlugin, $schoolPlugin } = useNuxtApp();
+const { t } = useI18n();
+const pending = ref(true);
+const pendingGroup = ref(false);
+const pendingCreate = ref(false);
+const pendingEdit = ref(false);
+const groupData = ref([]);
+const tableRef = ref(null);
+const searchFormRef = ref(null);
+const createFormRef = ref(null);
+const editFormRef = ref(null);
+const searchFilter = ref(false);
+const perPage = ref(10);
+const groups = ref([]);
+const currentGroup = ref(null);
+const groupMembers = ref([]);
+const school = $schoolPlugin;
+const attributes = ref([]);
+const errors = ref([]);
+
+const createModalIsVisible = ref(false);
+const groupModalIsVisible = ref(false);
+const editModalIsVisible = ref(false);
+
+const newGroupSteps = [
+    {
+        title: t('pages.groups.group_description'),
+        component: createFirstStep,
+        props: { errors, attributes },
+    },
+    {
+        title: t('pages.groups.add_members_to_group'),
+        component: secondStep,
+        props: { errors, groupMembers }
+    },
+    {
+        title: t('pages.groups.saving_a_group'),
+        component: thirdStep,
+        props: { groupData }
+    }
+];
+
+const editGroupSteps = [
+    {
+        title: t('pages.groups.group_description'),
+        component: editFirstStep,
+        props: { errors, attributes, currentGroup },
+    },
+    {
+        title: t('pages.groups.edit_group_members'),
+        component: secondStep,
+        props: { errors, groupMembers }
+    },
+    {
+        title: t('pages.groups.saving_a_group'),
+        component: thirdStep,
+        props: { groupData }
+    }
+];
+
+const currentStep = ref(1);
+
+const getGroups = async (url) => {
+    pending.value = true;
+
+    const formData = new FormData(searchFormRef.value);
+    formData.append('per_page', perPage.value);
+
+    if (!url) {
+        url = 'groups/get';
+    }
+
+    await $axiosPlugin.post(url, formData)
+        .then(response => {
+            groups.value = response.data;
+            pending.value = false;
+        }).catch(err => {
+            if (err.response) {
+                router.push({
+                    path: '/error',
+                    query: {
+                        status: err.response.status,
+                        message: err.response.data.message,
+                        url: err.request.responseURL,
+                    }
+                });
+            }
+            else {
+                router.push('/error');
+            }
+        });
+}
+
+const getGroup = async (group_id) => {
+    pendingGroup.value = true;
+    groupModalIsVisible.value = true;
+    await $axiosPlugin.get('groups/get/' + group_id)
+        .then(response => {
+            errors.value = [];
+            currentGroup.value = response.data;
+            groupMembers.value = response.data.group_members;
+            pendingGroup.value = false;
+        }).catch(err => {
+            if (err.response) {
+                router.push({
+                    path: '/error',
+                    query: {
+                        status: err.response.status,
+                        message: err.response.data.message,
+                        url: err.request.responseURL,
+                    }
+                });
+            }
+            else {
+                router.push('/error');
+            }
+        });
+}
+
+const getEditGroup = async () => {
+    groupModalIsVisible.value = false;
+    editModalIsVisible.value = true;
+}
+
+const getGroupAttributes = async () => {
+    pending.value = true;
+    await $axiosPlugin.get('groups/get_group_attributes')
+        .then(response => {
+            attributes.value = response.data;
+            pending.value = false;
+        }).catch(err => {
+            if (err.response) {
+                router.push({
+                    path: '/error',
+                    query: {
+                        status: err.response.status,
+                        message: err.response.data.message,
+                        url: err.request.responseURL,
+                    }
+                });
+            }
+            else {
+                router.push('/error');
+            }
+        });
+}
+
+const createGroupSubmit = async () => {
+    pendingCreate.value = true;
+    const formData = new FormData(createFormRef.value);
+    formData.append('members_count', groupMembers.value.length);
+    formData.append('members', JSON.stringify(groupMembers.value));
+    formData.append('operation_type_id', 3);
+    formData.append('step', currentStep.value);
+
+    await $axiosPlugin.post('groups/create', formData)
+        .then(res => {
+            pendingCreate.value = false;
+            if (res.data.step) {
+                currentStep.value = res.data.step + 1;
+                if (currentStep.value === 3) {
+                    groupData.value = res.data.data;
+                }
+            }
+            else {
+                closeModal('create');
+                getGroups();
+            }
+            errors.value = [];
+        }).catch(err => {
+            if (err.response) {
+                if (err.response.status == 422) {
+                    errors.value = err.response.data;
+                    pendingCreate.value = false;
+                }
+                else {
+                    router.push({
+                        path: '/error',
+                        query: {
+                            status: err.response.status,
+                            message: err.response.data.message,
+                            url: err.request.responseURL,
+                        }
+                    });
+                }
+            }
+            else {
+                router.push('/error');
+            }
+        });
+}
+
+const editGroupSubmit = async () => {
+    pendingEdit.value = true;
+    const formData = new FormData(editFormRef.value);
+    formData.append('members_count', groupMembers.value.length);
+    formData.append('members', JSON.stringify(groupMembers.value));
+    formData.append('operation_type_id', 4);
+    formData.append('step', currentStep.value);
+
+    await $axiosPlugin.post('groups/update/' + currentGroup.value.group_id, formData)
+        .then(res => {
+            pendingEdit.value = false;
+            if (res.data.step) {
+                currentStep.value = res.data.step + 1;
+                if (currentStep.value === 3) {
+                    groupData.value = res.data.data;
+                }
+            }
+            else {
+                closeModal('edit');
+                getGroups();
+            }
+            errors.value = [];
+        }).catch(err => {
+            if (err.response) {
+                if (err.response.status == 422) {
+                    errors.value = err.response.data;
+                    pendingEdit.value = false;
+                }
+                else {
+                    router.push({
+                        path: '/error',
+                        query: {
+                            status: err.response.status,
+                            message: err.response.data.message,
+                            url: err.request.responseURL,
+                        }
+                    });
+                }
+            }
+            else {
+                router.push('/error');
+            }
+        });
+}
+
+const closeModal = (action) => {
+    if (action === 'create') {
+        createModalIsVisible.value = false;
+        pendingCreate.value = false;
+        createFormRef.value.reset();
+    }
+    else if (action === 'edit') {
+        editModalIsVisible.value = false;
+        pendingEdit.value = false;
+        editFormRef.value.reset();
+    }
+
+    groupData.value = [];
+    groupMembers.value = [];
+    currentStep.value = 1;
+    errors.value = [];
+}
+
+const showHideGroupSearchFilter = () => {
+    if (searchFilter.value === true) {
+        searchFilter.value = false;
+        resetGroupSearchFilter();
+    }
+    else {
+        searchFilter.value = true;
+    }
+}
+
+const resetGroupSearchFilter = () => {
+    searchFormRef.value.reset();
+    getGroups();
+}
+
+const debounceGroups = debounceHandler(() => getGroups(), 1000);
+const debounceReset = debounceHandler(() => resetGroupSearchFilter(), 500);
+
+onMounted(() => {
+    getGroupAttributes();
+    getGroups();
+});
+</script>

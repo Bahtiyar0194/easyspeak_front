@@ -42,7 +42,7 @@
 
                 <button @click="participantsModalIsVisible = true;">
                     <i class="bi bi-people-fill"></i>
-                    <countBadge :count="streams.length" :class="'badge-sm badge-light'" />
+                    <countBadge :count="streams.length" :class="'badge-sm badge-light right-3 top-0'" />
                     <span>{{ $t('pages.conference.participants') }}</span>
                 </button>
 
@@ -71,7 +71,7 @@
         </div>
 
         <modal :show="participantsModalIsVisible" :onClose="() => participantsModalIsVisible = false"
-            :class="'modal-lg'">
+            :className="'modal-lg'" :closeOnClickSelf="true">
             <template v-slot:header_content>
                 <h4>{{ $t('pages.conference.participants') }}</h4>
             </template>
@@ -83,7 +83,7 @@
                             <li v-for="stream in streams" :key="stream.peer_id">
                                 <div class="flex flex-wrap items-center justify-between gap-1">
                                     <div class="flex items-center gap-2">
-                                        <userAvatar :padding="0.5" :className="'w-8 h-8'" :user="stream.userInfo" />
+                                        <userAvatar :padding="0.5" :class="'w-8 h-8'" :user="stream.userInfo" />
                                         <span class="font-medium">{{ stream.userInfo.last_name }} {{
                                             stream.userInfo.first_name }} <i v-if="!stream.remote">({{ $t('you')
                                                 }})</i></span>
@@ -102,7 +102,7 @@
             </template>
         </modal>
 
-        <modal :show="drawingBoardModalIsVisible" :onClose="() => drawingBoardModalIsVisible = false">
+        <modal :show="drawingBoardModalIsVisible" :onClose="() => drawingBoardModalIsVisible = false" :closeOnClickSelf="false">
             <template v-slot:header_content>
                 <h4>{{ $t('pages.conference.board') }}</h4>
             </template>
@@ -111,7 +111,7 @@
             </template>
         </modal>
 
-        <modal :show="messagesModalIsVisible" :onClose="() => messagesModalIsVisible = false" :class="'modal-2xl'">
+        <modal :show="messagesModalIsVisible" :onClose="() => messagesModalIsVisible = false" :className="'modal-2xl'" :closeOnClickSelf="true">
             <template v-slot:header_content>
                 <h4>{{ $t('pages.conference.chat') }}</h4>
             </template>
@@ -124,12 +124,12 @@
                 </ul>
                 <div class="flex gap-2">
                     <div class="form-group-border active w-full">
-                        <i class="pi pi-at"></i>
+                        <i class="pi pi-envelope"></i>
                         <input v-model="message" type="text" placeholder=" " />
-                        <label>Введите сообщение</label>
+                        <label></label>
                     </div>
-                    <button @click="sendMessage" class="btn btn-square btn-primary">
-                        <i class="bi bi-send"></i>
+                    <button @click="sendMessage" class="btn btn-square btn-outline-primary">
+                        <i class="pi pi-arrow-right"></i>
                     </button>
                 </div>
             </template>
@@ -145,17 +145,18 @@
 
 
 <script setup>
+import { useRoute } from "nuxt/app";
 import { ref, onMounted, onBeforeUnmount } from "vue";
-import { monitorNetworkAndAdjustQuality } from "../../utils/networkQuality";
+import { monitorNetworkAndAdjustQuality } from "../../../utils/networkQuality";
 import { useToast } from "vue-toastification";
 import Peer from "peerjs";
 import { useRuntimeConfig } from "nuxt/app";
-import gridMode from "../../components/conference/modes/gridMode.vue";
-import sliderMode from "../../components/conference/modes/sliderMode.vue";
-import drawingBoard from "../../components/conference/drawingBoard.vue";
-import countBadge from "../../components/ui/countBadge.vue";
-import modal from "../../components/ui/modal.vue";
-import userAvatar from "../../components/ui/userAvatar.vue";
+import gridMode from "../../../components/conference/modes/gridMode.vue";
+import sliderMode from "../../../components/conference/modes/sliderMode.vue";
+import drawingBoard from "../../../components/conference/drawingBoard.vue";
+import countBadge from "../../../components/ui/countBadge.vue";
+import modal from "../../../components/ui/modal.vue";
+import userAvatar from "../../../components/ui/userAvatar.vue";
 
 const { t } = useI18n();
 const config = useRuntimeConfig();

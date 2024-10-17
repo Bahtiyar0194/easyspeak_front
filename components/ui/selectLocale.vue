@@ -14,10 +14,39 @@
     </dropdownMenu>
 </template>
 <script setup>
+import { useNuxtApp } from 'nuxt/app';
 import dropdownMenu from './dropdownMenu';
-const { localeProperties, locales, setLocale, } = useI18n();
+import { useRouter } from 'nuxt/app';
 
-const changeLocale = (value) => {
-    setLocale(value)
+
+const { localeProperties, locales, setLocale, } = useI18n();
+const authUser = useSanctumUser();
+const router = useRouter();
+const { refreshIdentity } = useSanctumAuth();
+const { $axiosPlugin } = useNuxtApp();
+
+const changeLocale = async (value) => {
+    setLocale(value);
+
+    if (authUser.value) {
+        await $axiosPlugin.post('auth/change_language/' + value)
+            .then(response => {
+                refreshIdentity();
+            }).catch(err => {
+                if (err.response) {
+                    router.push({
+                        path: '/error',
+                        query: {
+                            status: err.response.status,
+                            message: err.response.data.message,
+                            url: err.request.responseURL,
+                        }
+                    });
+                }
+                else {
+                    router.push('/error');
+                }
+            });
+    }
 }
 </script>

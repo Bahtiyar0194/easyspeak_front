@@ -7,23 +7,41 @@
             </div>
 
             <div class="btn-wrap items-center">
+                <themeSwitcher />
                 <selectLocale />
+                <notifications />
                 <authUserMenu />
             </div>
         </div>
         <div class="flex">
             <div class="db__sidebar__menu">
-                <nuxt-link v-for="(item, index) in menu" :key="index" :to="localePath(item.link)">
-                    <i :class='item.icon'></i>
-                    <span>{{ $t(item.title) }}</span>
-                </nuxt-link>
+                <roleProvider v-for="(item, index) in dashboardMenu" :key="index" :roles="item.roles">
+                    <nuxt-link :to="localePath(item.link)">
+                        <i :class='item.icon'></i>
+                        <span>{{ $t(item.title) }}</span>
+                    </nuxt-link>
+                </roleProvider>
             </div>
             <div class="db__content">
-                <div class="custom-grid">
+                <div v-if="hasAccess" class="custom-grid">
                     <div class="col-span-12">
                         <breadcrumb />
                     </div>
                     <NuxtPage />
+                </div>
+
+                <div v-else class="custom-grid">
+                    <div class="col-span-12">
+                        <div class="content-center">
+                            <i class="pi pi-lock text-6xl mb-2 text-corp"></i>
+                            <div class="text-center">
+                                <h4 class="mb-2">{{ $t("errors.page_is_not_available") }}</h4>
+                                <nuxt-link class="text-corp" :to="localePath('/dashboard')">{{
+                                    $t("pages.dashboard.go_to_dashboard") }}
+                                </nuxt-link>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -32,19 +50,54 @@
 
 <script setup>
 import breadcrumb from "../components/ui/breadcrumb.vue";
+import themeSwitcher from "../components/ui/themeSwitcher.vue";
 import selectLocale from "../components/ui/selectLocale.vue";
+import notifications from "../components/ui/notifications.vue";
 import authUserMenu from "../components/authUserMenu.vue";
+import roleProvider from "../components/ui/roleProvider.vue";
+import { useRoute } from "nuxt/app";
 
-const menu = ref([
+const authUser = useSanctumUser();
+
+const dashboardMenu = [
     {
         title: 'pages.dashboard.title',
         icon: 'pi pi-home',
-        link: '/dashboard'
+        link: '/dashboard',
+        roles: [1, 2, 3, 4, 5]
+    },
+    {
+        title: 'pages.users-groups.title',
+        icon: 'pi pi-users',
+        link: '/dashboard/users-groups',
+        roles: [1, 2, 3, 4]
     },
     {
         title: 'pages.conference.title',
         icon: 'pi pi-video',
-        link: '/dashboard/conference'
+        link: '/dashboard/conference',
+        roles: [1, 2, 3, 4, 5]
+    },
+    {
+        title: 'pages.operations-requests.title',
+        icon: 'pi pi-file',
+        link: '/dashboard/operations-requests',
+        roles: [1, 2]
     }
-]);
+];
+
+const route = useRoute();
+
+const hasAccess = computed(() => {
+    const currentMenuItem = dashboardMenu.find(item => item.link === route.fullPath);
+    if (currentMenuItem) {
+        if (currentMenuItem.roles.includes(authUser.value?.current_role_id)) {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    return true;
+});
 </script>

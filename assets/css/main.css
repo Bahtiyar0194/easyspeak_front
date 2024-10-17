@@ -111,6 +111,10 @@
     @apply bg-green-500;
 }
 
+.bg-success-100{
+    @apply bg-green-200;
+}
+
 .bg-info{
     @apply bg-corp;
 }
@@ -179,6 +183,10 @@
     @apply border-red-500;
 }
 
+.border-warning{
+    @apply border-yellow-500;
+}
+
 .text-active {
     @apply text-dark-500 dark:text-white;
 }
@@ -197,6 +205,10 @@
 
 .text-danger{
     @apply text-red-500;
+}
+
+.text-warning{
+    @apply text-yellow-500;
 }
 
 .text-inactive {
@@ -372,15 +384,19 @@ input[type=number]::-webkit-outer-spin-button {
 }
 
 .table.selectable table tbody tr:hover{
-    @apply bg-corp-100 text-white;
+    @apply bg-corp-100;
 }
 
-.dark .table.selectable table tbody tr:hover > td{
+.table.selectable.success table tbody tr:hover{
+    @apply bg-success-100;
+}
+
+.table.selectable table tbody tr:hover > td{
     @apply text-dark-500;
 }
 
 .table table tbody tr td{
-    @apply px-4 py-3 text-active
+    @apply px-4 py-3;
 }
 
 .table.table-sm table thead tr th{
@@ -455,7 +471,11 @@ select.error:has(option:checked:disabled) {
 }
 
 .custom-grid{
-    @apply grid grid-cols-12 gap-4 relative;
+    @apply grid grid-cols-12 gap-4 relative w-full;
+}
+
+.custom-grid.cols-10{
+    @apply grid-cols-10;
 }
 
 .form-group {
@@ -646,7 +666,7 @@ select.error:has(option:checked:disabled) {
 .custom-radio-checkbox > span::before
  {
     content: '';
-    @apply inline-block w-4 h-4 flex-shrink-0 flex-grow-0 border border-inactive rounded-full mr-2 bg-no-repeat bg-center;
+    @apply inline-block w-4 h-4 flex-shrink-0 flex-grow-0 border border-inactive rounded-full mr-1 bg-no-repeat bg-center;
     background-size: 50% 50%;
 }
 
@@ -765,7 +785,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .btn.btn-sm{
-    @apply px-1.5 py-2 text-sm;
+    @apply px-1.5 py-1 text-sm;
 }
 
 .btn.btn-sm.btn-square{
@@ -937,6 +957,12 @@ select.error:has(option:checked:disabled) {
     @apply -top-2.5 text-xs left-2 text-inactive bg-inactive px-1.5;
 }
 
+.per-page-select.bg_active > select:focus ~ label,
+.per-page-select.bg_active > select:not(:placeholder-shown) ~ label
+{
+    @apply bg-active;
+}
+
 .badge-wrap{
     @apply flex flex-wrap gap-2;
 }
@@ -954,11 +980,11 @@ select.error:has(option:checked:disabled) {
 }
 
 .badge.count{
-    @apply absolute rounded-full right-3 top-0 flex justify-center items-center px-0 py-0 min-w-4 h-4 text-[8px];
+    @apply absolute rounded-full flex justify-center items-center px-0 py-0 min-w-4 h-4 text-nowrap;
 }
 
 .badge > i{
-    @apply inline text-lg;
+    @apply inline;
 }
 
 .badge-light{
@@ -997,6 +1023,38 @@ select.error:has(option:checked:disabled) {
     @apply border border-danger text-danger;
 }
 
+.note{
+    @apply pl-3 py-3 px-9 border-inactive bg-active rounded-lg relative;
+}
+
+.note button {
+    @apply absolute top-3 right-3
+}
+
+.note.danger{
+    @apply bg-danger border-danger text-white;
+}
+
+.note.outline-danger{
+    @apply border-danger text-danger;
+}
+
+.note.warning{
+    @apply bg-warning border-warning text-white;
+}
+
+.note.outline-warning{
+    @apply border-warning text-warning;
+}
+
+.note.success{
+    @apply bg-success border-success text-white;
+}
+
+.note.outline-success{
+    @apply border-success text-success;
+}
+
 .custom-toast{
     @apply flex items-center gap-5 min-h-max px-4 py-3;
 }
@@ -1021,8 +1079,12 @@ select.error:has(option:checked:disabled) {
     @apply bg-danger;
 }
 
+.custom-toast.success{
+    @apply bg-success;
+}
+
 .card {
-    @apply bg-active rounded-xl max-w-full relative border-inactive overflow-hidden shadow-lg;
+    @apply bg-active rounded-lg max-w-full relative border-inactive overflow-hidden shadow-lg;
 }
 
 .card.card-sm{
@@ -1110,6 +1172,10 @@ select.error:has(option:checked:disabled) {
     @apply border-corp border text-corp;
 }
 
+.list-data p > span{
+    @apply text-inactive
+}
+
 .list-wrap{
     @apply bg-active rounded-lg border-inactive max-h-44 overflow-y-scroll;
 }
@@ -1184,6 +1250,46 @@ select.error:has(option:checked:disabled) {
 
 .list-group > li a{
     @apply text-corp;
+}
+
+.steps{
+    @apply relative;
+}
+
+.steps > .progress{
+    @apply absolute my-0 top-5 border-0
+}
+
+.steps-wrap{
+    @apply flex justify-between items-baseline w-full mb-6;
+}
+
+.step-item{
+    @apply flex items-center justify-center flex-col gap-y-2 text-center font-medium text-xs md:text-base w-min md:w-auto z-10 bg-active text-inactive px-4;
+}
+
+.step-item:first-child{
+    @apply pl-0;
+}
+
+.step-item:last-child{
+    @apply pr-0;
+}
+
+.step-icon{
+    @apply rounded-full bg-active border-inactive text-inactive w-10 h-10 flex justify-center items-center text-xl text-center;
+}
+
+.step-item.current, .step-item.completed{
+    @apply text-active;
+}
+
+.step-item.current .step-icon{
+    @apply bg-inactive text-active;
+}
+
+.step-item.completed .step-icon{
+    @apply bg-success border-success text-white;
 }
 
 .tasks-list-group{
@@ -1311,7 +1417,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .db__sidebar__menu{
-    @apply bg-active px-3 fixed z-30 border-r-inactive;
+    @apply bg-active px-3 fixed z-50 border-r-inactive;
     height: calc(100vh - 64px);
     top: 64px;
 }
@@ -1345,9 +1451,8 @@ select.error:has(option:checked:disabled) {
 }
 
 .db__content{
-    @apply pb-3 pr-3 pl-14 w-full relative overflow-auto;
-    padding-top: 75px;
-    height: calc(100vh - 65px);
+    @apply pb-3 pr-3 pl-14 w-full relative overflow-auto h-screen;
+    padding-top: 85px;
 }
 
 .db__footer__menu{
@@ -1387,37 +1492,45 @@ select.error:has(option:checked:disabled) {
     @apply relative;
 }
 
-.dropdown-menu{
+.dropdown-menu, .multiple-select-menu{
     @apply hidden absolute z-30 rounded-lg shadow-xl bg-active text-sm border-inactive px-4 my-2 w-max;
 }
 
-.dropdown-menu.right{
+.multiple-select-menu{
+    @apply max-h-36 overflow-x-hidden overflow-y-auto w-full;
+}
+
+.dropdown-menu.right, .multiple-select-menu.right{
     @apply !right-0;
 }
 
-.dropdown-menu.show{
+.dropdown-menu.show, .multiple-select-menu.show{
     @apply block;
 }
 
-.dropdown-menu li{
+.dropdown-menu li, .multiple-select-menu li{
     @apply border-b-inactive py-2 list-none flex gap-1.5 items-center;
 }
 
-.dropdown-menu li:empty{
+.dropdown-menu li:empty, .multiple-select-menu li:empty{
     @apply hidden;
 }
 
-.dropdown-menu li:last-child{
-    @apply border-b-0;
+.dropdown-menu li:first-child, .multiple-select-menu li:first-child{
+    @apply pt-3;
 }
 
-.dropdown-menu li > a,
-.dropdown-menu li > button{
+.dropdown-menu li:last-child, .multiple-select-menu li:last-child{
+    @apply border-b-0 pb-3;
+}
+
+.dropdown-menu li > a, .multiple-select-menu li > a,
+.dropdown-menu li > button, .multiple-select-menu li > button{
     @apply flex items-center gap-1.5 text-active duration-200;
 }
 
-.dropdown-menu li > a:hover,
-.dropdown-menu li > button:hover{
+.dropdown-menu li > a:hover, .multiple-select-menu li > a:hover,
+.dropdown-menu li > button:hover, .multiple-select-menu li > button:hover{
     @apply text-corp;
 }
 
@@ -1431,6 +1544,10 @@ select.error:has(option:checked:disabled) {
 
 .tab-header-item.active{
     @apply border-active text-active cursor-default; 
+}
+
+.tab-header-item.active.success{
+    @apply border-success text-success; 
 }
 
 .tab-header-item > span{

@@ -30,7 +30,7 @@
     </div>
 
     <modal v-if="tool.tool_params" :show="toolModalIsVisible" :onClose="() => toolModalIsVisible = false"
-        :class="'modal-sm'">
+        :className="'modal-sm'" :closeOnClickSelf="true">
         <template v-slot:header_content>
             <h4>{{ $t('board.tool_parameters') }}</h4>
         </template>

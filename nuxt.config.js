@@ -16,7 +16,7 @@ export default defineNuxtConfig({
     }
   },
 
-  modules: ["@nuxtjs/i18n", 'nuxt-auth-sanctum', '@pinia/nuxt', 'vue3-carousel-nuxt'],
+  modules: ["@nuxtjs/i18n", 'nuxt-auth-sanctum', '@pinia/nuxt', 'vue3-carousel-nuxt', '@vueuse/motion/nuxt'],
 
   postcss: {
     plugins: {
@@ -45,6 +45,23 @@ export default defineNuxtConfig({
           onAuthOnly: '/auth/login',
           onGuestOnly: '/dashboard',
         },
+        // Добавляем хук для передачи языка
+        token: {
+          property: 'token',
+          type: 'Bearer',
+          global: true,
+          required: true,
+          // Добавляем хук token:before
+          maxAge: 1800
+        },
+        hooks: {
+          'token:before': (token, { $i18n }) => {
+            // Получаем текущий язык из i18n
+            const currentLocale = $i18n.locale;
+            // Добавляем его в заголовки
+            token.headers['Accept-Language'] = currentLocale;
+          }
+        }
       },
     },
   },
