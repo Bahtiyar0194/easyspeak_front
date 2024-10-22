@@ -26,6 +26,10 @@ export default {
     an_error_occurred: 'Қателік орнады',
     nothing_was_found_for_your_query: "Сіздің сұранымыңыз бойынша ештеңе табылған жоқ",
 
+    sort_by_this_column: 'Осы баған бойынша сұрыптау',
+    sort_asc: 'Өсу бойынша сұрыптау',
+    sort_desc: 'Кему бойынша сұрыптау',
+
     status: "Мәртебе",
     invite: "Шақыру",
     search: "Іздеу",
@@ -63,7 +67,8 @@ export default {
         next_page_title: "Келесі бетке өту",
         last_page_title: "Соңғы бетке өту",
         limit_per_page: "Әр беттің шегі",
-        unlimit: "Шектеу жоқ"
+        unlimit: "Шектеу жоқ",
+        shown: "Көрсетілді: {shown} / {total}"
     },
 
     errors: {

@@ -16,17 +16,11 @@
                     <form @submit.prevent="debounceReset" ref="searchFormRef">
                         <div class="custom-grid">
                             <div class="col-span-12">
-                                <div class="form-group-border select active label-active">
-                                    <i class="pi pi-file"></i>
-                                    <select name="operation_type_id" @change="debounceOperations">
-                                        <option selected value="">{{ $t("not_specified") }}</option>
-                                        <option v-for="operation_type in attributes.operation_types"
-                                            :key="operation_type.operation_type_id"
-                                            :value="operation_type.operation_type_id">
-                                            {{ operation_type.operation_type_name }}</option>
-                                    </select>
-                                    <label>{{ $t("pages.operations.operation_type") }}</label>
-                                </div>
+                                <multipleSelect :className="'form-group-border select active label-active'"
+                                    :icon="'pi pi-file'" :label="$t('pages.operations.operation_type')"
+                                    :items="attributes.operation_types" :optionName="'operations[]'"
+                                    :optionValue="'operation_type_id'" :optionLabel="'operation_type_name'"
+                                    :onChange="debounceOperations" />
                             </div>
 
                             <div class="col-span-12">
@@ -84,9 +78,10 @@
                     <table ref="tableRef">
                         <thead>
                             <tr>
-                                <th>{{ $t("pages.operations.operation_type") }}</th>
-                                <th>{{ $t("operator") }}</th>
-                                <th>{{ $t("created_at") }}</th>
+                                <sortTableHead v-for="(head, index) in operationsTableHeads" :key="index"
+                                    :title="head.title" :keyName="head.keyName" :sortKey="sortKey"
+                                    :sortDirection="sortDirection" :sortHandler="debounceOperations"
+                                    @update:sortKey="sortKey = $event" @update:sortDirection="sortDirection = $event" />
                             </tr>
                         </thead>
 
@@ -160,10 +155,13 @@ import stickyBox from '../../ui/stickyBox.vue';
 import pagination from '../../ui/pagination.vue';
 import tableToExcelButton from '../../ui/tableToExcelButton.vue';
 import { debounceHandler } from '../../utils/debounceHandler';
+import multipleSelect from '../../ui/multipleSelect.vue';
+import sortTableHead from '../../ui/sortTableHead.vue';
 
 const router = useRouter();
 const errors = ref([]);
 const { $axiosPlugin } = useNuxtApp();
+const { t } = useI18n();
 const pending = ref(true);
 const pendingOperation = ref(false);
 const tableRef = ref(null);
@@ -176,11 +174,31 @@ const attributes = ref([]);
 
 const operationModalIsVisible = ref(false);
 
+const sortKey = ref('user_operations.created_at'); // Ключ сортировки
+const sortDirection = ref('asc'); // Направление сортировки: asc или desc
+
+const operationsTableHeads = [
+    {
+        title: t('pages.operations.operation_type'),
+        keyName: 'types_of_operations_lang.operation_type_name'
+    },
+    {
+        title: t('operator'),
+        keyName: 'operator.last_name'
+    },
+    {
+        title: t('created_at'),
+        keyName: 'user_operations.created_at'
+    }
+];
+
 const getOperations = async (url) => {
     pending.value = true;
 
     const formData = new FormData(searchFormRef.value);
     formData.append('per_page', perPage.value);
+    formData.append('sort_key', sortKey.value);  // Добавляем ключ сортировки
+    formData.append('sort_direction', sortDirection.value);  // Добавляем направление сортировки
 
     if (!url) {
         url = 'operations/get';

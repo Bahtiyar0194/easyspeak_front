@@ -30,6 +30,35 @@
                             </div>
 
                             <div class="col-span-12">
+                                <multipleSelect :className="'form-group-border select active label-active'"
+                                    :icon="'pi pi-users'" :label="$t('pages.groups.group_category')"
+                                    :items="attributes.group_categories" :optionName="'categories[]'"
+                                    :optionValue="'category_id'" :optionLabel="'category_name'"
+                                    :onChange="debounceGroups" />
+                            </div>
+
+                            <div class="col-span-12">
+                                <multipleSelect :className="'form-group-border select active label-active'"
+                                    :icon="'pi pi-user'" :label="$t('operator')" :items="attributes.group_operators"
+                                    :optionName="'operators[]'" :optionValue="'user_id'" :optionLabel="'full_name'"
+                                    :avatar="true" :onChange="debounceGroups" />
+                            </div>
+
+                            <div class="col-span-12">
+                                <multipleSelect :className="'form-group-border select active label-active'"
+                                    :icon="'pi pi-user'" :label="$t('mentor')" :items="attributes.group_mentors"
+                                    :optionName="'mentors[]'" :optionValue="'user_id'" :optionLabel="'full_name'"
+                                    :avatar="true" :onChange="debounceGroups" />
+                            </div>
+
+                            <div class="col-span-12">
+                                <multipleSelect :className="'form-group-border select active label-active'"
+                                    :icon="'pi pi-hourglass'" :label="$t('status')" :items="attributes.group_statuses"
+                                    :optionName="'statuses[]'" :optionValue="'status_type_id'"
+                                    :optionLabel="'status_type_name'" :onChange="debounceGroups" />
+                            </div>
+
+                            <div class="col-span-12">
                                 <div class="form-group-border active">
                                     <i class="pi pi-calendar"></i>
                                     <input type="date" name="created_at_from" @input="debounceGroups" placeholder=" " />
@@ -66,13 +95,10 @@
                     <table ref="tableRef">
                         <thead>
                             <tr>
-                                <th>{{ $t("pages.groups.group_name") }}</th>
-                                <th>{{ $t("pages.groups.group_category") }}</th>
-                                <th>{{ $t("operator") }}</th>
-                                <th>{{ $t("mentor") }}</th>
-                                <th>{{ $t("pages.groups.members") }}</th>
-                                <th>{{ $t("created_at") }}</th>
-                                <th>{{ $t("status") }}</th>
+                                <sortTableHead v-for="(head, index) in groupsTableHeads" :key="index"
+                                    :title="head.title" :keyName="head.keyName" :sortKey="sortKey"
+                                    :sortDirection="sortDirection" :sortHandler="debounceGroups"
+                                    @update:sortKey="sortKey = $event" @update:sortDirection="sortDirection = $event" />
                             </tr>
                         </thead>
 
@@ -107,7 +133,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="btn-wrap mt-6">
+                <div class="btn-wrap mt-4">
                     <pagination :items="groups" :setItems="getGroups" :onSelect="(count) => perPage = count" />
                     <client-only>
                         <tableToExcelButton :table="tableRef"
@@ -131,24 +157,24 @@
         <template v-slot:body_content>
             <div v-if="currentGroup" class="flex flex-col gap-y-3">
                 <p v-if="currentGroup.group_description" class="mb-0"><span class="text-inactive">{{
-                    $t("pages.groups.group_description") }}</span>: <b>{{
+                    $t("pages.groups.group_description") }}:</span> <b>{{
                             currentGroup.group_description }}</b></p>
-                <p class="mb-0"><span class="text-inactive">{{ $t("pages.groups.group_category") }}</span>: <b>{{
+                <p class="mb-0"><span class="text-inactive">{{ $t("pages.groups.group_category") }}:</span> <b>{{
                     currentGroup.category_name }}</b></p>
 
                 <div class="flex gap-x-2 items-center">
-                    <p class="mb-0"><span class="text-inactive">{{ $t("mentor") }}</span>:</p>
+                    <p class="mb-0"><span class="text-inactive">{{ $t("mentor") }}:</span></p>
                     <userTag v-if="currentGroup.mentor" :user="currentGroup.mentor" />
                 </div>
 
                 <div class="flex gap-x-2 items-center">
-                    <p class="mb-0"><span class="text-inactive">{{ $t("operator") }}</span>:</p>
+                    <p class="mb-0"><span class="text-inactive">{{ $t("operator") }}:</span></p>
                     <userTag v-if="currentGroup.operator" :user="currentGroup.operator" />
                 </div>
                 <p class="mb-0" v-if="currentGroup.group_members"><span class="text-inactive">{{
-                    $t("pages.groups.members_count") }}</span>: <b>{{
+                    $t("pages.groups.members_count") }}:</span> <b>{{
                             currentGroup.group_members.length }}</b></p>
-                <p class="mb-0"><span class="text-inactive">{{ $t("pages.groups.members") }}</span>:</p>
+                <p class="mb-0"><span class="text-inactive">{{ $t("pages.groups.members") }}:</span></p>
 
                 <div v-if="currentGroup.group_members" class="btn-wrap">
                     <userTag v-for="(member, index) in currentGroup.group_members" :key="index" :user="member" />
@@ -259,6 +285,8 @@ import editFirstStep from './components/editFirstStep.vue';
 import secondStep from './components/secondStep.vue';
 import thirdStep from './components/thirdStep.vue';
 import roleProvider from '../../ui/roleProvider.vue';
+import multipleSelect from '../../ui/multipleSelect.vue';
+import sortTableHead from '../../ui/sortTableHead.vue';
 
 const router = useRouter();
 const { $axiosPlugin, $schoolPlugin } = useNuxtApp();
@@ -284,6 +312,40 @@ const errors = ref([]);
 const createModalIsVisible = ref(false);
 const groupModalIsVisible = ref(false);
 const editModalIsVisible = ref(false);
+
+const sortKey = ref('groups.created_at'); // Ключ сортировки
+const sortDirection = ref('asc'); // Направление сортировки: asc или desc
+
+const groupsTableHeads = [
+    {
+        title: t('pages.groups.group_name'),
+        keyName: 'groups.group_name'
+    },
+    {
+        title: t('pages.groups.group_category'),
+        keyName: 'group_categories.category_name'
+    },
+    {
+        title: t('operator'),
+        keyName: 'operator.last_name'
+    },
+    {
+        title: t('mentor'),
+        keyName: 'mentor.last_name'
+    },
+    {
+        title: t('pages.groups.members_count'),
+        keyName: 'members_count'
+    },
+    {
+        title: t('created_at'),
+        keyName: 'groups.created_at'
+    },
+    {
+        title: t('status'),
+        keyName: 'types_of_status_lang.status_type_name'
+    }
+];
 
 const newGroupSteps = [
     {
@@ -328,6 +390,8 @@ const getGroups = async (url) => {
 
     const formData = new FormData(searchFormRef.value);
     formData.append('per_page', perPage.value);
+    formData.append('sort_key', sortKey.value);  // Добавляем ключ сортировки
+    formData.append('sort_direction', sortDirection.value);  // Добавляем направление сортировки
 
     if (!url) {
         url = 'groups/get';

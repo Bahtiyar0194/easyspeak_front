@@ -1,4 +1,7 @@
 <template>
+    <div class="w-full mb-2 text-inactive">
+        {{ $t('pagination.shown', { shown: props.items.data.length, total: props.items.total }) }}
+    </div>
     <div class="pagination-wrap">
         <div v-if="props.items && props.items.last_page > 1" class="pagination">
             <button v-if="props.items.current_page > 1" @click="setItems(props.items.first_page_url)"
@@ -34,7 +37,7 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-const perPageValues = [5, 10, 100, 1000, 10000, 100000, 1000000];
+const perPageValues = [10, 100, 1000, 10000, 100000, 1000000];
 
 const props = defineProps({
     items: {

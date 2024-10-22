@@ -6,10 +6,11 @@
 </template>
 <script setup>
 
-const theme = ref('light')
+const theme = ref('light');
+const savedTheme = useCookie('theme');
+
 onMounted(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'dark') {
+    if (savedTheme.value === 'dark') {
         document.documentElement.classList.add('dark');
         theme.value = 'dark';
     } else {
@@ -22,11 +23,11 @@ const toggleTheme = () => {
     if (theme.value === 'light') {
         theme.value = 'dark';
         document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
+        savedTheme.value = 'dark';
     } else {
         theme.value = 'light';
         document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
+        savedTheme.value = 'light';
     }
 }
 </script>

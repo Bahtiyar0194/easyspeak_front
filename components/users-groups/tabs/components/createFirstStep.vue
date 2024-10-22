@@ -26,7 +26,7 @@
                 <i class="pi pi-users"></i>
                 <select name="group_category_id">
                     <option selected disabled value="">{{ $t("choose_a_category") }}</option>
-                    <option v-for="category in attributes.group_categories" :key="category.category_id"
+                    <option v-for="category in attributes.all_categories" :key="category.category_id"
                         :value="category.category_id">
                         {{ category.category_name }}</option>
                 </select>
@@ -42,7 +42,7 @@
                 <i class="pi pi-user"></i>
                 <select name="mentor_id">
                     <option selected disabled value="">{{ $t("choose_a_mentor") }}</option>
-                    <option v-for="mentor in attributes.group_mentors" :key="mentor.user_id" :value="mentor.user_id">{{
+                    <option v-for="mentor in attributes.all_mentors" :key="mentor.user_id" :value="mentor.user_id">{{
                         mentor.last_name }} {{ mentor.first_name }}
                     </option>
                 </select>

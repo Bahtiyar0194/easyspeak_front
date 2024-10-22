@@ -26,6 +26,10 @@ export default {
     an_error_occurred: 'Произошла ошибка',
     nothing_was_found_for_your_query: "По вашему запросу ничего не найдено",
 
+    sort_by_this_column: 'Сортировать по данному столбцу',
+    sort_asc: 'Сортировка по возрастанию',
+    sort_desc: 'Сортировка по убыванию',
+
     status: "Статус",
     invite: "Пригласить",
     search: "Искать",
@@ -62,7 +66,8 @@ export default {
         next_page_title: "Перейти на следующую страницу",
         last_page_title: "Перейти на последнюю страницу",
         limit_per_page: "Лимит на страницу",
-        unlimit: "Без ограничении"
+        unlimit: "Без ограничении",
+        shown: "Показано: {shown} из {total}"
     },
 
     errors: {

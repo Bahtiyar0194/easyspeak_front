@@ -520,7 +520,7 @@ select.error:has(option:checked:disabled) {
     @apply text-danger -top-2.5 text-xs left-0;
 }
 
-.form-group .show-password
+.form-group .show-password, .form-group .clear
 {
     @apply absolute right-0 text-2xl top-3 text-inactive z-20;
 }
@@ -595,7 +595,7 @@ select.error:has(option:checked:disabled) {
     @apply text-danger;
 }
 
-.form-group-border .show-password
+.form-group-border .show-password, .form-group-border .clear
 {
     @apply absolute right-2 text-lg top-2 text-inactive z-20;
 }
@@ -624,11 +624,6 @@ select.error:has(option:checked:disabled) {
     @apply top-1.5 text-lg;
 }
 
-.form-group .show-password
-{
-    @apply absolute right-0 text-lg top-3 text-active;
-}
-
 .form-group-file input{
     @apply hidden;
 }
@@ -649,6 +644,13 @@ select.error:has(option:checked:disabled) {
     @apply text-2xl m-auto;
 }
 
+.custom-radio, 
+.rating-radio,
+.custom-radio-checkbox, 
+.custom-checkbox{
+    @apply flex;
+}
+
 .custom-radio > input, 
 .rating-radio > input,
 .custom-radio-checkbox > input, 
@@ -659,7 +661,7 @@ select.error:has(option:checked:disabled) {
 .custom-radio > span, 
 .custom-radio-checkbox > span,
 .custom-checkbox > span {
-    @apply inline-flex items-center select-none cursor-pointer text-inactive;
+    @apply inline-flex items-center select-none cursor-pointer;
 }
   
 .custom-radio > span::before,
@@ -668,6 +670,12 @@ select.error:has(option:checked:disabled) {
     content: '';
     @apply inline-block w-4 h-4 flex-shrink-0 flex-grow-0 border border-inactive rounded-full mr-1 bg-no-repeat bg-center;
     background-size: 50% 50%;
+}
+
+.custom-radio.avatar > span::before,
+.custom-radio-checkbox.avatar > span::before
+{
+    @apply hidden;
 }
 
 .custom-checkbox > span::before {
@@ -922,7 +930,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .pagination-wrap{
-    @apply flex flex-wrap gap-x-2 gap-y-4;
+    @apply flex items-center flex-wrap gap-x-2 gap-y-4;
 }
 
 .pagination{
@@ -1492,20 +1500,24 @@ select.error:has(option:checked:disabled) {
     @apply relative;
 }
 
-.dropdown-menu, .multiple-select-menu{
+.dropdown-menu, .multiple-select-menu-wrap{
     @apply hidden absolute z-30 rounded-lg shadow-xl bg-active text-sm border-inactive px-4 my-2 w-max;
 }
 
-.multiple-select-menu{
-    @apply max-h-36 overflow-x-hidden overflow-y-auto w-full;
+.multiple-select-menu-wrap{
+    @apply w-full;
 }
 
-.dropdown-menu.right, .multiple-select-menu.right{
+.dropdown-menu.right, .multiple-select-menu-wrap.right{
     @apply !right-0;
 }
 
-.dropdown-menu.show, .multiple-select-menu.show{
+.dropdown-menu.show, .multiple-select-menu-wrap.show{
     @apply block;
+}
+
+.multiple-select-menu{
+    @apply max-h-28 mt-3 overflow-x-hidden overflow-y-auto w-full p-0;
 }
 
 .dropdown-menu li, .multiple-select-menu li{
@@ -1516,8 +1528,12 @@ select.error:has(option:checked:disabled) {
     @apply hidden;
 }
 
-.dropdown-menu li:first-child, .multiple-select-menu li:first-child{
+.dropdown-menu li:first-child {
     @apply pt-3;
+}
+
+.multiple-select-menu li:first-child{
+    @apply pt-0;
 }
 
 .dropdown-menu li:last-child, .multiple-select-menu li:last-child{

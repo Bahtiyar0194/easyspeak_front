@@ -46,29 +46,18 @@
                             </div>
 
                             <div class="col-span-12">
-                                <div class="form-group-border select active label-active">
-                                    <i class="pi pi-hourglass"></i>
-                                    <select name="status_type_id" @change="debounceUsers">
-                                        <option selected value="">{{ $t("not_specified") }}</option>
-                                        <option v-for="status in attributes.user_statuses" :key="status.status_type_id"
-                                            :value="status.status_type_id">
-                                            {{ status.status_type_name }}</option>
-                                    </select>
-                                    <label>{{ $t("pages.users.user_status") }}</label>
-                                </div>
+                                <multipleSelect :className="'form-group-border select active label-active'"
+                                    :icon="'pi pi-hourglass'" :label="$t('pages.users.user_status')"
+                                    :items="attributes.user_statuses" :optionName="'statuses[]'"
+                                    :optionValue="'status_type_id'" :optionLabel="'status_type_name'"
+                                    :onChange="debounceUsers" />
                             </div>
 
                             <div class="col-span-12">
                                 <multipleSelect :className="'form-group-border select active label-active'"
-                                    :icon="'pi pi-id-card'" :label="$t('pages.users.user_role')">
-                                    <li v-for="(role, index) in attributes.user_roles" :key="index">
-                                        <label class="custom-radio-checkbox">
-                                            <input class="search_role_input" name="roles[]" :value="role.role_type_id"
-                                                type="checkbox" :checked="false" @change="debounceUsers" />
-                                            <span>{{ role.user_role_type_name }}</span>
-                                        </label>
-                                    </li>
-                                </multipleSelect>
+                                    :icon="'pi pi-id-card'" :label="$t('pages.users.user_role')"
+                                    :items="attributes.user_roles" :optionName="'roles[]'" :optionValue="'role_type_id'"
+                                    :optionLabel="'user_role_type_name'" :onChange="debounceUsers" />
                             </div>
 
                             <div class="col-span-12">
@@ -108,11 +97,10 @@
                     <table ref="tableRef">
                         <thead>
                             <tr>
-                                <th>{{ $t("form.last_name") }} {{ $t("form.first_name") }}</th>
-                                <th>{{ $t("form.email") }}</th>
-                                <th>{{ $t("form.phone") }}</th>
-                                <th>{{ $t("registered_at") }}</th>
-                                <th>{{ $t("status") }}</th>
+                                <sortTableHead v-for="(head, index) in userTableHeads" :key="index" :title="head.title"
+                                    :keyName="head.keyName" :sortKey="sortKey" :sortDirection="sortDirection"
+                                    :sortHandler="debounceUsers" @update:sortKey="sortKey = $event"
+                                    @update:sortDirection="sortDirection = $event" />
                             </tr>
                         </thead>
 
@@ -132,7 +120,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="btn-wrap mt-6">
+                <div class="btn-wrap mt-4">
                     <pagination :items="users" :setItems="getUsers" :onSelect="(count) => perPage = count" />
                     <client-only>
                         <tableToExcelButton :table="tableRef"
@@ -228,8 +216,8 @@
                 <userAvatar :user="user" :className="'w-12 h-12 text-2xl'" />
                 <div class="flex flex-col gap-y-4">
                     <h4 class="mb-0">{{ user.last_name }} {{ user.first_name }}</h4>
-                    <span><span class="text-inactive">{{ $t("form.email") }}</span> : {{ user.email }}</span>
-                    <span><span class="text-inactive">{{ $t("form.phone") }}</span> : {{ user.phone }}</span>
+                    <span><span class="text-inactive">{{ $t("form.email") }}:</span> {{ user.email }}</span>
+                    <span><span class="text-inactive">{{ $t("form.phone") }}:</span> {{ user.phone }}</span>
                 </div>
                 <div class="flex flex-col gap-y-4">
                     <div v-if="user.roles?.length > 1">
@@ -339,10 +327,12 @@ import tableToExcelButton from '../../ui/tableToExcelButton.vue';
 import { debounceHandler } from '../../../utils/debounceHandler';
 import roleProvider from '../../ui/roleProvider.vue';
 import multipleSelect from '../../ui/multipleSelect.vue';
+import sortTableHead from '../../ui/sortTableHead.vue';
 
 const router = useRouter();
 const errors = ref([]);
 const { $axiosPlugin, $schoolPlugin } = useNuxtApp();
+const { t } = useI18n();
 const pending = ref(true);
 const pendingInvite = ref(false);
 const pendingUser = ref(false);
@@ -360,16 +350,43 @@ const user = ref(null);
 const school = $schoolPlugin;
 const attributes = ref([]);
 
-
 const inviteModalIsVisible = ref(false);
 const userModalIsVisible = ref(false);
 const editModalIsVisible = ref(false);
+
+const sortKey = ref('users.created_at'); // Ключ сортировки
+const sortDirection = ref('asc'); // Направление сортировки: asc или desc
+
+const userTableHeads = [
+    {
+        title: t('form.last_name') + ' ' + t('form.first_name'),
+        keyName: 'users.last_name'
+    },
+    {
+        title: t('form.email'),
+        keyName: 'users.email'
+    },
+    {
+        title: t('form.phone'),
+        keyName: 'users.phone'
+    },
+    {
+        title: t('registered_at'),
+        keyName: 'users.created_at'
+    },
+    {
+        title: t('status'),
+        keyName: 'types_of_status_lang.status_type_name'
+    }
+];
 
 const getUsers = async (url) => {
     pending.value = true;
 
     const formData = new FormData(searchFormRef.value);
     formData.append('per_page', perPage.value);
+    formData.append('sort_key', sortKey.value);  // Добавляем ключ сортировки
+    formData.append('sort_direction', sortDirection.value);  // Добавляем направление сортировки
 
     if (!url) {
         url = 'users/get';
