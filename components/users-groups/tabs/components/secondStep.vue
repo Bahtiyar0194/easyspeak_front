@@ -74,7 +74,7 @@
                     <template v-if="users.data?.length > 0">
                         <note :message="$t('pages.groups.note_1')" :className="'outline-success mb-4'" />
                         <div class="table table-sm selectable success">
-                            <loader v-if="pending" class="overlay" />
+                            <loader v-if="pending" :className="'overlay'" />
                             <table>
                                 <thead>
                                     <tr>
@@ -116,7 +116,7 @@
                     </template>
 
                     <alert v-else :className="'light'">
-                        <loader v-if="pending" class="overlay" />
+                        <loader v-if="pending" :className="'overlay'" />
                         <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
                     </alert>
                 </div>

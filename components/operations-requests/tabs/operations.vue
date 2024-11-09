@@ -74,7 +74,7 @@
         <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
             <template v-if="operations.data?.length > 0">
                 <div class="table table-sm selectable">
-                    <loader v-if="pending" class="overlay" />
+                    <loader v-if="pending" :className="'overlay'" />
                     <table ref="tableRef">
                         <thead>
                             <tr>
@@ -115,7 +115,7 @@
             </template>
 
             <alert v-else :className="'light'">
-                <loader v-if="pending" class="overlay" />
+                <loader v-if="pending" :className="'overlay'" />
                 <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
             </alert>
         </div>

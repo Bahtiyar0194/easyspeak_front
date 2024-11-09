@@ -3,8 +3,8 @@
         :title="props.sortKey !== props.keyName ? $t('sort_by_this_column') : (props.sortDirection === 'asc' ? $t('sort_asc') : $t('sort_desc'))">
         <div class="flex items-center gap-1">
             <span>{{ props.title }}</span>
-            <i v-if="props.sortKey === props.keyName" class="bi text-[10px]"
-                :class="props.sortDirection === 'asc' ? 'bi-caret-down-fill' : 'bi-caret-up-fill'"></i>
+            <i v-if="props.sortKey === props.keyName" class="pi text-[10px] text-corp"
+                :class="props.sortDirection === 'asc' ? ('pi-sort-' + props.sortType + '-down') : 'pi-sort-' + props.sortType + '-down-alt'"></i>
         </div>
     </th>
 </template>
@@ -26,6 +26,12 @@ const props = defineProps({
     sortDirection: {
         type: String,
         required: true
+    },
+    //Тип сортировки alpha, numeric, amount. По умолчанию alpha
+    sortType: {
+        default: 'alpha',
+        type: String,
+        required: false
     },
     sortHandler: {
         type: Function,

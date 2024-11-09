@@ -91,13 +91,13 @@
         <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
             <template v-if="groups.data?.length > 0">
                 <div class="table table-sm selectable">
-                    <loader v-if="pending" class="overlay" />
+                    <loader v-if="pending" :className="'overlay'" />
                     <table ref="tableRef">
                         <thead>
                             <tr>
                                 <sortTableHead v-for="(head, index) in groupsTableHeads" :key="index"
                                     :title="head.title" :keyName="head.keyName" :sortKey="sortKey"
-                                    :sortDirection="sortDirection" :sortHandler="debounceGroups"
+                                    :sortDirection="sortDirection" :sortType="head.sortType" :sortHandler="debounceGroups"
                                     @update:sortKey="sortKey = $event" @update:sortDirection="sortDirection = $event" />
                             </tr>
                         </thead>
@@ -143,7 +143,7 @@
                 </div>
             </template>
             <alert v-else :className="'light'">
-                <loader v-if="pending" class="overlay" />
+                <loader v-if="pending" :className="'overlay'" />
                 <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
             </alert>
         </div>
@@ -171,6 +171,7 @@
                     <p class="mb-0"><span class="text-inactive">{{ $t("operator") }}:</span></p>
                     <userTag v-if="currentGroup.operator" :user="currentGroup.operator" />
                 </div>
+                
                 <p class="mb-0" v-if="currentGroup.group_members"><span class="text-inactive">{{
                     $t("pages.groups.members_count") }}:</span> <b>{{
                             currentGroup.group_members.length }}</b></p>
@@ -319,31 +320,38 @@ const sortDirection = ref('asc'); // Направление сортировки
 const groupsTableHeads = [
     {
         title: t('pages.groups.group_name'),
-        keyName: 'groups.group_name'
+        keyName: 'groups.group_name',
+        sortType: 'alpha'
     },
     {
         title: t('pages.groups.group_category'),
-        keyName: 'group_categories.category_name'
+        keyName: 'group_categories.category_name',
+        sortType: 'alpha'
     },
     {
         title: t('operator'),
-        keyName: 'operator.last_name'
+        keyName: 'operator.last_name',
+        sortType: 'alpha'
     },
     {
         title: t('mentor'),
-        keyName: 'mentor.last_name'
+        keyName: 'mentor.last_name',
+        sortType: 'alpha'
     },
     {
         title: t('pages.groups.members_count'),
-        keyName: 'members_count'
+        keyName: 'members_count',
+        sortType: 'numeric'
     },
     {
         title: t('created_at'),
-        keyName: 'groups.created_at'
+        keyName: 'groups.created_at',
+        sortType: 'numeric'
     },
     {
         title: t('status'),
-        keyName: 'types_of_status_lang.status_type_name'
+        keyName: 'types_of_status_lang.status_type_name',
+        sortType: 'alpha'
     }
 ];
 

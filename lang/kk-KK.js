@@ -9,6 +9,7 @@ export default {
     export_to_png: "PNG экпорттау",
     export_to_xlsx: "XLSX экспорттау",
     export_to_pdf: "PDF экпорттау",
+    click_to_listen_to_the_audio: "Аудионы тыңдау үшін басыңыз",
     all_rights: 'Барлық құқықтар сақталған.',
     choose_your_language: 'Тілді таңдаңыз',
     choose_a_mentor: 'Тәлімгерді таңдаңыз',
@@ -59,6 +60,36 @@ export default {
     theme: {
         switch_to_a_light_theme: "Жарық тақырыпқа ауысу",
         switch_to_a_dark_theme: "Қараңғы тақырыпқа ауысу"
+    },
+
+    file: {
+        name: "Файлдың атауы",
+        size: "Файлдың өлшемі",
+        type: "Файлдың түрі",
+        specify_the_file_type: "Файлдың түрін көрсетіңіз",
+        selected_file: "Сіз таңдаған файл",
+        file_ready_to_upload: "Файл жүктелуге дайын",
+        upload: "Жүктеу",
+        upload_file: "Файл жүктеу",
+        uploading_a_new_file: "Жаңа файл жүктеу",
+        uploading_file: "Файл жүктелініп жатыр...",
+        upload_from_media: "Бұрын жүктелгендердің ішінен таңдау",
+        deleting_a_file: "Файлды жою",
+        file_delete_confirm: "Сіз расыменде бұл файлды жойғыңыз келе ме? Осы файлға байланысты барлық нәрсе де сонымен бірге жойылады.",
+        kilobyte: "КБ",
+        megabyte: "МБ",
+        gigabyte: "ГБ",
+        free_space: "Бос орын",
+        used_space: "Толған орын",
+        increase_the_space: "Орынды ұлғайту",
+        lack_of_disk_space: "Мына файлды жүктеу үшін дискідегі орын жеткіліксіз. Дискідегі орынды ұлғайту үшін сізге жоғарғы тарифтік жоспарға көшу қажет.",
+        choose: "Файлды таңдаңыз",
+        image: {
+            select: "Суретті таңдаңыз"
+        },
+        audio: {
+            select: "Аудиофайл таңдаңыз"
+        }
     },
 
     pagination: {
@@ -143,17 +174,21 @@ export default {
         error: {
             title: 'Қателік орын алды'
         },
+
         home: {
             title: 'Басты бет',
             hello: 'Қош келдіңіз!',
             to: "Басты бетке"
         },
+
         profile: {
             title: 'Менің парақшам',
         },
+
         auth: {
             title: 'Авторизация'
         },
+
         login: {
             title: 'Жүйеге кіру',
             sign_in: 'Кіру',
@@ -162,17 +197,21 @@ export default {
             password_recovery: "Қалпына келтіру",
             sign_out: 'Аккаунттан шығу',
         },
+
         register: {
             title: 'Тіркелу',
             have_an_account: 'Менде акканут бар.',
         },
+
         dashboard: {
             title: 'Жеке кабинет',
             go_to_dashboard: 'Жеке кабинетке өту'
         },
+
         "users-groups": {
             title: 'Қолданушылар мен топтар'
         },
+
         users: {
             title: "Қолданушылар",
             invite_user_title: "Жаңа қолданушыны шақыру",
@@ -184,6 +223,7 @@ export default {
             select_user_roles: "Жаңа қолданушыға рөл-(дер) таңдаңыз",
             search_filter: "Қолданушыларды іздеу сүзгісі",
         },
+
         groups: {
             title: 'Топтар',
             create_group: "Топ құру",
@@ -202,6 +242,7 @@ export default {
             note_1: "Қатысушыларды топқа қосу үшін төмендегі кестеде оларды басыңыз",
             warning_1: "Бұл қатысушы топқа қосулы тұр"
         },
+
         conference: {
             title: 'Бейнеконференция',
             mic: 'Микрофон',
@@ -231,6 +272,7 @@ export default {
                 passed: 'Өтіп кеткен',
             }
         },
+
         "operations-requests": {
             title: "Операциялар мен сұранымдар",
         },
@@ -252,6 +294,41 @@ export default {
         notifications: {
             title: 'Хабарламалар',
             there_are_no_new_notifications: 'Жаңа хабарламалар жоқ'
+        },
+
+        courses: {
+            course: 'Курс',
+            choose_a_course: 'Курсты таңдаңыз'
+        },
+
+        "dictionary-sentences": {
+            title: 'Сөздік және сөйлемдер'
+        },
+
+        dictionary: {
+            title: 'Сөздік',
+            word: 'Cөз',
+            add_word_title: 'Сөздікке сөз қосу',
+            edit_word_title: 'Сөзді қайта өңдеу',
+            transcription: 'Транскрипциясы',
+            translate: {
+                kk: 'Сөздің қазақша тілдегі аудармасы',
+                ru: 'Сөздің орысша тілдегі аудармасы'
+            },
+            search_filter: 'Сөздіктен іздеу сүзгісі'
+        },
+
+        sentences: {
+            title: 'Сөйлемдер'
+        },
+
+        training: {
+            title: 'Жаттығу',
+            keyboard: 'Жауапты таңдау үшін пернетақтадағы сандарды пайдаланыңыз',
+            word_translation: {
+                title: 'Сіздің біліміңізді тексеріп көрейік',
+                description: 'Бұл сөздің ағылшын тіліндегі аудармасын табыңыз'
+            }
         }
     }
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="overlay">
+  <div :class="props.className">
     <div class="overlay-loading-circle"></div>
 
     <div v-if="props.progress && props.progress >= 1" class="pt-2 text-center">
@@ -15,6 +15,16 @@ import { defineProps } from 'vue';
 const props = defineProps({
   progress: {
     type: Number,
+    required: false
+  },
+
+  className: {
+    type: String,
+    required: true
+  },
+
+  pending: {
+    type: Boolean,
     required: false
   }
 });

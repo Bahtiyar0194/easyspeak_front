@@ -9,6 +9,7 @@ export default {
     export_to_png: "Экспорт в PNG",
     export_to_xlsx: "Экспорт в XLSX",
     export_to_pdf: "Экспорт в PDF",
+    click_to_listen_to_the_audio: "Кликните чтобы прослушать аудио",
     all_rights: 'Все права защищены.',
     choose_your_language: 'Выберите Ваш язык',
     choose_a_mentor: 'Выберите куратора',
@@ -58,6 +59,36 @@ export default {
     theme: {
         switch_to_a_light_theme: "Переключиться на светлую тему",
         switch_to_a_dark_theme: "Переключиться на темную тему"
+    },
+
+    file: {
+        name: "Название файла",
+        size: "Размер файла",
+        type: "Тип файла",
+        specify_the_file_type: "Укажите тип файла",
+        selected_file: "Выбранный Вами файл",
+        file_ready_to_upload: "Файл готов к загрузке",
+        upload: "Загрузить",
+        upload_file: "Загрузить файл",
+        uploading_a_new_file: "Загрузка нового файла",
+        uploading_file: "Идет загрузка файла...",
+        upload_from_media: "Выбрать из ранее загруженных",
+        deleting_a_file: "Удаление файла",
+        file_delete_confirm: "Вы действительно хотите удалить данный файл? Все связанное с ним будет также удалено.",
+        kilobyte: "КБ",
+        megabyte: "МБ",
+        gigabyte: "ГБ",
+        free_space: "Свободно",
+        used_space: "Занято",
+        increase_the_space: "Увеличить место",
+        lack_of_disk_space: "Не хватает места на диске для загрузки данного файла. Для увеличения места на диске Вам нужно перейти на более высокий тарифный план.",
+        choose_file: "Выберите файл",
+        image: {
+            select: "Выберите изображение"
+        },
+        audio: {
+            select: "Выберите аудиофайл"
+        }
     },
 
     pagination: {
@@ -142,17 +173,21 @@ export default {
         error: {
             title: 'Произошла ошибка'
         },
+
         home: {
             title: 'Главная страница',
             hello: 'Добро пожаловать',
             to: "На главную страницу",
         },
+
         profile: {
             title: 'Мой профиль',
         },
+
         auth: {
             title: 'Авторизация'
         },
+
         login: {
             title: 'Вход в систему',
             sign_in: 'Войти',
@@ -161,14 +196,17 @@ export default {
             password_recovery: "Восстановить",
             sign_out: 'Выйти из аккаунта',
         },
+
         register: {
             title: 'Регистрация',
             have_an_account: 'У меня есть акканут.',
         },
+
         dashboard: {
             title: 'Личный кабинет',
             go_to_dashboard: 'Перейти в личный кабинет'
         },
+
         "users-groups": {
             title: 'Пользователи и группы',
         },
@@ -203,6 +241,7 @@ export default {
             note_1: "Чтобы добавить участников в группу кликните по ним в таблице ниже",
             warning_1: "Данный участник уже добавлен в группу"
         },
+
         conference: {
             title: 'Видеоконференция',
             mic: 'Микрофон',
@@ -232,6 +271,7 @@ export default {
                 passed: 'Пройденные',
             }
         },
+
         "operations-requests": {
             title: 'Операции и запросы',
         },
@@ -253,6 +293,41 @@ export default {
         notifications: {
             title: 'Уведомления',
             there_are_no_new_notifications: 'Новых уведомлений нет'
+        },
+
+        courses: {
+            course: 'Курс',
+            choose_a_course: 'Выберите курс'
+        },
+
+        "dictionary-sentences": {
+            title: 'Словарь и предложения'
+        },
+
+        dictionary: {
+            title: 'Словарь',
+            word: 'Cлово',
+            add_word_title: 'Добавление слова в словарь',
+            edit_word_title: 'Редактирование слова',
+            transcription: 'Транскрипция',
+            translate: {
+                kk: 'Перевод слова на казахском языке',
+                ru: 'Перевод слова на русском языке'
+            },
+            search_filter: 'Фильтр поиска по словарю'
+        },
+
+        sentences: {
+            title: 'Предложения'
+        },
+
+        training: {
+            title: 'Тренировка',
+            keyboard: 'Используйте цифры на клавиатуре для выбора ответа',
+            word_translation: {
+                title: 'Проверим ваши знания',
+                description: 'Найдите английский перевод этого слова'
+            }
         }
     }
 }

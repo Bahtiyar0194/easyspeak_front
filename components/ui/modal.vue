@@ -1,7 +1,7 @@
 <template>
     <div class="modal-backdrop" :class="isVisible && 'show'" @click.self="props.closeOnClickSelf && closeModal()">
         <div class="modal" :class="props.className">
-            <loader v-if="props.showLoader" />
+            <loader v-if="props.showLoader" :className="'overlay'" />
             <div class="modal-header">
                 <slot name="header_content" />
                 <span :title="$t('close')" @click="closeModal" class="modal-close-button">

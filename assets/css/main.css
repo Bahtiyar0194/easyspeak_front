@@ -45,15 +45,43 @@
 
 @font-face {
     font-family: 'Roboto';
+    src: url('../fonts/roboto/Roboto-Thin.ttf');
+    font-weight: 100;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Roboto';
+    src: url('../fonts/roboto/Roboto-ThinItalic.ttf');
+    font-weight: 100;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Roboto';
+    src: url('../fonts/roboto/Roboto-Light.ttf');
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Roboto';
+    src: url('../fonts/roboto/Roboto-LightItalic.ttf');
+    font-weight: 300;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Roboto';
     src: url('../fonts/roboto/Roboto-Regular.ttf');
-    font-weight: normal;
+    font-weight: 400;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'Roboto';
     src: url('../fonts/roboto/Roboto-Italic.ttf');
-    font-weight: normal;
+    font-weight: 400;
     font-style: italic;
 }
 
@@ -68,6 +96,34 @@
     font-family: 'Roboto';
     src: url('../fonts/roboto/Roboto-MediumItalic.ttf');
     font-weight: 500;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Roboto';
+    src: url('../fonts/roboto/Roboto-Bold.ttf');
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Roboto';
+    src: url('../fonts/roboto/Roboto-BoldItalic.ttf');
+    font-weight: 700;
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'Roboto';
+    src: url('../fonts/roboto/Roboto-Black.ttf');
+    font-weight: 900;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Roboto';
+    src: url('../fonts/roboto/Roboto-BlackItalic.ttf');
+    font-weight: 900;
     font-style: italic;
 }
 
@@ -100,11 +156,11 @@
 }
 
 .bg-inactive {
-    @apply bg-gray-50 dark:bg-slate-900;
+    @apply bg-gray-100 dark:bg-slate-900;
 }
 
 .bg-inactive-inverse {
-    @apply bg-slate-900 dark:bg-gray-50;
+    @apply bg-slate-900 dark:bg-gray-100;
 }
 
 .bg-success{
@@ -356,7 +412,7 @@ input[type=number]::-webkit-outer-spin-button {
 }
 
 .table{
-    @apply w-full relative overflow-x-auto rounded-lg shadow-md flex border-inactive;
+    @apply w-full relative overflow-x-auto rounded-xl shadow-md flex border-inactive;
 }
 
 .table table{
@@ -437,7 +493,7 @@ form code{
 }
 
 pre{
-    @apply rounded-lg;
+    @apply rounded-xl;
     padding: 0.75rem !important;
 }
 
@@ -526,7 +582,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .form-group-border {
-    @apply relative border-2 border-corp rounded-lg;
+    @apply relative border-2 border-corp rounded-xl;
 }
 
 .form-group-border.active{
@@ -629,18 +685,18 @@ select.error:has(option:checked:disabled) {
 }
 
 .form-group-file label{
-    @apply block border border-corp border-dashed p-4 rounded-lg text-center cursor-pointer hover:text-white duration-200;
+    @apply block border border-inactive border-dashed p-4 rounded-xl text-center break-all cursor-pointer duration-200;
 }
 
 .form-group-file label:hover{
-    @apply bg-corp;
+    @apply bg-inactive;
 }
 
 .form-group-file label.label-error{
     @apply text-danger hover:text-white;
 }
 
-.form-group-file label i{
+.form-group-file label > i{
     @apply text-2xl m-auto;
 }
 
@@ -648,7 +704,7 @@ select.error:has(option:checked:disabled) {
 .rating-radio,
 .custom-radio-checkbox, 
 .custom-checkbox{
-    @apply flex;
+    @apply inline-flex;
 }
 
 .custom-radio > input, 
@@ -781,7 +837,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .btn {
-    @apply rounded-lg px-4 py-2 duration-200 text-center text-base w-fit; 
+    @apply rounded-xl px-4 py-2 duration-200 text-center text-base w-fit; 
 }
 
 .btn.long{
@@ -789,7 +845,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .btn.btn-square{
-    @apply px-3 flex justify-center items-center;
+    @apply px-2 flex justify-center items-center;
 }
 
 .btn.btn-sm{
@@ -797,7 +853,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .btn.btn-sm.btn-square{
-    @apply px-2.5;
+    @apply px-1;
 }
 
 .btn.btn-lg{
@@ -805,7 +861,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .btn.btn-lg.btn-square{
-    @apply px-4;
+    @apply px-2;
 }
 
 .btn:disabled{
@@ -892,7 +948,7 @@ select.error:has(option:checked:disabled) {
 .btn-down,
 .btn-delete,
 .btn-edit{
-    @apply rounded-lg p-1.5 border-inactive text-inactive duration-200;
+    @apply rounded-xl p-1.5 border-inactive text-inactive duration-200;
 }
 
 .btn-up:hover,
@@ -948,7 +1004,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .per-page-select > select {
-    @apply border border-corp rounded-lg bg-transparent w-full text-active px-3 py-0.5;
+    @apply border border-corp rounded-xl bg-transparent w-full text-active px-3 py-0.5;
 }
 
 .per-page-select.active > select {
@@ -976,7 +1032,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .badge{
-    @apply text-sm px-2 py-1 rounded-lg max-w-full break-all;
+    @apply text-sm px-2 py-1 rounded-xl max-w-full break-all;
 }
 
 .badge.badge-sm{
@@ -1008,7 +1064,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .alert{
-    @apply p-6 text-center text-inactive rounded-lg relative overflow-hidden; 
+    @apply p-6 text-center text-inactive rounded-xl relative overflow-hidden; 
 }
 
 .alert.light{
@@ -1032,7 +1088,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .note{
-    @apply pl-3 py-3 px-9 border-inactive bg-active rounded-lg relative;
+    @apply pl-3 py-3 px-9 border-inactive bg-active rounded-xl relative;
 }
 
 .note button {
@@ -1092,7 +1148,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .card {
-    @apply bg-active rounded-lg max-w-full relative border-inactive overflow-hidden shadow-lg;
+    @apply bg-active rounded-xl max-w-full relative border-inactive overflow-hidden shadow-lg;
 }
 
 .card.card-sm{
@@ -1125,7 +1181,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .tag-wrap{
-    @apply bg-active rounded-lg border-inactive flex flex-wrap gap-2;
+    @apply bg-active rounded-xl border-inactive flex flex-wrap gap-2;
 }
 
 .tag-wrap.tag-wrap-full{
@@ -1149,7 +1205,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .tag{
-    @apply text-sm pr-1.5 pl-2 py-1 rounded-lg flex items-center max-w-full break-all;
+    @apply text-sm pr-1.5 pl-2 py-1 rounded-xl flex items-center max-w-full break-all;
 }
 
 .tag-wrap.tag-wrap-full .tag{
@@ -1185,7 +1241,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .list-wrap{
-    @apply bg-active rounded-lg border-inactive max-h-44 overflow-y-scroll;
+    @apply bg-active rounded-xl border-inactive max-h-44 overflow-y-scroll;
 }
 
 .list-wrap.inactive{
@@ -1217,7 +1273,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .list-group{
-    @apply bg-active rounded-lg border-inactive px-4;
+    @apply bg-active rounded-xl border-inactive px-4;
 }
 
 .list-group.nowrap{
@@ -1326,7 +1382,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .modal{
-    @apply bg-active p-6 shadow-md rounded-lg duration-200 w-full relative overflow-hidden;
+    @apply bg-active p-6 shadow-md rounded-xl duration-200 w-full relative overflow-hidden;
     transform: translateY(-2rem)
 }
 
@@ -1501,7 +1557,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .dropdown-menu, .multiple-select-menu-wrap{
-    @apply hidden absolute z-30 rounded-lg shadow-xl bg-active text-sm border-inactive px-4 my-2 w-max;
+    @apply hidden absolute z-30 rounded-xl shadow-xl bg-active text-sm border-inactive px-4 my-2 w-max;
 }
 
 .multiple-select-menu-wrap{
@@ -1555,7 +1611,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .tab-header-item{
-    @apply px-3 py-2 border-inactive bg-active rounded-lg hover:cursor-pointer text-inactive flex items-center relative;
+    @apply px-3 py-2 border-inactive bg-active rounded-xl hover:cursor-pointer text-inactive flex items-center relative;
 }
 
 .tab-header-item.active{
@@ -1587,7 +1643,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .progress{
-    @apply w-full bg-inactive rounded-lg border-inactive my-2 overflow-hidden;
+    @apply w-full bg-inactive rounded-xl border-inactive my-2 overflow-hidden;
 }
 
 .progress.active{

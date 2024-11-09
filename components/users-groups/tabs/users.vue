@@ -93,14 +93,14 @@
         <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
             <template v-if="users.data?.length > 0">
                 <div class="table table-sm selectable">
-                    <loader v-if="pending" class="overlay" />
+                    <loader v-if="pending" :className="'overlay'" />
                     <table ref="tableRef">
                         <thead>
                             <tr>
                                 <sortTableHead v-for="(head, index) in userTableHeads" :key="index" :title="head.title"
                                     :keyName="head.keyName" :sortKey="sortKey" :sortDirection="sortDirection"
-                                    :sortHandler="debounceUsers" @update:sortKey="sortKey = $event"
-                                    @update:sortDirection="sortDirection = $event" />
+                                    :sortType="head.sortType" :sortHandler="debounceUsers"
+                                    @update:sortKey="sortKey = $event" @update:sortDirection="sortDirection = $event" />
                             </tr>
                         </thead>
 
@@ -131,7 +131,7 @@
             </template>
 
             <alert v-else :className="'light'">
-                <loader v-if="pending" class="overlay" />
+                <loader v-if="pending" :className="'overlay'" />
                 <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
             </alert>
         </div>
@@ -360,23 +360,28 @@ const sortDirection = ref('asc'); // Направление сортировки
 const userTableHeads = [
     {
         title: t('form.last_name') + ' ' + t('form.first_name'),
-        keyName: 'users.last_name'
+        keyName: 'users.last_name',
+        sortType: 'alpha'
     },
     {
         title: t('form.email'),
-        keyName: 'users.email'
+        keyName: 'users.email',
+        sortType: 'alpha'
     },
     {
         title: t('form.phone'),
-        keyName: 'users.phone'
+        keyName: 'users.phone',
+        sortType: 'numeric'
     },
     {
         title: t('registered_at'),
-        keyName: 'users.created_at'
+        keyName: 'users.created_at',
+        sortType: 'numeric'
     },
     {
         title: t('status'),
-        keyName: 'types_of_status_lang.status_type_name'
+        keyName: 'types_of_status_lang.status_type_name',
+        sortType: 'alpha'
     }
 ];
 

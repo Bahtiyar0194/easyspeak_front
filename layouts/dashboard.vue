@@ -83,6 +83,12 @@ const dashboardMenu = [
         icon: 'pi pi-file',
         link: '/dashboard/operations-requests',
         roles: [1, 2]
+    },
+    {
+        title: 'pages.dictionary-sentences.title',
+        icon: 'pi pi-book',
+        link: '/dashboard/dictionary-sentences',
+        roles: [1]
     }
 ];
 

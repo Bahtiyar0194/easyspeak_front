@@ -13,6 +13,21 @@ export default defineNuxtConfig({
     head: {
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1',
+      script: [
+        {
+          children: `
+            (function() {
+              const savedTheme = document.cookie.match(new RegExp('(^| )theme=([^;]+)'))?.[2];
+              if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+              } else {
+                document.documentElement.classList.remove('dark');
+              }
+            })();
+          `,
+          type: 'text/javascript',
+        }
+      ]
     }
   },
 
