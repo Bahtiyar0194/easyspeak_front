@@ -1,10 +1,14 @@
 export default {
+    yes: 'Да',
+    no: 'Нет',
     you: 'Это вы',
     add: 'Добавить',
     added: 'Добавлен',
     not_added: 'Не добавлен',
     delete: 'Удалить',
     choose: "Выбрать",
+    choose_an_option: "Выберите вариант",
+    choose_your_option: "Выберите свой вариант",
     download: "Скачать",
     export_to_png: "Экспорт в PNG",
     export_to_xlsx: "Экспорт в XLSX",
@@ -62,11 +66,13 @@ export default {
     },
 
     file: {
+        files: "Файлы",
         name: "Название файла",
         size: "Размер файла",
         type: "Тип файла",
         specify_the_file_type: "Укажите тип файла",
         selected_file: "Выбранный Вами файл",
+        change_file: "Выбрать другой файл",
         file_ready_to_upload: "Файл готов к загрузке",
         upload: "Загрузить",
         upload_file: "Загрузить файл",
@@ -84,10 +90,12 @@ export default {
         lack_of_disk_space: "Не хватает места на диске для загрузки данного файла. Для увеличения места на диске Вам нужно перейти на более высокий тарифный план.",
         choose_file: "Выберите файл",
         image: {
-            select: "Выберите изображение"
+            select: "Выберите файл изображения",
+            current: "Текущий загруженный файл изображения"
         },
         audio: {
-            select: "Выберите аудиофайл"
+            select: "Выберите аудиофайл",
+            current: "Текущий загруженный аудиофайл"
         }
     },
 
@@ -297,16 +305,27 @@ export default {
 
         courses: {
             course: 'Курс',
-            choose_a_course: 'Выберите курс'
+            choose_a_course: 'Выберите курс',
+            course_level: 'Категория курса',
+            choose_a_course_level: 'Выберите категорию курса',
+            course_section: 'Глава',
+            choose_a_course_section: 'Выберите главу'
         },
 
-        "dictionary-sentences": {
-            title: 'Словарь и предложения'
+        lessons: {
+            lesson: 'Урок',
+            choosing_a_lesson: 'Выбор урока',
+            choose_a_lesson: 'Выберите урок'
+        },
+
+        "education-program": {
+            title: 'Учебная программа'
         },
 
         dictionary: {
             title: 'Словарь',
             word: 'Cлово',
+            added_words_count: 'Количество добавленных слов',
             add_word_title: 'Добавление слова в словарь',
             edit_word_title: 'Редактирование слова',
             transcription: 'Транскрипция',
@@ -318,7 +337,44 @@ export default {
         },
 
         sentences: {
-            title: 'Предложения'
+            title: 'Предложения',
+            sentence: 'Предложение',
+            add_sentence_title: 'Добавление предложения',
+            edit_sentence_title: 'Редактирование предложения',
+            transcription: 'Транскрипция',
+            translate: {
+                kk: 'Перевод предложения на казахском языке',
+                ru: 'Перевод предложения на русском языке'
+            },
+            search_filter: 'Фильтр поиска по предложениям'
+        },
+
+        tasks: {
+            title: 'Задания',
+            task_slug: 'Название задания на основном языке',
+            task_name: 'Название задания',
+            task_type: 'Тип задания',
+            add_a_task: 'Добавить задание',
+            adding_a_task: 'Добавление задания',
+            task_options: {
+                title: 'Настройки задания',
+                show_audio_button: 'Показывать аудиокнопку',
+                show_image: 'Показывать изображение',
+                show_transcription: 'Показывать транскрипцию',
+                show_translate: 'Показывать перевод',
+                impression_limit: 'Лимит показов'
+            },
+            translate: {
+                kk: 'Название задания на казахском языке',
+                ru: 'Название задания на русском языке',
+                en: 'Название задания на английском языке'
+            },
+            missing_letters: {
+                select_words: 'Выбор слов',
+                select_letters: 'Выбор букв',
+                note_1: 'Кликните по буквам, которые необходимо удалить из слова.'
+            },
+            search_filter: 'Фильтр поиска по заданиям'
         },
 
         training: {

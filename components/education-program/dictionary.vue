@@ -39,9 +39,8 @@
 
                             <div class="col-span-12">
                                 <multipleSelect :className="'form-group-border select active label-active'"
-                                    :icon="'pi pi-book'" :label="$t('pages.courses.course')"
-                                    :items="attributes.courses" :optionName="'courses[]'"
-                                    :optionValue="'course_id'" :optionLabel="'course_name'"
+                                    :icon="'pi pi-book'" :label="$t('pages.courses.course')" :items="attributes.courses"
+                                    :optionName="'courses[]'" :optionValue="'course_id'" :optionLabel="'course_name'"
                                     :onChange="debounceWords" />
                             </div>
 
@@ -125,10 +124,10 @@
                                 <td>
                                     <div class="flex items-center gap-x-4">
                                         <audioButton v-if="word.audio_file"
-                                        :src="config.public.apiBase + '/media/' + word.audio_file" @click.stop />
+                                            :src="config.public.apiBase + '/media/' + word.audio_file" @click.stop />
                                         <div v-if="word.image_file"
                                             :style="{ 'backgroundImage': 'url(' + config.public.apiBase + '/media/' + word.image_file + ')' }"
-                                            class="h-9 w-9 bg-cover bg-no-repeat bg-center rounded-xl">
+                                            class="h-9 w-9 bg-cover bg-no-repeat bg-center rounded-lg">
                                         </div>
                                     </div>
                                 </td>
@@ -224,7 +223,7 @@
                         </div>
 
                         <div class="col-span-12">
-                            <fileUploadButton :id="'add_word_poster_file'" :name="'image_file'" :accept="'image/*'"
+                            <fileUploadButton :id="'add_word_image_file'" :name="'image_file'" :accept="'image/*'"
                                 :error="errors.image_file" :icon="'pi pi-image'" :label="$t('file.image.select')" />
                         </div>
 
@@ -245,17 +244,17 @@
         </template>
     </modal>
 
-    <modal :show="wordModalIsVisible" :onClose="() => closeWordModal()" :className="word?.image_file ? 'modal-3xl' : 'modal-lg'"
-        :showLoader="pendingWord" :closeOnClickSelf="true">
+    <modal :show="wordModalIsVisible" :onClose="() => wordModalIsVisible = false"
+        :className="word?.image_file ? 'modal-3xl' : 'modal-lg'" :showLoader="pendingWord" :closeOnClickSelf="true">
         <template v-slot:header_content>
             <h3>{{ word?.word }}</h3>
         </template>
         <template v-if="word" v-slot:body_content>
             <div class="custom-grid">
-                <div v-if="word.image_file" class="col-span-12 lg:col-span-4">
+                <div v-if="word.image_file" class="col-span-3 lg:col-span-4">
                     <img class="w-full h-auto rounded-xl" :src="config.public.apiBase + '/media/' + word.image_file" />
                 </div>
-                <div class="col-span-12" :class="word.image_file && 'lg:col-span-8'">
+                <div :class="word.image_file ? 'col-span-9 lg:col-span-8' : 'col-span-12'">
                     <div class="flex flex-col gap-y-3">
                         <audioPlayerWithWave :src="config.public.apiBase + '/media/' + word.audio_file" />
                         <p class="mb-0"><span class="text-inactive">{{
@@ -263,8 +262,10 @@
                         <p class="mb-0"><span class="text-inactive">{{
                             $t("pages.courses.course") }}:</span> <b>{{ word.course_name }}</b></p>
 
-                        <p v-for="(translate, index) in word.translates" :key="index" class="mb-0"><span class="text-inactive">{{
-                            $t('pages.dictionary.translate.' + translate.lang_tag) }}:</span> <b>{{ translate.word_translate
+                        <p v-for="(translate, index) in word.translates" :key="index" class="mb-0"><span
+                                class="text-inactive">{{
+                                    $t('pages.dictionary.translate.' + translate.lang_tag) }}:</span> <b>{{
+                                    translate.word_translate
                                 }}</b></p>
 
                         <div class="flex gap-x-2 items-center">
@@ -274,77 +275,102 @@
                     </div>
                 </div>
             </div>
+
+            <roleProvider :roles="[1]">
+                <div class="btn-wrap mt-4">
+                    <button @click="getEditWord" class="btn btn-outline-primary">
+                        <i class="pi pi-pencil"></i>
+                        <span>{{ $t("edit") }}</span>
+                    </button>
+                </div>
+            </roleProvider>
         </template>
     </modal>
 
-    <modal :show="editModalIsVisible" :onClose="() => editModalIsVisible = false" :className="'modal-lg'"
+    <modal :show="editModalIsVisible" :onClose="() => closeEditModal()" :className="'modal-lg'"
         :showLoader="pendingEdit" :closeOnClickSelf="false">
         <template v-slot:header_content>
             <h4>{{ $t('pages.dictionary.edit_word_title') }}</h4>
         </template>
         <template v-if="word" v-slot:body_content>
-            <!-- <form class="mt-2" @submit.prevent="editWordSubmit(user.user_id)" ref="editFormRef">
-                <div class="custom-grid">
-                    <div class="col-span-12">
-                        <div class="form-group-border active">
-                            <i class="pi pi-user"></i>
-                            <input autoComplete="edit-first-name" name="first_name" v-model="user.first_name"
-                                type="text" placeholder=" " />
-                            <label :class="{ 'label-error': errors.first_name }">
-                                {{ errors.first_name ? errors.first_name[0] : $t("form.first_name") }}
-                            </label>
+            <div class="mt-2">
+                <form @submit.prevent="editWordSubmit" ref="editFormRef">
+                    <div class="custom-grid">
+                        <div class="col-span-12">
+                            <div class="form-group-border active">
+                                <i class="pi pi-align-left"></i>
+                                <input autoComplete="edit-word" v-model="word.word" name="word" type="text"
+                                    placeholder=" " />
+                                <label :class="{ 'label-error': errors.word }">
+                                    {{ errors.word ? errors.word[0] : $t("pages.dictionary.word") }}
+                                </label>
+                            </div>
                         </div>
-                    </div>
-                    <div class="col-span-12">
-                        <div class="form-group-border active">
-                            <i class="pi pi-user"></i>
-                            <input autoComplete="edit-last-name" name="last_name" v-model="user.last_name" type="text"
-                                placeholder=" " />
-                            <label :class="{ 'label-error': errors.last_name }">
-                                {{ errors.last_name ? errors.last_name[0] : $t("form.last_name") }}
-                            </label>
-                        </div>
-                    </div>
-                    <div class="col-span-12">
-                        <div class="form-group-border active">
-                            <i class="pi pi-at"></i>
-                            <input autoComplete="new-email" name="email" v-model="user.email" type="text"
-                                placeholder=" " />
-                            <label :class="{ 'label-error': errors.email }">
-                                {{ errors.email ? errors.email[0] : $t("form.email") }}
-                            </label>
-                        </div>
-                    </div>
-                    <div class="col-span-12">
-                        <div class="form-group-border active">
-                            <i class="pi pi-mobile"></i>
-                            <input autoComplete="new-phone" name="phone" v-model="user.phone"
-                                v-mask="'+7 (###) ###-####'" placeholder=" " />
-                            <label :class="{ 'label-error': errors.phone }">
-                                {{ errors.phone ? errors.phone[0] : $t("form.phone") }}
-                            </label>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="mt-2">
-                    <label class="label-focus" :class="errors.roles_count && 'danger'">{{ errors.roles_count ?
-                        errors.roles_count[0] : $t("pages.users.user_role") }}</label>
+                        <div class="col-span-12">
+                            <div class="form-group-border active">
+                                <i class="bi bi-braces"></i>
+                                <input autoComplete="edit-word-transcription" v-model="word.transcription"
+                                    name="transcription" type="text" placeholder=" " />
+                                <label :class="{ 'label-error': errors.transcription }">
+                                    {{ errors.transcription ? errors.transcription[0] :
+                                        $t("pages.dictionary.transcription") }}
+                                </label>
+                            </div>
+                        </div>
 
-                    <div class="btn-wrap mt-2">
-                        <label v-for="role in user.roles" :key="role.role_type_id" class="custom-radio-checkbox">
-                            <input class="edit_role_input" name="roles[]" :value="role.role_type_id" type="checkbox"
-                                :checked="role.selected" />
-                            <span>{{ role.user_role_type_name }}</span>
-                        </label>
+                        <div v-for="(translate, index) in word.translates" :key="index" class="col-span-12">
+                            <div class="form-group-border active">
+                                <i class="pi pi-align-left"></i>
+                                <input :autocomplete="'edit-word-kk-translate-' + translate.lang_tag"
+                                    v-model="translate.word_translate" :name="'word_' + translate.lang_tag" type="text"
+                                    placeholder=" " />
+                                <label :class="{ 'label-error': errors['word_' + translate.lang_tag] }">
+                                    {{ errors['word_' + translate.lang_tag] ? errors['word_' + translate.lang_tag][0] :
+                                        $t('pages.dictionary.translate.' + translate.lang_tag) }}
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-span-12">
+                            <div class="form-group-border select active label-active">
+                                <i class="pi pi-book"></i>
+                                <select name="course_id">
+                                    <option v-for="course in attributes.all_courses" :key="course.course_id"
+                                        :value="course.course_id" :selected="word.course_id === course.course_id">
+                                        {{ course.course_name }}</option>
+                                </select>
+                                <label :class="{ 'label-error': errors.course_id }">
+                                    {{ errors.course_id ? errors.course_id[0] :
+                                        $t("pages.courses.course") }}
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-span-12">
+                            <previewFileInput v-if="current_word_image" :fileType="'image'"
+                                :previewUrl="config.public.apiBase + '/media/' + word.image_file" :onChange="() => current_word_image = false" />
+                            <fileUploadButton v-else :id="'edit_word_image_file'" :name="'image_file'"
+                                :accept="'image/*'" :error="errors.image_file" :icon="'pi pi-image'"
+                                :label="$t('file.image.select')" />
+                        </div>
+
+                        <div class="col-span-12">
+                            <previewFileInput v-if="current_word_audio" :fileType="'audio'"
+                            :previewUrl="config.public.apiBase + '/media/' + word.audio_file" :onChange="() => current_word_audio = false" />
+                            <fileUploadButton v-else :id="'edit_word_audio_file'" :name="'audio_file'" :accept="'audio/*'"
+                                :error="errors.audio_file" :icon="'pi pi-volume-up'" :label="$t('file.audio.select')" />
+                        </div>
+
+                        <div class="col-span-12">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="pi pi-check"></i>
+                                <span>{{ $t("save") }}</span>
+                            </button>
+                        </div>
                     </div>
-                </div>
-
-                <button class="btn btn-primary mt-4" type="submit">
-                    <i class="pi pi-check"></i>
-                    <span>{{ $t("continue") }}</span>
-                </button>
-            </form> -->
+                </form>
+            </div>
         </template>
     </modal>
 </template>
@@ -352,6 +378,7 @@
 <script setup>
 import { useRouter } from 'nuxt/app';
 import fileUploadButton from '../ui/fileUploadButton.vue';
+import previewFileInput from '../ui/previewFileInput.vue';
 import audioButton from '../ui/audioButton.vue';
 import audioPlayerWithWave from '../ui/audioPlayerWithWave.vue';
 import userAvatar from '../ui/userAvatar.vue';
@@ -370,7 +397,7 @@ import sortTableHead from '../ui/sortTableHead.vue';
 const router = useRouter();
 const config = useRuntimeConfig();
 const errors = ref([]);
-const { $axiosPlugin, $schoolPlugin } = useNuxtApp();
+const { $axiosPlugin } = useNuxtApp();
 const { t } = useI18n();
 const pending = ref(true);
 const pendingAdd = ref(false);
@@ -385,6 +412,9 @@ const perPage = ref(10);
 const words = ref([]);
 const word = ref(null);
 const attributes = ref([]);
+
+const current_word_image = ref(false);
+const current_word_audio = ref(false);
 
 const addModalIsVisible = ref(false);
 const wordModalIsVisible = ref(false);
@@ -460,12 +490,18 @@ const getWords = async (url) => {
 }
 
 const getWord = async (word_id) => {
+    word.value = null;
     pendingWord.value = true;
+    editModalIsVisible.value = false;
     wordModalIsVisible.value = true;
     await $axiosPlugin.get('dictionary/get/' + word_id)
         .then(response => {
             errors.value = [];
             word.value = response.data;
+
+            current_word_image.value = Boolean(word.value.image_file);
+            current_word_audio.value = Boolean(word.value.audio_file);
+
             pendingWord.value = false
         }).catch(err => {
             if (err.response) {
@@ -546,49 +582,44 @@ const addWordSubmit = async () => {
         });
 }
 
-// const editWordSubmit = async (user_id) => {
-//     pendingEdit.value = true;
+const editWordSubmit = async () => {
+    pendingEdit.value = true;
 
-//     const formData = new FormData(editFormRef.value);
-//     let roles = [];
-//     document.querySelectorAll('.edit_role_input:checked').forEach(role => {
-//         roles.push(parseInt(role.value));
-//     });
+    const formData = new FormData(editFormRef.value);
 
-//     formData.append('roles_count', roles.length);
-//     formData.append('operation_type_id', 2);
-//     formData.append('user_id', user_id);
+    formData.append('current_word_image', current_word_image.value);
+    formData.append('current_word_audio', current_word_audio.value);
+    formData.append('operation_type_id', 10);
 
-//     await $axiosPlugin.post('users/update', formData)
-//         .then(response => {
-//             errors.value = false;
-//             getWord(user_id);
-//             getWords();
-//             pendingEdit.value = false;
-//             editModalIsVisible.value = false;
-//             wordModalIsVisible.value = true;
-//         }).catch(err => {
-//             if (err.response) {
-//                 if (err.response.status == 422) {
-//                     errors.value = err.response.data;
-//                     pendingEdit.value = false;
-//                 }
-//                 else {
-//                     router.push({
-//                         path: '/error',
-//                         query: {
-//                             status: err.response.status,
-//                             message: err.response.data.message,
-//                             url: err.request.responseURL,
-//                         }
-//                     });
-//                 }
-//             }
-//             else {
-//                 router.push('/error');
-//             }
-//         });
-// }
+    await $axiosPlugin.post('dictionary/update/' + word.value.word_id, formData)
+        .then(response => {
+            errors.value = false;
+            getWord(response.data.word_id);
+            words.value = [];
+            getWords();
+            pendingEdit.value = false;
+        }).catch(err => {
+            if (err.response) {
+                if (err.response.status == 422) {
+                    errors.value = err.response.data;
+                    pendingEdit.value = false;
+                }
+                else {
+                    router.push({
+                        path: '/error',
+                        query: {
+                            status: err.response.status,
+                            message: err.response.data.message,
+                            url: err.request.responseURL,
+                        }
+                    });
+                }
+            }
+            else {
+                router.push('/error');
+            }
+        });
+}
 
 const closeAddModal = () => {
     addModalIsVisible.value = false;
@@ -597,11 +628,9 @@ const closeAddModal = () => {
     errors.value = [];
 }
 
-const closeWordModal = () => {
-    wordModalIsVisible.value = false;
-    setTimeout(() => {
-        word.value = null;
-    }, 200);
+const closeEditModal = () => {
+    editModalIsVisible.value = false;
+    wordModalIsVisible.value = true;
 }
 
 const showHideWordSearchFilter = () => {

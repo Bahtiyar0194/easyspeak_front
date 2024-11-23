@@ -1,10 +1,14 @@
 export default {
+    yes: 'Иә',
+    no: 'Жоқ',
     you: 'Бұл сіз',
     add: 'Қосу',
     added: 'Қосылды',
     not_added: 'Қосылмаған',
     delete: 'Жойып тастау',
     choose: "Таңдау",
+    choose_an_option: "Нұсқаны таңдаңыз",
+    choose_your_option: "Өз нұсқаңызды таңдаңыз",
     download: "Жүктеп алу",
     export_to_png: "PNG экпорттау",
     export_to_xlsx: "XLSX экспорттау",
@@ -63,11 +67,13 @@ export default {
     },
 
     file: {
+        files: "Файлдар",
         name: "Файлдың атауы",
         size: "Файлдың өлшемі",
         type: "Файлдың түрі",
         specify_the_file_type: "Файлдың түрін көрсетіңіз",
         selected_file: "Сіз таңдаған файл",
+        change_file: "Басқа файл таңдау",
         file_ready_to_upload: "Файл жүктелуге дайын",
         upload: "Жүктеу",
         upload_file: "Файл жүктеу",
@@ -85,10 +91,12 @@ export default {
         lack_of_disk_space: "Мына файлды жүктеу үшін дискідегі орын жеткіліксіз. Дискідегі орынды ұлғайту үшін сізге жоғарғы тарифтік жоспарға көшу қажет.",
         choose: "Файлды таңдаңыз",
         image: {
-            select: "Суретті таңдаңыз"
+            select: "Суретті таңдаңыз",
+            current: "Ағымдағы жүктеліп тұрған сурет"
         },
         audio: {
-            select: "Аудиофайл таңдаңыз"
+            select: "Аудиофайл таңдаңыз",
+            current: "Ағымдағы жүктеліп тұрған аудио"
         }
     },
 
@@ -298,16 +306,27 @@ export default {
 
         courses: {
             course: 'Курс',
-            choose_a_course: 'Курсты таңдаңыз'
+            choose_a_course: 'Курсты таңдаңыз',
+            course_level: 'Курстың санаты',
+            choose_a_course_level: 'Курстың санатын таңдаңыз',
+            course_section: 'Тарау',
+            choose_a_course_section: 'Тарауды таңдаңыз'
         },
 
-        "dictionary-sentences": {
-            title: 'Сөздік және сөйлемдер'
+        lessons: {
+            lesson: 'Сабақ',
+            choosing_a_lesson: 'Сабақты таңдау',
+            choose_a_lesson: 'Сабақты таңдаңыз'
+        },
+
+        "education-program": {
+            title: 'Оқу бағдарламасы'
         },
 
         dictionary: {
             title: 'Сөздік',
             word: 'Cөз',
+            added_words_count: 'Қосылған сөздер саны',
             add_word_title: 'Сөздікке сөз қосу',
             edit_word_title: 'Сөзді қайта өңдеу',
             transcription: 'Транскрипциясы',
@@ -319,7 +338,43 @@ export default {
         },
 
         sentences: {
-            title: 'Сөйлемдер'
+            title: 'Сөйлемдер',
+            sentence: 'Cөйлем',
+            add_sentence_title: 'Сөйлем қосу',
+            edit_sentence_title: 'Сөйлемді қайта өңдеу',
+            transcription: 'Транскрипциясы',
+            translate: {
+                kk: 'Сөйлемнің қазақша тілдегі аудармасы',
+                ru: 'Сөзйлемнің орысша тілдегі аудармасы'
+            },
+            search_filter: 'Сөйлемді іздеу сүзгісі'
+        },
+
+        tasks: {
+            title: 'Тапсырмалар',
+            task_slug: 'Тапсырманың негізгі тілдегі атауы',
+            task_name: 'Тапсырманың атауы',
+            add_a_task: 'Тапсырма қосу',
+            adding_a_task: 'Тапсырма қосу',
+            task_options: {
+                title: 'Тапсырманың баптаулары',
+                show_audio_button: 'Аудиобатырманы көрсету',
+                show_image: 'Суретін көрсету',
+                show_transcription: 'Транскрипциясын көрсету',
+                show_translate: 'Аудармасын көрсету',
+                impression_limit: 'Көрсету шектеуі'
+            },
+            translate: {
+                kk: 'Тапсырманың қазақша тілдегі атауы',
+                ru: 'Тапсырманың орысша тілдегі атауы',
+                en: 'Тапсырманың ағылшынша тілдегі атауы'
+            },
+            missing_letters: {
+                select_words: 'Сөздерді таңдау',
+                select_letters: 'Әріптерді таңдау',
+                note_1: 'Сөзден алып тастау керек әріптерді басыңыз'
+            },
+            search_filter: 'Тапсырманы іздеу сүзгісі'
         },
 
         training: {

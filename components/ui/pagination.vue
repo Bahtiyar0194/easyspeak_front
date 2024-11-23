@@ -5,12 +5,13 @@
     <div class="pagination-wrap">
         <div v-if="props.items && props.items.last_page > 1" class="pagination">
             <button v-if="props.items.current_page > 1" @click="setItems(props.items.first_page_url)"
-                class="btn btn-square btn-sm btn-light" :title="$t('pagination.first_page_title')">
+                class="btn btn-square btn-sm btn-light" type="button" :title="$t('pagination.first_page_title')">
                 &#171;
             </button>
 
             <button v-for="(link, index) in filteredLinks" :key="index" @click="setItems(link.url)"
                 :class="['btn btn-square btn-sm', link.active ? 'btn-outline-primary disabled' : 'btn-light']"
+                type="button"
                 :title="getButtonTitle(link.label)">
                 <template v-if="link.label === 'pagination.previous'">&#8249;</template>
                 <template v-else-if="link.label === 'pagination.next'">&#8250;</template>
@@ -18,7 +19,7 @@
             </button>
 
             <button v-if="props.items.last_page > props.items.current_page" @click="setItems(props.items.last_page_url)"
-                class="btn btn-square btn-sm btn-light" :title="$t('pagination.last_page_title')">
+                class="btn btn-square btn-sm btn-light" type="button" :title="$t('pagination.last_page_title')">
                 &#187;
             </button>
         </div>
@@ -37,7 +38,7 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-const perPageValues = [10, 100, 1000, 10000, 100000, 1000000];
+const perPageValues = [5, 10, 100, 1000, 10000, 100000, 1000000];
 
 const props = defineProps({
     items: {

@@ -28,7 +28,7 @@ const tabs_data = [
         name: 'groups',
         title: t('pages.groups.title'),
         icon: 'pi pi-users',
-        //component: groups
+        component: groups
     }
 ];
 </script>

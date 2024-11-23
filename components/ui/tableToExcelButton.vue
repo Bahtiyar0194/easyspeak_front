@@ -10,7 +10,7 @@ import * as XLSX from 'xlsx';
 const props = defineProps({
     table: {
         type: HTMLElement,
-        required: true
+        required: false
     },
     fileName: {
         type: String,

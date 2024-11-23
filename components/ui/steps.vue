@@ -7,7 +7,8 @@
         <div class="steps-wrap">
             <div v-for="(step, index) in props.steps" :key="index" class="step-item" :class="{
                 'current': props.currentStep === (index + 1),
-                'completed': props.currentStep > (index + 1)
+                'completed': props.currentStep > (index + 1),
+                'xs': props.steps.length >= 3
             }">
                 <div class="step-icon">
                     <i v-if="props.currentStep > (index + 1)" class="fas fa-check"></i>

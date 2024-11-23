@@ -3,11 +3,13 @@
 </template>
 <script setup>
 import tabs from '../../../components/ui/tabs.vue';
-import dictionary from '../../../components/dictionary-sentences/dictionary.vue';
+import dictionary from '../../../components/education-program/dictionary.vue';
+import sentences from '../../../components/education-program/sentences.vue';
+import tasks from '../../../components/education-program/tasks.vue';
 const { t } = useI18n();
 
 useHead({
-    title: t('pages.dictionary-sentences.title'),
+    title: t('pages.education-program.title'),
     meta: [{ name: "description", content: "My amazing site." }],
 });
 
@@ -27,7 +29,14 @@ const tabs_data = [
         name: 'sentences',
         title: t('pages.sentences.title'),
         icon: 'pi pi-comment',
-        //component: groups
+        component: sentences
+    },
+
+    {
+        name: 'tasks',
+        title: t('pages.tasks.title'),
+        icon: 'pi pi-clock',
+        component: tasks
     }
 ];
 </script>

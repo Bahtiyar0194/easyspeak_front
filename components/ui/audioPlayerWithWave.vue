@@ -1,6 +1,6 @@
 <template>
-    <div class="flex items-center gap-x-4">
-        <button type="button" class="btn btn-square btn-lg btn-primary" :class="props.className" @click="toggleAudio"
+    <div class="flex items-center gap-x-4" :class="props.className">
+        <button type="button" class="btn btn-square btn-lg btn-primary" @click="toggleAudio"
             :title="$t('click_to_listen_to_the_audio')">
             <i class="pi" :class="isPlaying ? 'pi-pause' : 'pi-volume-up'"></i>
         </button>

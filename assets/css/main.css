@@ -849,15 +849,15 @@ select.error:has(option:checked:disabled) {
 }
 
 .btn.btn-sm{
-    @apply px-1.5 py-1 text-sm;
+    @apply px-2 py-1 text-sm rounded-lg;
 }
 
 .btn.btn-sm.btn-square{
-    @apply px-1;
+    @apply min-w-7;
 }
 
 .btn.btn-lg{
-    @apply px-3 py-2 text-lg;
+    @apply rounded-lg px-3 py-2 text-lg;
 }
 
 .btn.btn-lg.btn-square{
@@ -1004,7 +1004,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .per-page-select > select {
-    @apply border border-corp rounded-xl bg-transparent w-full text-active px-3 py-0.5;
+    @apply border border-corp rounded-lg bg-transparent w-full text-active px-3 py-0.5;
 }
 
 .per-page-select.active > select {
@@ -1329,7 +1329,11 @@ select.error:has(option:checked:disabled) {
 }
 
 .step-item{
-    @apply flex items-center justify-center flex-col gap-y-2 text-center font-medium text-xs md:text-base w-min md:w-auto z-10 bg-active text-inactive px-4;
+    @apply flex items-center justify-center flex-col gap-y-2 text-center font-medium text-xs md:text-base w-min md:w-auto z-10 bg-active text-inactive px-2 lg:px-4;
+}
+
+.step-item.xs{
+    @apply text-[10px] md:text-xs 
 }
 
 .step-item:first-child{
@@ -1342,6 +1346,10 @@ select.error:has(option:checked:disabled) {
 
 .step-icon{
     @apply rounded-full bg-active border-inactive text-inactive w-10 h-10 flex justify-center items-center text-xl text-center;
+}
+
+.step-item.xs .step-icon{
+    @apply w-8 h-8 text-lg;
 }
 
 .step-item.current, .step-item.completed{
@@ -1420,6 +1428,10 @@ select.error:has(option:checked:disabled) {
 
 .modal.modal-6xl{
     @apply max-w-6xl;
+}
+
+.modal.modal-full{
+    @apply w-full;
 }
 
 .modal-backdrop.show > .modal{

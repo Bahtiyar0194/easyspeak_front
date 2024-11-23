@@ -7,28 +7,29 @@
             <template v-if="previewUrl">
                 <img v-if="selectedFile.type.startsWith('image/')" :src="previewUrl" alt="Preview"
                     class="w-auto h-14 mx-auto rounded-lg mb-2" />
-                <audioButton v-else-if="selectedFile.type.startsWith('audio/')" :src="previewUrl"
-                    :className="'btn-sm btn-success mb-2 mx-auto'" />
+                <audioPlayerWithWave v-else-if="selectedFile.type.startsWith('audio/')" :src="previewUrl" :className="'mx-6 mb-4'" />
             </template>
 
             <i v-else-if="props.icon" :class="props.icon"></i>
 
             <div v-if="selectedFile">
+                <p v-if="props.error" class="text-danger">
+                    {{ props.error[0] || props.error}}
+                </p>
                 <p v-if="selectedFile.name" class="text-xs mb-0">
                     {{ $t('file.name') }}: <i>{{ selectedFile.name }}</i>
                 </p>
                 <p v-if="selectedFile.size" class="text-xs mb-0">
-                    {{ $t('file.size') }}: <i>{{ (selectedFile.size / 1048576).toFixed(2) }} {{ $t('megabyte') }}</i>
+                    {{ $t('file.size') }}: <i>{{ (selectedFile.size / 1048576).toFixed(2) }} {{ $t('file.megabyte') }}</i>
                 </p>
             </div>
-            <p v-else class="mb-0" :class="props.error && 'text-danger'">{{ props.error ? props.error[0] : props.label
-                }}</p>
+            <p v-else class="mb-0">{{ props.label}}</p>
         </label>
     </div>
 </template>
 
 <script setup>
-import audioButton from './audioButton.vue';
+import audioPlayerWithWave from './audioPlayerWithWave.vue';
 
 const inputWrapper = ref(null);
 

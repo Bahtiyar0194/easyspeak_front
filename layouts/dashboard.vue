@@ -85,9 +85,9 @@ const dashboardMenu = [
         roles: [1, 2]
     },
     {
-        title: 'pages.dictionary-sentences.title',
+        title: 'pages.education-program.title',
         icon: 'pi pi-book',
-        link: '/dashboard/dictionary-sentences',
+        link: '/dashboard/education-program',
         roles: [1]
     }
 ];

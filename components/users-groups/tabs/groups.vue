@@ -21,6 +21,7 @@
                     <h5>{{ $t("pages.groups.search_filter") }}</h5>
                     <form @submit.prevent="debounceReset" ref="searchFormRef">
                         <div class="custom-grid">
+
                             <div class="col-span-12">
                                 <div class="form-group-border active">
                                     <i class="pi pi-users"></i>
@@ -30,11 +31,27 @@
                             </div>
 
                             <div class="col-span-12">
+                                <div class="form-group-border select active label-active">
+                                    <i class="pi pi-book"></i>
+                                    <select name="course_id" v-model="selectedCourseId" @change="onCourseChange">
+                                        <option selected value="">{{ $t("not_selected") }}
+                                        </option>
+                                        <option v-for="(course, courseIndex) in attributes.courses" :key="courseIndex"
+                                            :value="course.course_id">
+                                            {{ course.course_name }}</option>
+                                    </select>
+                                    <label :class="{ 'label-error': errors.course_id }">
+                                        {{ errors.course_id ? errors.course_id[0] :
+                                            $t("pages.courses.course") }}
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div v-if="selectedCourseId" class="col-span-12">
                                 <multipleSelect :className="'form-group-border select active label-active'"
                                     :icon="'pi pi-users'" :label="$t('pages.groups.group_category')"
-                                    :items="attributes.group_categories" :optionName="'categories[]'"
-                                    :optionValue="'category_id'" :optionLabel="'category_name'"
-                                    :onChange="debounceGroups" />
+                                    :items="selectedCourse?.levels" :optionName="'levels[]'" :optionValue="'level_id'"
+                                    :optionLabel="'level_name'" :onChange="debounceGroups" />
                             </div>
 
                             <div class="col-span-12">
@@ -97,15 +114,17 @@
                             <tr>
                                 <sortTableHead v-for="(head, index) in groupsTableHeads" :key="index"
                                     :title="head.title" :keyName="head.keyName" :sortKey="sortKey"
-                                    :sortDirection="sortDirection" :sortType="head.sortType" :sortHandler="debounceGroups"
-                                    @update:sortKey="sortKey = $event" @update:sortDirection="sortDirection = $event" />
+                                    :sortDirection="sortDirection" :sortType="head.sortType"
+                                    :sortHandler="debounceGroups" @update:sortKey="sortKey = $event"
+                                    @update:sortDirection="sortDirection = $event" />
                             </tr>
                         </thead>
 
                         <tbody>
                             <tr v-for="group in groups.data" :key="group.group_id" @click="getGroup(group.group_id)">
                                 <td>{{ group.group_name }}</td>
-                                <td>{{ group.category_name }}</td>
+                                <td>{{ group.course_name }}</td>
+                                <td>{{ group.level_name }}</td>
                                 <td>
                                     <div class="flex gap-x-2 items-center">
                                         <userAvatar :padding="0.5" :className="'w-6 h-6'" :user="{
@@ -160,7 +179,7 @@
                     $t("pages.groups.group_description") }}:</span> <b>{{
                             currentGroup.group_description }}</b></p>
                 <p class="mb-0"><span class="text-inactive">{{ $t("pages.groups.group_category") }}:</span> <b>{{
-                    currentGroup.category_name }}</b></p>
+                    currentGroup.level.level_name }}</b></p>
 
                 <div class="flex gap-x-2 items-center">
                     <p class="mb-0"><span class="text-inactive">{{ $t("mentor") }}:</span></p>
@@ -171,7 +190,7 @@
                     <p class="mb-0"><span class="text-inactive">{{ $t("operator") }}:</span></p>
                     <userTag v-if="currentGroup.operator" :user="currentGroup.operator" />
                 </div>
-                
+
                 <p class="mb-0" v-if="currentGroup.group_members"><span class="text-inactive">{{
                     $t("pages.groups.members_count") }}:</span> <b>{{
                             currentGroup.group_members.length }}</b></p>
@@ -324,8 +343,13 @@ const groupsTableHeads = [
         sortType: 'alpha'
     },
     {
+        title: t('pages.courses.course'),
+        keyName: 'courses_lang.course_name',
+        sortType: 'alpha'
+    },
+    {
         title: t('pages.groups.group_category'),
-        keyName: 'group_categories.category_name',
+        keyName: 'course_levels_lang.level_name',
         sortType: 'alpha'
     },
     {
@@ -600,11 +624,25 @@ const showHideGroupSearchFilter = () => {
 
 const resetGroupSearchFilter = () => {
     searchFormRef.value.reset();
+    selectedCourseId.value = "";
     getGroups();
 }
 
 const debounceGroups = debounceHandler(() => getGroups(), 1000);
 const debounceReset = debounceHandler(() => resetGroupSearchFilter(), 500);
+
+// Реактивные свойства для отслеживания выбранных значений
+const selectedCourseId = ref("");
+
+// Вычисляемые свойства для получения выбранных данных
+const selectedCourse = computed(() =>
+    attributes?.value?.courses?.find((course) => course.course_id === Number(selectedCourseId.value))
+);
+
+// Сброс значений при изменении выбора
+const onCourseChange = () => {
+    debounceGroups();
+};
 
 onMounted(() => {
     getGroupAttributes();
