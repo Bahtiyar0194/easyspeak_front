@@ -7,12 +7,19 @@
             </button>
         </div>
 
-        <div class="col-span-12 lg:col-span-4" :class="searchFilter ? 'block' : 'hidden'">
+        <div class="col-span-12 lg:col-span-3" :class="searchFilter ? 'block' : 'hidden'">
             <stickyBox>
                 <div class="card p-4">
                     <h5>{{ $t("pages.dictionary.search_filter") }}</h5>
                     <form @submit.prevent="debounceReset" ref="searchFormRef">
                         <div class="custom-grid">
+                            <div class="col-span-12">
+                                <multipleSelect :className="'form-group-border select active label-active'"
+                                    :icon="'pi pi-book'" :label="$t('pages.courses.course')" :items="attributes.courses"
+                                    :optionName="'courses[]'" :optionValue="'course_id'" :optionLabel="'course_name'"
+                                    :onChange="debounceWords" />
+                            </div>
+
                             <div class="col-span-12">
                                 <div class="form-group-border active">
                                     <i class="pi pi-align-left"></i>
@@ -30,13 +37,6 @@
                             </div>
 
                             <div class="col-span-12">
-                                <multipleSelect :className="'form-group-border select active label-active'"
-                                    :icon="'pi pi-book'" :label="$t('pages.courses.course')" :items="attributes.courses"
-                                    :optionName="'courses[]'" :optionValue="'course_id'" :optionLabel="'course_name'"
-                                    :onChange="debounceWords" />
-                            </div>
-
-                            <div class="col-span-12">
                                 <div class="btn-wrap">
                                     <button type="submit" class="btn btn-sm btn-outline-primary">
                                         <i class="pi pi-undo"></i>
@@ -50,7 +50,7 @@
             </stickyBox>
         </div>
 
-        <div class="col-span-12" :class="searchFilter && 'lg:col-span-8'">
+        <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
             <template v-if="words.data?.length > 0">
                 <div class="table table-sm selectable">
                     <loader v-if="pending" :className="'overlay'" />
@@ -128,15 +128,15 @@
 
 <script setup>
 import { useRouter } from 'nuxt/app';
-import audioButton from '../../../../ui/audioButton.vue';
-import loader from '../../../../ui/loader.vue';
-import alert from '../../../../ui/alert.vue';
-import stickyBox from '../../../../ui/stickyBox.vue';
-import pagination from '../../../../ui/pagination.vue';
-import { debounceHandler } from '../../../../../utils/debounceHandler';
-import multipleSelect from '../../../../ui/multipleSelect.vue';
-import sortTableHead from '../../../../ui/sortTableHead.vue';
-import tag from '../../../../ui/tag.vue';
+import audioButton from '../../../ui/audioButton.vue';
+import loader from '../../../ui/loader.vue';
+import alert from '../../../ui/alert.vue';
+import stickyBox from '../../../ui/stickyBox.vue';
+import pagination from '../../../ui/pagination.vue';
+import { debounceHandler } from '../../../../utils/debounceHandler';
+import multipleSelect from '../../../ui/multipleSelect.vue';
+import sortTableHead from '../../../ui/sortTableHead.vue';
+import tag from '../../../ui/tag.vue';
 
 const router = useRouter();
 const config = useRuntimeConfig();
@@ -162,6 +162,12 @@ const props = defineProps({
     selectedWords: {
         type: Object,
         required: true
+    },
+
+    selectOnlyWordsWithImage: {
+        default: false,
+        type: Boolean,
+        required: false
     }
 });
 
@@ -192,6 +198,10 @@ const getWords = async (url) => {
     formData.append('per_page', perPage.value);
     formData.append('sort_key', sortKey.value);  // Добавляем ключ сортировки
     formData.append('sort_direction', sortDirection.value);  // Добавляем направление сортировки
+
+    if(props.selectOnlyWordsWithImage === true){
+        formData.append('image_file', true);
+    }
 
     if (!url) {
         url = 'dictionary/get';

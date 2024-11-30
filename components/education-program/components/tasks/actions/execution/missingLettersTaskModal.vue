@@ -35,8 +35,8 @@
                 </span>
             </div>
         </div>
-        <div class="col-span-12 mt-4">
-            <button class="btn btn-primary" @click="checkWords">Проверить</button>
+        <div class="col-span-12">
+            <button class="btn btn-primary" @click="checkWords">{{ $t('check') }}</button>
         </div>
     </div>
 </template>
@@ -69,7 +69,7 @@ const changeModalSize = inject("changeModalSize");
 const getTask = async () => {
     try {
         onPending(true);
-        const res = await $axiosPlugin.get("tasks/get_missing_letters_task/" + props.task.task_id);
+        const res = await $axiosPlugin.get("tasks/missing_letters/" + props.task.task_id);
         taskData.value = res.data;
 
         // Инициализация массивов

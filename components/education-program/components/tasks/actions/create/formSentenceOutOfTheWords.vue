@@ -31,7 +31,7 @@
 <script setup>
 import { useRouter } from 'nuxt/app';
 import steps from '../../../../../ui/steps.vue';
-import selectWordsFromDictionary from '../../selectWordsFromDictionary.vue';
+import selectSentences from '../../selectSentences.vue';
 import secondStep from '../../missing-letters/secondStep.vue';
 import courseStructureForm from '../../../../../courses/courseStructureForm.vue';
 import taskOptionsForm from '../../taskOptionsForm.vue';
@@ -40,7 +40,7 @@ const { t } = useI18n();
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
 const createFormRef = ref(null);
-const selectedWords = ref([]);
+const selectedSentences = ref([]);
 
 const errors = ref([]);
 
@@ -50,16 +50,10 @@ const closeModal = inject('closeModal');
 
 const newTaskSteps = [
     {
-        title: t('pages.dictionary.select_words'),
-        component: selectWordsFromDictionary,
-        props: { errors, selectedWords },
+        title: t('pages.sentences.select_sentences'),
+        component: selectSentences,
+        props: { errors, selectedSentences },
         modalSize: 'full'
-    },
-    {
-        title: t('pages.tasks.missing_letters.select_letters'),
-        component: secondStep,
-        props: { errors, selectedWords },
-        modalSize: '3xl'
     },
     {
         title: t('pages.lessons.choosing_a_lesson'),
@@ -70,7 +64,7 @@ const newTaskSteps = [
     {
         title: t('pages.tasks.task_options.title'),
         component: taskOptionsForm,
-        props: { errors },
+        props: { errors, showImage: false, showAudioButton: false, showTranscription: false, showTranslate: false, showImpressionLimit: false },
         modalSize: '2xl'
     }
 ];
@@ -85,12 +79,12 @@ const backToStep = (step) => {
 const createTaskSubmit = async () => {
     onPending(true);
     const formData = new FormData(createFormRef.value);
-    formData.append('words_count', selectedWords.value.length);
-    formData.append('words', JSON.stringify(selectedWords.value));
+    formData.append('sentences_count', selectedSentences.value.length);
+    formData.append('sentences', JSON.stringify(selectedSentences.value));
     formData.append('operation_type_id', 13);
     formData.append('step', currentStep.value);
 
-    await $axiosPlugin.post('tasks/missing_letters', formData)
+    await $axiosPlugin.post('tasks/form_a_sentence_out_of_the_words', formData)
         .then(res => {
             onPending(false);
             if (res.data.step) {

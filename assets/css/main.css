@@ -11,6 +11,40 @@
     }
 }
 
+@keyframes wobble {
+    0% {
+        transform: translateX(0px);
+    }
+
+    25% {
+        transform: translateX(-2px);  
+    }
+
+    50% {
+        transform: translateX(0px);  
+    }
+
+    75% {
+        transform: translateX(2px);  
+    }
+
+    100% {
+        transform: translateX(0px);
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
 /*Montserrat*/
 
 @font-face {
@@ -251,10 +285,6 @@
     @apply fill-slate-500 dark:fill-white;
 }
 
-.stroke-active{
-    @apply stroke-slate-500 dark:stroke-white;
-}
-
 .text-success{
     @apply text-green-500;
 }
@@ -283,8 +313,28 @@
     -webkit-text-stroke: 1px white;
 }
 
+.stroke-active{
+    @apply stroke-slate-500 dark:stroke-white;
+}
+
 .stroke-corp{
     @apply stroke-accent-300;
+}
+
+.stroke-success{
+    @apply stroke-green-500;
+}
+
+.stroke-warning{
+    @apply stroke-yellow-500;
+}
+
+.stroke-danger{
+    @apply stroke-red-500;
+}
+
+.stroke-inactive {
+    @apply stroke-gray-100 dark:stroke-slate-900;
 }
 
 ::-webkit-scrollbar {
@@ -857,19 +907,23 @@ select.error:has(option:checked:disabled) {
 }
 
 .btn.btn-lg{
-    @apply rounded-lg px-3 py-2 text-lg;
+    @apply rounded-xl px-3 py-2 text-lg;
 }
 
 .btn.btn-lg.btn-square{
     @apply px-2;
 }
 
-.btn:disabled{
-    @apply opacity-50 pointer-events-none;
+.btn:disabled, .btn.disabled{
+    @apply pointer-events-none !cursor-not-allowed !select-none;
 }
 
-.btn.disabled{
-    @apply pointer-events-none;
+.btn.text-hidden{
+    @apply !text-transparent;
+}
+
+.btn.wobble{
+    animation: 0.25s linear infinite wobble;
 }
 
 .btn-group{
@@ -921,27 +975,27 @@ select.error:has(option:checked:disabled) {
 }
 
 .btn-outline-danger{
-    @apply bg-transparent border border-red-500 text-red-500;
+    @apply !bg-transparent border !border-red-500 !text-red-500;
 }
 
 .btn-outline-danger:hover{
-    @apply bg-red-500 border border-red-500 text-white;
+    @apply !bg-red-500 border !border-red-500 !text-white;
 }
 
 .btn-success{
-    @apply bg-green-500 text-white border-green-500 border;
+    @apply !bg-green-500 !text-white !border-green-500 border;
 }
 
 .btn-success:hover{
-    @apply bg-transparent text-green-500;
+    @apply !bg-transparent !text-green-500;
 }
 
 .btn-outline-success{
-    @apply bg-transparent border border-green-500 text-green-500;
+    @apply !bg-transparent border !border-green-500 !text-green-500;
 }
 
 .btn-outline-success:hover{
-    @apply bg-green-500 border border-green-500 text-white;
+    @apply !bg-green-500 border !border-green-500 !text-white;
 }
 
 .btn-up,
@@ -1362,6 +1416,10 @@ select.error:has(option:checked:disabled) {
 
 .step-item.completed .step-icon{
     @apply bg-success border-success text-white;
+}
+
+.step-item.failed .step-icon{
+    @apply bg-danger border-danger text-white;
 }
 
 .tasks-list-group{
@@ -1875,4 +1933,8 @@ select.error:has(option:checked:disabled) {
 .dark .canvas-container canvas {
     background-image: linear-gradient(90deg, #334155 1px, transparent 1px),
     linear-gradient(180deg, #334155 1px, transparent 1px);
+}
+
+.pulse{
+    animation: 0.5s linear infinite pulse;
 }

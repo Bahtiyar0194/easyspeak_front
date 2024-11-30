@@ -28,8 +28,10 @@ export default {
     or: 'Или',
     back: 'Назад',
     close: 'Закрыть',
+    check: 'Проверить',
     an_error_occurred: 'Произошла ошибка',
     nothing_was_found_for_your_query: "По вашему запросу ничего не найдено",
+    time_is_up: "Время вышло!",
 
     sort_by_this_column: 'Сортировать по данному столбцу',
     sort_asc: 'Сортировка по возрастанию',
@@ -48,6 +50,9 @@ export default {
     selected: "Выбрано",
     not_selected: "Не выбран",
     not_specified: "Не указан",
+    right: "Правильно!",
+    right_answer: "Правильный ответ",
+    wrong: "Неправильно!",
 
     created_at: "Дата создания",
     created_at_from: "Дата создания (с)",
@@ -325,6 +330,7 @@ export default {
         dictionary: {
             title: 'Словарь',
             word: 'Cлово',
+            select_words: 'Выбор слов',
             added_words_count: 'Количество добавленных слов',
             add_word_title: 'Добавление слова в словарь',
             edit_word_title: 'Редактирование слова',
@@ -339,6 +345,11 @@ export default {
         sentences: {
             title: 'Предложения',
             sentence: 'Предложение',
+            select_sentences: 'Выбор предложений',
+            studied_sentences: 'Изученные предложения',
+            unstudied_sentences: 'Предложения на переизучение',
+            added_sentences_count: 'Количество добавленных предложений',
+            sentences_left: "Осталось {n} предложений на повторение | Осталось {n} предложение на повторение | Осталось {n} предложения на повторение | Осталось {n} предложений на повторение",
             add_sentence_title: 'Добавление предложения',
             edit_sentence_title: 'Редактирование предложения',
             transcription: 'Транскрипция',
@@ -370,7 +381,6 @@ export default {
                 en: 'Название задания на английском языке'
             },
             missing_letters: {
-                select_words: 'Выбор слов',
                 select_letters: 'Выбор букв',
                 note_1: 'Кликните по буквам, которые необходимо удалить из слова.'
             },

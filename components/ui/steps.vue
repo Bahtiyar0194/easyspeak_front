@@ -11,7 +11,7 @@
                 'xs': props.steps.length >= 3
             }">
                 <div class="step-icon">
-                    <i v-if="props.currentStep > (index + 1)" class="fas fa-check"></i>
+                    <i v-if="props.currentStep > (index + 1)" class="pi pi-check"></i>
                     <span v-else>{{ index + 1 }}</span>
                 </div>
                 <div class="step-label">{{ step.title }}</div>

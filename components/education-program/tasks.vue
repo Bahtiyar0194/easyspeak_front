@@ -15,6 +15,7 @@
                             <template v-slot:menu_content>
                                 <li v-for="(task_type, index) in taskAttributes.all_task_types" :key="index">
                                     <button @click="openTaskModal(task_type.task_type_component, 'create', null)">
+                                        <i :class="task_type.icon"></i>
                                         {{ task_type.task_type_name }}
                                     </button>
                                 </li>
@@ -228,7 +229,7 @@
     <modal :show="modalIsVisible" :onClose="() => closeModal()" :className="modalClass" :showLoader="pendingModal"
         :closeOnClickSelf="false">
         <template v-slot:header_content>
-            <h4>{{ task ? task.task_slug : $t('pages.tasks.adding_a_task') }}</h4>
+            <h3>{{ task ? task.task_slug : $t('pages.tasks.adding_a_task') }}</h3>
         </template>
         <template v-slot:body_content>
             <component :is="currentModal" v-bind="modalProps" />

@@ -27,7 +27,7 @@
                 </label>
             </div>
         </div>
-        <div class="col-span-12">
+        <div v-if="props.showAudioButton" class="col-span-12">
             <div class="form-group-border select active label-active">
                 <i class="pi pi-volume-up"></i>
                 <select name="show_audio_button">
@@ -40,7 +40,7 @@
                 </label>
             </div>
         </div>
-        <div class="col-span-12">
+        <div v-if="props.showImage" class="col-span-12">
             <div class="form-group-border select active label-active">
                 <i class="pi pi-image"></i>
                 <select name="show_image">
@@ -53,7 +53,7 @@
                 </label>
             </div>
         </div>
-        <div class="col-span-12">
+        <div v-if="props.showTranscription" class="col-span-12">
             <div class="form-group-border select active label-active">
                 <i class="bi bi-braces"></i>
                 <select name="show_transcription">
@@ -66,7 +66,7 @@
                 </label>
             </div>
         </div>
-        <div class="col-span-12">
+        <div v-if="props.showTranslate" class="col-span-12">
             <div class="form-group-border select active label-active">
                 <i class="pi pi-language"></i>
                 <select name="show_translate">
@@ -79,7 +79,7 @@
                 </label>
             </div>
         </div>
-        <div class="col-span-12">
+        <div v-if="props.showImpressionLimit" class="col-span-12">
             <div class="form-group-border select active label-active">
                 <i class="pi pi-eye"></i>
                 <select name="impression_limit">
@@ -98,7 +98,32 @@ const props = defineProps({
     errors: {
         type: Object,
         required: true,
-    }
+    },
+    showAudioButton: {
+        default: true,
+        type: Boolean,
+        required: false
+    },
+    showImage: {
+        default: true,
+        type: Boolean,
+        required: false
+    },
+    showTranscription: {
+        default: true,
+        type: Boolean,
+        required: false
+    },
+    showTranslate: {
+        default: true,
+        type: Boolean,
+        required: false
+    },
+    showImpressionLimit: {
+        default: true,
+        type: Boolean,
+        required: false
+    },
 });
 
 const { errors } = toRefs(props);

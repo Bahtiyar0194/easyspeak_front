@@ -99,8 +99,8 @@
                                     :keyName="head.keyName" :sortKey="sortKey" :sortDirection="sortDirection"
                                     :sortType="head.sortType" :sortHandler="debounceSentences"
                                     @update:sortKey="sortKey = $event" @update:sortDirection="sortDirection = $event" />
-                                <!-- <th>
-                                </th> -->
+                                <th>
+                                </th>
                             </tr>
                         </thead>
 
@@ -121,7 +121,7 @@
                                 </td>
                                 <td>{{ new Date(sentence.created_at).toLocaleString() }}</td>
                                 <td :class="sentence.status_color">{{ sentence.status_type_name }}</td>
-                                <!-- <td>
+                                <td>
                                     <div class="flex items-center gap-x-4">
                                         <audioButton v-if="sentence.audio_file"
                                             :src="config.public.apiBase + '/media/' + sentence.audio_file" @click.stop />
@@ -130,7 +130,7 @@
                                             class="h-9 w-9 bg-cover bg-no-repeat bg-center rounded-lg">
                                         </div>
                                     </div>
-                                </td> -->
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -225,12 +225,12 @@
                         <!-- <div class="col-span-12">
                             <fileUploadButton :id="'add_sentence_image_file'" :name="'image_file'" :accept="'image/*'"
                                 :error="errors.image_file" :icon="'pi pi-image'" :label="$t('file.image.select')" />
-                        </div>
+                        </div> -->
 
                         <div class="col-span-12">
                             <fileUploadButton :id="'add_sentence_audio_file'" :name="'audio_file'" :accept="'audio/*'"
                                 :error="errors.audio_file" :icon="'pi pi-volume-up'" :label="$t('file.audio.select')" />
-                        </div> -->
+                        </div>
 
                         <div class="col-span-12">
                             <button class="btn btn-primary" type="submit">
@@ -256,7 +256,7 @@
                 </div> -->
                 <div :class="sentence.image_file ? 'col-span-9 lg:col-span-8' : 'col-span-12'">
                     <div class="flex flex-col gap-y-3">
-                        <!-- <audioPlayerWithWave :src="config.public.apiBase + '/media/' + sentence.audio_file" /> -->
+                        <audioPlayerWithWave :src="config.public.apiBase + '/media/' + sentence.audio_file" />
                         <!-- <p class="mb-0"><span class="text-inactive">{{
                             $t("pages.sentences.transcription") }}:</span> <b>[{{ sentence.transcription }}]</b></p> -->
                         <p class="mb-0"><span class="text-inactive">{{
@@ -353,14 +353,14 @@
                             <fileUploadButton v-else :id="'edit_sentence_image_file'" :name="'image_file'"
                                 :accept="'image/*'" :error="errors.image_file" :icon="'pi pi-image'"
                                 :label="$t('file.image.select')" />
-                        </div>
+                        </div> -->
 
                         <div class="col-span-12">
                             <previewFileInput v-if="current_sentence_audio" :fileType="'audio'"
                             :previewUrl="config.public.apiBase + '/media/' + sentence.audio_file" :onChange="() => current_sentence_audio = false" />
                             <fileUploadButton v-else :id="'edit_sentence_audio_file'" :name="'audio_file'" :accept="'audio/*'"
                                 :error="errors.audio_file" :icon="'pi pi-volume-up'" :label="$t('file.audio.select')" />
-                        </div> -->
+                        </div>
 
                         <div class="col-span-12">
                             <button class="btn btn-primary" type="submit">
@@ -499,7 +499,7 @@ const getSentence = async (sentence_id) => {
             errors.value = [];
             sentence.value = response.data;
             // current_sentence_image.value = Boolean(sentence.value.image_file);
-            // current_sentence_audio.value = Boolean(sentence.value.audio_file);
+            current_sentence_audio.value = Boolean(sentence.value.audio_file);
 
             pendingSentence.value = false
         }).catch(err => {
@@ -586,7 +586,7 @@ const editSentenceSubmit = async () => {
     const formData = new FormData(editFormRef.value);
 
     // formData.append('current_sentence_image', current_sentence_image.value);
-    // formData.append('current_sentence_audio', current_sentence_audio.value);
+    formData.append('current_sentence_audio', current_sentence_audio.value);
     formData.append('operation_type_id', 12);
 
     await $axiosPlugin.post('sentences/update/' + sentence.value.sentence_id, formData)

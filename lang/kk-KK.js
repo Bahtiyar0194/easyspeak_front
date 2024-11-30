@@ -28,8 +28,10 @@ export default {
     or: 'Немесе',
     back: 'Артқа',
     close: 'Жабу',
+    check: 'Тексеру',
     an_error_occurred: 'Қателік орнады',
     nothing_was_found_for_your_query: "Сіздің сұранымыңыз бойынша ештеңе табылған жоқ",
+    time_is_up: "Уақыт бітті!",
 
     sort_by_this_column: 'Осы баған бойынша сұрыптау',
     sort_asc: 'Өсу бойынша сұрыптау',
@@ -48,6 +50,9 @@ export default {
     selected: "Таңдалды",
     not_selected: "Таңдалмаған",
     not_specified: "Көрсетілмеген",
+    right: "Дұрыс!",
+    right_answer: "Дұрыс жауап",
+    wrong: "Дұрыс емес!",
 
     created_at: "Шыққан уақыты",
     created_at_from: "Шыққан уақыты (бастап)",
@@ -326,6 +331,7 @@ export default {
         dictionary: {
             title: 'Сөздік',
             word: 'Cөз',
+            select_words: 'Сөздерді таңдау',
             added_words_count: 'Қосылған сөздер саны',
             add_word_title: 'Сөздікке сөз қосу',
             edit_word_title: 'Сөзді қайта өңдеу',
@@ -340,6 +346,11 @@ export default {
         sentences: {
             title: 'Сөйлемдер',
             sentence: 'Cөйлем',
+            select_sentences: 'Сөйлемдерді таңдау',
+            studied_sentences: 'Зерттелген сөйлемдер',
+            unstudied_sentences: 'Қайта зерттеуге арналған сөйлемдер',
+            added_sentences_count: 'Қосылған сөйлемдер саны',
+            sentences_left: "Қайталау үшін {n} сөйлем қалды",
             add_sentence_title: 'Сөйлем қосу',
             edit_sentence_title: 'Сөйлемді қайта өңдеу',
             transcription: 'Транскрипциясы',
@@ -354,6 +365,7 @@ export default {
             title: 'Тапсырмалар',
             task_slug: 'Тапсырманың негізгі тілдегі атауы',
             task_name: 'Тапсырманың атауы',
+            task_type: 'Тапсырманың түрі',
             add_a_task: 'Тапсырма қосу',
             adding_a_task: 'Тапсырма қосу',
             task_options: {
@@ -370,7 +382,6 @@ export default {
                 en: 'Тапсырманың ағылшынша тілдегі атауы'
             },
             missing_letters: {
-                select_words: 'Сөздерді таңдау',
                 select_letters: 'Әріптерді таңдау',
                 note_1: 'Сөзден алып тастау керек әріптерді басыңыз'
             },

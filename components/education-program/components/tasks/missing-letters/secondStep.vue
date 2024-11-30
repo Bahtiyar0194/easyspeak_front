@@ -48,8 +48,6 @@ const toggleLetterRemoval = (letterIndex, wordIndex) => {
     } else {
         word.removedLetters.splice(index, 1);
     }
-
-    console.log(selectedWords.value)
 };
 
 const { errors, selectedWords } = toRefs(props);
