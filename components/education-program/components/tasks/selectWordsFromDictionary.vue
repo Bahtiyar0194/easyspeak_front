@@ -103,8 +103,9 @@
         </div>
 
         <div class="col-span-12">
-            <p :class="{ 'text-danger': errors.words_count && !selectedWords.length }">
-                <span v-if="errors.words_count && !selectedWords.length">{{ errors.words_count[0] }}</span>
+            <p :class="{ 'text-danger': errors.words_count && (selectedWords.length < props.minimumWordsCount) }">
+                <span v-if="errors.words_count && (selectedWords.length < props.minimumWordsCount)">{{ errors.words_count[0]
+                    }}</span>
                 <span v-else> {{ $t("pages.dictionary.added_words_count") }}: <b>{{ selectedWords.length
                         }}</b></span>
             </p>
@@ -168,6 +169,12 @@ const props = defineProps({
         default: false,
         type: Boolean,
         required: false
+    },
+
+    minimumWordsCount: {
+        default: 1,
+        type: Number,
+        required: false
     }
 });
 
@@ -199,7 +206,7 @@ const getWords = async (url) => {
     formData.append('sort_key', sortKey.value);  // Добавляем ключ сортировки
     formData.append('sort_direction', sortDirection.value);  // Добавляем направление сортировки
 
-    if(props.selectOnlyWordsWithImage === true){
+    if (props.selectOnlyWordsWithImage === true) {
         formData.append('image_file', true);
     }
 

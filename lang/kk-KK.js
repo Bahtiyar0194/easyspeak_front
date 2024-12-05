@@ -51,8 +51,10 @@ export default {
     not_selected: "Таңдалмаған",
     not_specified: "Көрсетілмеген",
     right: "Дұрыс!",
-    right_answer: "Дұрыс жауап",
+    right_answer: "Дұрыс жауабы",
     wrong: "Дұрыс емес!",
+    get_ready: "Дайын болыңыз",
+    number_of_options: "Нұсқалар саны",
 
     created_at: "Шыққан уақыты",
     created_at_from: "Шыққан уақыты (бастап)",
@@ -332,10 +334,14 @@ export default {
             title: 'Сөздік',
             word: 'Cөз',
             select_words: 'Сөздерді таңдау',
+            studied_words: 'Зерттелген сөздер',
+            unstudied_words: 'Қайта зерттеуге арналған сөздер',
             added_words_count: 'Қосылған сөздер саны',
+            words_left: "Қайталауға қалған сөздер саны",
             add_word_title: 'Сөздікке сөз қосу',
             edit_word_title: 'Сөзді қайта өңдеу',
             transcription: 'Транскрипциясы',
+            seconds_per_word: 'Әр сөзді табуға бөлінетін секунд саны',
             translate: {
                 kk: 'Сөздің қазақша тілдегі аудармасы',
                 ru: 'Сөздің орысша тілдегі аудармасы'
@@ -350,10 +356,11 @@ export default {
             studied_sentences: 'Зерттелген сөйлемдер',
             unstudied_sentences: 'Қайта зерттеуге арналған сөйлемдер',
             added_sentences_count: 'Қосылған сөйлемдер саны',
-            sentences_left: "Қайталау үшін {n} сөйлем қалды",
+            sentences_left: "Қайталауға қалған сөйлемдер саны",
             add_sentence_title: 'Сөйлем қосу',
             edit_sentence_title: 'Сөйлемді қайта өңдеу',
             transcription: 'Транскрипциясы',
+            seconds_per_sentence: 'Әр сөйлемді табуға бөлінетін секунд саны',
             translate: {
                 kk: 'Сөйлемнің қазақша тілдегі аудармасы',
                 ru: 'Сөзйлемнің орысша тілдегі аудармасы'
@@ -372,6 +379,7 @@ export default {
                 title: 'Тапсырманың баптаулары',
                 show_audio_button: 'Аудиобатырманы көрсету',
                 show_image: 'Суретін көрсету',
+                show_word: 'Аударылатын сөзді көрсету',
                 show_transcription: 'Транскрипциясын көрсету',
                 show_translate: 'Аудармасын көрсету',
                 impression_limit: 'Көрсету шектеуі'
@@ -379,7 +387,9 @@ export default {
             translate: {
                 kk: 'Тапсырманың қазақша тілдегі атауы',
                 ru: 'Тапсырманың орысша тілдегі атауы',
-                en: 'Тапсырманың ағылшынша тілдегі атауы'
+                en: 'Тапсырманың ағылшынша тілдегі атауы',
+                from_the_main_lang_to_the_current_lang: 'Негізгі тілден сайттың ағымдағы тіліне аудару',
+                from_the_current_lang_to_the_main_lang: 'Cайттың ағымдағы тілінен негізгі тілге аудару'
             },
             missing_letters: {
                 select_letters: 'Әріптерді таңдау',

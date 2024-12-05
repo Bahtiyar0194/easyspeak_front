@@ -1,20 +1,18 @@
 <template>
     <div v-if="!props.startCommand || timeIsUp"
-        class="rounded-full flex items-center justify-center text-5xl text-success p-1 shadow-xl border-inactive"
-        :style="{ width: props.size + 'px', height: props.size + 'px' }">
+        class="rounded-full flex flex-none items-center justify-center text-5xl text-success p-1 shadow-xl border-inactive w-16 h-16">
         <div
-            class="w-full h-full border-4 rounded-full flex items-center justify-center text-5xl" :class="timeIsUp ? 'border-danger text-danger' : 'border-success text-success'">
+            class="w-full h-full border-2 rounded-full flex items-center justify-center text-3xl" :class="timeIsUp ? 'border-danger text-danger' : 'border-success text-success'">
             <i class="pi" :class="timeIsUp ? 'pi-times' : 'pi-check'"></i>
         </div>
     </div>
-    <div v-else class=" rounded-full flex shadow-xl justify-center items-center relative"
-        :style="{ width: props.size + 'px', height: props.size + 'px' }">
+    <div v-else class=" rounded-full flex flex-none shadow-xl justify-center items-center relative w-16 h-16">
         <svg class="w-full h-full absolute left-0 right-0 -rotate-90" viewBox="0 0 100 100">
             <circle class="background-circle fill-none stroke-inactive" cx="50" cy="50" r="45" />
             <circle class="progress-circle fill-none" :class="progressClass" cx="50" cy="50" r="45"
                 :style="circleStyle" />
         </svg>
-        <div class="font-medium text-2xl" :class="timerClass">{{ formattedTime }}</div>
+        <div class="font-medium" :class="timerClass">{{ formattedTime }}</div>
     </div>
 </template>
 
@@ -34,11 +32,6 @@ const props = defineProps({
     isWrong: {
         type: Boolean,
         required: false,
-    },
-    size: {
-        type: Number,
-        default: 200,
-        required: false
     },
 });
 

@@ -1,9 +1,8 @@
 <template>
     <div class="steps">
-        <div class="progress">
-            <div class="progress-bar success sm" :style="{ width: progressPercentage + '%' }"></div>
-        </div>
 
+        <progressBar :progressPercentage="progressPercentage" :className="'success sm'" />
+        
         <div class="steps-wrap">
             <div v-for="(step, index) in props.steps" :key="index" class="step-item" :class="{
                 'current': props.currentStep === (index + 1),
@@ -23,6 +22,7 @@
 </template>
 
 <script setup>
+import progressBar from './progressBar.vue';
 const props = defineProps({
     currentStep: {
         type: Number,

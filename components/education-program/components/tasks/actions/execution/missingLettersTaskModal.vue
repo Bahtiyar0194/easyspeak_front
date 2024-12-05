@@ -22,7 +22,7 @@
                                 style="width: 1.5ch; text-align: center;" maxlength="1" @focus="clearIncorrect(wordIndex, letterIndex)" />
                         </div>
 
-                        <div class="btn btn-square btn-sm disabled btn-light" v-else>
+                        <div class="btn btn-square btn-sm pointer-events-none btn-light" v-else>
                             {{ letter }}
                         </div>
                     </div>

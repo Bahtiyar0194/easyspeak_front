@@ -1,4 +1,5 @@
 <template>
+    <countdownTaskTimer v-if="showTaskTimer" />
     <div v-if="taskData?.sentences" class="custom-grid">
         <div v-if="!isFinished" class="col-span-12">
             <div class="custom-grid">
@@ -7,36 +8,38 @@
                 </div>
 
                 <div class="col-span-12">
-                    <p v-if="timeIsUp" class="mb-0 text-xl font-medium text-center text-danger">{{ $t('time_is_up') }}
+                    <progressBar :progressPercentage="progressPercentage" />
+
+                    <p v-if="timeIsUp" class="font-medium text-center text-danger">{{ $t('time_is_up') }}
                     </p>
-                    <p v-else-if="isComplete" class="mb-0 text-xl font-medium text-center text-success">{{ $t('right')
+                    <p v-else-if="isComplete" class="font-medium text-center text-success">{{ $t('right')
                         }}</p>
-                    <p v-else-if="isWrong" class="mb-0 text-xl font-medium text-center text-danger">{{ $t('wrong') }}
+                    <p v-else-if="isWrong" class="font-medium text-center text-danger">{{ $t('wrong') }}
                     </p>
-                    <p v-else-if="sentencesLeft > 0" class="mb-0 text-xl font-medium text-center">{{
-                        $t('pages.sentences.sentences_left', {
-                            n: sentencesLeft
-                        }) }}</p>
+                    <p v-else-if="sentencesLeft > 0" class="text-center">{{
+                        $t('pages.sentences.sentences_left') }}: <b>{{ sentencesLeft }}</b></p>
                 </div>
 
                 <div class="col-span-12">
                     <div class="flex justify-center items-center">
                         <countdownCircleTimer :totalSeconds="time" :startCommand="isStarted" :isWrong="isWrong"
-                            :size="timerSize" @timeIsUp="timerIsUp()" />
+                            @timeIsUp="timerIsUp()" />
                     </div>
                 </div>
 
                 <div class="col-span-12">
                     <div class="bg-inactive p-4 rounded-xl font-medium text-center w-fit mx-auto"
                         :class="isComplete && 'text-success'">{{
-                            currentSentence.sentence_translate }}
+                            taskData?.options.in_the_main_lang ? currentSentence?.sentence_translate :
+                        currentSentence?.sentence }}
                     </div>
                 </div>
 
                 <div v-if="timeIsUp || isWrong" class="col-span-12">
                     <div class="bg-inactive p-6 rounded-xl text-center">
                         <p class="text-inactive mb-2">{{ $t('right_answer') }}</p>
-                        <p class="text-2xl mb-0 font-medium">{{ currentSentence.sentence }}</p>
+                        <p class="text-2xl mb-0 font-medium">{{ taskData?.options.in_the_main_lang ?
+                            currentSentence?.sentence : currentSentence?.sentence_translate }}</p>
                     </div>
                 </div>
 
@@ -61,10 +64,11 @@
                         <div class="col-span-12">
                             <div class="flex justify-center">
                                 <div class="btn-wrap justify-center mb-1 mx-0.5">
-                                    <button v-for="(word, wordIndex) in cleanedSentenceWords" :key="`${word}-${wordIndex}-${currentSentence.sentence_id}`" v-motion="{
-                                        initial: { opacity: 0, scale: 0.5 },
-                                        enter: { opacity: 1, scale: 1, transition: { delay: wordIndex * 50, type: 'spring', stiffness: 500, damping: 20 } }
-                                    }" @click="checkSentence(word, wordIndex)" class="btn"
+                                    <button v-for="(word, wordIndex) in cleanedSentenceWords"
+                                        :key="`${word}-${wordIndex}-${currentSentence?.sentence_id}`" v-motion="{
+                                            initial: { opacity: 0, scale: 0.5 },
+                                            enter: { opacity: 1, scale: 1, transition: { delay: wordIndex * 50, type: 'spring', stiffness: 500, damping: 20 } }
+                                        }" @click="checkSentence(word, wordIndex)" class="btn"
                                         :class="successButtonsIndex.includes(wordIndex) ? 'disabled text-hidden btn-outline-success' : errorButtonsIndex.includes(wordIndex) ? 'btn-danger wobble' : 'btn-light'">{{
                                             word
                                         }}</button>
@@ -135,13 +139,15 @@ import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
 import audioButton from "../../../../../ui/audioButton.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
-
+import countdownTaskTimer from "../../../../../ui/countdownTaskTimer.vue";
+import progressBar from "../../../../../ui/progressBar.vue";
 const router = useRouter();
 const config = useRuntimeConfig();
 const { $axiosPlugin } = useNuxtApp();
 
+const showTaskTimer = ref(false);
 const taskData = ref(null);
-const shuffledSentences = ref([]);
+const sentences = ref([]);
 const currentSentence = ref(null);
 const cleanedSentence = ref(null);
 const cleanedSentenceWords = ref([]);
@@ -160,12 +166,21 @@ const isComplete = ref(false);
 
 const time = ref(30);
 const timeIsUp = ref(false);
-const timerSize = ref(100);
 
-const attempts = ref(3);
+//Инициализированное значение попыток
+const maxAttempts = 3;
+const remainingAttempts = ref(0);
 const isWrong = ref(false);
 
-const sentencesLeft = computed(() => shuffledSentences.value.length);
+const sentencesLeft = computed(() => sentences.value.length);
+
+const progressPercentage = computed(() => {
+    const totalSentences = taskData.value?.sentences?.length || 0; // Предотвращаем ошибки, если данные ещё не загружены
+    if (totalSentences === 0) return 0; // Если общее количество предложении равно 0, возвращаем 0
+    const completedSentences = totalSentences - sentences.value.length;
+    return (completedSentences / totalSentences) * 100;
+});
+
 const isFinished = ref(false);
 
 // Получаем данные задачи из пропсов
@@ -184,12 +199,16 @@ const getTask = async () => {
     try {
         onPending(true);
         const res = await $axiosPlugin.get("tasks/form_a_sentence_out_of_the_words/" + props.task.task_id);
+        showTaskTimer.value = true;
         taskData.value = res.data;
 
         // Перемешивание предложении
-        shuffledSentences.value = [...taskData.value.sentences].sort(() => Math.random() - 0.5);
+        sentences.value = [...taskData.value.sentences];
 
-        setSentence();
+        setTimeout(() => {
+            setSentence();
+            showTaskTimer.value = false;
+        }, 3000);
     } catch (err) {
         const errorRoute = err.response
             ? {
@@ -208,23 +227,23 @@ const getTask = async () => {
 };
 
 const setSentence = () => {
-    if (shuffledSentences.value.length > 0) {
+    if (sentences.value.length > 0) {
         // Устанавливаем текущее предложение
-        currentSentence.value = shuffledSentences.value[0];
+        currentSentence.value = sentences.value[0];
 
         // Очищаем текущее предложение от знаков препинания
-        cleanedSentence.value = currentSentence.value.sentence.toLowerCase().replace(/[{}|<>.,:;""!?\/]/g, '').replace(/\s+/g, " ");
+        cleanedSentence.value = taskData.value.options.in_the_main_lang ? currentSentence.value.sentence.toLowerCase().replace(/[{}|<>.,:;""!?\/]/g, '').replace(/\s+/g, " ") : currentSentence.value.sentence_translate.toLowerCase().replace(/[{}|<>.,:;""!?\/]/g, '').replace(/\s+/g, " ");
 
         cleanedSentenceWords.value = cleanedSentence.value.split(' ').sort(() => Math.random() - 0.5);
 
-        originalSentence.value = currentSentence.value.sentence.split(" ");
+        originalSentence.value = taskData.value.options.in_the_main_lang ? currentSentence.value.sentence.split(" ") : currentSentence.value.sentence_translate.split(" ");
         userInput.value = [];
         displayedSentence.value = [];
         isComplete.value = false;
         isStarted.value = true;
         timeIsUp.value = false;
         isWrong.value = false;
-        attempts.value = 3;
+        remainingAttempts.value = maxAttempts;
 
         successButtonsIndex.value = [];
         errorButtonsIndex.value = [];
@@ -255,7 +274,7 @@ const checkSentence = (word, wordIndex) => {
                 reStudySentences.value = reStudySentences.value.filter((s) => s.task_sentence_id !== currentSentence.value.task_sentence_id);
             }
 
-            shuffledSentences.value.shift();
+            sentences.value.shift();
 
             setTimeout(() => {
                 setSentence();
@@ -271,10 +290,10 @@ const checkSentence = (word, wordIndex) => {
 
         setTimeout(() => {
             errorButtonsIndex.value = [];
-        }, 300);
+        }, 1000);
 
-        if (attempts.value >= 1) {
-            --attempts.value;
+        if (remainingAttempts.value >= 1) {
+            --remainingAttempts.value;
         }
         else {
             moveToEnd();
@@ -292,12 +311,12 @@ const timerIsUp = () => {
 
 const moveToEnd = () => {
     if (reStudySentences.value.some((s) => s.task_sentence_id === currentSentence.value.task_sentence_id)) {
-        shuffledSentences.value.shift();
+        sentences.value.shift();
     }
     else {
         // Перемещение первого элемента в конец
-        const firstElement = shuffledSentences.value.shift(); // Удаляем первый элемент
-        shuffledSentences.value.push(firstElement); // Добавляем его в конец
+        const firstElement = sentences.value.shift(); // Удаляем первый элемент
+        sentences.value.push(firstElement); // Добавляем его в конец
         reStudySentences.value.push(currentSentence.value);
     }
 }

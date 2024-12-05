@@ -1,7 +1,7 @@
 <template>
     <button
-        class="flex items-center w-full bg-gray-50 dark:bg-slate-900 hover:bg-white dark:hover:bg-slate-800 p-3 rounded-2xl border-inactive duration-200">
-        <div v-if="props.number" class="hidden lg:flex rounded-lg w-8 h-8 border-inactive justify-center items-center">{{ props.number }}</div>
+        class="btn full" :class="props.className">
+        <div v-if="props.number" class="hidden lg:flex rounded-lg w-8 h-8 border-inactive bg-active justify-center items-center" :class="props.className === 'btn-inactive disabled' ? 'text-inactive' : 'text-active'">{{ props.number }}</div>
         <div class="w-full text-center">
             <span>{{ props.text }}</span>
         </div>
@@ -15,6 +15,11 @@ const props = defineProps({
     },
     number: {
         type: Number,
+        required: false
+    },
+    className: {
+        default: 'btn-inactive',
+        type: String,
         required: false
     }
 });

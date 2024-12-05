@@ -66,7 +66,6 @@ const newTaskSteps = [
         modalSize: '2xl'
     }
 ];
-
 const currentStep = ref(1);
 
 const backToStep = (step) => {

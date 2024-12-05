@@ -242,13 +242,7 @@ import { useRouter } from 'nuxt/app';
 import dropdownMenu from '../ui/dropdownMenu.vue';
 import roleProvider from '../ui/roleProvider.vue';
 import { provide, shallowRef } from 'vue';
-
-import fileUploadButton from '../ui/fileUploadButton.vue';
-import previewFileInput from '../ui/previewFileInput.vue';
-import audioButton from '../ui/audioButton.vue';
-import audioPlayerWithWave from '../ui/audioPlayerWithWave.vue';
 import userAvatar from '../ui/userAvatar.vue';
-import userTag from '../ui/userTag.vue';
 import loader from '../ui/loader.vue';
 import alert from '../ui/alert.vue';
 import stickyBox from '../ui/stickyBox.vue';

@@ -890,6 +890,10 @@ select.error:has(option:checked:disabled) {
     @apply rounded-xl px-4 py-2 duration-200 text-center text-base w-fit; 
 }
 
+.btn.full {
+    @apply w-full flex items-center px-2;
+}
+
 .btn.long{
     @apply px-4;
 }
@@ -915,7 +919,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .btn:disabled, .btn.disabled{
-    @apply pointer-events-none !cursor-not-allowed !select-none;
+    @apply pointer-events-none !cursor-not-allowed !select-none opacity-50;
 }
 
 .btn.text-hidden{
@@ -944,6 +948,10 @@ select.error:has(option:checked:disabled) {
 
 .btn-active{
     @apply border-active text-active;
+}
+
+.btn-inactive{
+    @apply border-inactive bg-inactive text-active;
 }
 
 .btn-primary{
@@ -1713,7 +1721,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .progress{
-    @apply w-full bg-inactive rounded-xl border-inactive my-2 overflow-hidden;
+    @apply w-full bg-inactive rounded-xl my-2 overflow-hidden;
 }
 
 .progress.active{
@@ -1725,7 +1733,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .progress-bar{
-    @apply h-full bg-corp py-1 duration-200 text-center font-medium overflow-hidden text-white;
+    @apply h-full bg-corp py-1 duration-200 text-center font-medium overflow-hidden text-white rounded-lg;
 }
 
 .progress-bar.sm{
