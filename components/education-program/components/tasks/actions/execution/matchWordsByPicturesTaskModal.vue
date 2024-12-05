@@ -8,7 +8,7 @@
         <div class="col-span-12 lg:col-span-6">
             <div class="custom-grid">
                 <div v-for="(word, wordIndex) in taskData.words" :key="wordIndex"
-                    class="col-span-6 lg:col-span-4 relative rounded-lg border-inactive overflow-hidden">
+                    class="col-span-4 lg:col-span-4 relative rounded-lg border-inactive overflow-hidden">
                     <div
                         class="absolute left-2 top-2 w-6 h-6 bg-success rounded-full flex items-center justify-center text-white text-lg">
                         {{ wordIndex + 1 }}
@@ -37,7 +37,7 @@
                         <span v-if="taskData.options.show_transcription" class="text-inactive">
                             <i>[{{ word.transcription }}]</i>
                         </span>
-                        <span v-if="taskData.options.show_translate" class="text-inactive">
+                        <span v-if="taskData.options.show_translate" class="text-inactive hidden lg:block">
                             <i>{{ word.word_translate }}</i>
                         </span>
                     </div>

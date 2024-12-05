@@ -31,9 +31,12 @@
 
                 <div class="col-span-12">
                     <div class="flex flex-wrap justify-center items-center gap-2">
-                        <audioButton v-if="currentWord?.audio_file && taskData?.options.show_audio_button"
+                        <audioButton v-if="currentWord?.audio_file && taskData?.options.show_image && taskData?.options.show_audio_button"
                             :key="currentWord?.audio_file"
                             :src="config.public.apiBase + '/media/' + currentWord?.audio_file" />
+                        <div v-else-if="currentWord?.audio_file && taskData?.options.show_audio_button" class="w-full">
+                            <audioPlayerWithWave :key="currentWord?.audio_file" :src="config.public.apiBase + '/media/' + currentWord?.audio_file" />
+                        </div>
                         <h2 v-if="taskData?.options.show_word" class="text-center mb-2">{{
                             taskData?.options.in_the_main_lang ? currentWord?.word : currentWord?.word_translate }}
                         </h2>
@@ -135,6 +138,7 @@ import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
 import trainingButton from "../../../../../ui/trainingButton.vue";
 import audioButton from "../../../../../ui/audioButton.vue";
+import audioPlayerWithWave from "../../../../../ui/audioPlayerWithWave.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import countdownTaskTimer from "../../../../../ui/countdownTaskTimer.vue";
 import progressBar from "../../../../../ui/progressBar.vue";

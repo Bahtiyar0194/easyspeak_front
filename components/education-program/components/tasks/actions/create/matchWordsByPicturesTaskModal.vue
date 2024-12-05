@@ -62,7 +62,7 @@ const newTaskSteps = [
     {
         title: t('pages.tasks.task_options.title'),
         component: taskOptionsForm,
-        props: { errors, showImage: false },
+        props: { errors, showImage: false, showTranscription: true },
         modalSize: '2xl'
     }
 ];

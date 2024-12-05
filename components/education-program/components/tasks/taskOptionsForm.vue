@@ -174,7 +174,7 @@ const props = defineProps({
         required: false
     },
     showWord: {
-        default: true,
+        default: false,
         type: Boolean,
         required: false
     },

@@ -164,7 +164,7 @@ const displayedSentence = ref([]);
 const isStarted = ref(false);
 const isComplete = ref(false);
 
-const time = ref(30);
+const time = ref(0);
 const timeIsUp = ref(false);
 
 //Инициализированное значение попыток
@@ -201,7 +201,7 @@ const getTask = async () => {
         const res = await $axiosPlugin.get("tasks/form_a_sentence_out_of_the_words/" + props.task.task_id);
         showTaskTimer.value = true;
         taskData.value = res.data;
-
+        time.value = taskData.value.options.seconds_per_sentence;
         // Перемешивание предложении
         sentences.value = [...taskData.value.sentences];
 
