@@ -31,41 +31,54 @@
 
                 <div class="col-span-12">
                     <div class="flex flex-wrap justify-center items-center gap-2">
-                        <audioButton v-if="currentWord?.audio_file && taskData?.options.show_image && taskData?.options.show_audio_button"
+                        <audioButton
+                            v-if="currentWord?.audio_file && taskData?.options.show_image && taskData?.options.show_audio_button"
                             :key="currentWord?.audio_file"
                             :src="config.public.apiBase + '/media/' + currentWord?.audio_file" />
                         <div v-else-if="currentWord?.audio_file && taskData?.options.show_audio_button" class="w-full">
-                            <audioPlayerWithWave :key="currentWord?.audio_file" :src="config.public.apiBase + '/media/' + currentWord?.audio_file" />
+                            <audioPlayerWithWave :key="currentWord?.audio_file"
+                                :src="config.public.apiBase + '/media/' + currentWord?.audio_file" />
                         </div>
-                        <h2 v-if="taskData?.options.show_word" class="text-center mb-0">{{
-                            taskData?.options.in_the_main_lang ? currentWord?.word : currentWord?.word_translate }}
-                        </h2>
                     </div>
-                    <p v-if="taskData?.options.show_transcription" class="text-center text-inactive mt-2">[{{
-                        currentWord?.transcription }}]</p>
                 </div>
 
                 <div v-if="timeIsUp || isWrong" class="col-span-12">
                     <div class="bg-inactive p-6 rounded-xl text-center">
                         <p class="text-inactive mb-2">{{ $t('right_answer') }}</p>
-                        <p class="text-2xl mb-0 font-medium">{{ taskData?.options.in_the_main_lang ?
-                            currentWord?.word_translate : currentWord?.word }}</p>
+                        <p class="text-2xl mb-0 font-medium">{{ currentWord?.word }}</p>
                     </div>
                 </div>
 
                 <div v-else class="col-span-12">
                     <div class="custom-grid">
-                        <div v-for="(answer, index) in currentWord?.answer_options"
-                            :key="`${currentWord?.word}-${index}-${currentWord?.task_word_id}`"
-                            class="col-span-12 lg:col-span-6">
-                            <trainingButton
-                                :text="taskData?.options.in_the_main_lang ? answer.word_translate : answer.word"
-                                :number="index + 1"
-                                :className="successButtonIndex === index ? 'btn-success' : errorButtonIndex === index ? 'btn-danger wobble' : checkingStatus ? 'btn-inactive disabled' : 'btn-inactive'"
-                                v-motion="{
-                                    initial: { opacity: 0 },
-                                    enter: { opacity: 1, transition: { delay: index * 50, type: 'spring', stiffness: 500, damping: 20 } }
-                                }" @click="checkAnswer(index)" />
+                        <div class="col-span-12">
+                            <div class="flex justify-center flex-wrap gap-x-1 mb-2">
+                                <div v-for="(letter, letterIndex) in currentWord?.word" :key="letterIndex"
+                                    class="text-3xl font-medium" :class="isComplete && 'text-success'">
+                                    <div v-if="letter === ' ' || letter === ''" class="mx-1"></div>
+                                    <div class="text-inactive" v-else-if="missingLetters.includes(letterIndex + 1)">
+                                        _
+                                    </div>
+                                    <div v-else>
+                                        {{ letter }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p class="text-center text-lg text-inactive mb-1">{{ currentWord?.word_translate }}</p>
+                            <p v-if="taskData?.options.show_transcription" class="text-center text-sm text-inactive">[{{
+                                currentWord?.transcription }}]</p>
+                        </div>
+
+                        <div v-if="currentWord" class="col-span-12">
+                            <div class="flex justify-center gap-x-1">
+                                <button v-for="(letter, lIndex) in displayedLetters"
+                                    :key="`${currentWord?.word}-${lIndex}-${currentWord?.task_word_id}`"
+                                    @click="checkWord(letter, $event)"
+                                    class="btn btn-square btn-lg btn-light">
+                                    {{ letter }}
+                                </button>
+                            </div>
                         </div>
 
                         <div class="col-span-12">
@@ -132,11 +145,9 @@
         </div>
     </div>
 </template>
-
 <script setup>
 import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
-import trainingButton from "../../../../../ui/trainingButton.vue";
 import audioButton from "../../../../../ui/audioButton.vue";
 import audioPlayerWithWave from "../../../../../ui/audioPlayerWithWave.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
@@ -151,6 +162,7 @@ const showTaskTimer = ref(false);
 const taskData = ref(null);
 const words = ref([]);
 const currentWord = ref(null);
+const missingLetters = ref([]);
 const checkingStatus = ref(false);
 
 const time = ref(0);
@@ -163,7 +175,7 @@ const isStarted = ref(false);
 const isComplete = ref(false);
 
 //Инициализированное значение попыток
-const maxAttempts = 2;
+const maxAttempts = 3;
 const remainingAttempts = ref(0);
 const isWrong = ref(false);
 
@@ -181,7 +193,9 @@ const isFinished = ref(false);
 const successButtonIndex = ref(null);
 const errorButtonIndex = ref(null);
 
-// Получаем данные задачи из пропсов
+const missingLetterInputs = ref([]);
+const results = ref([]);
+
 const props = defineProps({
     task: {
         type: Object,
@@ -196,7 +210,7 @@ const changeModalSize = inject("changeModalSize");
 const getTask = async () => {
     try {
         onPending(true);
-        const res = await $axiosPlugin.get("tasks/learning_words/" + props.task.task_id);
+        const res = await $axiosPlugin.get("tasks/form_a_word_out_of_the_letters/" + props.task.task_id);
         showTaskTimer.value = true;
         taskData.value = res.data;
         time.value = taskData.value.options.seconds_per_word;
@@ -206,6 +220,14 @@ const getTask = async () => {
             setWord();
             showTaskTimer.value = false;
         }, 3000);
+
+        // Инициализация массивов
+        missingLetterInputs.value = taskData.value.words.map(word =>
+            Array(word.word.length).fill("")
+        );
+        results.value = taskData.value.words.map(word =>
+            Array(word.word.length).fill(null) // null - еще не проверено
+        );
     } catch (err) {
         const errorRoute = err.response
             ? {
@@ -228,6 +250,8 @@ const setWord = () => {
         // Устанавливаем текущее слово
         currentWord.value = null;
         currentWord.value = words.value[0];
+        missingLetters.value = [];
+        missingLetters.value = [...currentWord.value.missingLetters];
         checkingStatus.value = false;
 
         successButtonIndex.value = null;
@@ -244,34 +268,44 @@ const setWord = () => {
     }
 }
 
-const checkAnswer = (answerIndex) => {
-    checkingStatus.value = true;
-    if (currentWord.value.task_word_id === currentWord.value.answer_options[answerIndex].task_word_id) {
-        successButtonIndex.value = answerIndex;
+const checkWord = (letter, event) => {
+    if (letter === currentWord.value.word[missingLetters.value[0] - 1]) {
+        missingLetters.value.shift();
 
-        if (isStarted.value === true) {
-            studiedWords.value.push(currentWord.value);
-        }
-
-        isComplete.value = true;
-        isStarted.value = false;
-
-        if (reStudyWords.value.some((w) => w.task_word_id === currentWord.value.task_word_id)) {
-            reStudyWords.value = reStudyWords.value.filter((w) => w.task_word_id !== currentWord.value.task_word_id);
-        }
+        event.target.classList.remove('btn-light');
+        event.target.classList.add('btn-success');
 
         setTimeout(() => {
-            words.value.shift();
-            setWord();
-        }, 2000);
+            event.target.classList.remove('btn-success');
+            event.target.classList.add('btn-light', 'disabled', 'text-hidden');
+        }, 300);
+
+        if (missingLetters.value.length === 0) {
+            if (isStarted.value === true) {
+                studiedWords.value.push(currentWord.value);
+            }
+
+            isComplete.value = true;
+            isStarted.value = false;
+
+            if (reStudyWords.value.some((w) => w.task_word_id === currentWord.value.task_word_id)) {
+                reStudyWords.value = reStudyWords.value.filter((w) => w.task_word_id !== currentWord.value.task_word_id);
+            }
+
+            setTimeout(() => {
+                words.value.shift();
+                setWord();
+            }, 3000);
+        }
     }
     else {
-        errorButtonIndex.value = answerIndex;
+        event.target.classList.remove('btn-light');
+        event.target.classList.add('btn-danger', 'wobble');
 
         setTimeout(() => {
-            checkingStatus.value = false;
-            errorButtonIndex.value = null;
-        }, 500);
+            event.target.classList.remove('btn-danger', 'wobble');
+            event.target.classList.add('btn-light');
+        }, 300);
 
         if (remainingAttempts.value >= 1) {
             --remainingAttempts.value;
@@ -283,6 +317,31 @@ const checkAnswer = (answerIndex) => {
         }
     }
 };
+
+// Функция для генерации случайных букв
+const generateRandomLetters = (count) => {
+    const letters = "abcdefghijklmnopqrstuvwxyz";
+    return Array.from({ length: count }, () =>
+        letters[Math.floor(Math.random() * letters.length)]
+    );
+};
+
+// Подготовка букв для отображения
+const displayedLetters = computed(() => {
+    const correctLetters = currentWord.value.missingLetters.map(
+        (index) => currentWord.value?.word[index - 1]
+    );
+    const randomLetters = generateRandomLetters(5); // 5 случайных букв
+    const allLetters = [...correctLetters, ...randomLetters];
+
+    // Перемешивание букв
+    for (let i = allLetters.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allLetters[i], allLetters[j]] = [allLetters[j], allLetters[i]];
+    }
+
+    return allLetters;
+});
 
 const timerIsUp = () => {
     timeIsUp.value = true;
@@ -302,24 +361,9 @@ const moveToEnd = () => {
     }
 }
 
-// Function to log key number and handle answer checking
-const logNumber = (event) => {
-    const key = event.key;
-    if (checkingStatus.value === false && currentWord.value && (key >= '1' && key <= currentWord.value.answer_options.length)) {
-        checkAnswer(parseInt(key - 1));
-    }
-};
-
 // Инициализация при монтировании
 onMounted(() => {
     getTask();
-    changeModalSize("modal-2xl");
-    // Добавляем обработчик событий при монтировании компонента
-    window.addEventListener('keydown', logNumber);
-});
-
-onBeforeUnmount(() => {
-    // Убираем обработчик событий при размонтировании компонента
-    window.removeEventListener('keydown', logNumber);
+    changeModalSize("modal-xl");
 });
 </script>

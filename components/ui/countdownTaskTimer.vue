@@ -1,5 +1,5 @@
 <template>
-    <div class="absolute w-full h-full left-0 top-0 bg-active flex justify-center items-center z-10">
+    <div class="absolute w-full h-full left-0 top-0 bg-active flex justify-center items-center z-10 select-none">
         <div class="flex flex-col gap-y-4">
             <transition name="fade" mode="out-in">
                 <span v-if="current > 0" :key="current" class="relative text-9xl font-bold text-center text-corp">{{ current

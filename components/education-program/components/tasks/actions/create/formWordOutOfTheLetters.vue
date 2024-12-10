@@ -41,7 +41,6 @@ const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
 const createFormRef = ref(null);
 const selectedWords = ref([]);
-
 const errors = ref([]);
 
 const onPending = inject('onPending');
@@ -70,11 +69,10 @@ const newTaskSteps = [
     {
         title: t('pages.tasks.task_options.title'),
         component: taskOptionsForm,
-        props: { errors, showTranscription: true },
+        props: { errors, showTranslate: true, showTranscription: true, showImpressionLimit: false, items: selectedWords.value, showSecondsPerWord: true },
         modalSize: '2xl'
     }
 ];
-
 const currentStep = ref(1);
 
 const backToStep = (step) => {
@@ -90,7 +88,7 @@ const createTaskSubmit = async () => {
     formData.append('operation_type_id', 13);
     formData.append('step', currentStep.value);
 
-    await $axiosPlugin.post('tasks/missing_letters', formData)
+    await $axiosPlugin.post('tasks/form_a_word_out_of_the_letters', formData)
         .then(res => {
             onPending(false);
             if (res.data.step) {

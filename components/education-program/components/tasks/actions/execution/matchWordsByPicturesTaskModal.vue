@@ -7,13 +7,13 @@
         <!-- Вывод изображений -->
         <div class="col-span-12 lg:col-span-6">
             <div class="custom-grid">
-                <div v-for="(word, wordIndex) in taskData.words" :key="wordIndex"
+                <div v-for="(picture, pictureIndex) in pictures" :key="pictureIndex"
                     class="col-span-4 lg:col-span-4 relative rounded-lg border-inactive overflow-hidden">
                     <div
                         class="absolute left-2 top-2 w-6 h-6 bg-success rounded-full flex items-center justify-center text-white text-lg">
-                        {{ wordIndex + 1 }}
+                        {{ pictureIndex + 1 }}
                     </div>
-                    <img class="w-full" :src="config.public.apiBase + '/media/' + word.image_file" />
+                    <img class="w-full" :src="config.public.apiBase + '/media/' + picture.image_file" />
                 </div>
             </div>
         </div>
@@ -21,7 +21,7 @@
         <!-- Вывод слов и полей для ввода -->
         <div class="col-span-12 lg:col-span-6">
             <div class="custom-grid">
-                <div v-for="(word, wordIndex) in shuffledWords" :key="wordIndex" class="col-span-12">
+                <div v-for="(word, wordIndex) in words" :key="wordIndex" class="col-span-12">
                     <div class="flex gap-3 items-center flex-wrap text-lg" :class="{
                         'text-success': results[wordIndex] === true,
                         'text-danger': results[wordIndex] === false,
@@ -29,7 +29,7 @@
                         <div class="btn btn-square btn-sm flex justify-center items-center"
                             :class="results[wordIndex] === true ? 'btn-outline-success' : results[wordIndex] === false ? 'btn-outline-danger' : 'btn-light'">
                             <input v-model="userAnswers[wordIndex]" type="text"
-                                style="width: 1.5ch; text-align: center;" maxlength="2" />
+                                :style="{width: (words.length.toString().length + 0.5) + 'ch', textAlign: 'center'}" :maxlength="words.length.toString().length" />
                         </div>
                         <audioButton v-if="word.audio_file && taskData.options.show_audio_button"
                             :src="config.public.apiBase + '/media/' + word.audio_file" />
@@ -62,7 +62,8 @@ const config = useRuntimeConfig();
 const { $axiosPlugin } = useNuxtApp();
 
 const taskData = ref(null);
-const shuffledWords = ref([]);
+const words = ref([]);
+const pictures = ref([]);
 
 // Состояние ответов и результатов
 const userAnswers = ref([]);
@@ -83,11 +84,10 @@ const changeModalSize = inject("changeModalSize");
 const getTask = async () => {
     try {
         onPending(true);
-        const res = await $axiosPlugin.get("tasks/missing_letters/" + props.task.task_id);
+        const res = await $axiosPlugin.get("tasks/match_words_by_pictures/" + props.task.task_id);
         taskData.value = res.data;
-
-        // Перемешивание слов
-        shuffledWords.value = [...taskData.value.words].sort(() => Math.random() - 0.5);
+        words.value = [...taskData.value.words]; // Поверхностная копия массива, чтобы избежать изменения исходного массива taskData.value.words
+        pictures.value = [...taskData.value.pictures];
 
         userAnswers.value = Array(taskData.value.words.length).fill(""); // Инициализация ответов
         results.value = Array(taskData.value.words.length).fill(null); // Инициализация результатов
@@ -111,9 +111,9 @@ const getTask = async () => {
 // Проверка ответов
 const checkWords = () => {
     results.value = userAnswers.value.map((answer, index) => {
-        const shuffledWord = shuffledWords.value[index]; // Слово из перемешанного списка
-        const originalIndex = taskData.value.words.findIndex(
-            (word) => word.task_word_id === shuffledWord.task_word_id
+        const findWordIndex = words.value[index]; // Слово из перемешанного списка
+        const originalIndex = taskData.value.pictures.findIndex(
+            (word) => word.task_word_id === findWordIndex.task_word_id
         );
         const correctIndex = originalIndex + 1; // Номер изображения в оригинальном списке
         return parseInt(answer) === correctIndex;
@@ -123,6 +123,6 @@ const checkWords = () => {
 // Инициализация при монтировании
 onMounted(() => {
     getTask();
-    changeModalSize("modal-4xl");
+    changeModalSize("modal-5xl");
 });
 </script>
