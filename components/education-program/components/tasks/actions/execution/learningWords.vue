@@ -69,7 +69,7 @@
                         </div>
 
                         <div class="col-span-12">
-                            <p class="text-inactive text-center hidden lg:block mb-0">{{ $t('pages.training.keyboard')
+                            <p class="text-inactive text-center hidden lg:block mb-0">{{ $t('pages.training.keyboard.numbers')
                                 }}
                             </p>
                         </div>

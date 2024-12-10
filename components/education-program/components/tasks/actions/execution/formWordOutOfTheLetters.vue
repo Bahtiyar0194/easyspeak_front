@@ -71,18 +71,22 @@
                         </div>
 
                         <div v-if="currentWord" class="col-span-12">
-                            <div class="flex justify-center gap-x-1">
+                            <div class="flex flex-wrap justify-center gap-1">
                                 <button v-for="(letter, lIndex) in displayedLetters"
                                     :key="`${currentWord?.word}-${lIndex}-${currentWord?.task_word_id}`"
                                     @click="checkWord(letter, $event)"
-                                    class="btn btn-square btn-lg btn-light">
+                                    class="letter-btn btn btn-square btn-lg btn-light font-medium"
+                                    :class="isComplete && 'disabled text-hidden'" v-motion="{
+                                        initial: { opacity: 0 },
+                                        enter: { opacity: 1, transition: { delay: lIndex * 50, type: 'spring', stiffness: 500, damping: 20 } }
+                                    }">
                                     {{ letter }}
                                 </button>
                             </div>
                         </div>
 
                         <div class="col-span-12">
-                            <p class="text-inactive text-center hidden lg:block mb-0">{{ $t('pages.training.keyboard')
+                            <p class="text-inactive text-center hidden lg:block mb-0">{{ $t('pages.training.keyboard.title')
                                 }}
                             </p>
                         </div>
@@ -148,14 +152,18 @@
 <script setup>
 import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
+import { useToast } from 'vue-toastification';
 import audioButton from "../../../../../ui/audioButton.vue";
 import audioPlayerWithWave from "../../../../../ui/audioPlayerWithWave.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import countdownTaskTimer from "../../../../../ui/countdownTaskTimer.vue";
 import progressBar from "../../../../../ui/progressBar.vue";
+import { debounceHandler } from "../../../../../../utils/debounceHandler";
 
 const router = useRouter();
 const config = useRuntimeConfig();
+const toast = useToast();
+const { t } = useI18n();
 const { $axiosPlugin } = useNuxtApp();
 
 const showTaskTimer = ref(false);
@@ -272,13 +280,29 @@ const checkWord = (letter, event) => {
     if (letter === currentWord.value.word[missingLetters.value[0] - 1]) {
         missingLetters.value.shift();
 
-        event.target.classList.remove('btn-light');
-        event.target.classList.add('btn-success');
+        if (event) {
+            event.target.classList.replace('btn-light', 'btn-success');
+            setTimeout(() => {
+                event.target.classList.remove('btn-success');
+                event.target.classList.add('btn-inactive', 'disabled', 'text-hidden');
+            }, 300);
+        }
+        else {
+            const letterButtons = document.getElementsByClassName('letter-btn');
 
-        setTimeout(() => {
-            event.target.classList.remove('btn-success');
-            event.target.classList.add('btn-light', 'disabled', 'text-hidden');
-        }, 300);
+            for (let index = 0; index < letterButtons.length; index++) {
+                const button = letterButtons[index];
+
+                if (!button.classList.contains('disabled') && button.innerText === letter) {
+                    button.classList.replace('btn-light', 'btn-success');
+                    setTimeout(() => {
+                        button.classList.remove('btn-success');
+                        button.classList.add('btn-inactive', 'disabled', 'text-hidden');
+                    }, 300);
+                    break;
+                }
+            }
+        }
 
         if (missingLetters.value.length === 0) {
             if (isStarted.value === true) {
@@ -299,21 +323,23 @@ const checkWord = (letter, event) => {
         }
     }
     else {
-        event.target.classList.remove('btn-light');
-        event.target.classList.add('btn-danger', 'wobble');
+        if (event) {
+            event.target.classList.remove('btn-light');
+            event.target.classList.add('btn-danger', 'wobble');
 
-        setTimeout(() => {
-            event.target.classList.remove('btn-danger', 'wobble');
-            event.target.classList.add('btn-light');
-        }, 300);
+            setTimeout(() => {
+                event.target.classList.remove('btn-danger', 'wobble');
+                event.target.classList.add('btn-light');
+            }, 300);
 
-        if (remainingAttempts.value >= 1) {
-            --remainingAttempts.value;
-        }
-        else {
-            isWrong.value = true;
-            isStarted.value = false;
-            moveToEnd();
+            if (remainingAttempts.value >= 1) {
+                --remainingAttempts.value;
+            }
+            else {
+                isWrong.value = true;
+                isStarted.value = false;
+                moveToEnd();
+            }
         }
     }
 };
@@ -361,9 +387,32 @@ const moveToEnd = () => {
     }
 }
 
+const debounceKeyboard = debounceHandler(() => toast(t("pages.training.keyboard.warning"), {
+    toastClassName: ["custom-toast", "warning"],
+    timeout: 5000,
+}), 1000);
+
+// Function to log key number and handle answer checking
+const logKey = (event) => {
+    if (isComplete.value === false && isStarted.value === true) {
+        const regex = /^[a-zA-Z0-9]*$/;
+        if (!regex.test(event.key) && event.key.length === 1) {
+            event.preventDefault();
+            debounceKeyboard();
+        } else {
+            checkWord(event.key.toLowerCase());
+        }
+    }
+};
+
 // Инициализация при монтировании
 onMounted(() => {
     getTask();
-    changeModalSize("modal-xl");
+    changeModalSize("modal-2xl");
+    window.addEventListener('keydown', logKey);
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('keydown', logKey);
 });
 </script>

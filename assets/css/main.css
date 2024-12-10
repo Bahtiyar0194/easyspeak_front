@@ -890,32 +890,32 @@ select.error:has(option:checked:disabled) {
     @apply rounded-xl px-4 py-2 duration-200 text-center text-base w-fit; 
 }
 
-.btn.full {
-    @apply w-full flex items-center px-2;
-}
-
-.btn.long{
-    @apply px-4;
-}
-
 .btn.btn-square{
-    @apply px-2 flex justify-center items-center;
+    @apply flex justify-center items-center p-0;
 }
 
 .btn.btn-sm{
     @apply px-2 py-1 text-sm rounded-lg;
 }
 
-.btn.btn-sm.btn-square{
-    @apply min-w-7;
+.btn.btn-square.btn-sm{
+    @apply min-w-7 h-7 p-0;
 }
 
 .btn.btn-lg{
-    @apply rounded-xl px-3 py-2 text-lg;
+    @apply rounded-xl px-3 py-3 text-lg;
 }
 
-.btn.btn-lg.btn-square{
-    @apply px-2;
+.btn.btn-square.btn-lg{
+    @apply min-w-10 h-10 p-0;
+}
+
+.btn.full {
+    @apply w-full flex items-center px-2;
+}
+
+.btn.long{
+    @apply px-4;
 }
 
 .btn:disabled, .btn.disabled{

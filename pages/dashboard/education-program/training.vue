@@ -15,7 +15,7 @@
             </div>
         </div>
 
-        <p class="text-inactive text-center hidden lg:block">{{ $t('pages.training.keyboard') }}</p>
+        <p class="text-inactive text-center hidden lg:block">{{ $t('pages.training.keyboard.numbers') }}</p>
     </div>
 </template>
 

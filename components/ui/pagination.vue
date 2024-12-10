@@ -10,7 +10,7 @@
             </button>
 
             <button v-for="(link, index) in filteredLinks" :key="index" @click="setItems(link.url)"
-                :class="['btn btn-square btn-sm', link.active ? 'btn-outline-primary disabled' : 'btn-light']"
+                :class="['btn btn-square btn-sm', link.active ? 'btn-outline-primary pointer-events-none' : 'btn-light']"
                 type="button"
                 :title="getButtonTitle(link.label)">
                 <template v-if="link.label === 'pagination.previous'">&#8249;</template>
