@@ -926,7 +926,7 @@ select.error:has(option:checked:disabled) {
     @apply !text-transparent;
 }
 
-.btn.wobble{
+.btn.wobble, input.wobble{
     animation: 0.25s linear infinite wobble;
 }
 

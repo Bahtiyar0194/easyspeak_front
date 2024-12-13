@@ -32,6 +32,7 @@ export default {
     an_error_occurred: 'Қателік орнады',
     nothing_was_found_for_your_query: "Сіздің сұранымыңыз бойынша ештеңе табылған жоқ",
     time_is_up: "Уақыт бітті!",
+    write_here_and_press_add: "Осы жерге енгізіңіз кейін 'Қосу' батырмасын басыңыз",
 
     sort_by_this_column: 'Осы баған бойынша сұрыптау',
     sort_asc: 'Өсу бойынша сұрыптау',
@@ -52,6 +53,7 @@ export default {
     not_specified: "Көрсетілмеген",
     right: "Дұрыс!",
     right_answer: "Дұрыс жауабы",
+    answer_options: "Жауап нұсқалары",
     wrong: "Дұрыс емес!",
     get_ready: "Дайын болыңыз",
     number_of_options: "Нұсқалар саны",
@@ -394,6 +396,13 @@ export default {
             missing_letters: {
                 select_letters: 'Әріптерді таңдау',
                 note_1: 'Сөзден алып тастау керек әріптерді басыңыз'
+            },
+            missing_words: {
+                options: {
+                    option_1: 'Сөйлемдегі бос орынды жасырын сөзбен толықтыру',
+                    option_2: 'Сөйлемдегі бос орынды жасырын сөз нұсқаларының бірі арқылы толықтыру'
+                },
+                note_1: 'Сөйлемнен жасыру керек сөзді басыңыз.'
             },
             search_filter: 'Тапсырманы іздеу сүзгісі'
         },

@@ -74,8 +74,8 @@
                             <div class="flex flex-wrap justify-center gap-1">
                                 <button v-for="(letter, lIndex) in displayedLetters"
                                     :key="`${currentWord?.word}-${lIndex}-${currentWord?.task_word_id}`"
-                                    @click="checkWord(letter, $event)"
-                                    class="letter-btn btn btn-square btn-lg btn-light font-medium"
+                                    @click="checkWord(letter.toLowerCase(), $event)"
+                                    class="letter-btn btn btn-square btn-lg btn-light font-medium lowercase"
                                     :class="isComplete && 'disabled text-hidden'" v-motion="{
                                         initial: { opacity: 0 },
                                         enter: { opacity: 1, transition: { delay: lIndex * 50, type: 'spring', stiffness: 500, damping: 20 } }
@@ -86,7 +86,8 @@
                         </div>
 
                         <div class="col-span-12">
-                            <p class="text-inactive text-center hidden lg:block mb-0">{{ $t('pages.training.keyboard.title')
+                            <p class="text-inactive text-center hidden lg:block mb-0">{{
+                                $t('pages.training.keyboard.title')
                                 }}
                             </p>
                         </div>
@@ -159,6 +160,7 @@ import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import countdownTaskTimer from "../../../../../ui/countdownTaskTimer.vue";
 import progressBar from "../../../../../ui/progressBar.vue";
 import { debounceHandler } from "../../../../../../utils/debounceHandler";
+import { playAudio, pauseAudio, stopAudio } from '../../../../../../utils/playAudio';
 
 const router = useRouter();
 const config = useRuntimeConfig();
@@ -261,6 +263,13 @@ const setWord = () => {
         missingLetters.value = [];
         missingLetters.value = [...currentWord.value.missingLetters];
         checkingStatus.value = false;
+        
+        if (taskData.value.options.show_audio_button) {
+            if (currentWord.value.audio_file) {
+                stopAudio();
+                playAudio(config.public.apiBase + '/media/' + currentWord.value.audio_file);
+            }
+        }
 
         successButtonIndex.value = null;
         errorButtonIndex.value = null;
@@ -277,7 +286,7 @@ const setWord = () => {
 }
 
 const checkWord = (letter, event) => {
-    if (letter === currentWord.value.word[missingLetters.value[0] - 1]) {
+    if (letter === currentWord.value.word[missingLetters.value[0] - 1].toLowerCase()) {
         missingLetters.value.shift();
 
         if (event) {

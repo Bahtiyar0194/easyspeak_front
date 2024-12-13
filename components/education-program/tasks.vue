@@ -226,7 +226,7 @@
         </div>
     </div>
 
-    <modal :show="modalIsVisible" :onClose="() => closeModal()" :className="modalClass" :showLoader="pendingModal"
+    <modal :show="modalIsVisible" :onClose="() => closeModalByUser()" :className="modalClass" :showLoader="pendingModal"
         :closeOnClickSelf="false">
         <template v-slot:header_content>
             <h3>{{ task ? task.task_slug : $t('pages.tasks.adding_a_task') }}</h3>
@@ -291,10 +291,19 @@ const changeModalSize = (size) => {
 const closeModal = () => {
     modalIsVisible.value = false;
     pendingModal.value = false;
+    currentModal.value = shallowRef(null);
     errors.value = [];
     task.value = null;
     getTaskAttributes();
     getTasks();
+}
+
+const closeModalByUser = () => {
+    modalIsVisible.value = false;
+    pendingModal.value = false;
+    currentModal.value = null;
+    errors.value = [];
+    task.value = null;
 }
 
 provide('onPending', onPending);

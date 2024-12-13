@@ -16,8 +16,8 @@
                 </div>
             </div>
         </div>
-        <div class="col-span-12">
-            <p v-if="errors.letters_failed" class="text-danger mb-0">{{ errors.letters_failed[0] }}</p>
+        <div v-if="errors.letters_failed" class="col-span-12">
+            <p class="text-danger mb-0">{{ errors.letters_failed[0] }}</p>
         </div>
     </div>
 </template>

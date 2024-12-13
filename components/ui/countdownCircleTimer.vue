@@ -1,8 +1,8 @@
 <template>
     <div v-if="!props.startCommand || timeIsUp"
         class="rounded-full flex flex-none items-center justify-center text-5xl text-success p-1 shadow-xl border-inactive w-16 h-16">
-        <div
-            class="w-full h-full border-2 rounded-full flex items-center justify-center text-3xl" :class="timeIsUp ? 'border-danger text-danger' : 'border-success text-success'">
+        <div class="w-full h-full border-2 rounded-full flex items-center justify-center text-3xl"
+            :class="timeIsUp ? 'border-danger text-danger' : 'border-success text-success'">
             <i class="pi" :class="timeIsUp ? 'pi-times' : 'pi-check'"></i>
         </div>
     </div>
@@ -17,7 +17,8 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onUnmounted } from 'vue';
+import { playAudio, stopAudio } from '../../utils/playAudio';
 
 const props = defineProps({
     totalSeconds: {
@@ -39,6 +40,9 @@ const emit = defineEmits(['timeIsUp']);
 const timeRemaining = ref(props.totalSeconds); // Время, оставшееся для таймера
 const intervalId = ref(null);
 const timeIsUp = ref(false);
+
+// Флаг для контроля аудио
+const hasPlayedAudio = ref(false);
 
 // Вычисляем длину окружности для прогресс-бара
 const circumference = 2 * Math.PI * 45;
@@ -75,6 +79,13 @@ const progressClass = computed(() => {
 const timerClass = computed(() => {
     const progress = timeRemaining.value / props.totalSeconds;
 
+    if (progress <= 0.33 && !hasPlayedAudio.value) {
+        stopAudio();
+        // Проигрываем аудио только один раз при достижении 33% времени
+        playAudio('/audio/magical-bell.aac');
+        hasPlayedAudio.value = true; // Устанавливаем флаг, чтобы не проигрывать аудио снова
+    }
+
     if (progress <= 0.33) {
         return 'pulse';
     }
@@ -82,6 +93,7 @@ const timerClass = computed(() => {
 
 const startTimer = () => {
     timeIsUp.value = false;
+    hasPlayedAudio.value = false; // Сбрасываем флаг перед стартом таймера
     if (intervalId.value !== null) return; // Таймер уже работает
     timeRemaining.value = props.totalSeconds; // Сбрасываем оставшееся время
     intervalId.value = setInterval(() => {
@@ -128,7 +140,6 @@ watch(
     { immediate: true }
 );
 
-
 watch(
     () => props.isWrong,
     (newVal) => {
@@ -136,7 +147,9 @@ watch(
     }
 );
 
-onUnmounted(() => stopTimer());
+onUnmounted(() => {
+    stopTimer();
+});
 </script>
 
 <style scoped>

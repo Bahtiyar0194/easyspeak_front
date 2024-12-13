@@ -142,6 +142,7 @@ import audioPlayerWithWave from "../../../../../ui/audioPlayerWithWave.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import countdownTaskTimer from "../../../../../ui/countdownTaskTimer.vue";
 import progressBar from "../../../../../ui/progressBar.vue";
+import { playAudio, pauseAudio, stopAudio } from '../../../../../../utils/playAudio';
 
 const router = useRouter();
 const config = useRuntimeConfig();
@@ -229,6 +230,13 @@ const setWord = () => {
         currentWord.value = null;
         currentWord.value = words.value[0];
         checkingStatus.value = false;
+
+        if (taskData.value.options.show_audio_button) {
+            if (currentWord.value.audio_file) {
+                stopAudio();
+                playAudio(config.public.apiBase + '/media/' + currentWord.value.audio_file);
+            }
+        }
 
         successButtonIndex.value = null;
         errorButtonIndex.value = null;

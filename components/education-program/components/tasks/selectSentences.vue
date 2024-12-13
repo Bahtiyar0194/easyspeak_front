@@ -1,7 +1,7 @@
 <template>
     <div class="custom-grid">
         <div class="col-span-12">
-            <button @click="showHideSentenceSearchFilter" class="btn btn-light">
+            <button type="button" @click="showHideSentenceSearchFilter" class="btn btn-light">
                 <i class="pi pi-search"></i>
                 <span>{{ searchFilter === true ? $t("hide_search_filter") : $t("show_search_filter") }}</span>
             </button>
@@ -41,13 +41,6 @@
                                     :icon="'pi pi-user'" :label="$t('operator')" :items="attributes.operators"
                                     :optionName="'operators[]'" :optionValue="'user_id'" :optionLabel="'full_name'"
                                     :avatar="true" :onChange="debounceSentences" />
-                            </div>
-
-                            <div class="col-span-12">
-                                <multipleSelect :className="'form-group-border select active label-active'"
-                                    :icon="'pi pi-hourglass'" :label="$t('status')" :items="attributes.statuses"
-                                    :optionName="'statuses[]'" :optionValue="'status_type_id'"
-                                    :optionLabel="'status_type_name'" :onChange="debounceSentences" />
                             </div>
 
                             <div class="col-span-12">
@@ -116,7 +109,11 @@
                                     </div>
                                 </td>
                                 <td>{{ new Date(sentence.created_at).toLocaleString() }}</td>
-                                <td :class="sentence.status_color">{{ sentence.status_type_name }}</td>
+                                <td>
+                                    <span v-if="selectedSentences.some((s) => s.sentence_id === sentence.sentence_id)"
+                                        class="text-success">{{ $t('added') }}</span>
+                                    <span v-else class="text-inactive">{{ $t('not_added') }}</span>
+                                </td>
                                 <td>
                                     <div class="flex items-center gap-x-4">
                                         <audioButton v-if="sentence.audio_file"
@@ -145,8 +142,11 @@
         </div>
 
         <div class="col-span-12">
-            <p :class="{ 'text-danger': errors.sentences_count && !selectedSentences.length }">
-                <span v-if="errors.sentences_count && !selectedSentences.length">{{ errors.sentences_count[0] }}</span>
+            <p
+                :class="{ 'text-danger': errors.sentences_count && (selectedSentences.length < props.minimumSentencesCount) }">
+                <span v-if="errors.sentences_count && (selectedSentences.length < props.minimumSentencesCount)">{{
+                    errors.sentences_count[0]
+                }}</span>
                 <span v-else> {{ $t("pages.sentences.added_sentences_count") }}: <b>{{ selectedSentences.length
                         }}</b></span>
             </p>
@@ -207,6 +207,12 @@ const props = defineProps({
     selectedSentences: {
         type: Object,
         required: true
+    },
+
+    minimumSentencesCount: {
+        default: 1,
+        type: Number,
+        required: false
     }
 });
 

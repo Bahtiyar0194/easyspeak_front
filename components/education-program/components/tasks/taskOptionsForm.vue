@@ -150,6 +150,18 @@
                 <span>{{ $t('pages.tasks.translate.from_the_current_lang_to_the_main_lang') }}</span>
             </label>
         </div>
+
+        <div v-if="props.showMissingWordsOptions" class="col-span-12">
+            <label class="custom-radio">
+                <input type="radio" :checked="findWordWithOptions === false" name="word_options" @change="findWordWithOptions = false"  />
+                <span>{{ $t('pages.tasks.missing_words.options.option_1') }}</span>
+            </label>
+
+            <label class="custom-radio mt-1.5">
+                <input type="radio" :checked="findWordWithOptions === true" name="word_options" @change="findWordWithOptions = true" />
+                <span>{{ $t('pages.tasks.missing_words.options.option_2') }}</span>
+            </label>
+        </div>
     </div>
 </template>
 <script setup>
@@ -158,64 +170,86 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    
     showAudioButton: {
         default: true,
         type: Boolean,
         required: false
     },
+
     showImage: {
         default: true,
         type: Boolean,
         required: false
     },
+
     showTranscription: {
         default: false,
         type: Boolean,
         required: false
     },
+
     showWord: {
         default: false,
         type: Boolean,
         required: false
     },
+
     showTranslate: {
         default: true,
         type: Boolean,
         required: false
     },
+
     showImpressionLimit: {
         default: true,
         type: Boolean,
         required: false
     },
+
     showOptionsNum: {
         default: false,
         type: Boolean,
         required: false
     },
+
     items: {
         type: Array,
         required: false,
         default: () => []
     },
+
     showSecondsPerWord: {
         default: false,
         type: Boolean,
         required: false
     },
+
     showSecondsPerSentence: {
         default: false,
         type: Boolean,
         required: false
     },
+
     showSelectMainLang: {
         default: false,
         type: Boolean,
+        required: false
+    },
+
+    showMissingWordsOptions: {
+        default: false,
+        type: Boolean,
+        required: false
+    },
+
+    findWordWithOptions: {
+        type: Object,
         required: false
     }
 });
 
 const optionsNum = ref([2, 3, 4]);
 
-const { errors } = toRefs(props);
+const { errors, findWordWithOptions } = toRefs(props);
 </script>
