@@ -104,6 +104,9 @@ const startTimer = () => {
             stopTimer(); // Вызывает завершение и emit
             timeIsUp.value = true;
             emit('timeIsUp'); // Отправляем событие завершения
+
+            stopAudio();
+            playAudio('/audio/game-over.mp3');
         }
     }, 1000);
 }

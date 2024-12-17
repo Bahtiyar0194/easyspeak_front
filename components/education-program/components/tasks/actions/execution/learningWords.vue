@@ -146,7 +146,7 @@ import audioPlayerWithWave from "../../../../../ui/audioPlayerWithWave.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import countdownTaskTimer from "../../../../../ui/countdownTaskTimer.vue";
 import progressBar from "../../../../../ui/progressBar.vue";
-import { playAudio, pauseAudio, stopAudio, playErrorSound } from '../../../../../../utils/playAudio';
+import { playAudio, stopAudio, playSuccessSound, playErrorSound } from '../../../../../../utils/playAudio';
 
 const router = useRouter();
 const config = useRuntimeConfig();
@@ -270,8 +270,7 @@ const checkAnswer = (answerIndex) => {
 
         if (Boolean(taskData.value.options.play_audio_with_the_correct_answer)) {
             if (currentWord.value.audio_file) {
-                stopAudio();
-                playAudio(config.public.apiBase + '/media/' + currentWord.value.audio_file);
+                playSuccessSound(config.public.apiBase + '/media/' + currentWord.value.audio_file);
             }
         }
 

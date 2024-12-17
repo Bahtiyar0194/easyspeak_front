@@ -177,7 +177,7 @@ import audioButton from "../../../../../ui/audioButton.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import countdownTaskTimer from "../../../../../ui/countdownTaskTimer.vue";
 import progressBar from "../../../../../ui/progressBar.vue";
-import { playAudio, pauseAudio, stopAudio, playErrorSound } from '../../../../../../utils/playAudio';
+import { playSuccessSound, playErrorSound } from '../../../../../../utils/playAudio';
 
 const router = useRouter();
 const config = useRuntimeConfig();
@@ -324,8 +324,7 @@ const checkSentence = (word, wordIndex) => {
 
             if (Boolean(taskData.value.options.play_audio_with_the_correct_answer)) {
                 if (currentSentence.value.audio_file) {
-                    stopAudio();
-                    playAudio(config.public.apiBase + '/media/' + currentSentence.value.audio_file);
+                    playSuccessSound(config.public.apiBase + '/media/' + currentSentence.value.audio_file)
                 }
             }
 
@@ -351,7 +350,6 @@ const checkSentence = (word, wordIndex) => {
         errorButtonsIndex.value.push(wordIndex);
 
         if (Boolean(taskData.value.options.play_error_sound_with_the_incorrect_answer)) {
-            stopAudio();
             playErrorSound();
         }
 

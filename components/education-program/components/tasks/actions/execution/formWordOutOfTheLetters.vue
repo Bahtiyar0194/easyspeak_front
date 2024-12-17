@@ -161,7 +161,7 @@ import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import countdownTaskTimer from "../../../../../ui/countdownTaskTimer.vue";
 import progressBar from "../../../../../ui/progressBar.vue";
 import { debounceHandler } from "../../../../../../utils/debounceHandler";
-import { playAudio, pauseAudio, stopAudio } from '../../../../../../utils/playAudio';
+import { playAudio, stopAudio, playSuccessSound, playErrorSound } from '../../../../../../utils/playAudio';
 
 const router = useRouter();
 const config = useRuntimeConfig();
@@ -322,8 +322,7 @@ const checkWord = (letter, event) => {
 
             if (Boolean(taskData.value.options.play_audio_with_the_correct_answer)) {
                 if (currentWord.value.audio_file) {
-                    stopAudio();
-                    playAudio(config.public.apiBase + '/media/' + currentWord.value.audio_file);
+                    playSuccessSound(config.public.apiBase + '/media/' + currentWord.value.audio_file)
                 }
             }
 
@@ -346,7 +345,6 @@ const checkWord = (letter, event) => {
             event.target.classList.add('btn-danger', 'wobble');
 
             if (Boolean(taskData.value.options.play_error_sound_with_the_incorrect_answer)) {
-                stopAudio();
                 playErrorSound();
             }
 
