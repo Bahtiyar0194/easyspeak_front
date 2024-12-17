@@ -52,8 +52,14 @@ const newTaskSteps = [
     {
         title: t('pages.tasks.task_options.title'),
         component: taskOptionsForm,
-        props: { errors, showImage: false, showAudioButton: false, showTranscription: false, showTranslate: false, showImpressionLimit: true, showMissingWordsOptions: true, findWordWithOptions, showSecondsPerSentence: true },
-        modalSize: '2xl'
+        props: { 
+            errors,  
+            showImpressionLimit: true, 
+            showMissingWordsOptions: true,
+            findWordWithOptions, 
+            showSecondsPerSentence: true 
+        },
+        modalSize: '4xl'
     },
     {
         title: t('pages.sentences.select_sentences'),
@@ -126,6 +132,6 @@ const createTaskSubmit = async () => {
 }
 
 onMounted(() => {
-    changeModalSize('modal-2xl');
+    changeModalSize('modal-4xl');
 });
 </script>

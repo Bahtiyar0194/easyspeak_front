@@ -9,7 +9,7 @@
                 </label>
             </div>
         </div>
-        <div class="col-span-12">
+        <div class="col-span-12 lg:col-span-6">
             <div class="form-group-border active">
                 <i class="pi pi-clock"></i>
                 <input name="task_name_kk" type="text" placeholder=" " />
@@ -18,7 +18,7 @@
                 </label>
             </div>
         </div>
-        <div class="col-span-12">
+        <div class="col-span-12 lg:col-span-6">
             <div class="form-group-border active">
                 <i class="pi pi-clock"></i>
                 <input name="task_name_ru" type="text" placeholder=" " />
@@ -27,6 +27,7 @@
                 </label>
             </div>
         </div>
+
         <div v-if="props.showAudioButton" class="col-span-12 lg:col-span-6">
             <div class="form-group-border select active label-active">
                 <i class="pi pi-volume-up"></i>
@@ -40,7 +41,50 @@
                 </label>
             </div>
         </div>
-        <div v-if="props.showImage" class="col-span-12 lg:col-span-6">
+
+        <div v-if="props.showPlayAudioAtTheBegin" class="col-span-12 lg:col-span-6">
+            <div class="form-group-border select active label-active">
+                <i class="pi pi-volume-up"></i>
+                <select name="play_audio_at_the_begin">
+                    <option selected disabled value="">{{ $t("choose_your_option") }}</option>
+                    <option value="1">{{ $t('yes') }}</option>
+                    <option value="0">{{ $t('no') }}</option>
+                </select>
+                <label :class="{ 'label-error': errors.play_audio_at_the_begin }">
+                    {{ $t("pages.tasks.task_options.play_audio_at_the_begin") }}
+                </label>
+            </div>
+        </div>
+
+        <div v-if="props.showPlayAudioWithTheCorrectAnswer" class="col-span-12 lg:col-span-6">
+            <div class="form-group-border select active label-active">
+                <i class="pi pi-check-circle"></i>
+                <select name="play_audio_with_the_correct_answer">
+                    <option selected disabled value="">{{ $t("choose_your_option") }}</option>
+                    <option value="1">{{ $t('yes') }}</option>
+                    <option value="0">{{ $t('no') }}</option>
+                </select>
+                <label :class="{ 'label-error': errors.play_audio_with_the_correct_answer }">
+                    {{ $t("pages.tasks.task_options.play_audio_with_the_correct_answer") }}
+                </label>
+            </div>
+        </div>
+
+        <div v-if="props.showPlayErrorSoundWithTheInCorrectAnswer" class="col-span-12 lg:col-span-6">
+            <div class="form-group-border select active label-active">
+                <i class="pi pi-exclamation-circle"></i>
+                <select name="play_error_sound_with_the_incorrect_answer">
+                    <option selected disabled value="">{{ $t("choose_your_option") }}</option>
+                    <option value="1">{{ $t('yes') }}</option>
+                    <option value="0">{{ $t('no') }}</option>
+                </select>
+                <label :class="{ 'label-error': errors.play_error_sound_with_the_incorrect_answer }">
+                    {{ $t("pages.tasks.task_options.play_error_sound_with_the_incorrect_answer") }}
+                </label>
+            </div>
+        </div>
+
+        <div v-if="props.showImage" class="col-span-12">
             <div class="form-group-border select active label-active">
                 <i class="pi pi-image"></i>
                 <select name="show_image">
@@ -96,7 +140,7 @@
             <div class="form-group-border select active label-active">
                 <i class="pi pi-eye"></i>
                 <select name="impression_limit">
-                    <option selected value="">{{ $t("pagination.unlimit") }}</option>
+                    <option selected disabled value="">{{ $t("choose_your_option") }}</option>
                     <option v-for="n in 10" :key="n" :value="n">{{ n }}</option>
                 </select>
                 <label :class="{ 'label-error': errors.impression_limit }">
@@ -140,27 +184,33 @@
         </div>
 
         <div v-if="props.showSelectMainLang" class="col-span-12">
-            <label class="custom-radio">
-                <input type="radio" :checked="true" value="1" name="in_the_main_lang" />
-                <span>{{ $t('pages.tasks.translate.from_the_main_lang_to_the_current_lang') }}</span>
-            </label>
+            <div class="flex flex-col gap-y-2">
+                <label class="custom-radio">
+                    <input type="radio" :checked="true" value="1" name="in_the_main_lang" />
+                    <span>{{ $t('pages.tasks.translate.from_the_main_lang_to_the_current_lang') }}</span>
+                </label>
 
-            <label class="custom-radio mt-1.5">
-                <input type="radio" value="0" name="in_the_main_lang" />
-                <span>{{ $t('pages.tasks.translate.from_the_current_lang_to_the_main_lang') }}</span>
-            </label>
+                <label class="custom-radio">
+                    <input type="radio" value="0" name="in_the_main_lang" />
+                    <span>{{ $t('pages.tasks.translate.from_the_current_lang_to_the_main_lang') }}</span>
+                </label>
+            </div>
         </div>
 
         <div v-if="props.showMissingWordsOptions" class="col-span-12">
-            <label class="custom-radio">
-                <input type="radio" :checked="findWordWithOptions === false" name="word_options" @change="findWordWithOptions = false"  />
-                <span>{{ $t('pages.tasks.missing_words.options.option_1') }}</span>
-            </label>
+            <div class="flex flex-col gap-y-2">
+                <label class="custom-radio">
+                    <input type="radio" :checked="findWordWithOptions === false" name="word_options"
+                        @change="findWordWithOptions = false" />
+                    <span>{{ $t('pages.tasks.missing_words.options.option_1') }}</span>
+                </label>
 
-            <label class="custom-radio mt-1.5">
-                <input type="radio" :checked="findWordWithOptions === true" name="word_options" @change="findWordWithOptions = true" />
-                <span>{{ $t('pages.tasks.missing_words.options.option_2') }}</span>
-            </label>
+                <label class="custom-radio">
+                    <input type="radio" :checked="findWordWithOptions === true" name="word_options"
+                        @change="findWordWithOptions = true" />
+                    <span>{{ $t('pages.tasks.missing_words.options.option_2') }}</span>
+                </label>
+            </div>
         </div>
     </div>
 </template>
@@ -170,15 +220,33 @@ const props = defineProps({
         type: Object,
         required: true,
     },
-    
+
     showAudioButton: {
-        default: true,
+        default: false,
+        type: Boolean,
+        required: false
+    },
+
+    showPlayAudioAtTheBegin: {
+        default: false,
+        type: Boolean,
+        required: false
+    },
+
+    showPlayAudioWithTheCorrectAnswer: {
+        default: false,
+        type: Boolean,
+        required: false
+    },
+
+    showPlayErrorSoundWithTheInCorrectAnswer: {
+        default: false,
         type: Boolean,
         required: false
     },
 
     showImage: {
-        default: true,
+        default: false,
         type: Boolean,
         required: false
     },
@@ -196,13 +264,13 @@ const props = defineProps({
     },
 
     showTranslate: {
-        default: true,
+        default: false,
         type: Boolean,
         required: false
     },
 
     showImpressionLimit: {
-        default: true,
+        default: false,
         type: Boolean,
         required: false
     },

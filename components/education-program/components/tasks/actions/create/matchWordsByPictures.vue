@@ -62,8 +62,13 @@ const newTaskSteps = [
     {
         title: t('pages.tasks.task_options.title'),
         component: taskOptionsForm,
-        props: { errors, showImage: false, showTranscription: true },
-        modalSize: '2xl'
+        props: { 
+            errors, 
+            showAudioButton: true,
+            showTranslate: true,
+            showTranscription: true 
+        },
+        modalSize: '4xl'
     }
 ];
 const currentStep = ref(1);

@@ -69,8 +69,19 @@ const newTaskSteps = [
     {
         title: t('pages.tasks.task_options.title'),
         component: taskOptionsForm,
-        props: { errors, showTranslate: true, showTranscription: true, showImpressionLimit: false, items: selectedWords.value, showSecondsPerWord: true },
-        modalSize: '2xl'
+        props: { 
+            errors, 
+            showAudioButton: true, 
+            showPlayAudioAtTheBegin: true,
+            showPlayAudioWithTheCorrectAnswer: true,
+            showPlayErrorSoundWithTheInCorrectAnswer: true,
+            showImage: true,
+            showTranscription: true,  
+            showTranslate: true, 
+            items: selectedWords.value, 
+            showSecondsPerWord: true 
+        },
+        modalSize: '4xl'
     }
 ];
 const currentStep = ref(1);

@@ -36,12 +36,15 @@
 @keyframes pulse {
     0% {
         transform: scale(1);
+        opacity: 1;
     }
     50% {
         transform: scale(1.1);
+        opacity: 0;
     }
     100% {
         transform: scale(1);
+        opacity: 1;
     }
 }
 
@@ -940,6 +943,10 @@ select.error:has(option:checked:disabled) {
 
 .btn-wrap.lg{
     @apply gap-4;
+}
+
+.btn-wrap.right{
+    @apply justify-end;
 }
 
 .btn-transparent{

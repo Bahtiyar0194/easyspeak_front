@@ -5,7 +5,8 @@
             <div class="custom-grid">
                 <div class="col-span-12">
                     <progressBar :progressPercentage="progressPercentage" />
-
+                </div>
+                <div class="col-span-12">
                     <p v-if="timeIsUp" class="font-medium text-center text-danger">{{ $t('time_is_up') }}
                     </p>
                     <p v-else-if="isComplete" class="font-medium text-center text-success">{{ $t('right')
@@ -140,7 +141,7 @@
                                 :src="config.public.apiBase + '/media/' + word.audio_file" />
                             <div class="step-item xs failed">
                                 <div class="step-icon">
-                                    <i class="pi pi-sync"></i>
+                                    <i class="pi pi-replay"></i>
                                 </div>
                             </div>
                         </div>
@@ -263,7 +264,7 @@ const setWord = () => {
         missingLetters.value = [];
         missingLetters.value = [...currentWord.value.missingLetters];
         checkingStatus.value = false;
-        
+
         if (taskData.value.options.show_audio_button) {
             if (currentWord.value.audio_file) {
                 stopAudio();
@@ -288,6 +289,7 @@ const setWord = () => {
 const checkWord = (letter, event) => {
     if (letter === currentWord.value.word[missingLetters.value[0] - 1].toLowerCase()) {
         missingLetters.value.shift();
+
 
         if (event) {
             event.target.classList.replace('btn-light', 'btn-success');
@@ -318,6 +320,13 @@ const checkWord = (letter, event) => {
                 studiedWords.value.push(currentWord.value);
             }
 
+            if (Boolean(taskData.value.options.play_audio_with_the_correct_answer)) {
+                if (currentWord.value.audio_file) {
+                    stopAudio();
+                    playAudio(config.public.apiBase + '/media/' + currentWord.value.audio_file);
+                }
+            }
+
             isComplete.value = true;
             isStarted.value = false;
 
@@ -335,6 +344,11 @@ const checkWord = (letter, event) => {
         if (event) {
             event.target.classList.remove('btn-light');
             event.target.classList.add('btn-danger', 'wobble');
+
+            if (Boolean(taskData.value.options.play_error_sound_with_the_incorrect_answer)) {
+                stopAudio();
+                playErrorSound();
+            }
 
             setTimeout(() => {
                 event.target.classList.remove('btn-danger', 'wobble');

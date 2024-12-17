@@ -87,7 +87,7 @@ const timerClass = computed(() => {
     }
 
     if (progress <= 0.33) {
-        return 'pulse';
+        return 'pulse text-danger';
     }
 });
 
@@ -99,8 +99,11 @@ const startTimer = () => {
     intervalId.value = setInterval(() => {
         if (timeRemaining.value > 0) {
             timeRemaining.value -= 1;
-        } else {
-            stopTimer();
+        }
+        if (timeRemaining.value === 0) {
+            stopTimer(); // Вызывает завершение и emit
+            timeIsUp.value = true;
+            emit('timeIsUp'); // Отправляем событие завершения
         }
     }, 1000);
 }
@@ -109,12 +112,8 @@ const stopTimer = () => {
     if (intervalId.value !== null) {
         clearInterval(intervalId.value);
         intervalId.value = null;
-        if (timeRemaining.value === 0) {
-            timeIsUp.value = true;
-            emit('timeIsUp'); // Отправляем событие завершения
-        }
     }
-}
+};
 
 // Слушаем изменение команды старта
 watch(

@@ -10,7 +10,7 @@
                     :src="config.public.apiBase + '/media/' + word.audio_file" />
                 <div v-if="word.image_file && taskData.options.show_image" :style="{
                     backgroundImage: 'url(' + config.public.apiBase + '/media/' + word.image_file + ')',
-                }" class="h-9 w-9 bg-cover bg-no-repeat bg-center rounded-lg border-inactive"></div>
+                }" class="h-10 w-10 bg-cover bg-no-repeat bg-center"></div>
                 <div class="flex gap-x-0.5">
                     <div v-for="(letter, letterIndex) in word.word" :key="letterIndex" class="font-medium">
                         <div v-if="letter === ' ' || letter === ''" class="mx-1"></div>
@@ -128,6 +128,6 @@ const clearIncorrect = (wordIndex, letterIndex) => {
 // Инициализация при монтировании
 onMounted(() => {
     getTask();
-    changeModalSize("modal-xl");
+    changeModalSize("modal-3xl");
 });
 </script>

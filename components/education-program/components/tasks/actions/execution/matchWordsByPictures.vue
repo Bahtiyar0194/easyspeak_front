@@ -8,7 +8,7 @@
         <div class="col-span-12 lg:col-span-6">
             <div class="custom-grid">
                 <div v-for="(picture, pictureIndex) in pictures" :key="pictureIndex"
-                    class="col-span-4 lg:col-span-4 relative rounded-lg border-inactive overflow-hidden">
+                    class="col-span-4 lg:col-span-6 relative rounded-lg border-inactive overflow-hidden">
                     <div
                         class="absolute left-2 top-2 w-6 h-6 bg-success rounded-full flex items-center justify-center text-white text-lg">
                         {{ pictureIndex + 1 }}
@@ -22,24 +22,33 @@
         <div class="col-span-12 lg:col-span-6">
             <div class="custom-grid">
                 <div v-for="(word, wordIndex) in words" :key="wordIndex" class="col-span-12">
-                    <div class="flex gap-3 items-center flex-wrap text-lg" :class="{
+                    <div class="flex gap-3 items-center text-lg" :class="{
                         'text-success': results[wordIndex] === true,
                         'text-danger': results[wordIndex] === false,
                     }">
                         <div class="btn btn-square btn-sm flex justify-center items-center"
                             :class="results[wordIndex] === true ? 'btn-outline-success' : results[wordIndex] === false ? 'btn-outline-danger' : 'btn-light'">
                             <input v-model="userAnswers[wordIndex]" type="text"
-                                :style="{width: (words.length.toString().length + 0.5) + 'ch', textAlign: 'center'}" :maxlength="words.length.toString().length" />
+                                :style="{ width: (words.length.toString().length + 0.5) + 'ch', textAlign: 'center' }"
+                                :maxlength="words.length.toString().length" />
                         </div>
-                        <audioButton v-if="word.audio_file && taskData.options.show_audio_button"
-                            :src="config.public.apiBase + '/media/' + word.audio_file" />
-                        <span class="font-medium">{{ word.word }}</span>
-                        <span v-if="taskData.options.show_transcription" class="text-inactive">
-                            <i>[{{ word.transcription }}]</i>
-                        </span>
-                        <span v-if="taskData.options.show_translate" class="text-inactive hidden lg:block">
-                            <i>{{ word.word_translate }}</i>
-                        </span>
+
+                        <div class="flex gap-x-2 items-center">
+                            <audioButton v-if="word.audio_file && taskData.options.show_audio_button"
+                                :src="config.public.apiBase + '/media/' + word.audio_file" />
+                            <div class="flex flex-col">
+                                <div class="flex flex-wrap gap-x-2">
+                                    <span class="font-medium">{{ word.word }}</span>
+                                    <span v-if="taskData.options.show_transcription" class="text-inactive">
+                                        [{{ word.transcription }}]
+                                    </span>
+                                </div>
+
+                                <span v-if="taskData.options.show_translate" class="text-inactive text-xs hidden lg:block">
+                                    {{ word.word_translate }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -123,6 +132,6 @@ const checkWords = () => {
 // Инициализация при монтировании
 onMounted(() => {
     getTask();
-    changeModalSize("modal-5xl");
+    changeModalSize("modal-2xl");
 });
 </script>

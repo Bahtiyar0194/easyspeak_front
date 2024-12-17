@@ -76,7 +76,6 @@ const handleFileChange = (event) => {
     // Generate a preview URL for the image
     if (file && (file.type.startsWith('image/') || file.type.startsWith('audio/'))) {
         previewUrl.value = URL.createObjectURL(file);
-        console.log(previewUrl)
     } else {
         previewUrl.value = null;
     }

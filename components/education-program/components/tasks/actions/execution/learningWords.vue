@@ -5,7 +5,8 @@
             <div class="custom-grid">
                 <div class="col-span-12">
                     <progressBar :progressPercentage="progressPercentage" />
-
+                </div>
+                <div class="col-span-12">
                     <p v-if="timeIsUp" class="font-medium text-center text-danger">{{ $t('time_is_up') }}
                     </p>
                     <p v-else-if="isComplete" class="font-medium text-center text-success">{{ $t('right')
@@ -31,11 +32,13 @@
 
                 <div class="col-span-12">
                     <div class="flex flex-wrap justify-center items-center gap-2">
-                        <audioButton v-if="currentWord?.audio_file && taskData?.options.show_image && taskData?.options.show_audio_button"
+                        <audioButton
+                            v-if="currentWord?.audio_file && taskData?.options.show_image && taskData?.options.show_audio_button"
                             :key="currentWord?.audio_file"
                             :src="config.public.apiBase + '/media/' + currentWord?.audio_file" />
                         <div v-else-if="currentWord?.audio_file && taskData?.options.show_audio_button" class="w-full">
-                            <audioPlayerWithWave :key="currentWord?.audio_file" :src="config.public.apiBase + '/media/' + currentWord?.audio_file" />
+                            <audioPlayerWithWave :key="currentWord?.audio_file"
+                                :src="config.public.apiBase + '/media/' + currentWord?.audio_file" />
                         </div>
                         <h2 v-if="taskData?.options.show_word" class="text-center mb-0">{{
                             taskData?.options.in_the_main_lang ? currentWord?.word : currentWord?.word_translate }}
@@ -69,7 +72,8 @@
                         </div>
 
                         <div class="col-span-12">
-                            <p class="text-inactive text-center hidden lg:block mb-0">{{ $t('pages.training.keyboard.numbers')
+                            <p class="text-inactive text-center hidden lg:block mb-0">{{
+                                $t('pages.training.keyboard.numbers')
                                 }}
                             </p>
                         </div>
@@ -122,7 +126,7 @@
                                 :src="config.public.apiBase + '/media/' + word.audio_file" />
                             <div class="step-item xs failed">
                                 <div class="step-icon">
-                                    <i class="pi pi-sync"></i>
+                                    <i class="pi pi-replay"></i>
                                 </div>
                             </div>
                         </div>
@@ -142,7 +146,7 @@ import audioPlayerWithWave from "../../../../../ui/audioPlayerWithWave.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import countdownTaskTimer from "../../../../../ui/countdownTaskTimer.vue";
 import progressBar from "../../../../../ui/progressBar.vue";
-import { playAudio, pauseAudio, stopAudio } from '../../../../../../utils/playAudio';
+import { playAudio, pauseAudio, stopAudio, playErrorSound } from '../../../../../../utils/playAudio';
 
 const router = useRouter();
 const config = useRuntimeConfig();
@@ -231,7 +235,7 @@ const setWord = () => {
         currentWord.value = words.value[0];
         checkingStatus.value = false;
 
-        if (taskData.value.options.show_audio_button) {
+        if (Boolean(taskData.value.options.play_audio_at_the_begin)) {
             if (currentWord.value.audio_file) {
                 stopAudio();
                 playAudio(config.public.apiBase + '/media/' + currentWord.value.audio_file);
@@ -264,6 +268,13 @@ const checkAnswer = (answerIndex) => {
         isComplete.value = true;
         isStarted.value = false;
 
+        if (Boolean(taskData.value.options.play_audio_with_the_correct_answer)) {
+            if (currentWord.value.audio_file) {
+                stopAudio();
+                playAudio(config.public.apiBase + '/media/' + currentWord.value.audio_file);
+            }
+        }
+
         if (reStudyWords.value.some((w) => w.task_word_id === currentWord.value.task_word_id)) {
             reStudyWords.value = reStudyWords.value.filter((w) => w.task_word_id !== currentWord.value.task_word_id);
         }
@@ -275,6 +286,11 @@ const checkAnswer = (answerIndex) => {
     }
     else {
         errorButtonIndex.value = answerIndex;
+
+        if (Boolean(taskData.value.options.play_error_sound_with_the_incorrect_answer)) {
+            stopAudio();
+            playErrorSound();
+        }
 
         setTimeout(() => {
             checkingStatus.value = false;

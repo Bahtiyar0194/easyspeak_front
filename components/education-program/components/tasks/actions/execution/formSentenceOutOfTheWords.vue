@@ -9,7 +9,9 @@
 
                 <div class="col-span-12">
                     <progressBar :progressPercentage="progressPercentage" />
+                </div>
 
+                <div class="col-span-12">
                     <p v-if="timeIsUp" class="font-medium text-center text-danger">
                         {{ $t("time_is_up") }}
                     </p>
@@ -157,7 +159,7 @@
                                 :src="config.public.apiBase + '/media/' + sentence.audio_file" />
                             <div class="step-item xs failed">
                                 <div class="step-icon">
-                                    <i class="pi pi-sync"></i>
+                                    <i class="pi pi-replay"></i>
                                 </div>
                             </div>
                         </div>
@@ -175,7 +177,7 @@ import audioButton from "../../../../../ui/audioButton.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import countdownTaskTimer from "../../../../../ui/countdownTaskTimer.vue";
 import progressBar from "../../../../../ui/progressBar.vue";
-import { playAudio, pauseAudio, stopAudio } from '../../../../../../utils/playAudio';
+import { playAudio, pauseAudio, stopAudio, playErrorSound } from '../../../../../../utils/playAudio';
 
 const router = useRouter();
 const config = useRuntimeConfig();
@@ -306,7 +308,7 @@ const checkSentence = (word, wordIndex) => {
 
     if (word === cleanedSentence.value.split(" ")[assembledWordsCount.value]) {
 
-        if(cleanedSentence.value.length > assembledWordsCount.value){
+        if (cleanedSentence.value.length > assembledWordsCount.value) {
             assembledWordsCount.value++;
         }
 
@@ -320,9 +322,11 @@ const checkSentence = (word, wordIndex) => {
             isComplete.value = true;
             isStarted.value = false;
 
-            if (currentSentence.value.audio_file) {
-                stopAudio();
-                playAudio(config.public.apiBase + '/media/' + currentSentence.value.audio_file);
+            if (Boolean(taskData.value.options.play_audio_with_the_correct_answer)) {
+                if (currentSentence.value.audio_file) {
+                    stopAudio();
+                    playAudio(config.public.apiBase + '/media/' + currentSentence.value.audio_file);
+                }
             }
 
             studiedSentences.value.push(currentSentence.value);
@@ -345,6 +349,11 @@ const checkSentence = (word, wordIndex) => {
         }
     } else {
         errorButtonsIndex.value.push(wordIndex);
+
+        if (Boolean(taskData.value.options.play_error_sound_with_the_incorrect_answer)) {
+            stopAudio();
+            playErrorSound();
+        }
 
         setTimeout(() => {
             errorButtonsIndex.value = [];

@@ -23,3 +23,14 @@ export function stopAudio() {
         audio.currentTime = 0; // Сбрасываем аудио на начало
     }
 }
+
+export function playErrorSound(){
+        // Если аудио уже играет, останавливаем его перед воспроизведением нового
+        if (audio) {
+            audio.pause();
+            audio.currentTime = 0;
+        }
+    
+        audio = new Audio('/audio/error-short.mp3'); // Создаем новый объект Audio
+        audio.play()
+}
