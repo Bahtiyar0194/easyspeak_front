@@ -266,7 +266,6 @@ const setWord = () => {
         checkingStatus.value = false;
 
         if (Boolean(taskData.value.options.play_audio_at_the_begin)) {
-            alert(12345)
             if (currentWord.value.audio_file) {
                 stopAudio();
                 playAudio(config.public.apiBase + '/media/' + currentWord.value.audio_file);
