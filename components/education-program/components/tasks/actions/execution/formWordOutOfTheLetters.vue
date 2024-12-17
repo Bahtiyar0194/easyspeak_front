@@ -265,7 +265,7 @@ const setWord = () => {
         missingLetters.value = [...currentWord.value.missingLetters];
         checkingStatus.value = false;
 
-        if (taskData.value.options.show_audio_button) {
+        if (Boolean(taskData.value.options.play_audio_at_the_begin)) {
             if (currentWord.value.audio_file) {
                 stopAudio();
                 playAudio(config.public.apiBase + '/media/' + currentWord.value.audio_file);
