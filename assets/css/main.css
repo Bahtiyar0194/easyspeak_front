@@ -1345,12 +1345,20 @@ select.error:has(option:checked:disabled) {
     @apply bg-active rounded-xl border-inactive px-4;
 }
 
+.list-group.sm{
+    @apply px-3;
+}
+
 .list-group.nowrap{
     @apply px-0 border-0;
 }
 
 .list-group > li{
     @apply py-4 border-b-inactive duration-200 list-none;
+}
+
+.list-group.sm > li{
+    @apply py-3;
 }
 
 .list-group.nowrap > li{
@@ -1394,7 +1402,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .steps-wrap{
-    @apply flex justify-between items-baseline w-full mb-6;
+    @apply flex justify-between items-baseline w-full mb-4;
 }
 
 .step-item{
@@ -1517,7 +1525,7 @@ select.error:has(option:checked:disabled) {
 
 .modal-body{
     @apply overflow-y-auto overflow-x-hidden;
-    max-height: 90vh;
+    max-height: 85vh;
 }
 
 .modal-footer{

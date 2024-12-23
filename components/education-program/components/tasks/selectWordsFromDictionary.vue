@@ -62,7 +62,6 @@
                                     :keyName="head.keyName" :sortKey="sortKey" :sortDirection="sortDirection"
                                     :sortType="head.sortType" :sortHandler="debounceWords"
                                     @update:sortKey="sortKey = $event" @update:sortDirection="sortDirection = $event" />
-                                <th>{{ $t("status") }}</th>
                             </tr>
                         </thead>
 
@@ -78,14 +77,10 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td>{{ word.word }}</td>
+                                <td>{{ word.word }} <i v-if="selectedWords.some((w) => w.word_id === word.word_id)"
+                                        class="text-success">({{ $t('added') }})</i></td>
                                 <td>[{{ word.transcription }}]</td>
                                 <td>{{ word.course_name }}</td>
-                                <td>
-                                    <span v-if="selectedWords.some((w) => w.word_id === word.word_id)"
-                                        class="text-success">{{ $t('added') }}</span>
-                                    <span v-else class="text-inactive">{{ $t('not_added') }}</span>
-                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -103,8 +98,11 @@
         </div>
 
         <div class="col-span-12">
-            <p :class="{ 'text-danger': errors.words_count && (selectedWords.length < props.minimumWordsCount) }">
-                <span v-if="errors.words_count && (selectedWords.length < props.minimumWordsCount)">{{ errors.words_count[0]
+            <p
+                :class="{ 'text-danger': errors.words_count && ((selectedWords.length < props.minimumWordsCount || selectedWords.length < props.maximumWordsCount) || selectedWords.length !== wordsCount) }">
+                <span
+                    v-if="errors.words_count && ((selectedWords.length < props.minimumWordsCount || selectedWords.length < props.maximumWordsCount) || selectedWords.length !== wordsCount)">{{
+                        errors.words_count[0]
                     }}</span>
                 <span v-else> {{ $t("pages.dictionary.added_words_count") }}: <b>{{ selectedWords.length
                         }}</b></span>
@@ -124,10 +122,25 @@
                     }" />
             </div>
         </div>
+
+        <div class="col-span-12" v-if="props.selectWordsForSection">
+            <div class="btn-wrap">
+                <button type="button" class="btn btn-inactive" @click="closeAddSection()">
+                    <i class="pi pi-arrow-left"></i>
+                    {{ $t('back') }}
+                </button>
+                <button type="button" v-if="selectedWords.length > 0" @click="addWordsToSection()"
+                    class="btn btn-outline-primary">
+                    <i class="pi pi-angle-double-right"></i>
+                    {{ $t('pages.dictionary.add_these_words_to_the_section') }}
+                </button>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup>
+import { inject } from 'vue';
 import { useRouter } from 'nuxt/app';
 import audioButton from '../../../ui/audioButton.vue';
 import loader from '../../../ui/loader.vue';
@@ -138,6 +151,11 @@ import { debounceHandler } from '../../../../utils/debounceHandler';
 import multipleSelect from '../../../ui/multipleSelect.vue';
 import sortTableHead from '../../../ui/sortTableHead.vue';
 import tag from '../../../ui/tag.vue';
+
+const emit = defineEmits();
+
+const closeAddSection = inject('closeAddSection');
+const addWordsToSection = inject('addWordsToSection');
 
 const router = useRouter();
 const config = useRuntimeConfig();
@@ -160,6 +178,12 @@ const props = defineProps({
         required: true
     },
 
+    selectWordsForSection: {
+        default: false,
+        type: Boolean,
+        required: false
+    },
+
     selectedWords: {
         type: Object,
         required: true
@@ -171,8 +195,18 @@ const props = defineProps({
         required: false
     },
 
+    wordsCount: {
+        type: Number,
+        required: false
+    },
+
     minimumWordsCount: {
         default: 1,
+        type: Number,
+        required: false
+    },
+
+    maximumWordsCount: {
         type: Number,
         required: false
     }
@@ -260,20 +294,39 @@ const getDictionaryAttributes = async () => {
 
 const addToWordsGroup = (word) => {
     if (!selectedWords.value.some((w) => w.word_id === word.word_id)) {
-        let newArr = JSON.parse(JSON.stringify(selectedWords.value));
-        newArr.push(word);
-        selectedWords.value = newArr;
+        if (!props.selectWordsForSection) {
+            let newArr = JSON.parse(JSON.stringify(selectedWords.value));
+            newArr.push(word);
+            selectedWords.value = newArr;
+        }
+        else {
+            emit('update:selectedWords', [...props.selectedWords, word]);
+        }
     }
     else {
-        selectedWords.value = selectedWords.value.filter((w) => w.word_id !== word.word_id);
+        if (!props.selectWordsForSection) {
+            selectedWords.value = selectedWords.value.filter((w) => w.word_id !== word.word_id);
+        }
+        else {
+            emit('update:selectedWords', props.selectedWords.filter((w) => w.word_id !== word.word_id));
+        }
     }
 }
 
 const deleteFromGroup = (word_id) => {
-    const wordToRemove = selectedWords.value.find((w) => w.word_id === word_id);
+    if (!props.selectWordsForSection) {
+        const wordToRemove = selectedWords.value.find((w) => w.word_id === word_id);
 
-    if (wordToRemove) {
-        selectedWords.value = selectedWords.value.filter((w) => w.word_id !== word_id);
+        if (wordToRemove) {
+            selectedWords.value = selectedWords.value.filter((w) => w.word_id !== word_id);
+        }
+    }
+    else {
+        const wordToRemove = props.selectedWords.find((w) => w.word_id === word_id);
+
+        if (wordToRemove) {
+            emit('update:selectedWords', props.selectedWords.filter((w) => w.word_id !== word_id));
+        }
     }
 }
 

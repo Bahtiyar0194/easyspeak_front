@@ -1,8 +1,6 @@
 <template>
     <div class="custom-grid">
-        <div class="col-span-12">
-            <note :message="$t('pages.tasks.missing_words.note_1')" :className="'outline-success'" />
-        </div>
+        <note :message="$t('pages.tasks.missing_words.note_1')" :className="'outline-success'" />
         <div v-for="(sentence, sentenceIndex) in selectedSentences" :key="sentenceIndex" class="col-span-12">
             <div class="card p-3">
                 <div class="flex flex-col gap-y-3">

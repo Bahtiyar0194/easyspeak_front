@@ -1,8 +1,6 @@
 <template>
     <div class="custom-grid">
-        <div class="col-span-12">
-            <note :message="$t('pages.tasks.missing_letters.note_1')" :className="'outline-success'"/>
-        </div>
+        <note :message="$t('pages.tasks.missing_letters.note_1')" :className="'outline-success'" />
         <div v-for="(word, wordIndex) in selectedWords" :key="wordIndex" class="col-span-12">
             <div class="btn-wrap items-center">
                 <b>{{ wordIndex + 1 }}.</b>

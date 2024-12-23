@@ -1,10 +1,12 @@
 <template>
-    <div v-if="show" class="note" :class="props.className">
-        {{ props.message }}
+    <div v-if="show" class="col-span-12">
+        <div class="note" :class="props.className">
+            {{ props.message }}
 
-        <button @click="show = false" :title="$t('close')">
-            <i class="pi pi-times text-xs"></i>
-        </button>
+            <button @click="show = false" :title="$t('close')">
+                <i class="pi pi-times text-xs"></i>
+            </button>
+        </div>
     </div>
 </template>
 <script setup>

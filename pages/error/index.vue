@@ -24,7 +24,8 @@
     </div>
 </template>
 <script setup>
-import { useRoute } from 'nuxt/app';
+import { useRoute, useRouter } from 'nuxt/app';
+import { onMounted } from 'vue';
 const { t } = useI18n();
 
 useHead({
@@ -36,7 +37,14 @@ definePageMeta({
     layout: "error"
 });
 
-const router = useRoute();
-const { status, message, url } = router.query;
+const route = useRoute();
+const router = useRouter();
+const { status, message, url } = route.query;
 const showMessage = ref(false);
+
+onMounted(() => {
+    if (status && status == 401) {
+        router.push('/auth/login');
+    }
+});
 </script>
