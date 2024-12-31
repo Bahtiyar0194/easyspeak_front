@@ -894,7 +894,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .btn.btn-square{
-    @apply flex justify-center items-center p-0;
+    @apply min-w-9 h-9 flex justify-center items-center p-0;
 }
 
 .btn.btn-sm{
@@ -1362,7 +1362,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .list-group.nowrap > li{
-    @apply py-2 border-b-0;
+    @apply py-2;
 }
 
 .list-group > li.section{
@@ -1960,4 +1960,12 @@ select.error:has(option:checked:disabled) {
 
 .pulse{
     animation: 0.5s linear infinite pulse;
+}
+
+.draggable {
+    @apply cursor-grab select-none touch-none;
+}
+  
+.draggable.dragging {
+    @apply opacity-50;
 }

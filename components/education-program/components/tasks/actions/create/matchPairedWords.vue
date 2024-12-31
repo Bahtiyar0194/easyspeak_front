@@ -80,9 +80,7 @@ const newTaskSteps = [
         component: taskOptionsForm,
         props: {
             errors,
-            // showAudioButton: true,
-            // showTranslate: true,
-            // showTranscription: true,
+            showImpressionLimit: true, 
             showSecondsPerWord: true, 
         },
         modalSize: '4xl'

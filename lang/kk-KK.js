@@ -380,6 +380,12 @@ export default {
             search_filter: 'Сөйлемді іздеу сүзгісі'
         },
 
+        sections: {
+            sections_left: "Қайталауға қалған бөлімдер саны",
+            studied_sections: "Зерттелген бөлімдер",
+            unstudied_sections: 'Қайта зерттеуге арналған бөлімдер',
+        },
+
         tasks: {
             title: 'Тапсырмалар',
             task_slug: 'Тапсырманың негізгі тілдегі атауы',

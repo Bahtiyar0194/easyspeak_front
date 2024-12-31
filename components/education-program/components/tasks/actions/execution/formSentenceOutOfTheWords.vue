@@ -114,70 +114,18 @@
                 </div>
             </div>
         </div>
-        <div v-else class="col-span-12">
-            <div class="flex flex-col gap-y-4">
-                <div class="flex flex-col gap-y-2" v-if="studiedSentences.length > 0">
-                    <p class="text-xl font-medium mb-0 text-success">
-                        {{ $t("pages.sentences.studied_sentences") }}
-                    </p>
-                    <div v-for="(sentence, sIndex) in studiedSentences" :key="sIndex"
-                        class="flex justify-between items-center gap-x-2">
-                        <div>
-                            <p class="mb-0 font-medium">{{ sentence.sentence }}</p>
-                            <p class="mb-0 text-inactive">
-                                {{ sentence.sentence_translate }}
-                            </p>
-                        </div>
-
-                        <div class="flex items-center">
-                            <audioButton v-if="sentence.audio_file"
-                                :src="config.public.apiBase + '/media/' + sentence.audio_file" />
-                            <div class="step-item xs completed">
-                                <div class="step-icon">
-                                    <i class="pi pi-check"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex flex-col gap-y-2" v-if="reStudySentences.length > 0">
-                    <p class="text-xl font-medium mb-0 text-danger">
-                        {{ $t("pages.sentences.unstudied_sentences") }}
-                    </p>
-                    <div v-for="(sentence, rIndex) in reStudySentences" :key="rIndex"
-                        class="flex justify-between items-center gap-x-2">
-                        <div>
-                            <p class="mb-0 font-medium">{{ sentence.sentence }}</p>
-                            <p class="mb-0 text-inactive">
-                                {{ sentence.sentence_translate }}
-                            </p>
-                        </div>
-
-                        <div class="flex items-center">
-                            <audioButton v-if="sentence.audio_file"
-                                :src="config.public.apiBase + '/media/' + sentence.audio_file" />
-                            <div class="step-item xs failed">
-                                <div class="step-icon">
-                                    <i class="pi pi-replay"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <result v-else :studiedSentences="studiedSentences" :reStudySentences="reStudySentences" />
     </div>
 </template>
 
 <script setup>
 import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
-import audioButton from "../../../../../ui/audioButton.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import countdownTaskTimer from "../../../../../ui/countdownTaskTimer.vue";
 import progressBar from "../../../../../ui/progressBar.vue";
 import { playSuccessSound, playErrorSound } from '../../../../../../utils/playAudio';
+import result from "../../results/sentences/result.vue";
 
 const router = useRouter();
 const config = useRuntimeConfig();

@@ -104,51 +104,7 @@
             </div>
         </div>
 
-        <div v-else class="col-span-12 max-h-96 overflow-auto pr-2">
-            <div class="flex flex-col gap-y-4">
-                <div class="flex flex-col gap-y-2" v-if="studiedWords.length > 0">
-                    <p class="text-xl font-medium mb-0 text-success">{{ $t('pages.dictionary.studied_words') }}</p>
-                    <div v-for="(word, sIndex) in studiedWords" :key="sIndex"
-                        class="flex justify-between items-center gap-x-2">
-                        <div>
-                            <p class="mb-0 font-medium">{{ word.word }}</p>
-                            <p class="mb-0 text-inactive">{{ word.word_translate }}</p>
-                        </div>
-
-                        <div class="flex items-center">
-                            <audioButton v-if="word.audio_file"
-                                :src="config.public.apiBase + '/media/' + word.audio_file" />
-                            <div class="step-item xs completed">
-                                <div class="step-icon">
-                                    <i class="pi pi-check"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex flex-col gap-y-2" v-if="reStudyWords.length > 0">
-                    <p class="text-xl font-medium mb-0 text-danger">{{ $t('pages.dictionary.unstudied_words') }}</p>
-                    <div v-for="(word, rIndex) in reStudyWords" :key="rIndex"
-                        class="flex justify-between items-center gap-x-2">
-                        <div>
-                            <p class="mb-0 font-medium">{{ word.word }}</p>
-                            <p class="mb-0 text-inactive">{{ word.word_translate }}</p>
-                        </div>
-
-                        <div class="flex items-center">
-                            <audioButton v-if="word.audio_file"
-                                :src="config.public.apiBase + '/media/' + word.audio_file" />
-                            <div class="step-item xs failed">
-                                <div class="step-icon">
-                                    <i class="pi pi-replay"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <result v-else :studiedWords="studiedWords" :reStudyWords="reStudyWords" />
     </div>
 </template>
 <script setup>
@@ -162,6 +118,7 @@ import countdownTaskTimer from "../../../../../ui/countdownTaskTimer.vue";
 import progressBar from "../../../../../ui/progressBar.vue";
 import { debounceHandler } from "../../../../../../utils/debounceHandler";
 import { playAudio, stopAudio, playSuccessSound, playErrorSound } from '../../../../../../utils/playAudio';
+import result from "../../results/dictionary/result.vue";
 
 const router = useRouter();
 const config = useRuntimeConfig();

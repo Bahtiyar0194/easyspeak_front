@@ -75,7 +75,9 @@ const newTaskSteps = [
             showAudioButton: true,
             showImage: true,
             showTranslate: true,
-            showTranscription: true 
+            showTranscription: true,
+            showImpressionLimit: true, 
+            showSecondsPerWord: true
         },
         modalSize: '4xl'
     }

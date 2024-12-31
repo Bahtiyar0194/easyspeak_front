@@ -1,6 +1,5 @@
 <template>
-    123
-    <!-- <countdownTaskTimer v-if="showTaskTimer" />
+    <countdownTaskTimer v-if="showTaskTimer" />
     <div class="custom-grid">
         <div v-if="!isFinished" class="col-span-12">
             <div class="custom-grid">
@@ -15,7 +14,7 @@
                         {{ $t("time_is_up") }}
                     </p>
                     <p v-else-if="sections.length > 0" class="text-center">
-                        {{ $t("pages.dictionary.sections_left") }}:
+                        {{ $t("pages.sections.sections_left") }}:
                         <b>{{ sections.length }}</b>
                     </p>
                 </div>
@@ -28,78 +27,115 @@
 
                 <div v-if="timeIsUp || isComplete" class="col-span-12">
                     <div class="flex flex-col gap-y-4">
-                        <div class="flex flex-col gap-y-2" v-if="currentStudiedSentences.length > 0">
+                        <div class="flex flex-col gap-y-2" v-if="currentStudiedSections.length > 0">
                             <p class="text-xl font-medium mb-0 text-success">
-                                {{ currentReStudySentences.length > 0 ? $t("right_answers") : $t("right") }}
+                                {{ currentReStudySections.length > 0 ? $t("right_answers") : $t("right") }}
                             </p>
-                            <div v-for="(sentence, sIndex) in currentStudiedSentences" :key="sIndex"
-                                class="flex justify-between items-center gap-x-2">
-                                <div>
-                                    <p class="mb-0 font-medium">{{ sentence.sentence }}</p>
-                                    <p class="mb-0 text-inactive">
-                                        {{ sentence.sentence_translate }}
-                                    </p>
-                                </div>
 
-                                <div class="flex items-center">
-                                    <audioButton v-if="sentence.audio_file"
-                                        :src="config.public.apiBase + '/media/' + sentence.audio_file" />
+                            <ul class="list-group nowrap">
+                                <li v-for="(section, sIndex) in currentStudiedSections" :key="sIndex"
+                                    class="flex justify-between items-center gap-x-2">
+                                    <div class="btn-wrap items-center">
+                                        <div :class="section.words[0].target === 1 && 'text-success'">
+                                            <div class="flex flex-col">
+                                                <b class="mb-0">{{ section.words[0].word }}</b>
+                                                <span class="text-xs">{{ section.words[0].word_translate }}</span>
+                                            </div>
+                                        </div>
+                                        <span>-</span>
+                                        <div :class="section.words[1].target === 1 && 'text-success'">
+                                            <div class="flex flex-col">
+                                                <b class="mb-0">{{ section.words[1].word }}</b>
+                                                <span class="text-xs">{{ section.words[1].word_translate }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="step-item xs completed">
                                         <div class="step-icon">
                                             <i class="pi pi-check"></i>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
+                                </li>
+                            </ul>
                         </div>
 
-                        <div class="flex flex-col gap-y-2" v-if="currentReStudySentences.length > 0">
+                        <div class="flex flex-col gap-y-2" v-if="currentReStudySections.length > 0">
                             <p class="text-xl font-medium mb-0 text-danger">
                                 {{ $t("for_re_examination") }}
                             </p>
-                            <div v-for="(sentence, rIndex) in currentReStudySentences" :key="rIndex"
-                                class="flex justify-between items-center gap-x-2">
-                                <div>
-                                    <div v-if="sentence.selectedOptionIndex >= 0"
-                                        class="flex flex-wrap gap-x-1 font-medium">
-                                        <p class="mb-0 text-inactive font-normal">
-                                            {{ $t('your_answer') }}:
-                                        </p>
-                                        <div v-for="(word, wordIndex) in sentence.sentence.split(' ')" :key="wordIndex">
-                                            <span class="underline text-danger"
-                                                v-if="wordIndex === sentence.missing_word_position && sentence.selectedOptionIndex >= 0">{{
-                                                    sentence.missingWords[sentence.selectedOptionIndex].word }}</span>
-                                            <span class="underline text-success"
-                                                v-else-if="wordIndex === sentence.missing_word_position">{{ word
-                                                }}</span>
-                                            <span v-else>{{ word }}</span>
-                                        </div>
-                                    </div>
-                                    <div class="flex flex-wrap gap-x-1 font-medium">
-                                        <p class="mb-0 text-inactive font-normal">
-                                            {{ $t('right_answer') }}:
-                                        </p>
-                                        <div v-for="(word, wordIndex) in sentence.sentence.split(' ')" :key="wordIndex">
-                                            <span class="underline text-success"
-                                                v-if="wordIndex === sentence.missing_word_position">{{ word }}</span>
-                                            <span v-else>{{ word }}</span>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <div class="flex items-center">
-                                    <audioButton v-if="sentence.audio_file"
-                                        :src="config.public.apiBase + '/media/' + sentence.audio_file" />
+                            <ul class="list-group nowrap">
+                                <li v-for="(section, rIndex) in currentReStudySections" :key="rIndex"
+                                    class="flex justify-between items-center gap-x-2">
+
+                                    <div class="flex flex-wrap gap-4">
+                                        <div>
+                                            <p class="mb-0 text-inactive font-normal text-xs">
+                                                {{ $t('your_answer') }}:
+                                            </p>
+                                            <div class="btn-wrap items-center">
+                                                <div :class="section.words[0].target === 1 && 'text-danger'">
+                                                    <div class="flex flex-col">
+                                                        <b class="mb-0">{{ section.words[0].target === 1 ?
+                                                            (section.words[0].userInput === "" ? "________" :
+                                                                section.words[0].userInput) : section.words[0].word }}</b>
+                                                        <span class="text-xs">{{ section.words[0].userInput === "" ?
+                                                            "________" : (section.words[0].target === 1 ?
+                                                                section.words[0].userInputTranslate :
+                                                                section.words[0].word_translate) }}</span>
+                                                    </div>
+                                                </div>
+                                                <span>-</span>
+                                                <div :class="section.words[1].target === 1 && 'text-danger'">
+                                                    <div class="flex flex-col">
+                                                        <b class="mb-0">{{ section.words[1].target === 1 ?
+                                                            (section.words[1].userInput === "" ? "________" :
+                                                                section.words[1].userInput) : section.words[1].word }}</b>
+                                                        <span class="text-xs">{{ section.words[1].userInput === "" ?
+                                                            "________" : (section.words[1].target === 1 ?
+                                                                section.words[1].userInputTranslate :
+                                                                section.words[1].word_translate) }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <p class="mb-0 text-inactive font-normal text-xs">
+                                                {{ $t('right_answer') }}:
+                                            </p>
+                                            <div class="btn-wrap items-center">
+                                                <div :class="section.words[0].target === 1 && 'text-success'">
+                                                    <div class="flex flex-col">
+                                                        <b class="mb-0">{{ section.words[0].word }}</b>
+                                                        <span class="text-xs">{{ section.words[0].word_translate
+                                                            }}</span>
+                                                    </div>
+                                                </div>
+                                                <span>-</span>
+                                                <div :class="section.words[1].target === 1 && 'text-success'">
+                                                    <div class="flex flex-col">
+                                                        <b class="mb-0">{{ section.words[1].word }}</b>
+                                                        <span class="text-xs">{{ section.words[1].word_translate
+                                                            }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="step-item xs failed">
                                         <div class="step-icon">
                                             <i class="pi pi-replay"></i>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
+                                </li>
+                            </ul>
                         </div>
+
                         <div class="btn-wrap right">
-                            <button v-if="sentences.length > 0" class="btn btn-outline-primary" @click="setSentences()">
+                            <button v-if="sections.length > 0" class="btn btn-outline-primary" @click="setSections()">
                                 <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
                             </button>
                             <button v-else class="btn btn-light" @click="isFinished = true">
@@ -111,26 +147,37 @@
 
                 <div v-else class="col-span-12">
                     <div class="custom-grid">
-                        <div v-for="(section, sectionIndex) in currentSections" :key="sectionIndex"
-                            class="col-span-12">
-                            <div class="flex flex-wrap gap-1 font-medium text-lg mb-2">
-                                <span>{{ sentenceIndex + 1 }}.</span>
-                                <div v-for="(word, wordIndex) in sentence.sentence.split(' ')" :key="wordIndex">
-                                    <span class="underline text-corp"
-                                        v-if="wordIndex === sentence.missing_word_position && sentence.selectedOptionIndex >= 0">{{
-                                            sentence.missingWords[sentence.selectedOptionIndex].word }}</span>
-                                    <span v-else-if="wordIndex === sentence.missing_word_position">_______</span>
-                                    <span v-else>{{ word }}</span>
-                                </div>
+                        <div class="col-span-12 border-b-inactive">
+                            <div class="btn-wrap justify-center items-center mb-4">
+                                <button draggable="true" v-for="(word, wordIndex) in hiddenWords" :key="wordIndex"
+                                    class="btn btn-light draggable" :class="{
+                                        disabled: word.disabled,
+                                        dragging: isDragging
+                                    }" type="button" @dragstart="onDragStart($event, wordIndex)"
+                                    @touchstart="onTouchStart($event, wordIndex)" @touchmove="onTouchMove"
+                                    @touchend="onTouchEnd" @click="insertWord(word)">{{
+                                        word.word }}</button>
                             </div>
+                        </div>
+                        <div v-for="(section, sectionIndex) in currentSections" :key="sectionIndex" class="col-span-12">
+                            <div class="btn-wrap justify-center gap-2 font-medium">
+                                <div v-for="(word, wordIndex) in section.words" :key="wordIndex">
 
-                            <div class="btn-wrap">
-                                <button v-for="(option, optionIndex) in sentence.missingWords" :key="optionIndex"
-                                    type="button" class="btn btn-sm btn-light"
-                                    :class="unFilledSentences.includes(sentenceIndex) ? 'pulse btn-danger' : sentence.selectedOptionIndex === optionIndex && 'text-hidden disabled'"
-                                    @click="insertWord(sentenceIndex, optionIndex)">
-                                    {{ option.word }}
-                                </button>
+                                    <div v-if="word.target == 1" class="btn flex justify-center items-center"
+                                        :class="unFilledSections.includes(sectionIndex) ? 'pulse btn-danger' : 'btn-active'"
+                                        @drop="onDrop($event, sectionIndex, wordIndex)" @dragover="onDragOver">
+                                        <input v-model="word.userInput"
+                                            :style="{ 'width': (word.userInput !== '' && (word.userInput.length > word.word.length) ? (word.userInput.length + 'ch') : (word.word.length + 'ch')), 'text-align': 'center' }"
+                                            @input="handleInput($event)" type="text" />
+                                        <button v-if="word.userInput !== ''"
+                                            @click="clearInput(sectionIndex, wordIndex)"
+                                            class="text-danger ml-0.5 mt-0.5"><i class="pi pi-delete-left"></i></button>
+                                    </div>
+
+                                    <div v-else class="btn btn-active">{{
+                                        word.word
+                                        }}</div>
+                                </div>
                             </div>
                         </div>
 
@@ -149,102 +196,120 @@
         </div>
         <div v-else class="col-span-12">
             <div class="flex flex-col gap-y-4">
-                <div class="flex flex-col gap-y-2" v-if="studiedSentences.length > 0">
+                <div class="flex flex-col gap-y-2" v-if="studiedSections.length > 0">
                     <p class="text-xl font-medium mb-0 text-success">
-                        {{ $t("pages.sentences.studied_sentences") }}
+                        {{ $t("pages.sections.studied_sections") }}
                     </p>
-                    <div v-for="(sentence, sIndex) in studiedSentences" :key="sIndex"
-                        class="flex justify-between items-center gap-x-2">
-                        <div>
-                            <p class="mb-0 font-medium">{{ sentence.sentence }}</p>
-                            <p class="mb-0 text-inactive">
-                                {{ sentence.sentence_translate }}
-                            </p>
-                        </div>
 
-                        <div class="flex items-center">
-                            <audioButton v-if="sentence.audio_file"
-                                :src="config.public.apiBase + '/media/' + sentence.audio_file" />
+                    <ul class="list-group nowrap">
+                        <li v-for="(section, sIndex) in studiedSections" :key="sIndex"
+                            class="flex justify-between items-center gap-x-2">
+                            <div class="btn-wrap items-center">
+                                <div :class="section.words[0].target === 1 && 'text-success'">
+                                    <div class="flex flex-col">
+                                        <b class="mb-0">{{ section.words[0].word }}</b>
+                                        <span class="text-xs">{{ section.words[0].word_translate }}</span>
+                                    </div>
+                                </div>
+                                <span>-</span>
+                                <div :class="section.words[1].target === 1 && 'text-success'">
+                                    <div class="flex flex-col">
+                                        <b class="mb-0">{{ section.words[1].word }}</b>
+                                        <span class="text-xs">{{ section.words[1].word_translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="step-item xs completed">
                                 <div class="step-icon">
                                     <i class="pi pi-check"></i>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </li>
+                    </ul>
                 </div>
 
-                <div class="flex flex-col gap-y-2" v-if="reStudySentences.length > 0">
+                <div class="flex flex-col gap-y-2" v-if="reStudySections.length > 0">
                     <p class="text-xl font-medium mb-0 text-danger">
-                        {{ $t("pages.sentences.unstudied_sentences") }}
+                        {{ $t("pages.sections.unstudied_sections") }}
                     </p>
-                    <div v-for="(sentence, rIndex) in reStudySentences" :key="rIndex"
-                        class="flex justify-between items-center gap-x-2">
-                        <div>
-                            <p class="mb-0 font-medium">{{ sentence.sentence }}</p>
-                            <p class="mb-0 text-inactive">
-                                {{ sentence.sentence_translate }}
-                            </p>
-                        </div>
 
-                        <div class="flex items-center">
-                            <audioButton v-if="sentence.audio_file"
-                                :src="config.public.apiBase + '/media/' + sentence.audio_file" />
+                    <ul class="list-group nowrap">
+                        <li v-for="(section, rIndex) in reStudySections" :key="rIndex"
+                            class="flex justify-between items-center gap-x-2">
+                            <div class="btn-wrap items-center">
+                                <div :class="section.words[0].target === 1 && 'text-danger'">
+                                    <div class="flex flex-col">
+                                        <b class="mb-0">{{ section.words[0].word }}</b>
+                                        <span class="text-xs">{{ section.words[0].word_translate }}</span>
+                                    </div>
+                                </div>
+                                <span>-</span>
+                                <div :class="section.words[1].target === 1 && 'text-danger'">
+                                    <div class="flex flex-col">
+                                        <b class="mb-0">{{ section.words[1].word }}</b>
+                                        <span class="text-xs">{{ section.words[1].word_translate }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="step-item xs failed">
                                 <div class="step-icon">
                                     <i class="pi pi-replay"></i>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
-    </div> -->
+    </div>
 </template>
 
 <script setup>
 import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
-import audioButton from "../../../../../ui/audioButton.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import countdownTaskTimer from "../../../../../ui/countdownTaskTimer.vue";
 import progressBar from "../../../../../ui/progressBar.vue";
 const router = useRouter();
-const config = useRuntimeConfig();
 const { $axiosPlugin } = useNuxtApp();
 
-// const showTaskTimer = ref(false);
+const showTaskTimer = ref(false);
 const taskData = ref(null);
-// const sections = ref([]);
-// const currentSections = ref([]);
-// const checkingStatus = ref(false);
+const sections = ref([]);
+const currentSections = ref([]);
+const hiddenWords = ref([]);
+const checkingStatus = ref(false);
 
-// const studiedSentences = ref([]);
-// const currentStudiedSentences = ref([]);
+const isDragging = ref(false);
+const touchData = ref({ word: "", target: null });
 
-// const reStudySentences = ref([]);
-// const currentReStudySentences = ref([]);
+const studiedSections = ref([]);
+const currentStudiedSections = ref([]);
 
-// const unFilledSentences = ref([]);
+const reStudySections = ref([]);
+const currentReStudySections = ref([]);
 
-// const isStarted = ref(false);
-// const isComplete = ref(false);
+const unFilledSections = ref([]);
 
-// const time = ref(0);
-// const timeIsUp = ref(false);
+const isStarted = ref(false);
+const isComplete = ref(false);
 
-// const isFinished = ref(false);
+const time = ref(0);
+const timeIsUp = ref(false);
+
+const isFinished = ref(false);
 
 //Инициализированное значение попыток
-// const maxAttempts = 0;
+const maxAttempts = 1;
 
-// const progressPercentage = computed(() => {
-//     const totalSentences = taskData.value?.sentences?.length || 0; // Предотвращаем ошибки, если данные ещё не загружены
-//     if (totalSentences === 0) return 0; // Если общее количество предложении равно 0, возвращаем 0
-//     const completedSentences = totalSentences - sentences.value.length;
-//     return (completedSentences / totalSentences) * 100;
-// });
+const progressPercentage = computed(() => {
+    const totalSections = taskData.value?.word_sections?.length || 0; // Предотвращаем ошибки, если данные ещё не загружены
+    if (totalSections === 0) return 0; // Если общее количество предложении равно 0, возвращаем 0
+    const completedSections = totalSections - sections.value.length;
+    return (completedSections / totalSections) * 100;
+});
 
 // Получаем данные задачи из пропсов
 const props = defineProps({
@@ -266,19 +331,18 @@ const getTask = async () => {
         const res = await $axiosPlugin.get(
             "tasks/match_paired_words/" + props.task.task_id
         );
-        //showTaskTimer.value = true;
+        showTaskTimer.value = true;
         taskData.value = res.data;
-        console.log(taskData.value)
-        //sentences.value = [...taskData.value.sentences];
+        sections.value = [...taskData.value.word_sections];
 
-        // sentences.value.forEach((sentence) => {
-        //     sentence.attempts = maxAttempts;
-        // });
+        sections.value.forEach((section) => {
+            sections.attempts = maxAttempts;
+        });
 
-        // setTimeout(() => {
-        //     setSentences();
-        //     showTaskTimer.value = false;
-        // }, 3000);
+        setTimeout(() => {
+            setSections();
+            showTaskTimer.value = false;
+        }, 3000);
     } catch (err) {
         const errorRoute = err.response
             ? {
@@ -296,87 +360,186 @@ const getTask = async () => {
     }
 };
 
-// const setSentences = () => {
-//     currentStudiedSentences.value = [];
-//     currentReStudySentences.value = [];
+const setSections = () => {
+    currentStudiedSections.value = [];
+    currentReStudySections.value = [];
+    hiddenWords.value = [];
 
-//     if (sentences.value.length > 0) {
-//         currentSentences.value = sentences.value.slice(0, taskData.value.options.impression_limit);
+    if (sections.value.length > 0) {
+        currentSections.value = sections.value.slice(0, taskData.value.options.impression_limit);
 
-//         currentSentences.value.forEach((sentence) => {
-//             const removeSentenceOptionIndex = sentences.value.find((s) => s.task_sentence_id === sentence.task_sentence_id);
-//             removeSentenceOptionIndex.selectedOptionIndex = undefined;
-//         });
+        currentSections.value.forEach((section) => {
+            section.words.forEach((word) => {
+                if (word.target == 1) {
+                    word.userInput = "";
+                    word.userInputTranslate = "";
+                    hiddenWords.value.push(word);
+                }
+            });
+        });
 
-//         time.value = (taskData.value.options.seconds_per_sentence * currentSentences.value.length);
+        hiddenWords.value = [...hiddenWords.value].sort(() => Math.random() - 0.5);
 
-//         isComplete.value = false;
-//         isStarted.value = true;
-//         timeIsUp.value = false;
-//         checkingStatus.value = false;
-//     }
-// }
+        time.value = (taskData.value.options.seconds_per_word * currentSections.value.length);
 
-// const insertWord = (sentenceIndex, optionIndex) => {
-//     sentences.value[sentenceIndex].selectedOptionIndex = optionIndex;
-// }
+        isComplete.value = false;
+        isStarted.value = true;
+        timeIsUp.value = false;
+        checkingStatus.value = false;
+    }
+}
 
-// const checkSentences = () => {
-//     currentSentences.value.forEach((sentence) => {
-//         sentences.value = sentences.value.filter((s) => s.task_sentence_id !== sentence.task_sentence_id);
-//         if (sentence.selectedOptionIndex >= 0 && (sentence.missingWords[sentence.selectedOptionIndex].word === sentence.sentence.split(" ")[sentence.missing_word_position])) {
-//             studiedSentences.value.push(sentence);
-//             currentStudiedSentences.value.push(sentence);
+const onDragStart = (event, wordIndex) => {
+    // Установить данные для перетаскивания
+    event.dataTransfer.setData("wordIndex", wordIndex);
+};
 
-//             if (reStudySentences.value.some((s) => s.task_sentence_id === sentence.task_sentence_id)) {
-//                 reStudySentences.value = reStudySentences.value.filter((s) => s.task_sentence_id !== sentence.task_sentence_id);
-//             }
-//         }
-//         else {
-//             currentReStudySentences.value.push(sentence);
+const onDrop = (event, sectionIndex, wordIndex) => {
+    // Остановить поведение по умолчанию
+    event.preventDefault();
 
-//             if (sentence.attempts >= 1) {
-//                 sentences.value.push(sentence);
-//                 const removeSentenceAttempt = sentences.value.find((s) => s.task_sentence_id === sentence.task_sentence_id);
-//                 removeSentenceAttempt.attempts--;
-//             }
-//             else {
-//                 reStudySentences.value.push(sentence);
-//             }
-//         }
-//     });
-// }
+    // Получить данные из события
+    const wIndex = event.dataTransfer.getData("wordIndex");
 
-// const acceptAnswers = () => {
-//     checkingStatus.value = true;
-//     currentSentences.value.forEach((sentence, sentenceIndex) => {
-//         if (sentence.selectedOptionIndex === undefined) {
-//             unFilledSentences.value.push(sentenceIndex);
-//         }
-//     });
+    const word = hiddenWords.value[wIndex];
+    word.disabled = true;
 
-//     if (unFilledSentences.value.length > 0) {
-//         setTimeout(() => {
-//             unFilledSentences.value = [];
-//             checkingStatus.value = false;
-//         }, 1000);
-//     }
-//     else {
-//         isComplete.value = true;
-//         isStarted.value = false;
-//         checkSentences();
-//     }
-// }
+    currentSections.value[sectionIndex].words[wordIndex].userInput = word.word;
+    currentSections.value[sectionIndex].words[wordIndex].userInputTranslate = word.word_translate;
+};
 
-// const timerIsUp = () => {
-//     timeIsUp.value = true;
-//     isStarted.value = false;
-//     checkSentences();
-// };
+const onDragOver = (event) => {
+    // Остановить поведение по умолчанию, чтобы разрешить drop
+    event.preventDefault();
+};
+
+const onTouchStart = (event, wordIndex) => {
+    touchData.value.word = wordIndex;
+    touchData.value.target = event.target;
+    isDragging.value = true;
+};
+
+const onTouchMove = (event) => {
+    event.preventDefault(); // Предотвращаем скролл
+    const touch = event.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+
+    if (element && element.tagName === "INPUT") {
+        touchData.value.target = element;
+    }
+};
+
+const onTouchEnd = () => {
+    if (touchData.value.target && touchData.value.target.tagName === "INPUT") {
+        touchData.value.target.value = touchData.value.word;
+    }
+    isDragging.value = false;
+    touchData.value.word = "";
+    touchData.value.target = null;
+};
+
+const enableTheHiddenWord = (w) => {
+    hiddenWords.value.forEach((word) => {
+        if (w === word.word) {
+            word.disabled = false;
+        }
+    });
+}
+
+const disableTheHiddenWord = (w) => {
+    hiddenWords.value.forEach((word) => {
+        if (w === word.word) {
+            word.disabled = true;
+        }
+    });
+}
+
+const handleInput = (e) => {
+    disableTheHiddenWord(e.target.value);
+};
+
+const insertWord = (w) => {
+    let emptyWordFind = false;
+    currentSections.value.forEach((section) => {
+        section.words.forEach((word) => {
+            if (word.userInput === "" && !emptyWordFind) {
+                word.userInput = w.word;
+                word.userInputTranslate = w.word_translate;
+                disableTheHiddenWord(w.word);
+                emptyWordFind = true;
+            }
+        });
+    });
+}
+
+const clearInput = (sectionIndex, wordIndex) => {
+    enableTheHiddenWord(currentSections.value[sectionIndex].words[wordIndex].userInput);
+    currentSections.value[sectionIndex].words[wordIndex].userInput = "";
+}
+
+const checkSections = () => {
+    currentSections.value.forEach((section) => {
+        sections.value = sections.value.filter((ws) => ws.word_section_id !== section.word_section_id);
+
+        section.words.forEach((word) => {
+            if (word.target == 1) {
+                if (word.userInput.toLowerCase() === word.word.toLowerCase()) {
+                    studiedSections.value.push(section);
+                    currentStudiedSections.value.push(section);
+
+                    if (reStudySections.value.some((ws) => ws.word_section_id === section.word_section_id)) {
+                        reStudySections.value = reStudySections.value.filter((ws) => ws.word_section_id !== section.word_section_id);
+                    }
+                }
+                else {
+                    currentReStudySections.value.push(section);
+
+                    if (section.attempts >= 1) {
+                        section.value.push(section);
+                        const removeSectionAttempt = sections.value.find((ws) => ws.word_section_id === section.word_section_id);
+                        removeSectionAttempt.attempts--;
+                    }
+                    else {
+                        reStudySections.value.push(section);
+                    }
+                }
+            }
+        });
+    });
+}
+
+const acceptAnswers = () => {
+    checkingStatus.value = true;
+    currentSections.value.forEach((section, sectionIndex) => {
+        section.words.forEach((word) => {
+            if (word.userInput === "") {
+                unFilledSections.value.push(sectionIndex);
+            }
+        });
+    });
+
+    if (unFilledSections.value.length > 0) {
+        setTimeout(() => {
+            unFilledSections.value = [];
+            checkingStatus.value = false;
+        }, 1000);
+    }
+    else {
+        isComplete.value = true;
+        isStarted.value = false;
+        checkSections();
+    }
+}
+
+const timerIsUp = () => {
+    timeIsUp.value = true;
+    isStarted.value = false;
+    checkSections();
+};
 
 // Инициализация при монтировании
 onMounted(() => {
     getTask();
-    changeModalSize("modal-2xl");
+    changeModalSize("modal-lg");
 });
 </script>

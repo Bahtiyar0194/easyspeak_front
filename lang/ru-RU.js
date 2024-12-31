@@ -380,6 +380,12 @@ export default {
             search_filter: 'Фильтр поиска по предложениям'
         },
 
+        sections: {
+            sections_left: "Осталось секций на повторение",
+            studied_sections: "Изученные секции",
+            unstudied_sections: 'Секции для переизучения',
+        },
+
         tasks: {
             title: 'Задания',
             task_slug: 'Название задания на основном языке',
