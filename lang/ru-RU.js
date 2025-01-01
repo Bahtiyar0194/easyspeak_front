@@ -63,6 +63,8 @@ export default {
     for_re_examination: "Для повторного изучения",
     get_ready: "Приготовьтесь",
     number_of_options: "Количество вариантов",
+    number_of_attempts: "Количество попыток",
+    random_order: "Выводить в случайном порядке",
 
     created_at: "Дата создания",
     created_at_from: "Дата создания (с)",
@@ -404,7 +406,10 @@ export default {
                 show_word: 'Показывать переводимое слово',
                 show_transcription: 'Показывать транскрипцию',
                 show_translate: 'Показывать перевод',
-                impression_limit: 'Лимит показов'
+                impression_limit: 'Лимит показов',
+                match_by_typing: 'Сопоставление с помощью ввода слова',
+                match_by_clicking: 'Сопоставление с помощью клика',
+                match_by_drag_and_drop: 'Сопоставление с помощью перетаскивания'
             },
             translate: {
                 kk: 'Название задания на казахском языке',

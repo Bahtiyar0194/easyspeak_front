@@ -139,7 +139,7 @@
                         <div class="col-span-12 lg:col-span-6">
                             <div class="custom-grid">
                                 <div v-for="(picture, pictureIndex) in currentPictures" :key="pictureIndex"
-                                    class="col-span-4 lg:col-span-6 relative rounded-lg border-inactive overflow-hidden">
+                                    class="col-span-3 lg:col-span-6 relative rounded-xl border-inactive overflow-hidden">
                                     <div
                                         class="absolute left-2 top-2 w-6 h-6 bg-success rounded-full flex items-center justify-center text-white text-lg">
                                         {{ pictureIndex + 1 }}
@@ -236,9 +236,6 @@ const timeIsUp = ref(false);
 
 const isFinished = ref(false);
 
-//Инициализированное значение попыток
-const maxAttempts = 1;
-
 const progressPercentage = computed(() => {
     const totalWords = taskData.value?.words?.length || 0; // Предотвращаем ошибки, если данные ещё не загружены
     if (totalWords === 0) return 0; // Если общее количество слов равно 0, возвращаем 0
@@ -268,7 +265,7 @@ const getTask = async () => {
         words.value = [...taskData.value.words];
 
         words.value.forEach((word) => {
-            word.attempts = maxAttempts;
+            word.attempts = taskData.value.options.max_attempts;
         });
 
         setTimeout(() => {

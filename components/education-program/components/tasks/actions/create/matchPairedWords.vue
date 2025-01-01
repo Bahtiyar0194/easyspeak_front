@@ -81,7 +81,10 @@ const newTaskSteps = [
         props: {
             errors,
             showImpressionLimit: true, 
-            showSecondsPerWord: true, 
+            showSecondsPerWord: true,
+            showMatchByTyping: true,
+            showMatchByClicking: true,
+            showMatchByDragAndDrop: true,
         },
         modalSize: '4xl'
     }

@@ -149,10 +149,13 @@
                     <div class="custom-grid">
                         <div class="col-span-12 border-b-inactive">
                             <div class="btn-wrap justify-center items-center mb-4">
-                                <button draggable="true" v-for="(word, wordIndex) in hiddenWords" :key="wordIndex"
-                                    class="btn btn-light draggable" :class="{
+                                <button :draggable="taskData?.options?.match_by_drag_and_drop == 1"
+                                    v-for="(word, wordIndex) in hiddenWords" :key="wordIndex" class="btn btn-light"
+                                    :class="{
                                         disabled: word.disabled,
-                                        dragging: isDragging
+                                        dragging: isDragging,
+                                        draggable: taskData?.options?.match_by_drag_and_drop == 1,
+                                        'pointer-events-none': (taskData?.options?.match_by_drag_and_drop != 1 && taskData?.options?.match_by_clicking != 1)
                                     }" type="button" @dragstart="onDragStart($event, wordIndex)"
                                     @touchstart="onTouchStart($event, wordIndex)" @touchmove="onTouchMove"
                                     @touchend="onTouchEnd" @click="insertWord(word)">{{
@@ -166,7 +169,7 @@
                                     <div v-if="word.target == 1" class="btn flex justify-center items-center"
                                         :class="unFilledSections.includes(sectionIndex) ? 'pulse btn-danger' : 'btn-active'"
                                         @drop="onDrop($event, sectionIndex, wordIndex)" @dragover="onDragOver">
-                                        <input v-model="word.userInput"
+                                        <input v-model="word.userInput" :disabled="taskData?.options?.match_by_typing != 1"
                                             :style="{ 'width': (word.userInput !== '' && (word.userInput.length > word.word.length) ? (word.userInput.length + 'ch') : (word.word.length + 'ch')), 'text-align': 'center' }"
                                             @input="handleInput($event)" type="text" />
                                         <button v-if="word.userInput !== ''"
@@ -176,7 +179,7 @@
 
                                     <div v-else class="btn btn-active">{{
                                         word.word
-                                        }}</div>
+                                    }}</div>
                                 </div>
                             </div>
                         </div>
@@ -301,9 +304,6 @@ const timeIsUp = ref(false);
 
 const isFinished = ref(false);
 
-//Инициализированное значение попыток
-const maxAttempts = 1;
-
 const progressPercentage = computed(() => {
     const totalSections = taskData.value?.word_sections?.length || 0; // Предотвращаем ошибки, если данные ещё не загружены
     if (totalSections === 0) return 0; // Если общее количество предложении равно 0, возвращаем 0
@@ -336,7 +336,7 @@ const getTask = async () => {
         sections.value = [...taskData.value.word_sections];
 
         sections.value.forEach((section) => {
-            sections.attempts = maxAttempts;
+            section.attempts = taskData.value.options.max_attempts;
         });
 
         setTimeout(() => {
@@ -459,17 +459,19 @@ const handleInput = (e) => {
 };
 
 const insertWord = (w) => {
-    let emptyWordFind = false;
-    currentSections.value.forEach((section) => {
-        section.words.forEach((word) => {
-            if (word.userInput === "" && !emptyWordFind) {
-                word.userInput = w.word;
-                word.userInputTranslate = w.word_translate;
-                disableTheHiddenWord(w.word);
-                emptyWordFind = true;
-            }
+    if (taskData.value.options.match_by_clicking == 1) {
+        let emptyWordFind = false;
+        currentSections.value.forEach((section) => {
+            section.words.forEach((word) => {
+                if (word.userInput === "" && !emptyWordFind) {
+                    word.userInput = w.word;
+                    word.userInputTranslate = w.word_translate;
+                    disableTheHiddenWord(w.word);
+                    emptyWordFind = true;
+                }
+            });
         });
-    });
+    }
 }
 
 const clearInput = (sectionIndex, wordIndex) => {

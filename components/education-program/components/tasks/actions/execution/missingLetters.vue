@@ -230,9 +230,6 @@ const timeIsUp = ref(false);
 
 const isFinished = ref(false);
 
-//Инициализированное значение попыток
-const maxAttempts = 1;
-
 const progressPercentage = computed(() => {
     const totalWords = taskData.value?.words?.length || 0; // Предотвращаем ошибки, если данные ещё не загружены
     if (totalWords === 0) return 0; // Если общее количество слов равно 0, возвращаем 0
@@ -262,7 +259,7 @@ const getTask = async () => {
         words.value = [...taskData.value.words];
 
         words.value.forEach((word) => {
-            word.attempts = maxAttempts;
+            word.attempts = taskData.value.options.max_attempts;
         });
 
         setTimeout(() => {

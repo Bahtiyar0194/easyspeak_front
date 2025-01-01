@@ -63,6 +63,8 @@ export default {
     for_re_examination: "Қайта оқуға арналған",
     get_ready: "Дайын болыңыз",
     number_of_options: "Нұсқалар саны",
+    number_of_attempts: "Әрекет саны",
+    random_order: "Кездейсоқ тәртіпте шығару",
 
     created_at: "Шыққан уақыты",
     created_at_from: "Шыққан уақыты (бастап)",
@@ -404,7 +406,10 @@ export default {
                 show_word: 'Аударылатын сөзді көрсету',
                 show_transcription: 'Транскрипциясын көрсету',
                 show_translate: 'Аудармасын көрсету',
-                impression_limit: 'Көрсету шектеуі'
+                impression_limit: 'Көрсету шектеуі',
+                match_by_typing: 'Сөзді енгізу арқылы сәйкестендіру',
+                match_by_clicking: 'Сөзге басу арқылы сәйкестендіру',
+                match_by_drag_and_drop: 'Сүйреп апару арқылы сәйкестендіру'
             },
             translate: {
                 kk: 'Тапсырманың қазақша тілдегі атауы',

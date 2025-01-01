@@ -212,6 +212,47 @@
                 </label>
             </div>
         </div>
+
+        <div v-if="props.showMatchByTyping" class="col-span-12">
+            <label class="custom-radio-checkbox">
+                <input type="checkbox" :checked="true" name="match_by_typing" />
+                <span>{{ $t('pages.tasks.task_options.match_by_typing') }}</span>
+            </label>
+        </div>
+
+        <div v-if="props.showMatchByClicking" class="col-span-12">
+            <label class="custom-radio-checkbox">
+                <input type="checkbox" :checked="true" name="match_by_clicking" />
+                <span>{{ $t('pages.tasks.task_options.match_by_clicking') }}</span>
+            </label>
+        </div>
+
+        <div v-if="props.showMatchByDragAndDrop" class="col-span-12">
+            <label class="custom-radio-checkbox">
+                <input type="checkbox" :checked="true" name="match_by_drag_and_drop" />
+                <span>{{ $t('pages.tasks.task_options.match_by_drag_and_drop') }}</span>
+            </label>
+        </div>
+
+        <div class="col-span-12">
+            <div class="form-group-border select active label-active">
+                <i class="pi pi-replay"></i>
+                <select name="max_attempts">
+                    <option selected disabled value="">{{ $t("choose_your_option") }}</option>
+                    <option v-for="item in maxAttempts" :key="item" :value="item">{{ item }}</option>
+                </select>
+                <label :class="{ 'label-error': errors.max_attempts }">
+                    {{ $t("number_of_attempts") }}
+                </label>
+            </div>
+        </div>
+
+        <div class="col-span-12">
+            <label class="custom-radio-checkbox">
+                <input type="checkbox" checked="true" name="random_order" />
+                <span>{{ $t('random_order') }}</span>
+            </label>
+        </div>
     </div>
 </template>
 <script setup>
@@ -314,10 +355,29 @@ const props = defineProps({
     findWordWithOptions: {
         type: Object,
         required: false
+    },
+
+    showMatchByTyping: {
+        default: false,
+        type: Boolean,
+        required: false
+    },
+
+    showMatchByClicking: {
+        default: false,
+        type: Boolean,
+        required: false
+    },
+
+    showMatchByDragAndDrop: {
+        default: false,
+        type: Boolean,
+        required: false
     }
 });
 
 const optionsNum = ref([2, 3, 4]);
+const maxAttempts = ref([0, 1, 2, 3, 4, 5]);
 
 const { errors, findWordWithOptions } = toRefs(props);
 </script>

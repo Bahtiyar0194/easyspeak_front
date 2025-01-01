@@ -123,8 +123,6 @@ const reStudyWords = ref([]);
 const isStarted = ref(false);
 const isComplete = ref(false);
 
-//Инициализированное значение попыток
-const maxAttempts = 2;
 const remainingAttempts = ref(0);
 const isWrong = ref(false);
 
@@ -205,7 +203,7 @@ const setWord = () => {
         isStarted.value = true;
         timeIsUp.value = false;
         isWrong.value = false;
-        remainingAttempts.value = maxAttempts;
+        remainingAttempts.value = taskData.value.options.max_attempts;
     }
     else {
         isFinished.value = true;

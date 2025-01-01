@@ -184,9 +184,6 @@ const timeIsUp = ref(false);
 
 const isFinished = ref(false);
 
-//Инициализированное значение попыток
-const maxAttempts = 1;
-
 const progressPercentage = computed(() => {
     const totalSentences = taskData.value?.sentences?.length || 0; // Предотвращаем ошибки, если данные ещё не загружены
     if (totalSentences === 0) return 0; // Если общее количество предложении равно 0, возвращаем 0
@@ -219,7 +216,7 @@ const getTask = async () => {
         sentences.value = [...taskData.value.sentences];
 
         sentences.value.forEach((sentence) => {
-            sentence.attempts = maxAttempts;
+            sentence.attempts = taskData.value.options.max_attempts;
         });
 
         setTimeout(() => {

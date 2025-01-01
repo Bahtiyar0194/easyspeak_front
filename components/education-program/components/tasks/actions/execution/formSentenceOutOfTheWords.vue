@@ -152,8 +152,6 @@ const isComplete = ref(false);
 const time = ref(0);
 const timeIsUp = ref(false);
 
-//Инициализированное значение попыток
-const maxAttempts = 3;
 const remainingAttempts = ref(0);
 const isWrong = ref(false);
 
@@ -243,7 +241,7 @@ const setSentence = () => {
         isStarted.value = true;
         timeIsUp.value = false;
         isWrong.value = false;
-        remainingAttempts.value = maxAttempts;
+        remainingAttempts.value = taskData.value.options.max_attempts;
 
         successButtonsIndex.value = [];
         errorButtonsIndex.value = [];
