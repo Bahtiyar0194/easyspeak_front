@@ -154,8 +154,9 @@ import tag from '../../../ui/tag.vue';
 
 const emit = defineEmits();
 
-const closeAddSection = inject('closeAddSection');
-const addWordsToSection = inject('addWordsToSection');
+// null для того чтобы игнорировать если родитель не передал provide
+const closeAddSection = inject('closeAddSection', null);
+const addWordsToSection = inject('addWordsToSection', null);
 
 const router = useRouter();
 const config = useRuntimeConfig();

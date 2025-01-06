@@ -336,8 +336,7 @@ const checkWords = () => {
 
             if (word.attempts >= 1) {
                 words.value.push(word);
-                const removeWordAttempt = words.value.find((w) => w.task_word_id === word.task_word_id);
-                removeWordAttempt.attempts--;
+                word.attempts--;
             }
             else {
                 reStudyWords.value.push(word);

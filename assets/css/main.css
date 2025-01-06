@@ -216,6 +216,10 @@
     @apply bg-red-500;
 }
 
+.bg-danger-100{
+    @apply bg-red-100;
+}
+
 .bg-warning{
     @apply bg-yellow-500;
 }

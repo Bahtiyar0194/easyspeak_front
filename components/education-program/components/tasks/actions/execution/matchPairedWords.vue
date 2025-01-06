@@ -71,7 +71,7 @@
 
                                     <div class="flex flex-wrap gap-4">
                                         <div>
-                                            <p class="mb-0 text-inactive font-normal text-xs">
+                                            <p class="mb-1 text-inactive font-normal text-xs">
                                                 {{ $t('your_answer') }}:
                                             </p>
                                             <div class="btn-wrap items-center">
@@ -102,7 +102,7 @@
                                         </div>
 
                                         <div>
-                                            <p class="mb-0 text-inactive font-normal text-xs">
+                                            <p class="mb-1 text-inactive font-normal text-xs">
                                                 {{ $t('right_answer') }}:
                                             </p>
                                             <div class="btn-wrap items-center">
@@ -372,6 +372,7 @@ const setSections = () => {
             section.words.forEach((word) => {
                 if (word.target == 1) {
                     word.userInput = "";
+                    word.disabled = false;
                     word.userInputTranslate = "";
                     hiddenWords.value.push(word);
                 }
@@ -497,7 +498,7 @@ const checkSections = () => {
                     currentReStudySections.value.push(section);
 
                     if (section.attempts >= 1) {
-                        section.value.push(section);
+                        sections.value.push(section);
                         const removeSectionAttempt = sections.value.find((ws) => ws.word_section_id === section.word_section_id);
                         removeSectionAttempt.attempts--;
                     }

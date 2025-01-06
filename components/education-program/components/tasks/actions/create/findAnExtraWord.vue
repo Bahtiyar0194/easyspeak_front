@@ -3,36 +3,36 @@
         <form @submit.prevent="createTaskSubmit" class="mt-2" ref="createFormRef">
             <div class="custom-grid">
                 <div class="col-span-12" v-for="(step, index) in newTaskSteps" :key="index"
-                :class="currentStep === (index + 1) ? 'block' : 'hidden'">
-                <component v-if="step.component" :is="step.component" v-bind="step.props"></component>
-            </div>
-            <div class="col-span-12">
-                <div class="btn-wrap justify-between">
-                    <button v-if="!addWordsSectionIsVisible && currentStep === 1" type="button"
-                        class="btn btn-outline-primary" @click="addSection()">
-                        <i class="pi pi-plus"></i>
-                        {{ $t('pages.dictionary.add_section') }}
-                    </button>
-                    <div v-if="wordSections.length > 0 && !addWordsSectionIsVisible" class="btn-wrap">
-                        <button v-if="currentStep > 1" class="btn btn-light" @click="backToStep(currentStep - 1)"
-                            type="button">
-                            <i class="pi pi-arrow-left"></i>
-                            <span>{{ $t("back") }}</span>
+                    :class="currentStep === (index + 1) ? 'block' : 'hidden'">
+                    <component v-if="step.component" :is="step.component" v-bind="step.props"></component>
+                </div>
+                <div class="col-span-12">
+                    <div class="btn-wrap justify-between">
+                        <button v-if="!addWordsSectionIsVisible && currentStep === 1" type="button"
+                            class="btn btn-outline-primary" @click="addSection()">
+                            <i class="pi pi-plus"></i>
+                            {{ $t('pages.dictionary.add_section') }}
                         </button>
+                        <div v-if="wordSections.length > 0 && !addWordsSectionIsVisible" class="btn-wrap">
+                            <button v-if="currentStep > 1" class="btn btn-light" @click="backToStep(currentStep - 1)"
+                                type="button">
+                                <i class="pi pi-arrow-left"></i>
+                                <span>{{ $t("back") }}</span>
+                            </button>
 
-                        <button class="btn btn-primary" type="submit">
-                            <template v-if="currentStep !== newTaskSteps.length">
-                                <i class="pi pi-arrow-right"></i>
-                                <span>{{ $t("continue") }}</span>
-                            </template>
-                            <template v-else>
-                                <i class="pi pi-check"></i>
-                                <span>{{ $t("save") }}</span>
-                            </template>
-                        </button>
+                            <button class="btn btn-primary" type="submit">
+                                <template v-if="currentStep !== newTaskSteps.length">
+                                    <i class="pi pi-arrow-right"></i>
+                                    <span>{{ $t("continue") }}</span>
+                                </template>
+                                <template v-else>
+                                    <i class="pi pi-check"></i>
+                                    <span>{{ $t("save") }}</span>
+                                </template>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
             </div>
         </form>
     </steps>
@@ -41,7 +41,7 @@
 <script setup>
 import { useRouter } from 'nuxt/app';
 import steps from '../../../../../ui/steps.vue';
-import pairedWordSections from '../../pairedWordSections.vue';
+import extraWordSections from '../../extraWordSections.vue';
 import courseStructureForm from '../../../../../courses/courseStructureForm.vue';
 import taskOptionsForm from '../../taskOptionsForm.vue';
 
@@ -54,7 +54,7 @@ const selectedWords = ref([]);
 const addWordsSectionIsVisible = ref(false);
 const errors = ref([]);
 
-const wordsCount = ref(2);
+const minimumWordsCount = ref(3);
 
 const onPending = inject('onPending');
 const changeModalSize = inject('changeModalSize');
@@ -65,8 +65,8 @@ provide('changeModalSize', changeModalSize);
 const newTaskSteps = [
     {
         title: t('pages.dictionary.select_words'),
-        component: pairedWordSections,
-        props: { errors, wordSections, selectedWords, addWordsSectionIsVisible, wordsCount },
+        component: extraWordSections,
+        props: { errors, wordSections, selectedWords, addWordsSectionIsVisible, minimumWordsCount },
         modalSize: '2xl'
     },
     {
@@ -80,11 +80,8 @@ const newTaskSteps = [
         component: taskOptionsForm,
         props: {
             errors,
-            showImpressionLimit: true, 
-            showSecondsPerWord: true,
-            showMatchByTyping: true,
-            showMatchByClicking: true,
-            showMatchByDragAndDrop: true,
+            showImpressionLimit: true,
+            showSecondsPerWord: true
         },
         modalSize: '4xl'
     }
@@ -105,7 +102,7 @@ const createTaskSubmit = async () => {
     formData.append('operation_type_id', 13);
     formData.append('step', currentStep.value);
 
-    await $axiosPlugin.post('tasks/match_paired_words', formData)
+    await $axiosPlugin.post('tasks/find_an_extra_word', formData)
         .then(res => {
             onPending(false);
             if (res.data.step) {
@@ -139,21 +136,12 @@ const createTaskSubmit = async () => {
         });
 }
 
-const hideWordInSection = (wordIndex, sectionIndex) => {
+const targetWordInSection = (wordIndex, sectionIndex) => {
     wordSections.value[sectionIndex].forEach((word) => {
         word.target = false;
     });
 
     wordSections.value[sectionIndex][wordIndex].target = true;
-}
-
-const swapInSection = (sectionIndex) => {
-    if (sectionIndex >= 0 && sectionIndex < wordSections.value.length) {
-        const subArray = wordSections.value[sectionIndex];
-        if (subArray.length === wordsCount.value) {
-            [subArray[0], subArray[1]] = [subArray[1], subArray[0]];
-        }
-    }
 }
 
 const removeSection = (sectionIndex) => {
@@ -177,18 +165,21 @@ const closeAddSection = () => {
 }
 
 const addWordsToSection = () => {
-    if (selectedWords.value.length === wordsCount.value) {
-        selectedWords.value[selectedWords.value.length - 1].target = true;
+    if (selectedWords.value.length >= minimumWordsCount.value) {
         wordSections.value.push(selectedWords.value);
+
+        wordSections.value[wordSections.value.length - 1].forEach((word) => {
+            word.target = false;
+        });
+
         closeAddSection();
     }
     else {
-        errors.value.words_count = [t('pages.dictionary.exactly_words_count_error', wordsCount.value)]
+        errors.value.words_count = [t('pages.dictionary.min_words_count_error', minimumWordsCount.value)]
     }
 }
 
-provide('hideWordInSection', hideWordInSection);
-provide('swapInSection', swapInSection);
+provide('targetWordInSection', targetWordInSection);
 provide('removeSection', removeSection);
 provide('closeAddSection', closeAddSection);
 provide('addWordsToSection', addWordsToSection);

@@ -213,25 +213,25 @@
             </div>
         </div>
 
-        <div v-if="props.showMatchByTyping" class="col-span-12">
-            <label class="custom-radio-checkbox">
-                <input type="checkbox" :checked="true" name="match_by_typing" />
-                <span>{{ $t('pages.tasks.task_options.match_by_typing') }}</span>
-            </label>
-        </div>
+        <div v-if="props.showMatchByTyping || props.showMatchByClicking || props.showMatchByDragAndDrop" class="col-span-12">
+            <div class="flex flex-col gap-y-2.5">
+                <p class="mb-0" :class="errors.choose_one_of_the_methods ? 'text-danger' : 'text-inactive'">{{
+                    $t('pages.tasks.task_options.choose_one_of_the_methods_for_matching_words') }}</p>
+                <label v-if="props.showMatchByTyping" class="custom-radio-checkbox text-nowrap">
+                    <input type="checkbox" :checked="false" name="match_by_typing" />
+                    <span>{{ $t('pages.tasks.task_options.match_by_typing') }}</span>
+                </label>
 
-        <div v-if="props.showMatchByClicking" class="col-span-12">
-            <label class="custom-radio-checkbox">
-                <input type="checkbox" :checked="true" name="match_by_clicking" />
-                <span>{{ $t('pages.tasks.task_options.match_by_clicking') }}</span>
-            </label>
-        </div>
+                <label v-if="props.showMatchByClicking" class="custom-radio-checkbox text-nowrap">
+                    <input type="checkbox" :checked="false" name="match_by_clicking" />
+                    <span>{{ $t('pages.tasks.task_options.match_by_clicking') }}</span>
+                </label>
 
-        <div v-if="props.showMatchByDragAndDrop" class="col-span-12">
-            <label class="custom-radio-checkbox">
-                <input type="checkbox" :checked="true" name="match_by_drag_and_drop" />
-                <span>{{ $t('pages.tasks.task_options.match_by_drag_and_drop') }}</span>
-            </label>
+                <label v-if="props.showMatchByDragAndDrop" class="custom-radio-checkbox text-nowrap">
+                    <input type="checkbox" :checked="false" name="match_by_drag_and_drop" />
+                    <span>{{ $t('pages.tasks.task_options.match_by_drag_and_drop') }}</span>
+                </label>
+            </div>
         </div>
 
         <div class="col-span-12">
@@ -248,7 +248,7 @@
         </div>
 
         <div class="col-span-12">
-            <label class="custom-radio-checkbox">
+            <label class="custom-radio-checkbox text-nowrap">
                 <input type="checkbox" checked="true" name="random_order" />
                 <span>{{ $t('random_order') }}</span>
             </label>
