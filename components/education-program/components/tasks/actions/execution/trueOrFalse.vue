@@ -223,9 +223,24 @@ const timerIsUp = () => {
     checkSentence()
 };
 
+const handleKeyPress = (event) => {
+  if (event.key === "Enter") {
+    if (!isFinished.value) {
+      if (timeIsUp.value === true || isWrong.value === true || isComplete.value === true) {
+        setSentence();
+      }
+    }
+  }
+};
+
 // Инициализация при монтировании
 onMounted(() => {
-    getTask();
-    changeModalSize("modal-xl");
+  getTask();
+  changeModalSize("modal-xl");
+  window.addEventListener("keydown", handleKeyPress);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", handleKeyPress);
 });
 </script>

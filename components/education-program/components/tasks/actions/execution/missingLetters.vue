@@ -412,9 +412,32 @@ const timerIsUp = () => {
     checkWords();
 };
 
+const handleKeyPress = (event) => {
+  if (event.key === "Enter") {
+    if (!isFinished.value) {
+      if (timeIsUp.value === true || isComplete.value === true) {
+        if (words.value.length > 0) {
+          setWords();
+        } else {
+          isFinished.value = true;
+        }
+      } else {
+        if (checkingStatus.value === false) {
+          acceptAnswers();
+        }
+      }
+    }
+  }
+};
+
 // Инициализация при монтировании
 onMounted(() => {
-    getTask();
-    changeModalSize("modal-xl");
+  getTask();
+  changeModalSize("modal-xl");
+  window.addEventListener("keydown", handleKeyPress);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("keydown", handleKeyPress);
 });
 </script>
