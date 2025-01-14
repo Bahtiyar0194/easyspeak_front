@@ -118,21 +118,11 @@
                         >
                           <span
                             class="underline text-danger"
-                            v-if="
-                              wordIndex === sentence.missing_word_position &&
-                              sentence.selectedOptionIndex >= 0
-                            "
-                            >{{
-                              sentence.missingWords[
-                                sentence.selectedOptionIndex
-                              ].word
-                            }}</span
-                          >
+                            v-if="wordIndex === sentence.missing_word_position && ((taskData?.options.find_word_with_options == 1 && sentence.selectedOptionIndex >= 0) || (taskData?.options.find_word_with_options == 0 && sentence.userInput != ''))">{{taskData?.options.find_word_with_options == 1 ? sentence.missingWords[sentence.selectedOptionIndex].word : sentence.userInput}}</span>
                           <span
                             class="text-danger"
                             v-else-if="
-                              wordIndex === sentence.missing_word_position &&
-                              !sentence.selectedOptionIndex
+                              wordIndex === sentence.missing_word_position && ((taskData?.options.find_word_with_options == 1 && !sentence.selectedOptionIndex) || (taskData?.options.find_word_with_options == 0 && sentence.userInput === ''))
                             "
                             >____</span
                           >
@@ -199,12 +189,37 @@
 
         <div v-else class="col-span-12">
           <div class="custom-grid">
+            <div class="col-span-12">
+              <div class="btn-wrap">
+                <button
+                  v-for="(word, wordIndex) in hiddenWords"
+                  :key="wordIndex"
+                  type="button"
+                  class="btn btn-light"
+                  :class="{
+                    disabled: word.disabled,
+                    dragging: isDragging,
+                    draggable: true,
+                  }"
+                  :draggable="true"
+                  @dragstart="onDragStart($event, wordIndex)"
+                  @touchstart="onTouchStart($event, wordIndex)"
+                  @touchmove="onTouchMove"
+                  @touchend="onTouchEnd"
+                  @click="insertWordToInput(word)"
+                >
+                  {{ word.word }}
+                </button>
+              </div>
+            </div>
             <div
               v-for="(sentence, sentenceIndex) in currentSentences"
               :key="sentenceIndex"
               class="col-span-12"
             >
-              <div class="flex flex-wrap gap-1 font-medium text-lg mb-2">
+              <div
+                class="flex flex-wrap items-center gap-1 font-medium text-lg mb-2"
+              >
                 <span>{{ sentenceIndex + 1 }}.</span>
                 <div
                   class="select-none"
@@ -221,9 +236,39 @@
                       sentence.missingWords[sentence.selectedOptionIndex].word
                     }}</span
                   >
-                  <span v-else-if="wordIndex === sentence.missing_word_position"
-                    >_______</span
-                  >
+                  <div v-else-if="wordIndex === sentence.missing_word_position">
+                    <div
+                      v-if="taskData?.options.find_word_with_options == 0"
+                      class="btn flex justify-center items-center"
+                      :class="
+                        unFilledSentences.includes(sentenceIndex)
+                          ? 'pulse btn-danger'
+                          : 'btn-active'
+                      "
+                      @drop="onDrop($event, sentenceIndex)"
+                      @dragover="onDragOver"
+                    >
+                      <input
+                        v-model="sentence.userInput"
+                        :disabled="false"
+                        :style="{
+                          width:
+                            sentence.userInput !== '' ? (sentence.userInput.length + 0.5) + 'ch' : '4ch',
+                          'text-align': 'center',
+                        }"
+                        @input="handleInput($event)"
+                        type="text"
+                      />
+                      <button
+                        v-if="sentence.userInput !== ''"
+                        @click="clearInput(sentenceIndex)"
+                        class="text-danger ml-0.5 mt-0.5"
+                      >
+                        <i class="pi pi-delete-left"></i>
+                      </button>
+                    </div>
+                    <span v-else>_______</span>
+                  </div>
                   <span v-else>{{ word }}</span>
                 </div>
               </div>
@@ -290,9 +335,11 @@ const showTaskTimer = ref(false);
 const taskData = ref(null);
 const sentences = ref([]);
 const currentSentences = ref([]);
+const hiddenWords = ref([]);
 const checkingStatus = ref(false);
 
-const hiddenWords = ref([]);
+const isDragging = ref(false);
+const touchData = ref({ word: "", target: null });
 
 const studiedSentences = ref([]);
 const currentStudiedSentences = ref([]);
@@ -367,6 +414,7 @@ const getTask = async () => {
 const setSentences = () => {
   currentStudiedSentences.value = [];
   currentReStudySentences.value = [];
+  hiddenWords.value = [];
 
   if (sentences.value.length > 0) {
     currentSentences.value = sentences.value.slice(
@@ -375,10 +423,15 @@ const setSentences = () => {
     );
 
     currentSentences.value.forEach((sentence) => {
-      const removeSentenceOptionIndex = sentences.value.find(
-        (s) => s.task_sentence_id === sentence.task_sentence_id
-      );
-      removeSentenceOptionIndex.selectedOptionIndex = undefined;
+      if (taskData.value.options.find_word_with_options == 1) {
+        sentence.selectedOptionIndex = undefined;
+      } else {
+        sentence.userInput = "";
+        hiddenWords.value.push({
+          word: sentence.sentence.split(" ")[sentence.missing_word_position],
+          disabled: false,
+        });
+      }
     });
 
     time.value =
@@ -392,8 +445,92 @@ const setSentences = () => {
   }
 };
 
+const onDragStart = (event, wordIndex) => {
+  // Установить данные для перетаскивания
+  event.dataTransfer.setData("wordIndex", wordIndex);
+};
+
+const onDrop = (event, sentenceIndex) => {
+  // Остановить поведение по умолчанию
+  event.preventDefault();
+
+  // Получить данные из события
+  const wIndex = event.dataTransfer.getData("wordIndex");
+
+  const word = hiddenWords.value[wIndex];
+  word.disabled = true;
+
+  currentSentences.value[sentenceIndex].userInput = word.word;
+};
+
+const onDragOver = (event) => {
+  // Остановить поведение по умолчанию, чтобы разрешить drop
+  event.preventDefault();
+};
+
+const onTouchStart = (event, wordIndex) => {
+  touchData.value.word = wordIndex;
+  touchData.value.target = event.target;
+  isDragging.value = true;
+};
+
+const onTouchMove = (event) => {
+  event.preventDefault(); // Предотвращаем скролл
+  const touch = event.touches[0];
+  const element = document.elementFromPoint(touch.clientX, touch.clientY);
+
+  if (element && element.tagName === "INPUT") {
+    touchData.value.target = element;
+  }
+};
+
+const onTouchEnd = () => {
+  if (touchData.value.target && touchData.value.target.tagName === "INPUT") {
+    touchData.value.target.value = touchData.value.word;
+  }
+  isDragging.value = false;
+  touchData.value.word = "";
+  touchData.value.target = null;
+};
+
+const enableTheHiddenWord = (w) => {
+  hiddenWords.value.forEach((word) => {
+    if (w === word.word) {
+      word.disabled = false;
+    }
+  });
+};
+
+const disableTheHiddenWord = (w) => {
+  hiddenWords.value.forEach((word) => {
+    if (w === word.word) {
+      word.disabled = true;
+    }
+  });
+};
+
+const handleInput = (e) => {
+  disableTheHiddenWord(e.target.value);
+};
+
 const insertWord = (sentenceIndex, optionIndex) => {
   sentences.value[sentenceIndex].selectedOptionIndex = optionIndex;
+};
+
+const insertWordToInput = (w) => {
+    let emptyWordFind = false;
+    currentSentences.value.forEach((sentence) => {
+        if (sentence.userInput === "" && !emptyWordFind) {
+          sentence.userInput = w.word;
+          disableTheHiddenWord(w.word);
+          emptyWordFind = true;
+        }
+    });
+};
+
+const clearInput = (sentenceIndex) => {
+  enableTheHiddenWord(currentSentences.value[sentenceIndex].userInput);
+  currentSentences.value[sentenceIndex].userInput = "";
 };
 
 const checkSentences = () => {
@@ -401,11 +538,8 @@ const checkSentences = () => {
     sentences.value = sentences.value.filter(
       (s) => s.task_sentence_id !== sentence.task_sentence_id
     );
-    if (
-      sentence.selectedOptionIndex >= 0 &&
-      sentence.missingWords[sentence.selectedOptionIndex].word ===
-        sentence.sentence.split(" ")[sentence.missing_word_position]
-    ) {
+
+    if ((taskData.value.options.find_word_with_options == 0 && (sentence.userInput === sentence.sentence.split(" ")[sentence.missing_word_position])) || (taskData.value.options.find_word_with_options == 1 && (sentence.selectedOptionIndex >= 0 && sentence.missingWords[sentence.selectedOptionIndex].word) === sentence.sentence.split(" ")[sentence.missing_word_position])) {
       studiedSentences.value.push(sentence);
       currentStudiedSentences.value.push(sentence);
 
@@ -434,8 +568,14 @@ const checkSentences = () => {
 const acceptAnswers = () => {
   checkingStatus.value = true;
   currentSentences.value.forEach((sentence, sentenceIndex) => {
-    if (sentence.selectedOptionIndex === undefined) {
-      unFilledSentences.value.push(sentenceIndex);
+    if (taskData.value.options.find_word_with_options == 1) {
+      if (sentence.selectedOptionIndex === undefined) {
+        unFilledSentences.value.push(sentenceIndex);
+      }
+    } else {
+      if (sentence.userInput === "") {
+        unFilledSentences.value.push(sentenceIndex);
+      }
     }
   });
 

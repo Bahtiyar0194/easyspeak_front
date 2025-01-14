@@ -1,10 +1,14 @@
 <template>
-  <ul class="breadcrumb">
-    <li v-for="(crumb, index) in crumbs" :key="index">
-      <nuxt-link v-if="index < crumbs.length - 1" :to="crumb.to">{{ crumb.label }}</nuxt-link>
-      <span v-else>{{ crumb.label }}</span>
-    </li>
-  </ul>
+  <client-only>
+    <ul class="breadcrumb">
+      <li v-for="(crumb, index) in crumbs" :key="index">
+        <nuxt-link v-if="index < crumbs.length - 1" :to="crumb.to">
+          <span :data-crumb="crumb.label">{{ crumb.label }}</span>
+        </nuxt-link>
+        <span v-else :data-crumb="crumb.label">{{ crumb.label }}</span>
+      </li>
+    </ul>
+  </client-only>
 </template>
 
 <script setup>
@@ -13,18 +17,25 @@ const route = useRoute();
 
 const crumbs = computed(() => {
   // Разбиваем путь на отдельные части
-  let paths = route.path.split('/').filter(path => path);
-  
-  // Проверяем, есть ли параметры в маршруте
-  if (Object.keys(route.params).length > 0) {
-    // Удаляем последний элемент, если маршрут содержит параметры
-    paths = paths.slice(0, -1);
-  }
+  let fullPath = route.path.split("/").filter((path) => path);
+
+  const getTitle = (index) => {
+    // Проход по ключам объекта
+    const key = Object.keys(route.params).find(
+      (k) => route.params[k] === fullPath[index]
+    );
+
+    if (key) {
+      return "[" + key + "]";
+    } else {
+      return t("pages." + fullPath[index] + ".title");
+    }
+  };
 
   // Формируем хлебные крошки
-  return paths.map((path, index) => ({
-    to: '/' + paths.slice(0, index + 1).join('/'),
-    label: t('pages.' + path + '.title'),
+  return fullPath.map((path, index) => ({
+    to: "/" + fullPath.slice(0, index + 1).join("/"),
+    label: getTitle(index),
   }));
 });
 </script>

@@ -78,11 +78,17 @@ const dashboardMenu = [
         link: '/dashboard/conference',
         roles: [1, 2, 3, 4, 5]
     },
+    // {
+    //     title: 'pages.operations-requests.title',
+    //     icon: 'pi pi-file',
+    //     link: '/dashboard/operations-requests',
+    //     roles: [1, 2]
+    // },
     {
-        title: 'pages.operations-requests.title',
-        icon: 'pi pi-file',
-        link: '/dashboard/operations-requests',
-        roles: [1, 2]
+        title: 'pages.courses.title',
+        icon: 'pi pi-book',
+        link: '/dashboard/courses',
+        roles: [1,2,3,4,5]
     },
     {
         title: 'pages.education-program.title',

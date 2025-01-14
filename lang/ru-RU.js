@@ -323,6 +323,8 @@ export default {
         },
 
         courses: {
+            title: 'Курсы',
+            my_courses: 'Мои курсы',
             course: 'Курс',
             choose_a_course: 'Выберите курс',
             course_level: 'Категория курса',
@@ -332,6 +334,7 @@ export default {
         },
 
         lessons: {
+            title: 'Уроки',
             lesson: 'Урок',
             choosing_a_lesson: 'Выбор урока',
             choose_a_lesson: 'Выберите урок'

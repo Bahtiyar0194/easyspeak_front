@@ -901,6 +901,10 @@ select.error:has(option:checked:disabled) {
     @apply min-w-9 h-9 flex justify-center items-center p-0;
 }
 
+.btn.btn-circle{
+    @apply min-w-9 h-9 flex justify-center items-center p-0 rounded-full;
+}
+
 .btn.btn-sm{
     @apply px-2 py-1 text-sm rounded-lg;
 }
@@ -909,12 +913,20 @@ select.error:has(option:checked:disabled) {
     @apply min-w-7 h-7 p-0;
 }
 
+.btn.btn-circle.btn-sm{
+    @apply min-w-7 h-7 p-0 rounded-full;
+}
+
 .btn.btn-lg{
     @apply rounded-xl px-3 py-3 text-lg;
 }
 
 .btn.btn-square.btn-lg{
     @apply min-w-10 h-10 p-0;
+}
+
+.btn.btn-circle.btn-lg{
+    @apply min-w-10 h-10 p-0 rounded-full;
 }
 
 .btn.full {
@@ -1040,22 +1052,6 @@ select.error:has(option:checked:disabled) {
 
 .btn-loading-circle {
     animation: 0.75s linear infinite spinner-border;
-}
-
-.btn-circle{
-    @apply flex justify-center items-center rounded-full w-10 h-10 shadow-lg bg-active border duration-100;
-}
-
-.btn-circle i{
-    @apply md:text-lg;
-}
-
-.btn-circle:hover{
-    @apply bg-corp;
-}
-
-.btn-circle:hover i{
-    @apply text-white;
 }
 
 .pagination-wrap{
@@ -1560,7 +1556,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .breadcrumb{
-    @apply text-inactive flex flex-wrap list-none p-0;
+    @apply text-inactive flex flex-wrap list-none px-0;
 }
 
 .breadcrumb a{
@@ -1879,43 +1875,43 @@ select.error:has(option:checked:disabled) {
     transform: rotate(45deg);
 }
 
-.horizontal-accordeon{
+.horizontal-accordion{
     @apply lg:pr-4;
 }
 
-.horizontal-accordeon-item{
+.horizontal-accordion-item{
     @apply card px-4 py-2 mb-4 cursor-pointer;
 }
 
-.horizontal-accordeon-item.active{
+.horizontal-accordion-item.active{
     @apply border-corp;
 }
 
-.horizontal-accordeon-item > .horizontal-accordeon-title{
+.horizontal-accordion-item > .horizontal-accordion-title{
     @apply text-lg font-medium;
 }
 
-.horizontal-accordeon-item.active > .horizontal-accordeon-title{
+.horizontal-accordion-item.active > .horizontal-accordion-title{
     @apply text-corp;
 }
 
-.horizontal-accordeon-item > .horizontal-accordeon-description{
+.horizontal-accordion-item > .horizontal-accordion-description{
     @apply hidden mt-2 mb-2;
 }
 
-.horizontal-accordeon-item.active > .horizontal-accordeon-description{
+.horizontal-accordion-item.active > .horizontal-accordion-description{
     @apply block;
 }
 
-.accordeon-img{
+.accordion-img{
     @apply opacity-0 absolute left-0 top-0 duration-200;
 }
 
-.accordeon-img:first-child{
+.accordion-img:first-child{
     @apply relative;
 }
 
-.accordeon-img.active{
+.accordion-img.active{
     @apply opacity-100;
 }
 

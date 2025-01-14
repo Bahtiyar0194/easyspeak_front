@@ -263,10 +263,9 @@
                       :disabled="taskData?.options?.match_by_typing != 1"
                       :style="{
                         width:
-                          word.userInput !== '' &&
-                          word.userInput.length > word.word.length
-                            ? word.userInput.length + 'ch'
-                            : word.word.length + 'ch',
+                          word.userInput !== ''
+                            ? word.userInput.length + 0.5 + 'ch'
+                            : '4ch',
                         'text-align': 'center',
                       }"
                       @input="handleInput($event)"

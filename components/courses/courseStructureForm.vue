@@ -88,7 +88,7 @@ const props = defineProps({
 const getCourseAttributes = async () => {
     courseAttributes.value = [];
     pending.value = true;
-    await $axiosPlugin.get('courses/get')
+    await $axiosPlugin.get('courses/get_structure')
         .then(response => {
             courseAttributes.value = response.data;
             pending.value = false;

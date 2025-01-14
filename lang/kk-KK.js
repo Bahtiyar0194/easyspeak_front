@@ -323,6 +323,8 @@ export default {
         },
 
         courses: {
+            title: 'Курстар',
+            my_courses: 'Менің курстарым',
             course: 'Курс',
             choose_a_course: 'Курсты таңдаңыз',
             course_level: 'Курстың санаты',
@@ -332,6 +334,7 @@ export default {
         },
 
         lessons: {
+            title: 'Сабақтар'
             lesson: 'Сабақ',
             choosing_a_lesson: 'Сабақты таңдау',
             choose_a_lesson: 'Сабақты таңдаңыз'
