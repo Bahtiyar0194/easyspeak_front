@@ -85,10 +85,15 @@ export default {
     },
 
     file: {
+        file: "Файл",
         files: "Файлдар",
         name: "Файлдың атауы",
         size: "Файлдың өлшемі",
         type: "Файлдың түрі",
+        search_filter: "Файлды іздеу сүзгісі",
+        choose_a_file: "Файлды таңдаңыз",
+        choose_a_file_type: "Файлдың түрін таңдаңыз",
+        specify_the_file_name: "Файлдың атын енгізіңіз",
         specify_the_file_type: "Файлдың түрін көрсетіңіз",
         selected_file: "Сіз таңдаған файл",
         change_file: "Басқа файл таңдау",
@@ -115,6 +120,18 @@ export default {
         audio: {
             select: "Аудиофайл таңдаңыз",
             current: "Ағымдағы жүктеліп тұрған аудио"
+        },
+        video: {
+            select: "Бейнефайл таңдаңыз",
+            current: "Ағымдағы жүктеліп тұрған бейне"
+        }
+    },
+
+    materials: {
+        learn: {
+            video: "Тапсырманың материалымен танысу үшін осы бейнежазбаны мұқият қарап алыңыз",
+            audio: "Тапсырманың материалымен танысу үшін осы аудиожазбаны мұқият тыңдап алыңыз",
+            image: "Тапсырманың материалымен танысу үшін осы суретті мұқият қарап алыңыз"
         }
     },
 
@@ -334,10 +351,23 @@ export default {
         },
 
         lessons: {
-            title: 'Сабақтар'
+            title: 'Сабақтар',
             lesson: 'Сабақ',
+            lesson_name: 'Сабақтың атауы',
+            lesson_description: 'Сабақтың қысқаша сипаттамасы',
             choosing_a_lesson: 'Сабақты таңдау',
-            choose_a_lesson: 'Сабақты таңдаңыз'
+            choose_a_lesson: 'Сабақты таңдаңыз',
+            lesson_type: 'Сабақтың түрі',
+            choose_a_lesson_type: 'Сабақтың түрін таңдаңыз',
+            add_lesson: 'Сабақ қосу',
+            add_unit: 'Бөлім қосу',
+            add_unit_title: 'Бөлім қосу',
+            unit_name: 'Бөлімнің атауы',
+            lesson_materials: 'Сабақтың материалдары'
+        },
+
+        "add-lesson": {
+            title: 'Сабақ қосу'
         },
 
         "education-program": {
@@ -404,7 +434,11 @@ export default {
             task_type: 'Тапсырманың түрі',
             add_a_task: 'Тапсырма қосу',
             adding_a_task: 'Тапсырма қосу',
+            start_the_task: 'Тапсырманы бастау', 
             complete_the_task: 'Тапсырманы аяқтау',
+            tasks_count: 'Тапсырмалар',
+            there_are_no_tasks: 'Бұл сабаққа әзірше тапсырмалар қосылмаған.',
+            task_materials: 'Тапсырманың материалдары',
             task_options: {
                 title: 'Тапсырманың баптаулары',
                 show_audio_button: 'Аудиобатырманы көрсету',
@@ -460,6 +494,10 @@ export default {
                 title: 'Сіздің біліміңізді тексеріп көрейік',
                 description: 'Бұл сөздің ағылшын тіліндегі аудармасын табыңыз'
             }
+        },
+
+        files: {
+            title: "Файл сақтау орны",
         }
     }
 }

@@ -95,6 +95,12 @@ const dashboardMenu = [
         icon: 'pi pi-book',
         link: '/dashboard/education-program',
         roles: [1]
+    },
+    {
+        title: 'pages.files.title',
+        icon: 'pi pi-file',
+        link: '/dashboard/files',
+        roles: [1]
     }
 ];
 

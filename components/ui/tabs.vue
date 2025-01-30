@@ -13,7 +13,7 @@
             <div v-for="tab in props.tabs" :key="tab.name" class="tab-body-item"
                 :class="active_tab === tab.name && 'active'">
                 <!-- Здесь рендерится компонент выбранной вкладки -->
-                <component :key="tab.name" v-if="tab.component" :is="tab.component"></component>
+                <component :key="tab.name" v-if="tab.component" :is="tab.component" v-bind="tab.props"></component>
             </div>
         </div>
     </div>

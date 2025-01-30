@@ -1,6 +1,19 @@
 <template>
+  <loader v-if="pending" :className="'full-overlay'" />
   <div class="col-span-12">
     <div class="custom-grid">
+      <div class="col-span-12">
+        <roleProvider :roles="[1]" :redirect="false">
+          <div class="btn-wrap justify-end">
+            <button
+              @click="addSectionModalIsVisible = true"
+              class="btn btn-primary"
+            >
+              <i class="pi pi-plus"></i> {{ $t("pages.lessons.add_unit") }}
+            </button>
+          </div>
+        </roleProvider>
+      </div>
       <div class="col-span-12">
         <ul class="list-group">
           <li
@@ -19,10 +32,7 @@
                 >
                   {{ section.section_name }}
                 </h5>
-                <div
-                  v-if="section.lessons.length > 0"
-                  class="btn btn-circle btn-light"
-                >
+                <div class="btn btn-circle btn-light">
                   <i
                     class="pi pi-angle-down duration-500"
                     :class="sectionIndex === activeSectionIndex && 'rotate-180'"
@@ -32,9 +42,10 @@
             </div>
 
             <div
-              v-if="section.lessons.length > 0"
               class="transition-all duration-500 ease-in-out overflow-hidden"
-              :class="activeSectionIndex === sectionIndex ? 'h-auto' : 'h-0'"
+              :class="
+                activeSectionIndex === sectionIndex ? 'max-h-40' : 'max-h-0'
+              "
             >
               <ul class="list-group nowrap mt-2">
                 <li
@@ -49,7 +60,8 @@
                           course_slug +
                           '/' +
                           level_slug +
-                          '/lessons'
+                          '/' +
+                          lesson.lesson_id
                       )
                     "
                   >
@@ -59,6 +71,18 @@
                     >
                   </nuxt-link>
                 </li>
+                <roleProvider :roles="[1]" :redirect="false">
+                  <li class="list-item my-2">
+                    <button
+                      class="btn btn-sm btn-outline-primary"
+                      type="button"
+                      @click="showAddLessonModal(section.section_id)"
+                    >
+                      <i class="pi pi-plus-circle"></i>
+                      {{ $t("pages.lessons.add_lesson") }}
+                    </button>
+                  </li>
+                </roleProvider>
               </ul>
             </div>
           </li>
@@ -66,25 +90,171 @@
       </div>
     </div>
   </div>
+
+  <roleProvider :roles="[1]" :redirect="false">
+    <modal
+      :show="addSectionModalIsVisible"
+      :onClose="() => closeAddSectionModal()"
+      :className="'modal-lg'"
+      :showLoader="pendingAddSection"
+      :closeOnClickSelf="false"
+    >
+      <template v-slot:header_content>
+        <h4>{{ $t("pages.lessons.add_unit_title") }}</h4>
+      </template>
+      <template v-slot:body_content>
+        <form
+          class="mt-2"
+          @submit.prevent="addSectionSubmit"
+          ref="addSectionFormRef"
+        >
+          <div class="custom-grid">
+            <div class="col-span-12">
+              <div class="form-group-border active">
+                <i class="pi pi-bookmark"></i>
+                <input
+                  autoComplete="new-section-name"
+                  name="section_name"
+                  type="text"
+                  placeholder=" "
+                />
+                <label :class="{ 'label-error': errors.section_name }">
+                  {{
+                    errors.section_name
+                      ? errors.section_name[0]
+                      : $t("pages.lessons.unit_name")
+                  }}
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary mt-4" type="submit">
+            <i class="pi pi-plus"></i>
+            <span>{{ $t("add") }}</span>
+          </button>
+        </form>
+      </template>
+    </modal>
+
+    <modal
+      :show="addLessonModalIsVisible"
+      :onClose="() => closeAddLessonModal()"
+      :className="'modal-xl'"
+      :showLoader="pendingAddLesson"
+      :closeOnClickSelf="false"
+    >
+      <template v-slot:header_content>
+        <h4>{{ $t("pages.add-lesson.title") }}</h4>
+      </template>
+      <template v-slot:body_content>
+        <form
+          class="mt-2"
+          @submit.prevent="addLessonSubmit"
+          ref="addLessonFormRef"
+        >
+          <div class="custom-grid">
+            <div class="col-span-12">
+              <div class="form-group-border active label-active">
+                <i class="pi pi-book"></i>
+                <input
+                  autoComplete="new-lesson-name"
+                  name="lesson_name"
+                  type="text"
+                  placeholder=" "
+                />
+                <label :class="{ 'label-error': errors.lesson_name }">
+                  {{
+                    errors.lesson_name
+                      ? errors.lesson_name[0]
+                      : $t("pages.lessons.lesson_name")
+                  }}
+                </label>
+              </div>
+            </div>
+
+            <div class="col-span-12">
+              <div class="form-group-border active label-active">
+                <i class="pi pi-book"></i>
+                <textarea
+                  autoComplete="new-lesson-description"
+                  name="lesson_description"
+                  placeholder=" "
+                ></textarea>
+                <label :class="{ 'label-error': errors.lesson_description }">
+                  {{
+                    errors.lesson_description
+                      ? errors.lesson_description[0]
+                      : $t("pages.lessons.lesson_description")
+                  }}
+                </label>
+              </div>
+            </div>
+
+            <div class="col-span-12">
+              <div class="form-group-border select active label-active">
+                <i class="pi pi-book"></i>
+                <select name="lesson_type_id">
+                  <option selected disabled value="">
+                    {{ $t("pages.lessons.choose_a_lesson_type") }}
+                  </option>
+                  <option
+                    v-for="(item, index) in lessonTypes"
+                    :key="index"
+                    :value="item.lesson_type_id"
+                  >
+                    {{ item.lesson_type_name }}
+                  </option>
+                </select>
+                <label :class="{ 'label-error': errors.lesson_type_id }">
+                  {{
+                    errors.lesson_type_id
+                      ? errors.lesson_type_id[0]
+                      : $t("pages.lessons.lesson_type")
+                  }}
+                </label>
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary mt-4" type="submit">
+            <i class="pi pi-plus"></i>
+            <span>{{ $t("add") }}</span>
+          </button>
+        </form>
+      </template>
+    </modal>
+  </roleProvider>
 </template>
 
 <script setup>
+import roleProvider from "../../../../../components/ui/roleProvider.vue";
+import loader from "../../../../../components/ui/loader.vue";
+import modal from "../../../../../components/ui/modal.vue";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
 
-const config = useRuntimeConfig();
+const errors = ref([]);
 const router = useRouter();
 const route = useRoute();
 const course_slug = route.params.course;
 const level_slug = route.params.level;
+const currentSectionId = ref(null);
 
-const errors = ref([]);
 const { $axiosPlugin } = useNuxtApp();
-const { t } = useI18n();
 const pending = ref(true);
+const pendingAddSection = ref(false);
+const pendingAddLesson = ref(false);
 const lessonsData = ref([]);
 const activeSectionIndex = ref(null);
 const pageTitle = ref("");
+
+const addSectionModalIsVisible = ref(false);
+const addLessonModalIsVisible = ref(false);
+
+const addSectionFormRef = ref(null);
+const addLessonFormRef = ref(null);
+
+const lessonTypes = ref([]);
 
 useHead(() => ({
   title: pageTitle.value,
@@ -102,6 +272,11 @@ const toggleAccordion = (index) => {
   } else {
     activeSectionIndex.value = index;
   }
+};
+
+const showAddLessonModal = (section_id) => {
+  addLessonModalIsVisible.value = true;
+  currentSectionId.value = section_id;
 };
 
 const getLessons = async () => {
@@ -151,7 +326,124 @@ const getLessons = async () => {
     });
 };
 
+const addSectionSubmit = async () => {
+  pendingAddSection.value = true;
+  const formData = new FormData(addSectionFormRef.value);
+  formData.append("operation_type_id", 15);
+
+  await $axiosPlugin
+    .post(
+      "courses/" + course_slug + "/" + level_slug + "/add_section",
+      formData
+    )
+    .then((response) => {
+      getLessons();
+      closeAddSectionModal();
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          pendingAddSection.value = false;
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
+const addLessonSubmit = async () => {
+  pendingAddLesson.value = true;
+  const formData = new FormData(addLessonFormRef.value);
+
+  formData.append("operation_type_id", 7);
+
+  await $axiosPlugin
+    .post(
+      "courses/" +
+        course_slug +
+        "/" +
+        level_slug +
+        "/" +
+        currentSectionId.value +
+        "/add_lesson",
+      formData
+    )
+    .then((response) => {
+      getLessons();
+      closeAddLessonModal();
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          pendingAddLesson.value = false;
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
+const getLessonTypes = async () => {
+  pending.value = true;
+
+  await $axiosPlugin
+    .get("courses/get_lesson_types")
+    .then((response) => {
+      lessonTypes.value = response.data;
+      pending.value = false;
+    })
+    .catch((err) => {
+      if (err.response) {
+        router.push({
+          path: "/error",
+          query: {
+            status: err.response.status,
+            message: err.response.data.message,
+            url: err.request.responseURL,
+          },
+        });
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
+const closeAddSectionModal = () => {
+  addSectionModalIsVisible.value = false;
+  pendingAddSection.value = false;
+  addSectionFormRef.value.reset();
+  errors.value = [];
+};
+
+const closeAddLessonModal = () => {
+  addLessonModalIsVisible.value = false;
+  pendingAddLesson.value = false;
+  addLessonFormRef.value.reset();
+  errors.value = [];
+};
+
 onMounted(() => {
   getLessons();
+  getLessonTypes();
 });
 </script>

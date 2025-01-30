@@ -4,7 +4,7 @@
             :title="$t('click_to_listen_to_the_audio')">
             <i class="pi" :class="isPlaying ? 'pi-pause' : 'pi-volume-up'"></i>
         </button>
-        <div ref="waveform" style="width: 100%; height: 36px;"></div>
+        <div type="button" ref="waveform" style="width: 100%; height: 36px;"></div>
     </div>
 </template>
 

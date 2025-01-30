@@ -10,7 +10,7 @@
           <img
             :src="
               config.public.apiBase +
-              '/media/' +
+              '/media/get/' +
               course.course_name_slug +
               '.png'
             "
@@ -29,9 +29,7 @@
 import { useRouter } from "nuxt/app";
 const config = useRuntimeConfig();
 const router = useRouter();
-const errors = ref([]);
 const { $axiosPlugin } = useNuxtApp();
-const { t } = useI18n();
 const pending = ref(true);
 const courses = ref([]);
 

@@ -124,9 +124,9 @@
                                 <td>
                                     <div class="flex items-center gap-x-4">
                                         <audioButton v-if="sentence.audio_file"
-                                            :src="config.public.apiBase + '/media/' + sentence.audio_file" @click.stop />
+                                            :src="config.public.apiBase + '/media/get/' + sentence.audio_file" @click.stop />
                                         <div v-if="sentence.image_file"
-                                            :style="{ 'backgroundImage': 'url(' + config.public.apiBase + '/media/' + sentence.image_file + ')' }"
+                                            :style="{ 'backgroundImage': 'url(' + config.public.apiBase + '/media/get/' + sentence.image_file + ')' }"
                                             class="h-9 w-9 bg-cover bg-no-repeat bg-center rounded-lg">
                                         </div>
                                     </div>
@@ -252,11 +252,11 @@
         <template v-if="sentence" v-slot:body_content>
             <div class="custom-grid">
                 <!-- <div v-if="sentence.image_file" class="col-span-3 lg:col-span-4">
-                    <img class="w-full h-auto rounded-xl" :src="config.public.apiBase + '/media/' + sentence.image_file" />
+                    <img class="w-full h-auto rounded-xl" :src="config.public.apiBase + '/media/get/' + sentence.image_file" />
                 </div> -->
                 <div :class="sentence.image_file ? 'col-span-9 lg:col-span-8' : 'col-span-12'">
                     <div class="flex flex-col gap-y-3">
-                        <audioPlayerWithWave :src="config.public.apiBase + '/media/' + sentence.audio_file" />
+                        <audioPlayerWithWave :src="config.public.apiBase + '/media/get/' + sentence.audio_file" />
                         <!-- <p class="mb-0"><span class="text-inactive">{{
                             $t("pages.sentences.transcription") }}:</span> <b>[{{ sentence.transcription }}]</b></p> -->
                         <p class="mb-0"><span class="text-inactive">{{
@@ -349,7 +349,7 @@
 
                         <!-- <div class="col-span-12">
                             <previewFileInput v-if="current_sentence_image" :fileType="'image'"
-                                :previewUrl="config.public.apiBase + '/media/' + sentence.image_file" :onChange="() => current_sentence_image = false" />
+                                :previewUrl="config.public.apiBase + '/media/get/' + sentence.image_file" :onChange="() => current_sentence_image = false" />
                             <fileUploadButton v-else :id="'edit_sentence_image_file'" :name="'image_file'"
                                 :accept="'image/*'" :error="errors.image_file" :icon="'pi pi-image'"
                                 :label="$t('file.image.select')" />
@@ -357,7 +357,7 @@
 
                         <div class="col-span-12">
                             <previewFileInput v-if="current_sentence_audio" :fileType="'audio'"
-                            :previewUrl="config.public.apiBase + '/media/' + sentence.audio_file" :onChange="() => current_sentence_audio = false" />
+                            :previewUrl="config.public.apiBase + '/media/get/' + sentence.audio_file" :onChange="() => current_sentence_audio = false" />
                             <fileUploadButton v-else :id="'edit_sentence_audio_file'" :name="'audio_file'" :accept="'audio/*'"
                                 :error="errors.audio_file" :icon="'pi pi-volume-up'" :label="$t('file.audio.select')" />
                         </div>

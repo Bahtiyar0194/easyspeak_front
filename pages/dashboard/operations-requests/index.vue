@@ -8,7 +8,7 @@ import operations from '../../../components/operations-requests/tabs/operations.
 import requests from '../../../components/operations-requests/tabs/requests.vue';
 const { t } = useI18n();
 
-const tabs_data = [
+const tabs_data = computed(() => [
     {
         name: 'operations',
         title: t('pages.operations.title'),
@@ -21,9 +21,7 @@ const tabs_data = [
         icon: 'pi pi-file-import',
         component: requests
     }
-];
-
-
+]);
 
 useHead({
     title: t('pages.operations-requests.title'),

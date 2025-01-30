@@ -18,7 +18,7 @@ definePageMeta({
     middleware: ['sanctum:auth']
 });
 
-const tabs_data = [
+const tabs_data = computed(() => [
     {
         name: 'dictionary',
         title: t('pages.dictionary.title'),
@@ -38,5 +38,5 @@ const tabs_data = [
         icon: 'pi pi-clock',
         component: tasks
     }
-];
+]);
 </script>

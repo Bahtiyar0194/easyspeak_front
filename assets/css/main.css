@@ -384,6 +384,14 @@ a:hover{
     @apply text-active;
 }
 
+.link{
+    @apply cursor-pointer duration-200;
+}
+
+.link:hover{
+    @apply text-corp;
+}
+
 p {
     @apply mb-3
 }
@@ -750,7 +758,11 @@ select.error:has(option:checked:disabled) {
 }
 
 .form-group-file label.label-error{
-    @apply text-danger hover:text-white;
+    @apply text-danger;
+}
+
+.form-group-file label.label-error:hover{
+    @apply text-active;
 }
 
 .form-group-file label > i{
@@ -894,15 +906,15 @@ select.error:has(option:checked:disabled) {
 }
 
 .btn {
-    @apply rounded-xl px-4 py-2 duration-200 text-center text-base w-fit; 
+    @apply rounded-xl px-4 py-2 duration-200 text-center text-base w-fit flex justify-center items-center gap-x-1; 
 }
 
 .btn.btn-square{
-    @apply min-w-9 h-9 flex justify-center items-center p-0;
+    @apply min-w-9 h-9 p-0;
 }
 
 .btn.btn-circle{
-    @apply min-w-9 h-9 flex justify-center items-center p-0 rounded-full;
+    @apply min-w-9 h-9 p-0 rounded-full;
 }
 
 .btn.btn-sm{
@@ -930,7 +942,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .btn.full {
-    @apply w-full flex items-center px-2;
+    @apply w-full px-2;
 }
 
 .btn.long{
@@ -1545,6 +1557,10 @@ select.error:has(option:checked:disabled) {
     border-radius: inherit;
 }
 
+.overlay.opacity-full{
+    @apply opacity-100;
+}
+
 .overlay-loading-circle {
     @apply w-10 h-10 border-4 border-corp rounded-full;
     border-bottom-color: transparent !important;
@@ -1653,6 +1669,10 @@ select.error:has(option:checked:disabled) {
     @apply hidden absolute z-30 rounded-xl shadow-xl bg-active text-sm border-inactive px-4 my-2 w-max;
 }
 
+.dropdown-menu.no-absolute{
+    @apply relative;
+}
+
 .multiple-select-menu-wrap{
     @apply w-full;
 }
@@ -1691,7 +1711,7 @@ select.error:has(option:checked:disabled) {
 
 .dropdown-menu li > a, .multiple-select-menu li > a,
 .dropdown-menu li > button, .multiple-select-menu li > button{
-    @apply flex items-center gap-1.5 text-active duration-200;
+    @apply flex items-center gap-1.5 text-active duration-200 w-full;
 }
 
 .dropdown-menu li > a:hover, .multiple-select-menu li > a:hover,
@@ -1968,4 +1988,8 @@ select.error:has(option:checked:disabled) {
   
 .draggable.dragging {
     @apply opacity-50;
+}
+
+.vjs-default-skin {
+    @apply overflow-hidden rounded-xl border-inactive;
 }

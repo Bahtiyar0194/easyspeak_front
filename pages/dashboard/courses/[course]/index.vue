@@ -1,4 +1,5 @@
 <template>
+  <loader v-if="pending" :className="'full-overlay'" />
   <div class="col-span-12">
     <div class="custom-grid">
       <div
@@ -17,7 +18,7 @@
             <img
               :src="
                 config.public.apiBase +
-                '/media/' +
+                '/media/get/' +
                 level.course_name_slug +
                 '.png'
               "
@@ -38,6 +39,7 @@
 </template>
 
 <script setup>
+import loader from "../../../../components/ui/loader.vue";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
 
@@ -46,9 +48,7 @@ const router = useRouter();
 const route = useRoute();
 const course_slug = route.params.course;
 
-const errors = ref([]);
 const { $axiosPlugin } = useNuxtApp();
-const { t } = useI18n();
 const pending = ref(true);
 const levels = ref([]);
 const pageTitle = ref("");
@@ -69,7 +69,9 @@ const getLevels = async () => {
   await $axiosPlugin
     .get("courses/get_levels/" + course_slug)
     .then((response) => {
-      const courseCrumbItem = document.querySelector('span[data-crumb="[course]"]');
+      const courseCrumbItem = document.querySelector(
+        'span[data-crumb="[course]"]'
+      );
 
       // Проверить, найден ли элемент
       if (courseCrumbItem) {

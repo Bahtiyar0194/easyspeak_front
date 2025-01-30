@@ -18,7 +18,7 @@ import tabs from '../../../components/ui/tabs.vue';
 import current from '../../../components/conference/tabs/current.vue';
 import planned from '../../../components/conference/tabs/planned.vue';
 
-const tabs_data = [
+const tabs_data = computed(() => [
     {
         name: 'current',
         title: t('pages.conference.statuses.current'),
@@ -36,5 +36,5 @@ const tabs_data = [
         title: t('pages.conference.statuses.passed'),
         icon: 'bi bi-check2-square'
     },
-];
+]);
 </script>

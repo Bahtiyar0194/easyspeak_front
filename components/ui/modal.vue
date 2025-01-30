@@ -1,7 +1,7 @@
 <template>
     <div class="modal-backdrop" :class="isVisible && 'show'" @click.self="props.closeOnClickSelf && closeModal()">
         <div class="modal" :class="props.className">
-            <loader v-if="props.showLoader" :className="'overlay'" />
+            <loader v-if="props.showLoader" :className="props.loaderOpacityFull === true ? 'overlay opacity-full' : 'overlay'" />
             <div class="modal-header">
                 <slot name="header_content" />
                 <span :title="$t('close')" @click="closeModal" class="modal-close-button">
@@ -29,6 +29,10 @@ const props = defineProps({
         required: false
     },
     showLoader: {
+        type: Boolean,
+        required: false
+    },
+    loaderOpacityFull: {
         type: Boolean,
         required: false
     },
