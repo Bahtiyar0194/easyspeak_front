@@ -39,7 +39,7 @@
             <li>
                 <button>
                     <i class="pi pi-user"></i>
-                    <span>{{ $t('pages.profile.title') }}</span>
+                    {{ $t('pages.profile.title') }}
                 </button>
             </li>
             <li>

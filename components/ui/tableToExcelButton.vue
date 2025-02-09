@@ -1,7 +1,7 @@
 <template>
     <button @click="exportToXLSX()" class="btn btn-outline-success" :class="props.className">
         <i class="bi bi-file-earmark-excel"></i>
-        <span>{{ $t("export_to_xlsx") }}</span>
+        {{ $t("export_to_xlsx") }}
     </button>
 </template>
 <script setup>

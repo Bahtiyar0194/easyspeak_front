@@ -11,21 +11,21 @@
           >
             <template v-slot:btn_content>
               <button type="button" class="btn btn-outline-primary">
-                <i class="pi pi-file-plus"></i>
-                <span>{{ $t("file.upload_file") }}</span>
+                <i class="pi pi-plus"></i>
+                {{ $t("materials.add_material") }}
               </button>
             </template>
 
             <template v-slot:menu_content>
-              <li v-for="(file_type, index) in fileTypes" :key="index">
+              <li v-for="(material_type, index) in materialTypes" :key="index">
                 <button
                   type="button"
                   @click="
-                    addMaterial(file_type.material_type_slug, file_type.icon)
+                    addMaterial(material_type)
                   "
                 >
-                  <i :class="file_type.icon"></i>
-                  {{ file_type.material_type_name }}
+                  <i :class="material_type.icon"></i>
+                  {{ material_type.material_type_name }}
                 </button>
               </li>
             </template>
@@ -33,7 +33,6 @@
         </client-only>
       </div>
     </div>
-
     <div
       v-for="(material, materialIndex) in taskMaterials"
       :key="materialIndex"
@@ -53,73 +52,36 @@
         <div class="custom-grid">
           <div class="col-span-12">
             <div class="btn-wrap justify-between">
-              <p class="mb-0">{{ $t("file.file") }}: {{ materialIndex + 1 }}</p>
-              <button type="button" @click="removeMaterial(materialIndex)" :title="$t('delete')">
+              <p class="mb-0">{{ $t("materials.material") }} № {{ materialIndex + 1 }}</p>
+              <button
+                type="button"
+                @click="removeMaterial(materialIndex)"
+                :title="$t('delete')"
+              >
                 <i class="pi pi-times"></i>
               </button>
             </div>
           </div>
-          <div class="col-span-12">
-            <div class="flex flex-col gap-y-2">
-              <label class="custom-radio">
-                <input
-                  type="radio"
-                  :checked="material.uploadingNewFile === true"
-                  :name="'upload_task_file_' + materialIndex"
-                  @change="material.uploadingNewFile = true"
-                />
-                <span>{{ $t("file.uploading_a_new_file") }}</span>
-              </label>
-
-              <label class="custom-radio">
-                <input
-                  type="radio"
-                  :checked="material.uploadingNewFile === false"
-                  :name="'upload_task_file_' + materialIndex"
-                  @change="material.uploadingNewFile = false"
-                />
-                <span>{{ $t("file.upload_from_media") }}</span>
-              </label>
-            </div>
-          </div>
-          <div v-if="material.uploadingNewFile === true" class="col-span-12">
-            <div class="custom-grid">
-              <div class="col-span-12">
-                <div class="form-group-border active">
-                  <i class="pi pi-file"></i>
-                  <input
-                    :name="'file_name_' + materialIndex"
-                    type="text"
-                    placeholder=" "
-                  />
-                  <label
-                    :class="{
-                      'label-error': errors[`file_name_${materialIndex}`],
-                    }"
-                  >
-                    {{
-                      errors[`file_name_${materialIndex}`]
-                        ? $t("file.specify_the_file_name")
-                        : $t("file.name")
-                    }}
-                  </label>
-                </div>
-              </div>
-              <div class="col-span-12">
-                <fileUploadButton
-                  :id="'file_' + materialIndex"
-                  :name="'file_' + materialIndex"
-                  :accept="material.material_type_slug + '/*'"
-                  :error="errors[`file_${materialIndex}`]"
-                  :icon="material.icon"
-                  :label="$t('file.' + material.material_type_slug + '.select')"
-                />
-              </div>
-            </div>
-          </div>
-          <div v-else class="col-span-12">
-            <selectFileFromLibrary :name="'file_from_library_' + materialIndex" :fileType="material.material_type_slug" :error="errors[`file_from_library_${materialIndex}`]"/>
-          </div>
+          <uploadOrSelectFile
+            v-if="material.material_type_category === 'file'"
+            :radioName="'upload_task_file_' + materialIndex"
+            :fileInputName="'file_name_' + materialIndex"
+            :uploadingFileName="'file_' + materialIndex"
+            :libraryFileName="'file_from_library_' + materialIndex"
+            :accept="material.material_type_slug"
+            :icon="material.icon"
+            :errors="errors"
+          />
+          <textEditor
+            v-else-if="material.material_type_slug === 'text'"
+            :inputName="'text_' + materialIndex"
+            :errors="errors"
+          />
+          <editableTable
+            v-else-if="material.material_type_slug === 'table'"
+            :tableName="'table_' + materialIndex"
+            :errors="errors"
+          />
         </div>
       </div>
     </div>
@@ -128,11 +90,13 @@
 <script setup>
 import dropdownMenu from "../../../ui/dropdownMenu.vue";
 import loader from "../../../ui/loader.vue";
-import fileUploadButton from "../../../ui/fileUploadButton.vue";
-import selectFileFromLibrary from "../../../ui/selectFileFromLibrary.vue";
+import uploadOrSelectFile from "../../../ui/uploadOrSelectFile.vue";
+import textEditor from "../../../ui/textEditor.vue";
+import editableTable from "../../../ui/editableTable.vue";
+
 const { $axiosPlugin } = useNuxtApp();
 const pending = ref(false);
-const fileTypes = ref([]);
+const materialTypes = ref([]);
 
 const props = defineProps({
   errors: {
@@ -148,12 +112,8 @@ const props = defineProps({
 
 const { errors, taskMaterials } = toRefs(props);
 
-const addMaterial = (material_type_slug, icon) => {
-  taskMaterials.value.push({
-    uploadingNewFile: true,
-    material_type_slug: material_type_slug,
-    icon: icon,
-  });
+const addMaterial = (material_type) => {
+  taskMaterials.value.push(material_type);
 };
 
 const removeMaterial = (materialIndex) => {
@@ -162,13 +122,13 @@ const removeMaterial = (materialIndex) => {
   }
 };
 
-const getFileTypes = async () => {
+const getMaterialTypes = async () => {
   pending.value = true;
 
   await $axiosPlugin
-    .get("media/get_attributes")
+    .get("courses/get_material_types")
     .then((response) => {
-      fileTypes.value = response.data.all_file_types;
+      materialTypes.value = response.data;
       pending.value = false;
     })
     .catch((err) => {
@@ -188,6 +148,6 @@ const getFileTypes = async () => {
 };
 
 onMounted(() => {
-  getFileTypes();
+  getMaterialTypes();
 });
 </script>

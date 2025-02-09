@@ -8,7 +8,7 @@
               <template v-slot:btn_content>
                 <button class="btn btn-outline-primary">
                   <i class="pi pi-plus"></i>
-                  <span>{{ $t("pages.tasks.add_a_task") }}</span>
+                  {{ $t("pages.tasks.add_a_task") }}
                 </button>
               </template>
 

@@ -5,12 +5,12 @@
                 <roleProvider :roles="[1, 2, 3]">
                     <button class="btn btn-outline-primary" @click="inviteModalIsVisible = true">
                         <i class="pi pi-user-plus"></i>
-                        <span>{{ $t("invite") }}</span>
+                        {{ $t("invite") }}
                     </button>
                 </roleProvider>
                 <button @click="showHideUserSearchFilter" class="btn btn-light">
                     <i class="pi pi-search"></i>
-                    <span>{{ searchFilter === true ? $t("hide_search_filter") : $t("show_search_filter") }}</span>
+                    {{ searchFilter === true ? $t("hide_search_filter") : $t("show_search_filter") }}
                 </button>
             </div>
         </div>
@@ -80,7 +80,7 @@
                                 <div class="btn-wrap">
                                     <button type="submit" class="btn btn-sm btn-outline-primary">
                                         <i class="pi pi-undo"></i>
-                                        <span>{{ $t("reset_search_filter") }}</span>
+                                        {{ $t("reset_search_filter") }}
                                     </button>
                                 </div>
                             </div>
@@ -92,7 +92,7 @@
 
         <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
             <template v-if="users.data?.length > 0">
-                <div class="table table-sm selectable">
+                <div class="table table-striped table-sm selectable">
                     <loader v-if="pending" :className="'overlay'" />
                     <table ref="tableRef">
                         <thead>
@@ -200,7 +200,7 @@
 
                 <button class="btn btn-primary mt-4" type="submit">
                     <i class="pi pi-check"></i>
-                    <span>{{ $t("continue") }}</span>
+                    {{ $t("continue") }}
                 </button>
             </form>
         </template>
@@ -234,7 +234,7 @@
                     <roleProvider :roles="[1, 2, 3]">
                         <button @click="getEditUser" class="btn btn-outline-primary">
                             <i class="pi pi-user-edit"></i>
-                            <span>{{ $t("edit") }}</span>
+                            {{ $t("edit") }}
                         </button>
                     </roleProvider>
                 </div>
@@ -307,7 +307,7 @@
 
                 <button class="btn btn-primary mt-4" type="submit">
                     <i class="pi pi-check"></i>
-                    <span>{{ $t("continue") }}</span>
+                    {{ $t("continue") }}
                 </button>
             </form>
         </template>
@@ -479,10 +479,6 @@ const getUserAttributes = async () => {
 const inviteUserSubmit = async () => {
     pendingInvite.value = true;
     const formData = new FormData(inviteFormRef.value);
-    let roles = [];
-    document.querySelectorAll('.invite_role_input:checked').forEach(role => {
-        roles.push(parseInt(role.value));
-    });
 
     formData.append('roles_count', roles.length);
     formData.append('operation_type_id', 1);

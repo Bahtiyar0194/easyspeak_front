@@ -43,9 +43,7 @@
 
             <div
               class="transition-all duration-500 ease-in-out overflow-hidden"
-              :class="
-                activeSectionIndex === sectionIndex ? 'max-h-40' : 'max-h-0'
-              "
+              :class="activeSectionIndex === sectionIndex ? 'h-auto' : 'h-0'"
             >
               <ul class="list-group nowrap mt-2">
                 <li
@@ -65,14 +63,24 @@
                       )
                     "
                   >
-                    {{ lessonIndex + 1 }}. {{ lesson.lesson_name }}
-                    <span class="text-inactive"
-                      >({{ lesson.lesson_type_name }})</span
-                    >
+                    <div class="flex flex-col">
+                      <div>
+                        {{ lessonIndex + 1 }}. {{ lesson.lesson_name }}
+                        <span class="text-inactive"
+                          >({{ lesson.lesson_type_name }})</span
+                        >
+                      </div>
+                      <div>
+                        <span class="text-xs text-active"
+                          >{{ $t("pages.tasks.tasks_count") }}:
+                          <b>{{ lesson.tasks.length }}</b></span
+                        >
+                      </div>
+                    </div>
                   </nuxt-link>
                 </li>
                 <roleProvider :roles="[1]" :redirect="false">
-                  <li class="list-item my-2">
+                  <li class="list-item mt-1.5">
                     <button
                       class="btn btn-sm btn-outline-primary"
                       type="button"
@@ -131,7 +139,7 @@
 
           <button class="btn btn-primary mt-4" type="submit">
             <i class="pi pi-plus"></i>
-            <span>{{ $t("add") }}</span>
+            {{ $t("add") }}
           </button>
         </form>
       </template>
@@ -218,7 +226,7 @@
           </div>
           <button class="btn btn-primary mt-4" type="submit">
             <i class="pi pi-plus"></i>
-            <span>{{ $t("add") }}</span>
+            {{ $t("add") }}
           </button>
         </form>
       </template>

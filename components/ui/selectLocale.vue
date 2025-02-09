@@ -1,7 +1,7 @@
 <template>
     <dropdownMenu :dropdown-arrow="true">
         <template v-slot:btn_content>
-            <span>{{ localeProperties.short_name }}</span>
+            {{ localeProperties.short_name }}
         </template>
 
         <template v-slot:menu_content>

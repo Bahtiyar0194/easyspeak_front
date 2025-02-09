@@ -5,12 +5,12 @@
                 <roleProvider :roles="[1]">
                     <button class="btn btn-outline-primary" @click="addModalIsVisible = true">
                         <i class="pi pi-plus"></i>
-                        <span>{{ $t("add") }}</span>
+                        {{ $t("add") }}
                     </button>
                 </roleProvider>
                 <button @click="showHideSentenceSearchFilter" class="btn btn-light">
                     <i class="pi pi-search"></i>
-                    <span>{{ searchFilter === true ? $t("hide_search_filter") : $t("show_search_filter") }}</span>
+                    {{ searchFilter === true ? $t("hide_search_filter") : $t("show_search_filter") }}
                 </button>
             </div>
         </div>
@@ -78,7 +78,7 @@
                                 <div class="btn-wrap">
                                     <button type="submit" class="btn btn-sm btn-outline-primary">
                                         <i class="pi pi-undo"></i>
-                                        <span>{{ $t("reset_search_filter") }}</span>
+                                        {{ $t("reset_search_filter") }}
                                     </button>
                                 </div>
                             </div>
@@ -90,7 +90,7 @@
 
         <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
             <template v-if="sentences.data?.length > 0">
-                <div class="table table-sm selectable">
+                <div class="table table-striped table-sm selectable">
                     <loader v-if="pending" :className="'overlay'" />
                     <table ref="tableRef">
                         <thead>
@@ -235,7 +235,7 @@
                         <div class="col-span-12">
                             <button class="btn btn-primary" type="submit">
                                 <i class="pi pi-check"></i>
-                                <span>{{ $t("add") }}</span>
+                                {{ $t("add") }}
                             </button>
                         </div>
                     </div>
@@ -280,7 +280,7 @@
                 <div class="btn-wrap mt-4">
                     <button @click="getEditSentence" class="btn btn-outline-primary">
                         <i class="pi pi-pencil"></i>
-                        <span>{{ $t("edit") }}</span>
+                        {{ $t("edit") }}
                     </button>
                 </div>
             </roleProvider>
@@ -365,7 +365,7 @@
                         <div class="col-span-12">
                             <button class="btn btn-primary" type="submit">
                                 <i class="pi pi-check"></i>
-                                <span>{{ $t("save") }}</span>
+                                {{ $t("save") }}
                             </button>
                         </div>
                     </div>

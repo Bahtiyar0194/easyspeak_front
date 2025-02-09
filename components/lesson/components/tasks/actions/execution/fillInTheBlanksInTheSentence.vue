@@ -418,6 +418,7 @@ const getTask = async () => {
     const res = await $axiosPlugin.get(
       "tasks/fill_in_the_blanks_in_the_sentence/" + props.task.task_id
     );
+
     taskData.value = res.data;
     sentences.value = [...taskData.value.sentences];
     materials.value = taskData.value.materials;
@@ -673,7 +674,7 @@ const handleKeyPress = (event) => {
 // Инициализация при монтировании
 onMounted(() => {
   getTask();
-  changeModalSize("modal-xl");
+  changeModalSize("modal-2xl");
   window.addEventListener("keydown", handleKeyPress);
 });
 

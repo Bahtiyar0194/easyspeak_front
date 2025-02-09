@@ -488,16 +488,20 @@ input[type=number]::-webkit-outer-spin-button {
     @apply border-b-inactive bg-active;
 }
 
+td.th{
+    @apply border-b-inactive bg-active;
+}
+
 .table table tbody tr{
     @apply bg-active;
 }
 
-.table table tbody tr:nth-child(odd){
+.table.table-striped table tbody tr:nth-child(odd){
     @apply bg-inactive;
 }
 
-.table table thead tr th{
-    @apply px-4 py-3 text-left font-medium tracking-wider;
+.table table thead tr th, td.th{
+    @apply px-4 py-3 font-medium tracking-wider;
 }
 
 .table.selectable table tbody tr{
@@ -518,6 +522,10 @@ input[type=number]::-webkit-outer-spin-button {
 
 .table table tbody tr td{
     @apply px-4 py-3;
+}
+
+.table.editable table tbody tr td{
+    @apply cursor-pointer;
 }
 
 .table.table-sm table thead tr th{
@@ -1992,4 +2000,8 @@ select.error:has(option:checked:disabled) {
 
 .vjs-default-skin {
     @apply overflow-hidden rounded-xl border-inactive;
+}
+
+.text-editor-content {
+    @apply h-48 overflow-y-auto border-inactive rounded-xl p-4;
 }

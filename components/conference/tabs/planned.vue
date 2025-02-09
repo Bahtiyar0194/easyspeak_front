@@ -40,7 +40,7 @@
         </div>
 
         <div class="col-span-12" :class="search_filter && 'lg:col-span-9'">
-            <div class="table selectable">
+            <div class="table table-striped selectable">
                 <table>
                     <thead>
                         <tr>

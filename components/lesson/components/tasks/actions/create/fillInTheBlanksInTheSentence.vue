@@ -21,17 +21,17 @@
           type="button"
         >
           <i class="pi pi-arrow-left"></i>
-          <span>{{ $t("back") }}</span>
+          {{ $t("back") }}
         </button>
 
         <button class="btn btn-primary" type="submit">
           <template v-if="currentStep !== newTaskSteps.length">
             <i class="pi pi-arrow-right"></i>
-            <span>{{ $t("continue") }}</span>
+            {{ $t("continue") }}
           </template>
           <template v-else>
             <i class="pi pi-check"></i>
-            <span>{{ $t("save") }}</span>
+            {{ $t("save") }}
           </template>
         </button>
       </div>

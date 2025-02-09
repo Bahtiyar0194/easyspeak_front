@@ -20,6 +20,7 @@ const lesson_id = route.params.lesson;
 
 const { $axiosPlugin } = useNuxtApp();
 const pending = ref(true);
+const materialTypes = ref([]);
 const lessonData = ref([]);
 const pageTitle = ref("");
 
@@ -39,7 +40,7 @@ const tabs_data = computed(() => [
     title: t("pages.lessons.lesson_materials"),
     icon: "pi pi-paperclip",
     component: materials,
-    props: { lessonData: lessonData.value },
+    props: { lessonData: lessonData.value, materialTypes: materialTypes.value },
   },
   {
     name: "tasks",
@@ -49,6 +50,31 @@ const tabs_data = computed(() => [
     props: { lesson_id: lesson_id },
   },
 ]);
+
+const getMaterialTypes = async () => {
+  pending.value = true;
+
+  await $axiosPlugin
+    .get("courses/get_material_types")
+    .then((response) => {
+      materialTypes.value = response.data;
+      pending.value = false;
+    })
+    .catch((err) => {
+      if (err.response) {
+        router.push({
+          path: "/error",
+          query: {
+            status: err.response.status,
+            message: err.response.data.message,
+            url: err.request.responseURL,
+          },
+        });
+      } else {
+        router.push("/error");
+      }
+    });
+};
 
 const getLesson = async () => {
   pending.value = true;
@@ -111,7 +137,10 @@ const getLesson = async () => {
     });
 };
 
+provide("getLesson", getLesson);
+
 onMounted(() => {
+  getMaterialTypes();
   getLesson();
 });
 </script>

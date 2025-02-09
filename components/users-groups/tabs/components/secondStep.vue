@@ -4,7 +4,7 @@
             <div class="btn-wrap">
                 <button type="button" @click="showHideUserSearchFilter" class="btn btn-light">
                     <i class="pi pi-search"></i>
-                    <span>{{ searchFilter === true ? $t("hide_search_filter") : $t("show_search_filter") }}</span>
+                    {{ searchFilter === true ? $t("hide_search_filter") : $t("show_search_filter") }}
                 </button>
             </div>
         </div>
@@ -59,7 +59,7 @@
                             <div class="btn-wrap">
                                 <button type="button" @click="debounceReset" class="btn btn-sm btn-outline-primary">
                                     <i class="pi pi-undo"></i>
-                                    <span>{{ $t("reset_search_filter") }}</span>
+                                    {{ $t("reset_search_filter") }}
                                 </button>
                             </div>
                         </div>
@@ -73,7 +73,7 @@
                 <div class="col-span-12">
                     <template v-if="users.data?.length > 0">
                         <note :message="$t('pages.groups.note_1')" :className="'outline-success mb-4'" />
-                        <div class="table table-sm selectable success">
+                        <div class="table table-striped table-sm selectable success">
                             <loader v-if="pending" :className="'overlay'" />
                             <table>
                                 <thead>
