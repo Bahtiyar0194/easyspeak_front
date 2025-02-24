@@ -46,6 +46,7 @@ import selectSentences from "../../selectSentences.vue";
 import thirdStep from "../../fill-in-the-blanks-in-the-sentence/thirdStep.vue";
 import taskMaterialsForm from "../../taskMaterialsForm.vue";
 import taskOptionsForm from "../../taskOptionsForm.vue";
+import { watch } from "vue";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -53,7 +54,7 @@ const { $axiosPlugin } = useNuxtApp();
 const createFormRef = ref(null);
 const selectedSentences = ref([]);
 const taskMaterials = ref([]);
-const findWordWithOptions = ref(false);
+const findWordOption = ref("with_hints");
 
 const errors = ref([]);
 
@@ -75,7 +76,7 @@ const newTaskSteps = [
       errors,
       showImpressionLimit: true,
       showMissingWordsOptions: true,
-      findWordWithOptions,
+      findWordOption,
       showSecondsPerSentence: true,
     },
     modalSize: "4xl",
@@ -89,7 +90,7 @@ const newTaskSteps = [
   {
     title: t("pages.dictionary.select_words"),
     component: thirdStep,
-    props: { errors, selectedSentences, findWordWithOptions },
+    props: { errors, selectedSentences, findWordOption },
     modalSize: "3xl",
   },
   {
@@ -116,7 +117,7 @@ const createTaskSubmit = async () => {
   formData.append("sentences_count", selectedSentences.value.length);
   formData.append("sentences", JSON.stringify(selectedSentences.value));
   formData.append("task_materials", JSON.stringify(taskMaterials.value));
-  formData.append("find_word_with_options", Number(findWordWithOptions.value));
+  formData.append("find_word_option", findWordOption.value);
   formData.append("operation_type_id", 13);
   formData.append("step", currentStep.value);
 
@@ -161,4 +162,16 @@ const createTaskSubmit = async () => {
 onMounted(() => {
   changeModalSize("modal-4xl");
 });
+
+watch(
+  () => findWordOption.value,
+  (newVal) => {
+    selectedSentences.value.forEach((sentence) => {
+      sentence.removedWordIndex = null;
+      sentence.removedWordsIndex = [];
+      sentence.removedWordOptions = [];
+    });
+    selectedSentences.value = [];
+  }
+);
 </script>

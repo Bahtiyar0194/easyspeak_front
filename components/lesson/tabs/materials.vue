@@ -58,6 +58,12 @@
         />
       </div>
     </div>
+
+    <div v-else class="col-span-12">
+      <alert :className="'light'">
+        <p class="mb-0">{{ $t("pages.lessons.there_are_no_materials") }}</p>
+      </alert>
+    </div>
   </div>
 
   <modal
@@ -117,6 +123,7 @@ import uploadOrSelectFile from "../../ui/uploadOrSelectFile.vue";
 import textEditor from "../../ui/textEditor.vue";
 import editableTable from "../../ui/editableTable.vue";
 import materialsList from "../components/materialsList.vue";
+import alert from "../../ui/alert.vue";
 
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();

@@ -1,366 +1,304 @@
 <template>
-  <countdownTaskTimer v-if="showTaskTimer" />
-  <div v-if="showMaterials" class="custom-grid">
-    <materialsList :materials="materials" />
-    <div class="col-span-12">
-      <div class="btn-wrap justify-end">
-        <button class="btn btn-light" @click="startTask()">
-          <i class="pi pi-arrow-right"></i>
-          {{ $t("pages.tasks.start_the_task") }}
-        </button>
+  <taskLayout v-if="taskData" :task="props.task" :showTaskTimer="showTaskTimer"
+    :showMaterialsOption="showMaterialsOption" :showMaterialsBeforeTask="showMaterialsBeforeTask" :materials="materials"
+    :startTask="startTask" :isFinished="isFinished" :progressPercentage="progressPercentage">
+    <template v-slot:task_content>
+      <div class="col-span-12">
+        <p v-if="timeIsUp" class="font-medium text-center text-danger">
+          {{ $t("time_is_up") }}
+        </p>
+        <p v-else-if="sentences.length > 0" class="text-center">
+          {{ $t("pages.sentences.sentences_left") }}:
+          <b>{{ sentences.length }}</b>
+        </p>
       </div>
-    </div>
-  </div>
-  <div v-else class="custom-grid">
-    <div v-if="!isFinished" class="col-span-12">
-      <div class="custom-grid">
-        <div class="col-span-12">
-          <p class="mb-0 text-corp font-medium">{{ props.task.task_name }}</p>
+
+      <div class="col-span-12">
+        <div class="flex justify-center items-center">
+          <countdownCircleTimer :totalSeconds="time" :startCommand="isStarted" @timeIsUp="timerIsUp()" />
         </div>
+      </div>
 
-        <div class="col-span-12">
-          <progressBar :progressPercentage="progressPercentage" />
-
-          <p v-if="timeIsUp" class="font-medium text-center text-danger">
-            {{ $t("time_is_up") }}
-          </p>
-          <p v-else-if="sentences.length > 0" class="text-center">
-            {{ $t("pages.sentences.sentences_left") }}:
-            <b>{{ sentences.length }}</b>
-          </p>
-        </div>
-
-        <div class="col-span-12">
-          <div class="flex justify-center items-center">
-            <countdownCircleTimer
-              :totalSeconds="time"
-              :startCommand="isStarted"
-              @timeIsUp="timerIsUp()"
-            />
-          </div>
-        </div>
-
-        <div v-if="timeIsUp || isComplete" class="col-span-12">
-          <div class="flex flex-col gap-y-4">
-            <div
-              class="flex flex-col gap-y-2"
-              v-if="currentStudiedSentences.length > 0"
-            >
-              <p class="text-xl font-medium mb-0 text-success">
-                {{
-                  currentReStudySentences.length > 0
-                    ? $t("right_answers")
-                    : $t("right")
-                }}
-              </p>
-              <ul class="list-group nowrap">
-                <li
-                  class="list-item"
-                  v-for="(sentence, sIndex) in currentStudiedSentences"
-                  :key="sIndex"
-                >
-                  <div class="flex justify-between items-center gap-x-2">
-                    <div>
-                      <div class="flex flex-wrap gap-x-1 font-medium">
-                        <div
-                          v-for="(word, wordIndex) in sentence.sentence.split(
-                            ' '
-                          )"
-                          :key="wordIndex"
-                        >
-                          <span
-                            :class="
-                              wordIndex === sentence.missing_word_position &&
-                              'text-success'
-                            "
-                            >{{ word }}</span
-                          >
-                        </div>
+      <div v-if="timeIsUp || isComplete" class="col-span-12">
+        <div class="flex flex-col gap-y-4">
+          <div class="flex flex-col gap-y-2" v-if="currentStudiedSentences.length > 0">
+            <p class="text-xl font-medium mb-0 text-success">
+              {{
+                currentReStudySentences.length > 0
+                  ? $t("right_answers")
+                  : $t("right")
+              }}
+            </p>
+            <ul class="list-group nowrap">
+              <li class="list-item" v-for="(sentence, sIndex) in currentStudiedSentences" :key="sIndex">
+                <div class="flex justify-between items-center gap-x-2">
+                  <div>
+                    <div class="flex flex-wrap gap-x-1 font-medium">
+                      <div v-for="(word, wordIndex) in sentence.sentence.split(
+                        ' '
+                      )" :key="wordIndex">
+                        <span :class="(
+                          (taskData?.options.find_word_option == 'with_options' && sentence.missingWordPositionIndex == wordIndex) ||
+                          ((taskData?.options.find_word_option == 'with_hints' || taskData?.options.find_word_option == 'without_hints') && sentence.missingWords.find((w) => w.word_position == wordIndex)?.userInput.toLowerCase() == removePunctuation(word).toLowerCase()) ||
+                          (taskData?.options.find_word_option == 'with_first_letter' && (removePunctuation(sentence.missingWords.find((w) => w.word_position == wordIndex)?.userInput).toLowerCase() == removePunctuation(word).toLowerCase().slice(1) && word.length > 1))
+                        ) &&
+                          'text-success'
+                          ">{{ word }}</span>
                       </div>
-                      <p class="mb-0 text-xs text-inactive">
-                        {{ sentence.sentence_translate }}
-                      </p>
                     </div>
+                    <p class="mb-0 text-xs text-inactive font-medium">
+                      {{ sentence.sentence_translate }}
+                    </p>
+                  </div>
 
-                    <div class="flex items-center">
-                      <audioButton
-                        v-if="sentence.audio_file"
-                        :src="
-                          config.public.apiBase +
-                          '/media/get/' +
-                          sentence.audio_file
-                        "
-                      />
-                      <div class="step-item xs completed">
-                        <div class="step-icon">
-                          <i class="pi pi-check"></i>
-                        </div>
+                  <div class="flex items-center">
+                    <audioButton v-if="sentence.audio_file" :src="config.public.apiBase +
+                      '/media/get/' +
+                      sentence.audio_file
+                      " />
+                    <div class="step-item xs completed">
+                      <div class="step-icon">
+                        <i class="pi pi-check"></i>
                       </div>
                     </div>
                   </div>
-                </li>
-              </ul>
-            </div>
+                </div>
+              </li>
+            </ul>
+          </div>
 
-            <div
-              class="flex flex-col gap-y-2"
-              v-if="currentReStudySentences.length > 0"
-            >
-              <p class="text-xl font-medium mb-0 text-danger">
-                {{ $t("for_re_examination") }}
-              </p>
-              <ul class="list-group nowrap">
-                <li
-                  class="list-item"
-                  v-for="(sentence, rIndex) in currentReStudySentences"
-                  :key="rIndex"
-                >
-                  <div class="flex justify-between items-center gap-x-2">
-                    <div>
-                      <p class="mb-0 text-xs text-inactive font-normal">
-                        {{ $t("your_answer") }}:
-                      </p>
-                      <div class="flex flex-wrap gap-x-1 font-medium mb-2">
-                        <div
-                          v-for="(word, wordIndex) in sentence.sentence.split(
-                            ' '
-                          )"
-                          :key="wordIndex"
-                        >
-                          <span
-                            class="underline text-danger"
-                            v-if="
-                              wordIndex === sentence.missing_word_position &&
-                              ((taskData?.options.find_word_with_options == 1 &&
-                                sentence.selectedOptionIndex >= 0) ||
-                                (taskData?.options.find_word_with_options ==
-                                  0 &&
-                                  sentence.userInput != ''))
-                            "
-                            >{{
-                              taskData?.options.find_word_with_options == 1
-                                ? sentence.missingWords[
-                                    sentence.selectedOptionIndex
-                                  ].word
-                                : sentence.userInput
-                            }}</span
-                          >
-                          <span
-                            class="text-danger"
-                            v-else-if="
-                              wordIndex === sentence.missing_word_position &&
-                              ((taskData?.options.find_word_with_options == 1 &&
-                                !sentence.selectedOptionIndex) ||
-                                (taskData?.options.find_word_with_options ==
-                                  0 &&
-                                  sentence.userInput === ''))
-                            "
-                            >____</span
-                          >
-                          <span v-else>{{ word }}</span>
-                        </div>
+          <div class="flex flex-col gap-y-2" v-if="currentReStudySentences.length > 0">
+            <p class="text-xl font-medium mb-0 text-danger">
+              {{ $t("for_re_examination") }}
+            </p>
+            <ul class="list-group nowrap">
+              <li class="list-item" v-for="(sentence, rIndex) in currentReStudySentences" :key="rIndex">
+                <div class="flex justify-between items-center gap-x-2">
+                  <div>
+                    <p class="mb-0 text-xs text-inactive font-normal">
+                      {{ $t("your_answer") }}:
+                    </p>
+                    <div class="flex flex-wrap gap-x-1 font-medium mb-2">
+
+                      <div v-for="(word, wordIndex) in sentence.sentence.split(' ')" :key="wordIndex">
+                        <span class="underline text-danger"
+                          v-if="(taskData?.options.find_word_option == 'with_options' && wordIndex === sentence.missingWordPositionIndex && sentence.selectedOptionIndex !== undefined && sentence.selectedOptionIndex >= 0)">
+                          {{ sentence.missingWords[sentence.selectedOptionIndex]?.word_option }}
+                        </span>
+                        <span class="underline flex"
+                          v-else-if="taskData?.options.find_word_option != 'with_options' && sentence.missingWords.find((w) => w.word_position == wordIndex)?.userInput"
+                          :class="((taskData?.options.find_word_option == 'with_hints' || taskData?.options.find_word_option == 'without_hints') && sentence.missingWords.find((w) => w.word_position == wordIndex)?.userInput.toLowerCase() == removePunctuation(word).toLowerCase() ||
+                            (taskData?.options.find_word_option == 'with_first_letter' && (removePunctuation(sentence.missingWords.find((w) => w.word_position == wordIndex)?.userInput).toLowerCase() == removePunctuation(word).toLowerCase().slice(1) && word.length > 1))) ? 'text-success' : 'text-danger'">
+                          <span v-if="taskData?.options.find_word_option == 'with_first_letter'" class="text-corp">{{
+                            word[0] }}</span>
+                          {{ sentence.missingWords.find((w) => w.word_position == wordIndex)?.userInput }}
+                        </span>
+
+                        <span class="text-danger"
+                          v-else-if="
+                            ((taskData?.options.find_word_option == 'with_options' && wordIndex === sentence.missingWordPositionIndex && sentence.selectedOptionIndex === undefined) ||
+                              (taskData?.options.find_word_option != 'task_options' && sentence.missingWords.find((w) => w.word_position == wordIndex)?.userInput == ''))">
+                          _______
+                        </span>
+
+                        <span v-else>{{ word }}</span>
                       </div>
-                      <p class="mb-0 text-xs text-inactive font-normal">
-                        {{ $t("right_answer") }}:
-                      </p>
-                      <div class="flex flex-wrap gap-x-1 font-medium">
-                        <div
-                          v-for="(word, wordIndex) in sentence.sentence.split(
-                            ' '
-                          )"
-                          :key="wordIndex"
-                        >
-                          <span
-                            class="underline text-success"
-                            v-if="wordIndex === sentence.missing_word_position"
-                            >{{ word }}</span
-                          >
-                          <span v-else>{{ word }}</span>
-                        </div>
-                        <p class="mb-0 text-xs text-inactive">
-                          {{ sentence.sentence_translate }}
-                        </p>
+
+                    </div>
+                    <p class="mb-0 text-xs text-inactive font-normal">
+                      {{ $t("right_answer") }}:
+                    </p>
+                    <div class="flex flex-wrap gap-x-1 font-medium">
+                      <div v-for="(word, wordIndex) in sentence.sentence.split(
+                        ' '
+                      )" :key="wordIndex">
+                        <span class="underline text-success" v-if="
+                          ((taskData?.options.find_word_option == 'with_options' && sentence.missingWordPositionIndex == wordIndex) || (taskData?.options.find_word_option != 'with_options' && sentence.missingWords.find((w) => w.word_position == wordIndex)?.word_position == wordIndex))
+                        ">{{ word }}</span>
+                        <span v-else>{{ word }}</span>
                       </div>
                     </div>
+                    <p class="mb-0 text-xs text-inactive font-medium">
+                      {{ sentence.sentence_translate }}
+                    </p>
+                  </div>
 
-                    <div class="flex items-center">
-                      <audioButton
-                        v-if="sentence.audio_file"
-                        :src="
-                          config.public.apiBase +
-                          '/media/get/' +
-                          sentence.audio_file
-                        "
-                      />
-                      <div class="step-item xs failed">
-                        <div class="step-icon">
-                          <i class="pi pi-replay"></i>
-                        </div>
+                  <div class="flex items-center">
+                    <audioButton v-if="sentence.audio_file" :src="config.public.apiBase +
+                      '/media/get/' +
+                      sentence.audio_file
+                      " />
+                    <div class="step-item xs failed">
+                      <div class="step-icon">
+                        <i class="pi pi-replay"></i>
                       </div>
                     </div>
                   </div>
-                </li>
-              </ul>
-            </div>
-            <div class="btn-wrap right">
-              <button
-                v-if="sentences.length > 0"
-                class="btn btn-outline-primary"
-                @click="setSentences()"
-              >
-                <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
-              </button>
-              <button v-else class="btn btn-light" @click="isFinished = true">
-                <i class="pi pi-check"></i>
-                {{ $t("pages.tasks.complete_the_task") }}
+                </div>
+              </li>
+            </ul>
+          </div>
+          <div class="btn-wrap right">
+            <button v-if="sentences.length > 0" class="btn btn-outline-primary" @click="setSentences()">
+              <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
+            </button>
+            <button v-else class="btn btn-light" @click="isFinished = true">
+              <i class="pi pi-check"></i>
+              {{ $t("pages.tasks.complete_the_task") }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div v-else class="col-span-12">
+        <div class="custom-grid">
+          <div v-if="taskData?.options.find_word_option == 'with_hints'" class="col-span-12">
+            <div class="btn-wrap">
+              <button v-for="(word, wordIndex) in hiddenWords" :key="wordIndex" type="button"
+                class="btn btn-sm btn-light" :class="{
+                  disabled: word.disabled,
+                  draggable: true,
+                }" :draggable="true" @dragstart="onDragStart($event, wordIndex)" @click="insertWordToInput(word)">
+                {{ word.word }}
               </button>
             </div>
           </div>
-        </div>
-
-        <div v-else class="col-span-12">
-          <div class="custom-grid">
-            <div class="col-span-12">
-              <div class="btn-wrap">
-                <button
-                  v-for="(word, wordIndex) in hiddenWords"
-                  :key="wordIndex"
-                  type="button"
-                  class="btn btn-light"
-                  :class="{
-                    disabled: word.disabled,
-                    dragging: isDragging,
-                    draggable: true,
-                  }"
-                  :draggable="true"
-                  @dragstart="onDragStart($event, wordIndex)"
-                  @touchstart="onTouchStart($event, wordIndex)"
-                  @touchmove="onTouchMove"
-                  @touchend="onTouchEnd"
-                  @click="insertWordToInput(word)"
-                >
-                  {{ word.word }}
-                </button>
-              </div>
-            </div>
-            <div
-              v-for="(sentence, sentenceIndex) in currentSentences"
-              :key="sentenceIndex"
-              class="col-span-12"
-            >
-              <div
-                class="flex flex-wrap items-center gap-1 font-medium text-lg mb-2"
-              >
-                <span>{{ sentenceIndex + 1 }}.</span>
-                <div
-                  class="select-none"
-                  v-for="(word, wordIndex) in sentence.sentence.split(' ')"
-                  :key="wordIndex"
-                >
-                  <span
-                    class="underline text-corp"
-                    v-if="
-                      wordIndex === sentence.missing_word_position &&
-                      sentence.selectedOptionIndex >= 0
-                    "
-                    >{{
-                      sentence.missingWords[sentence.selectedOptionIndex].word
-                    }}</span
-                  >
-                  <div v-else-if="wordIndex === sentence.missing_word_position">
-                    <div
-                      v-if="taskData?.options.find_word_with_options == 0"
-                      class="btn flex justify-center items-center"
-                      :class="
-                        unFilledSentences.includes(sentenceIndex)
-                          ? 'pulse btn-danger'
-                          : 'btn-active'
-                      "
-                      @drop="onDrop($event, sentenceIndex)"
-                      @dragover="onDragOver"
-                    >
-                      <input
-                        v-model="sentence.userInput"
-                        :disabled="false"
-                        :style="{
+          <div v-for="(sentence, sentenceIndex) in currentSentences" :key="sentenceIndex" class="col-span-12">
+            <div class="flex flex-wrap items-center gap-1 font-medium text-lg mb-2">
+              <span>{{ sentenceIndex + 1 }}.</span>
+              <div class="select-none" v-for="(word, wordIndex) in sentence.sentence.split(' ')" :key="wordIndex">
+                <span class="underline text-corp" v-if="taskData?.options.find_word_option == 'with_options' &&
+                  wordIndex === sentence.missingWordPositionIndex &&
+                  sentence.selectedOptionIndex >= 0
+                ">{{
+                    sentence.missingWords[sentence.selectedOptionIndex]
+                      .word_option
+                  }}</span>
+                <div v-else-if="
+                  taskData?.options.find_word_option == 'with_options' &&
+                  wordIndex === sentence.missingWordPositionIndex
+                ">
+                  <span>_______</span>
+                </div>
+                <div v-else-if="
+                  (taskData?.options.find_word_option == 'with_hints' || taskData?.options.find_word_option == 'without_hints') &&
+                  sentence.missingWords.find(
+                    (w) => w.word_position == wordIndex
+                  )
+                ">
+                  <div class="px-2 rounded-lg flex items-center border" :class="unFilledSentences.includes(sentenceIndex) &&
+                    sentence.missingWords.find(
+                      (w) => w.word_position == wordIndex
+                    ).userInput === ''
+                    ? 'pulse border-danger bg-danger'
+                    : 'border-active'
+                    " @drop="onDrop($event, sentenceIndex, wordIndex)" @dragover="onDragOver">
+                    <input v-model="sentence.missingWords.find(
+                      (w) => w.word_position == wordIndex
+                    ).userInput
+                      " :disabled="false" :style="{
                           width:
-                            sentence.userInput !== ''
-                              ? sentence.userInput.length + 0.5 + 'ch'
+                            sentence.missingWords.find(
+                              (w) => w.word_position == wordIndex
+                            ).userInput !== ''
+                              ? sentence.missingWords.find(
+                                (w) => w.word_position == wordIndex
+                              ).userInput.length +
+                              0.5 +
+                              'ch'
                               : '4ch',
                           'text-align': 'center',
-                        }"
-                        @input="handleInput($event)"
-                        type="text"
-                      />
-                      <button
-                        v-if="sentence.userInput !== ''"
-                        @click="clearInput(sentenceIndex)"
-                        class="text-danger ml-0.5 mt-0.5"
-                      >
-                        <i class="pi pi-delete-left"></i>
-                      </button>
-                    </div>
-                    <span v-else>_______</span>
+                        }" @input="handleInput($event)" type="text" />
+                    <button v-if="
+                      sentence.missingWords.find(
+                        (w) => w.word_position == wordIndex
+                      ).userInput !== ''
+                    " @click="clearInput(sentenceIndex, wordIndex)" class="text-danger ml-0.5 mt-1">
+                      <i class="pi pi-delete-left"></i>
+                    </button>
                   </div>
-                  <span v-else>{{ word }}</span>
                 </div>
-              </div>
-
-              <div
-                v-if="taskData?.options.find_word_with_options == 1"
-                class="btn-wrap"
-              >
-                <button
-                  v-for="(option, optionIndex) in sentence.missingWords"
-                  :key="optionIndex"
-                  type="button"
-                  class="btn btn-sm btn-light"
-                  :class="
-                    unFilledSentences.includes(sentenceIndex)
-                      ? 'pulse btn-danger'
-                      : sentence.selectedOptionIndex === optionIndex &&
-                        'text-hidden disabled'
-                  "
-                  @click="insertWord(sentenceIndex, optionIndex)"
-                >
-                  {{ option.word }}
-                </button>
+                <div v-else-if="taskData?.options.find_word_option == 'with_first_letter' &&
+                  sentence.missingWords.find(
+                    (w) => w.word_position == wordIndex
+                  )" class="flex items-center">
+                  <span class="text-corp">{{ word[0] }}</span>
+                  <div class="flex items-center" :class="unFilledSentences.includes(sentenceIndex) &&
+                    sentence.missingWords.find(
+                      (w) => w.word_position == wordIndex
+                    ).userInput === ''
+                    ? 'pulse border-b-danger bg-danger'
+                    : 'border-b-active'">
+                    <input v-model="sentence.missingWords.find(
+                      (w) => w.word_position == wordIndex
+                    ).userInput
+                      " :disabled="false" :style="{
+                          marginTop: '0.05rem',
+                          width:
+                            sentence.missingWords.find(
+                              (w) => w.word_position == wordIndex
+                            ).userInput !== ''
+                              ? sentence.missingWords.find(
+                                (w) => w.word_position == wordIndex
+                              ).userInput.length +
+                              0.5 +
+                              'ch'
+                              : word.slice(1).length +
+                              0.5 +
+                              'ch'
+                        }" @input="handleInput($event)" type="text" />
+                    <button v-if="
+                      sentence.missingWords.find(
+                        (w) => w.word_position == wordIndex
+                      ).userInput !== ''
+                    " @click="clearInput(sentenceIndex, wordIndex)" class="text-danger ml-0.5 mt-1">
+                      <i class="pi pi-delete-left"></i>
+                    </button>
+                  </div>
+                  <span class="text-corp" v-if="endsWithPunctuation(word)">{{ word[word.length - 1] }}</span>
+                </div>
+                <span v-else>{{ word }}</span>
               </div>
             </div>
 
-            <div class="col-span-12">
-              <div class="btn-wrap right">
-                <button
-                  class="btn btn-outline-primary"
-                  :class="checkingStatus && 'disabled'"
-                  @click="acceptAnswers()"
-                >
-                  <i class="pi pi-check"></i>
-                  {{ $t("check") }}
-                </button>
-              </div>
+            <div v-if="taskData?.options.find_word_option == 'with_options'" class="btn-wrap">
+              <button v-for="(option, optionIndex) in sentence.missingWords" :key="optionIndex" type="button"
+                class="btn btn-sm btn-light" :class="unFilledSentences.includes(sentenceIndex)
+                  ? 'pulse btn-danger'
+                  : sentence.selectedOptionIndex === optionIndex &&
+                  'text-hidden disabled'
+                  " @click="insertWord(sentenceIndex, optionIndex)">
+                {{ option.word_option }}
+              </button>
+            </div>
+          </div>
+
+          <div class="col-span-12">
+            <div class="btn-wrap right">
+              <button class="btn btn-outline-primary" :class="checkingStatus && 'disabled'" @click="acceptAnswers()">
+                <i class="pi pi-check"></i>
+                {{ $t("check") }}
+              </button>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    <result
-      v-else
-      :studiedSentences="studiedSentences"
-      :reStudySentences="reStudySentences"
-    />
-  </div>
+    </template>
+
+    <template v-slot:task_result_content>
+      <result :studiedSentences="studiedSentences" :reStudySentences="reStudySentences" />
+    </template>
+  </taskLayout>
 </template>
 
 <script setup>
 import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
+import taskLayout from "../../taskLayout.vue";
 import audioButton from "../../../../../ui/audioButton.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
-import countdownTaskTimer from "../../../../../ui/countdownTaskTimer.vue";
-import progressBar from "../../../../../ui/progressBar.vue";
 import result from "../../results/sentences/result.vue";
-import materialsList from "../../../materialsList.vue";
+import { endsWithPunctuation, removePunctuation } from "../../../../../../utils/endsWithPunctuation";
 const router = useRouter();
 const config = useRuntimeConfig();
 const { $axiosPlugin } = useNuxtApp();
@@ -368,14 +306,12 @@ const { $axiosPlugin } = useNuxtApp();
 const showTaskTimer = ref(false);
 const taskData = ref(null);
 const materials = ref([]);
-const showMaterials = ref(false);
+const showMaterialsOption = ref('');
+const showMaterialsBeforeTask = ref(false);
 const sentences = ref([]);
 const currentSentences = ref([]);
 const hiddenWords = ref([]);
 const checkingStatus = ref(false);
-
-const isDragging = ref(false);
-const touchData = ref({ word: "", target: null });
 
 const studiedSentences = ref([]);
 const currentStudiedSentences = ref([]);
@@ -420,28 +356,29 @@ const getTask = async () => {
     );
 
     taskData.value = res.data;
-    sentences.value = [...taskData.value.sentences];
+    showMaterialsOption.value = taskData.value.options.show_materials_option;
     materials.value = taskData.value.materials;
 
+    sentences.value = [...taskData.value.sentences];
     sentences.value.forEach((sentence) => {
       sentence.attempts = taskData.value.options.max_attempts;
     });
 
-    if (materials.value.length > 0) {
-      showMaterials.value = true;
+    if (materials.value.length > 0 && (showMaterialsOption.value == 'before_starting_a_task' || showMaterialsOption.value == 'use_both')) {
+      showMaterialsBeforeTask.value = true;
     } else {
       startTask();
     }
   } catch (err) {
     const errorRoute = err.response
       ? {
-          path: "/error",
-          query: {
-            status: err.response.status,
-            message: err.response.data.message,
-            url: err.request.responseURL,
-          },
-        }
+        path: "/error",
+        query: {
+          status: err.response.status,
+          message: err.response.data.message,
+          url: err.request.responseURL,
+        },
+      }
       : { path: "/error" };
     router.push(errorRoute);
   } finally {
@@ -450,7 +387,12 @@ const getTask = async () => {
 };
 
 const startTask = () => {
-  showMaterials.value = false;
+  showMaterialsBeforeTask.value = false;
+
+  if (materials.value.length > 0 && (showMaterialsOption.value == 'during_a_task' || showMaterialsOption.value == 'use_both')) {
+    changeModalSize("modal-6xl");
+  }
+
   showTaskTimer.value = true;
   setTimeout(() => {
     setSentences();
@@ -470,14 +412,25 @@ const setSentences = () => {
     );
 
     currentSentences.value.forEach((sentence) => {
-      if (taskData.value.options.find_word_with_options == 1) {
+      if (taskData.value.options.find_word_option == "with_options") {
         sentence.selectedOptionIndex = undefined;
+
+        for (let index = 0; index < sentence.missingWords.length; index++) {
+          const word = sentence.missingWords[index];
+          if (word.word_position > 0) {
+            sentence.missingWordPositionIndex = word.word_position;
+            break;
+          }
+        }
       } else {
-        sentence.userInput = "";
-        hiddenWords.value.push({
-          word: sentence.sentence.split(" ")[sentence.missing_word_position],
-          disabled: false,
+        sentence.missingWords.forEach((word) => {
+          word.userInput = "";
+          hiddenWords.value.push({
+            word: sentence.sentence.split(" ")[word.word_position],
+            disabled: false,
+          });
         });
+
         hiddenWords.value.sort(() => Math.random() - 0.5);
       }
     });
@@ -498,7 +451,7 @@ const onDragStart = (event, wordIndex) => {
   event.dataTransfer.setData("wordIndex", wordIndex);
 };
 
-const onDrop = (event, sentenceIndex) => {
+const onDrop = (event, sentenceIndex, wordIndex) => {
   // Остановить поведение по умолчанию
   event.preventDefault();
 
@@ -508,37 +461,14 @@ const onDrop = (event, sentenceIndex) => {
   const word = hiddenWords.value[wIndex];
   word.disabled = true;
 
-  currentSentences.value[sentenceIndex].userInput = word.word;
+  currentSentences.value[sentenceIndex].missingWords.find(
+    (w) => w.word_position == wordIndex
+  ).userInput = word.word;
 };
 
 const onDragOver = (event) => {
   // Остановить поведение по умолчанию, чтобы разрешить drop
   event.preventDefault();
-};
-
-const onTouchStart = (event, wordIndex) => {
-  touchData.value.word = wordIndex;
-  touchData.value.target = event.target;
-  isDragging.value = true;
-};
-
-const onTouchMove = (event) => {
-  event.preventDefault(); // Предотвращаем скролл
-  const touch = event.touches[0];
-  const element = document.elementFromPoint(touch.clientX, touch.clientY);
-
-  if (element && element.tagName === "INPUT") {
-    touchData.value.target = element;
-  }
-};
-
-const onTouchEnd = () => {
-  if (touchData.value.target && touchData.value.target.tagName === "INPUT") {
-    touchData.value.target.value = touchData.value.word;
-  }
-  isDragging.value = false;
-  touchData.value.word = "";
-  touchData.value.target = null;
 };
 
 const enableTheHiddenWord = (w) => {
@@ -568,17 +498,27 @@ const insertWord = (sentenceIndex, optionIndex) => {
 const insertWordToInput = (w) => {
   let emptyWordFind = false;
   currentSentences.value.forEach((sentence) => {
-    if (sentence.userInput === "" && !emptyWordFind) {
-      sentence.userInput = w.word;
-      disableTheHiddenWord(w.word);
-      emptyWordFind = true;
-    }
+    sentence.missingWords.forEach((missingWord) => {
+      if (missingWord.userInput === "" &&
+        !emptyWordFind
+      ) {
+        missingWord.userInput = w.word;
+        disableTheHiddenWord(w.word);
+        emptyWordFind = true;
+      }
+    });
   });
 };
 
-const clearInput = (sentenceIndex) => {
-  enableTheHiddenWord(currentSentences.value[sentenceIndex].userInput);
-  currentSentences.value[sentenceIndex].userInput = "";
+const clearInput = (sentenceIndex, wordIndex) => {
+  enableTheHiddenWord(
+    currentSentences.value[sentenceIndex].missingWords.find(
+      (w) => w.word_position == wordIndex
+    ).userInput
+  );
+  currentSentences.value[sentenceIndex].missingWords.find(
+    (w) => w.word_position == wordIndex
+  ).userInput = "";
 };
 
 const checkSentences = () => {
@@ -587,51 +527,107 @@ const checkSentences = () => {
       (s) => s.task_sentence_id !== sentence.task_sentence_id
     );
 
-    if (
-      (taskData.value.options.find_word_with_options == 0 &&
-        sentence.userInput ===
-          sentence.sentence.split(" ")[sentence.missing_word_position]) ||
-      (taskData.value.options.find_word_with_options == 1 &&
-        (sentence.selectedOptionIndex >= 0 &&
-          sentence.missingWords[sentence.selectedOptionIndex].word) ===
-          sentence.sentence.split(" ")[sentence.missing_word_position])
-    ) {
-      studiedSentences.value.push(sentence);
-      currentStudiedSentences.value.push(sentence);
-
-      if (
-        reStudySentences.value.some(
-          (s) => s.task_sentence_id === sentence.task_sentence_id
-        )
+    if (taskData.value.options.find_word_option != "with_options") {
+      let sentenceFail = false;
+      for (
+        let missingWordIndex = 0;
+        missingWordIndex < sentence.missingWords.length;
+        missingWordIndex++
       ) {
-        reStudySentences.value = reStudySentences.value.filter(
-          (s) => s.task_sentence_id !== sentence.task_sentence_id
-        );
-      }
-    } else {
-      currentReStudySentences.value.push(sentence);
 
-      if (sentence.attempts >= 1) {
-        sentences.value.push(sentence);
-        sentence.attempts--;
+        const missingWord = sentence.missingWords[missingWordIndex];
+
+        let wordFromSentence = sentence.sentence.split(" ")[missingWord.word_position].toLowerCase();
+
+        if (endsWithPunctuation(wordFromSentence)) {
+          wordFromSentence = wordFromSentence.slice(0, -1);
+        }
+
+        if (endsWithPunctuation(missingWord.userInput)) {
+          missingWord.userInput = missingWord.userInput.slice(0, -1);
+        }
+
+        if (taskData.value.options.find_word_option == "with_first_letter") {
+          if (
+            wordFromSentence.slice(1) !=
+            missingWord.userInput.toLowerCase()
+          ) {
+            pushToCurrentReStudySentences(sentence);
+            sentenceFail = true;
+            break;
+          }
+        } else {
+          if (
+            wordFromSentence !=
+            missingWord.userInput.toLowerCase()
+          ) {
+            pushToCurrentReStudySentences(sentence);
+            sentenceFail = true;
+            break;
+          }
+        }
+
+      }
+
+      if (sentenceFail === false) {
+        pushToStudySentences(sentence);
+      }
+    } else if (taskData.value.options.find_word_option == "with_options") {
+      if (
+        sentence.selectedOptionIndex >= 0 &&
+        sentence.missingWords[sentence.selectedOptionIndex].word_option ===
+        sentence.sentence.split(" ")[sentence.missingWordPositionIndex]
+      ) {
+        pushToStudySentences(sentence);
       } else {
-        reStudySentences.value.push(sentence);
+        pushToCurrentReStudySentences(sentence);
       }
     }
   });
 };
 
+const pushToStudySentences = (sentence) => {
+  studiedSentences.value.push(sentence);
+  currentStudiedSentences.value.push(sentence);
+
+  if (
+    reStudySentences.value.some(
+      (s) => s.task_sentence_id === sentence.task_sentence_id
+    )
+  ) {
+    reStudySentences.value = reStudySentences.value.filter(
+      (s) => s.task_sentence_id !== sentence.task_sentence_id
+    );
+  }
+};
+
+const pushToCurrentReStudySentences = (sentence) => {
+  currentReStudySentences.value.push(sentence);
+
+  if (sentence.attempts >= 1) {
+    sentences.value.push(sentence);
+    sentence.attempts--;
+  } else {
+    reStudySentences.value.push(sentence);
+  }
+};
+
 const acceptAnswers = () => {
   checkingStatus.value = true;
   currentSentences.value.forEach((sentence, sentenceIndex) => {
-    if (taskData.value.options.find_word_with_options == 1) {
+    if (taskData.value.options.find_word_option == "with_options") {
       if (sentence.selectedOptionIndex === undefined) {
         unFilledSentences.value.push(sentenceIndex);
       }
     } else {
-      if (sentence.userInput === "") {
-        unFilledSentences.value.push(sentenceIndex);
-      }
+      let emptyWordFind = false;
+
+      sentence.missingWords.forEach((missingWord) => {
+        if (missingWord.userInput === "" && !emptyWordFind) {
+          unFilledSentences.value.push(sentenceIndex);
+          emptyWordFind = true;
+        }
+      });
     }
   });
 

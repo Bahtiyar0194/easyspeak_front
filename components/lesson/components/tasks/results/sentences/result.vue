@@ -11,7 +11,7 @@
                         class="flex justify-between items-center gap-x-2">
                         <div>
                             <p class="mb-0 font-medium">{{ sentence.sentence }}</p>
-                            <p class="mb-0 text-inactive text-xs">
+                            <p class="mb-0 text-inactive text-xs font-medium">
                                 {{ sentence.sentence_translate }}
                             </p>
                         </div>
@@ -38,7 +38,7 @@
                         class="flex justify-between items-center gap-x-2">
                         <div>
                             <p class="mb-0 font-medium">{{ sentence.sentence }}</p>
-                            <p class="mb-0 text-inactive text-xs">
+                            <p class="mb-0 text-inactive text-xs font-medium">
                                 {{ sentence.sentence_translate }}
                             </p>
                         </div>

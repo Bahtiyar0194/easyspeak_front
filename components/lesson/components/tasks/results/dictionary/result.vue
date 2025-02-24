@@ -8,7 +8,7 @@
                         class="flex justify-between items-center gap-x-2">
                         <div>
                             <p class="mb-0 font-medium">{{ word.word }}</p>
-                            <p class="mb-0 text-inactive text-xs">{{ word.word_translate }}</p>
+                            <p class="mb-0 text-inactive text-xs font-medium">{{ word.word_translate }}</p>
                         </div>
 
                         <div class="flex items-center">
@@ -31,7 +31,7 @@
                         class="flex justify-between items-center gap-x-2">
                         <div>
                             <p class="mb-0 font-medium">{{ word.word }}</p>
-                            <p class="mb-0 text-inactive text-xs">{{ word.word_translate }}</p>
+                            <p class="mb-0 text-inactive text-xs font-medium">{{ word.word_translate }}</p>
                         </div>
 
                         <div class="flex items-center">

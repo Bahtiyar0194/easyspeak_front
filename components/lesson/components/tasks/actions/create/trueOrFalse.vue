@@ -1,25 +1,12 @@
 <template>
   <steps :currentStep="currentStep" :steps="newTaskSteps">
     <form @submit.prevent="createTaskSubmit" class="mt-2" ref="createFormRef">
-      <div
-        v-for="(step, index) in newTaskSteps"
-        :key="index"
-        :class="currentStep === index + 1 ? 'block' : 'hidden'"
-      >
-        <component
-          v-if="step.component"
-          :is="step.component"
-          v-bind="step.props"
-        ></component>
+      <div v-for="(step, index) in newTaskSteps" :key="index" :class="currentStep === index + 1 ? 'block' : 'hidden'">
+        <component v-if="step.component" :is="step.component" v-bind="step.props"></component>
       </div>
 
       <div class="btn-wrap mt-4">
-        <button
-          v-if="currentStep > 1"
-          class="btn btn-light"
-          @click="backToStep(currentStep - 1)"
-          type="button"
-        >
+        <button v-if="currentStep > 1" class="btn btn-light" @click="backToStep(currentStep - 1)" type="button">
           <i class="pi pi-arrow-left"></i>
           {{ $t("back") }}
         </button>
@@ -84,7 +71,11 @@ const newTaskSteps = [
     component: taskOptionsForm,
     props: {
       errors,
+      showPlayAudioAtTheBegin: true,
+      showPlayAudioWithTheCorrectAnswer: true,
+      showPlayErrorSoundWithTheInCorrectAnswer: true,
       showSecondsPerSentence: true,
+
     },
     modalSize: "4xl",
   },

@@ -44,12 +44,14 @@ import { useRouter } from "nuxt/app";
 import steps from "../../../../../ui/steps.vue";
 import selectWordsFromDictionary from "../../selectWordsFromDictionary.vue";
 import taskOptionsForm from "../../taskOptionsForm.vue";
+import taskMaterialsForm from "../../taskMaterialsForm.vue";
 
 const { t } = useI18n();
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
 const createFormRef = ref(null);
 const selectedWords = ref([]);
+const taskMaterials = ref([]);
 const errors = ref([]);
 
 const onPending = inject("onPending");
@@ -82,6 +84,15 @@ const newTaskSteps = [
     },
     modalSize: "4xl",
   },
+  {
+    title: t("pages.tasks.task_materials"),
+    component: taskMaterialsForm,
+    props: {
+      errors,
+      taskMaterials,
+    },
+    modalSize: "2xl",
+  },
 ];
 const currentStep = ref(1);
 
@@ -95,6 +106,7 @@ const createTaskSubmit = async () => {
   const formData = new FormData(createFormRef.value);
   formData.append("words_count", selectedWords.value.length);
   formData.append("words", JSON.stringify(selectedWords.value));
+  formData.append("task_materials", JSON.stringify(taskMaterials.value));
   formData.append("operation_type_id", 13);
   formData.append("step", currentStep.value);
 

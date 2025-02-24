@@ -171,7 +171,7 @@
 }
 
 .bg-corp-100{
-    @apply bg-accent-100;
+    @apply bg-accent-100 dark:bg-accent-100;
 }
 
 .border-corp {
@@ -205,7 +205,7 @@
 }
 
 .bg-success-100{
-    @apply bg-green-200;
+    @apply bg-green-200 dark:bg-green-200;
 }
 
 .bg-info{
@@ -362,6 +362,10 @@
     @apply bg-corp;
 }
 
+[contenteditable]{
+    @apply h-full;
+}
+
 [contenteditable="true"]:active,
 [contenteditable="true"]:focus{
     @apply outline-none;
@@ -393,7 +397,7 @@ a:hover{
 }
 
 p {
-    @apply mb-3
+    @apply mb-3;
 }
 
 h1,
@@ -2004,4 +2008,8 @@ select.error:has(option:checked:disabled) {
 
 .text-editor-content {
     @apply h-48 overflow-y-auto border-inactive rounded-xl p-4;
+}
+
+.text-viewer > *:last-child {
+    @apply mb-0
 }
