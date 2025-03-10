@@ -9,6 +9,7 @@
     :startTask="startTask"
     :isFinished="isFinished"
     :progressPercentage="progressPercentage"
+    :reStudyItems="reStudySections"
   >
     <template v-slot:task_content>
       <div class="col-span-12">
@@ -208,6 +209,7 @@
 
     <template v-slot:task_result_content>
       <div class="col-span-12">
+        <canvas id="confetti-canvas"></canvas>
         <div class="flex flex-col gap-y-4">
           <div class="flex flex-col gap-y-2" v-if="studiedSections.length > 0">
             <p class="text-xl font-medium mb-0 text-success">
@@ -400,7 +402,7 @@ const setSections = () => {
     });
 
     time.value =
-      taskData.value.options.seconds_per_word * currentSections.value.length;
+      taskData.value.options.seconds_per_section * currentSections.value.length;
 
     isComplete.value = false;
     isStarted.value = true;

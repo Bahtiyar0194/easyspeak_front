@@ -60,9 +60,10 @@
 <script setup>
 import { useRouter } from "nuxt/app";
 import steps from "../../../../../ui/steps.vue";
-import firstStep from "../../match_paired_words/firstStep.vue";
-import taskOptionsForm from "../../taskOptionsForm.vue";
+import firstStep from "../../match_words_with_same_sounds/firstStep.vue";
+import secondStep from "../../match_words_with_same_sounds/secondStep.vue";
 import taskMaterialsForm from "../../taskMaterialsForm.vue";
+import taskOptionsForm from "../../taskOptionsForm.vue";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -74,7 +75,7 @@ const taskMaterials = ref([]);
 const addWordsSectionIsVisible = ref(false);
 const errors = ref([]);
 
-const wordsCount = ref(2);
+const minimumWordsCount = ref(2);
 
 const onPending = inject("onPending");
 const changeModalSize = inject("changeModalSize");
@@ -97,15 +98,22 @@ const newTaskSteps = [
       wordSections,
       selectedWords,
       addWordsSectionIsVisible,
-      wordsCount,
+      minimumWordsCount,
     },
     modalSize: "2xl",
+  },
+  {
+    title: t("pages.tasks.missing_letters.select_letters"),
+    component: secondStep,
+    props: { errors, wordSections },
+    modalSize: "3xl",
   },
   {
     title: t("pages.tasks.task_options.title"),
     component: taskOptionsForm,
     props: {
       errors,
+      showAudioButton: true,
       showImpressionLimit: true,
       showSecondsPerSection: true,
       showMatchByTyping: true,
@@ -142,7 +150,7 @@ const createTaskSubmit = async () => {
   formData.append("step", currentStep.value);
 
   await $axiosPlugin
-    .post("tasks/match_paired_words/" + props.lesson_id, formData)
+    .post("tasks/match_words_with_same_sounds/" + props.lesson_id, formData)
     .then((res) => {
       onPending(false);
       if (res.data.step) {
@@ -176,23 +184,6 @@ const createTaskSubmit = async () => {
     });
 };
 
-const hideWordInSection = (wordIndex, sectionIndex) => {
-  wordSections.value[sectionIndex].forEach((word) => {
-    word.target = false;
-  });
-
-  wordSections.value[sectionIndex][wordIndex].target = true;
-};
-
-const swapInSection = (sectionIndex) => {
-  if (sectionIndex >= 0 && sectionIndex < wordSections.value.length) {
-    const subArray = wordSections.value[sectionIndex];
-    if (subArray.length === wordsCount.value) {
-      [subArray[0], subArray[1]] = [subArray[1], subArray[0]];
-    }
-  }
-};
-
 const removeSection = (sectionIndex) => {
   if (sectionIndex >= 0 && sectionIndex < wordSections.value.length) {
     wordSections.value.splice(sectionIndex, 1);
@@ -214,19 +205,24 @@ const closeAddSection = () => {
 };
 
 const addWordsToSection = () => {
-  if (selectedWords.value.length === wordsCount.value) {
-    selectedWords.value[selectedWords.value.length - 1].target = true;
+  if (selectedWords.value.length >= minimumWordsCount.value) {
     wordSections.value.push(selectedWords.value);
+
+    for (let index = 0; index < selectedWords.value.length; index++) {
+      const word = selectedWords.value[index];
+      if (index > 0) {
+        word.target = true;
+      }
+    }
+
     closeAddSection();
   } else {
     errors.value.words_count = [
-      t("pages.dictionary.exactly_words_count_error", wordsCount.value),
+      t("pages.dictionary.min_words_count_error", minimumWordsCount.value),
     ];
   }
 };
 
-provide("hideWordInSection", hideWordInSection);
-provide("swapInSection", swapInSection);
 provide("removeSection", removeSection);
 provide("closeAddSection", closeAddSection);
 provide("addWordsToSection", addWordsToSection);

@@ -9,6 +9,7 @@
     :startTask="startTask"
     :isFinished="isFinished"
     :progressPercentage="progressPercentage"
+    :reStudyItems="reStudyWords"
   >
     <template v-slot:task_content>
       <div class="col-span-12">
@@ -365,7 +366,7 @@ const getTask = async () => {
     const res = await $axiosPlugin.get(
       "tasks/missing_letters/" + props.task.task_id
     );
-    
+
     taskData.value = res.data;
     showMaterialsOption.value = taskData.value.options.show_materials_option;
     materials.value = taskData.value.materials;

@@ -9,6 +9,7 @@
     :startTask="startTask"
     :isFinished="isFinished"
     :progressPercentage="progressPercentage"
+    :reStudyItems="reStudySections"
   >
     <template v-slot:task_content>
       <div class="col-span-12">
@@ -255,7 +256,7 @@
                           : '4ch',
                       'text-align': 'center',
                     }"
-                    @input="handleInput($event)"
+                    @input="disableTheHiddenWord()"
                     type="text"
                   />
                   <button
@@ -290,6 +291,7 @@
 
     <template v-slot:task_result_content>
       <div class="col-span-12">
+        <canvas id="confetti-canvas"></canvas>
         <div class="flex flex-col gap-y-4">
           <div class="flex flex-col gap-y-2" v-if="studiedSections.length > 0">
             <p class="text-xl font-medium mb-0 text-success">
@@ -517,7 +519,7 @@ const setSections = () => {
     hiddenWords.value = [...hiddenWords.value].sort(() => Math.random() - 0.5);
 
     time.value =
-      taskData.value.options.seconds_per_word * currentSections.value.length;
+      taskData.value.options.seconds_per_section * currentSections.value.length;
 
     isComplete.value = false;
     isStarted.value = true;
@@ -544,6 +546,7 @@ const onDrop = (event, sectionIndex, wordIndex) => {
   currentSections.value[sectionIndex].words[wordIndex].userInput = word.word;
   currentSections.value[sectionIndex].words[wordIndex].userInputTranslate =
     word.word_translate;
+  disableTheHiddenWord();
 };
 
 const onDragOver = (event) => {
@@ -576,24 +579,24 @@ const onTouchEnd = () => {
   touchData.value.target = null;
 };
 
-const enableTheHiddenWord = (w) => {
+const disableTheHiddenWord = () => {
+  const userInputs = [];
+
+  currentSections.value.forEach((section) => {
+    section.words.forEach((word) => {
+      if (word.target === 1 && word.userInput.length > 0) {
+        userInputs.push(word.userInput.toLowerCase());
+      }
+    });
+  });
+
   hiddenWords.value.forEach((word) => {
-    if (w === word.word) {
+    if (userInputs.includes(word.word.toLowerCase())) {
+      word.disabled = true;
+    } else {
       word.disabled = false;
     }
   });
-};
-
-const disableTheHiddenWord = (w) => {
-  hiddenWords.value.forEach((word) => {
-    if (w === word.word) {
-      word.disabled = true;
-    }
-  });
-};
-
-const handleInput = (e) => {
-  disableTheHiddenWord(e.target.value);
 };
 
 const insertWord = (w) => {
@@ -604,7 +607,7 @@ const insertWord = (w) => {
         if (word.userInput === "" && !emptyWordFind) {
           word.userInput = w.word;
           word.userInputTranslate = w.word_translate;
-          disableTheHiddenWord(w.word);
+          disableTheHiddenWord();
           emptyWordFind = true;
         }
       });
@@ -613,10 +616,8 @@ const insertWord = (w) => {
 };
 
 const clearInput = (sectionIndex, wordIndex) => {
-  enableTheHiddenWord(
-    currentSections.value[sectionIndex].words[wordIndex].userInput
-  );
   currentSections.value[sectionIndex].words[wordIndex].userInput = "";
+  disableTheHiddenWord();
 };
 
 const checkSections = () => {

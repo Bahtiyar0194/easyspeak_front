@@ -16,7 +16,7 @@
                             <button @click="targetWordInSection(wordIndex, sectionIndex)" type="button"
                                 v-for="(word, wordIndex) in section"
                                 :key="`${word + '-' + wordIndex + '-' + sectionIndex}`" class="btn btn-sm"
-                                :class="word.target === true ? 'btn-outline-danger pointer-events-none' : 'btn-active'"
+                                :class="word.target === true ? 'btn-outline-danger line-through pointer-events-none' : 'btn-active'"
                                 :title="word.target === true ? $t('pages.dictionary.this_word_is_extra') : $t('pages.dictionary.make_this_word_extra')">{{
                                     word.word
                                 }}</button>
@@ -37,9 +37,9 @@
 </template>
 
 <script setup>
-import note from '../../../ui/note.vue';
+import note from '../../../../ui/note.vue';
 import { inject, provide } from 'vue';
-import selectWordsFromDictionary from './selectWordsFromDictionary.vue';
+import selectWordsFromDictionary from '../selectWordsFromDictionary.vue';
 
 const targetWordInSection = inject('targetWordInSection');
 const removeSection = inject('removeSection');

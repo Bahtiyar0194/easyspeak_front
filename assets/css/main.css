@@ -929,6 +929,18 @@ select.error:has(option:checked:disabled) {
     @apply min-w-9 h-9 p-0 rounded-full;
 }
 
+.btn.btn-xs{
+    @apply px-1.5 py-1 text-[11px] rounded-md;
+}
+
+.btn.btn-square.btn-xs{
+    @apply min-w-5 h-5 p-0;
+}
+
+.btn.btn-circle.btn-xs{
+    @apply min-w-5 h-5 p-0 rounded-full;
+}
+
 .btn.btn-sm{
     @apply px-2 py-1 text-sm rounded-lg;
 }
@@ -981,8 +993,16 @@ select.error:has(option:checked:disabled) {
     @apply flex gap-2 flex-wrap;
 }
 
+.btn-wrap.sm{
+    @apply gap-1;
+}
+
 .btn-wrap.lg{
     @apply gap-4;
+}
+
+.btn-wrap.xl{
+    @apply gap-6;
 }
 
 .btn-wrap.right{
@@ -1378,7 +1398,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .list-group > li{
-    @apply py-4 border-b-inactive duration-200 list-none;
+    @apply py-4 border-b-inactive list-none transition-transform duration-300 ease-in-out;
 }
 
 .list-group.sm > li{
@@ -2012,4 +2032,8 @@ select.error:has(option:checked:disabled) {
 
 .text-viewer > *:last-child {
     @apply mb-0
+}
+
+#confetti-canvas {
+    @apply absolute top-0 left-0 w-full h-full pointer-events-none;
 }

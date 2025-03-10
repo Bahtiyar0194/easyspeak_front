@@ -26,16 +26,23 @@
                 @click="toggleAccordion(sectionIndex)"
                 class="flex justify-between items-center gap-4 hover:cursor-pointer"
               >
-              <div class="flex flex-col">
-                <h5
-                  class="mb-0"
-                  :class="activeSectionIndex === sectionIndex && 'text-corp'"
-                >
-                  {{ section.section_name }}
-                </h5>
-                <span v-if="section.lessons.length" class="text-active text-sm">{{ $t('pages.lessons.lessons_count') }}: <b>{{ section.lessons.length }}</b></span>
-                <span v-else class="text-inactive text-sm">{{ $t('pages.lessons.there_is_no_lessons') }}</span>
-              </div>
+                <div class="flex flex-col">
+                  <h5
+                    class="mb-0"
+                    :class="activeSectionIndex === sectionIndex && 'text-corp'"
+                  >
+                    {{ section.section_name }}
+                  </h5>
+                  <span
+                    v-if="section.lessons.length"
+                    class="text-active text-sm"
+                    >{{ $t("pages.lessons.lessons_count") }}:
+                    <b>{{ section.lessons.length }}</b></span
+                  >
+                  <span v-else class="text-inactive text-sm">{{
+                    $t("pages.lessons.there_is_no_lessons")
+                  }}</span>
+                </div>
                 <div class="btn btn-circle btn-light">
                   <i
                     class="pi pi-angle-down duration-500"
@@ -68,9 +75,7 @@
                     "
                   >
                     <div class="flex flex-col">
-                      <div>
-                        {{ lessonIndex + 1 }}. {{ lesson.lesson_name }}
-                      </div>
+                      <div>{{ lessonIndex + 1 }}. {{ lesson.lesson_name }}</div>
                       <div class="flex gap-2">
                         <span class="text-xs text-active"
                           >{{ $t("materials.materials_count") }}:

@@ -60,7 +60,7 @@
 <script setup>
 import { useRouter } from "nuxt/app";
 import steps from "../../../../../ui/steps.vue";
-import extraWordSections from "../../extraWordSections.vue";
+import firstStep from "../../find_an_extra_word/firstStep.vue";
 import taskMaterialsForm from "../../taskMaterialsForm.vue";
 import taskOptionsForm from "../../taskOptionsForm.vue";
 
@@ -91,7 +91,7 @@ const props = defineProps({
 const newTaskSteps = [
   {
     title: t("pages.dictionary.select_words"),
-    component: extraWordSections,
+    component: firstStep,
     props: {
       errors,
       wordSections,
@@ -107,7 +107,7 @@ const newTaskSteps = [
     props: {
       errors,
       showImpressionLimit: true,
-      showSecondsPerWord: true,
+      showSecondsPerSection: true,
     },
     modalSize: "4xl",
   },

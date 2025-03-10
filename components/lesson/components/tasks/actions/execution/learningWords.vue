@@ -9,6 +9,7 @@
     :startTask="startTask"
     :isFinished="isFinished"
     :progressPercentage="progressPercentage"
+    :reStudyItems="reStudyWords"
   >
     <template v-slot:task_content>
       <div class="col-span-12">

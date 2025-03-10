@@ -95,13 +95,18 @@ const props = defineProps({
     required: true,
   },
 
+  sentenceMaterialTypes: {
+    type: Object,
+    required: false,
+  },
+
   taskMaterials: {
     type: Object,
     required: true,
   },
 });
 
-const { errors, taskMaterials } = toRefs(props);
+const { errors, sentenceMaterialTypes, taskMaterials } = toRefs(props);
 
 const addMaterial = (material_type) => {
   taskMaterials.value.push(material_type);
@@ -120,6 +125,13 @@ const getMaterialTypes = async () => {
     .get("courses/get_material_types")
     .then((response) => {
       materialTypes.value = response.data;
+      if(props.sentenceMaterialTypes){
+        materialTypes.value.forEach(material_type => {
+          if(material_type.material_type_category == 'file'){
+            sentenceMaterialTypes.value.push(material_type);
+          }
+        });
+      }
       pending.value = false;
     })
     .catch((err) => {

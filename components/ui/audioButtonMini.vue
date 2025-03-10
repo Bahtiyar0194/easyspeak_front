@@ -1,7 +1,7 @@
 <template>
   <button
     type="button"
-    class="btn btn-square btn-lg btn-primary"
+    class="btn btn-square btn-xs btn-primary"
     :class="props.className"
     @click="toggleAudio"
     :title="$t('click_to_listen_to_the_audio')"

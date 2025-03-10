@@ -42,17 +42,18 @@
 <script setup>
 import { useRouter } from "nuxt/app";
 import steps from "../../../../../ui/steps.vue";
-import selectWordsFromDictionary from "../../selectWordsFromDictionary.vue";
-import secondStep from "../../missing-letters/secondStep.vue";
-import taskOptionsForm from "../../taskOptionsForm.vue";
+import selectSentences from "../../selectSentences.vue";
+import thirdStep from "../../match_sentences_with_materials/thirdStep.vue";
 import taskMaterialsForm from "../../taskMaterialsForm.vue";
+import taskOptionsForm from "../../taskOptionsForm.vue";
 
 const { t } = useI18n();
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
 const createFormRef = ref(null);
-const selectedWords = ref([]);
-const materialTypes = ref([]);
+const selectedSentences = ref([]);
+const sentenceMaterialTypes = ref([]);
+const sentenceMaterialTypeSlug = ref("");
 const taskMaterials = ref([]);
 
 const errors = ref([]);
@@ -69,38 +70,36 @@ const props = defineProps({
 
 const newTaskSteps = [
   {
-    title: t("pages.dictionary.select_words"),
-    component: selectWordsFromDictionary,
-    props: { errors, selectedWords },
-    modalSize: "full",
-  },
-  {
-    title: t("pages.tasks.missing_letters.select_letters"),
-    component: secondStep,
-    props: { errors, selectedWords },
-    modalSize: "3xl",
-  },
-  {
     title: t("pages.tasks.task_options.title"),
     component: taskOptionsForm,
     props: {
       errors,
-      showAudioButton: true,
-      showImage: true,
-      showTranslate: true,
-      showTranscription: true,
       showImpressionLimit: true,
-      showSecondsPerWord: true,
+      showSecondsPerSentence: true,
+      sentenceMaterialTypes,
+      sentenceMaterialTypeSlug,
     },
     modalSize: "4xl",
+  },
+  {
+    title: t("pages.sentences.select_sentences"),
+    component: selectSentences,
+    props: { errors, selectedSentences, minimumSentencesCount: 2 },
+    modalSize: "full",
+  },
+  {
+    title: t("materials.sentence_materials"),
+    component: thirdStep,
+    props: { errors, selectedSentences, sentenceMaterialTypeSlug },
+    modalSize: "3xl",
   },
   {
     title: t("pages.tasks.task_materials"),
     component: taskMaterialsForm,
     props: {
       errors,
-      materialTypes,
       taskMaterials,
+      sentenceMaterialTypes,
     },
     modalSize: "2xl",
   },
@@ -116,16 +115,18 @@ const backToStep = (step) => {
 const createTaskSubmit = async () => {
   onPending(true);
   const formData = new FormData(createFormRef.value);
-  formData.append("words_count", selectedWords.value.length);
-  formData.append("words", JSON.stringify(selectedWords.value));
+  formData.append("sentences_count", selectedSentences.value.length);
+  formData.append("sentences", JSON.stringify(selectedSentences.value));
+  formData.append("sentence_material_type_slug", sentenceMaterialTypeSlug.value);
   formData.append("task_materials", JSON.stringify(taskMaterials.value));
   formData.append("operation_type_id", 13);
   formData.append("step", currentStep.value);
 
   await $axiosPlugin
-    .post("tasks/missing_letters/" + props.lesson_id, formData)
+    .post("tasks/match_sentences_with_materials/" + props.lesson_id, formData)
     .then((res) => {
       onPending(false);
+      errors.value = [];
       if (res.data.step) {
         currentStep.value = res.data.step + 1;
         changeModalSize(
@@ -134,7 +135,6 @@ const createTaskSubmit = async () => {
       } else {
         closeModal();
       }
-      errors.value = [];
     })
     .catch((err) => {
       if (err.response) {
@@ -158,6 +158,6 @@ const createTaskSubmit = async () => {
 };
 
 onMounted(() => {
-  changeModalSize("modal-full");
+  changeModalSize("modal-4xl");
 });
 </script>

@@ -40,15 +40,23 @@
 
     <div class="col-span-12">
       <label class="custom-radio-checkbox text-nowrap">
-        <input type="checkbox" v-model="showTaskExample" @click="showTaskExample = !showTaskExample" />
+        <input
+          type="checkbox"
+          v-model="showTaskExample"
+          @click="showTaskExample = !showTaskExample"
+        />
         <span>{{ $t("pages.tasks.task_options.show_task_example") }}</span>
       </label>
     </div>
 
     <div v-if="showTaskExample" class="col-span-12">
-        <div class="custom-grid">
-            <textEditor :inputName="'task_example'" :errors="errors" :content="$t('pages.tasks.task_options.task_example_message')" />
-        </div>
+      <div class="custom-grid">
+        <textEditor
+          :inputName="'task_example'"
+          :errors="errors"
+          :content="$t('pages.tasks.task_options.task_example_message')"
+        />
+      </div>
     </div>
 
     <div v-if="props.showAudioButton" class="col-span-12 lg:col-span-6">
@@ -246,6 +254,19 @@
         </label>
       </div>
     </div>
+    <div v-if="props.showSecondsPerSection" class="col-span-12">
+      <div class="form-group-border active">
+        <i class="pi pi-stopwatch"></i>
+        <input name="seconds_per_section" type="number" placeholder=" " />
+        <label :class="{ 'label-error': errors.seconds_per_section }">
+          {{
+            errors.seconds_per_section
+              ? errors.seconds_per_section[0]
+              : $t("pages.sections.seconds_per_section")
+          }}
+        </label>
+      </div>
+    </div>
     <div v-if="props.showSelectMainLang" class="col-span-12">
       <div class="flex flex-col gap-y-2">
         <label class="custom-radio">
@@ -339,6 +360,30 @@
         </label>
       </div>
     </div>
+    <div v-if="props.sentenceMaterialTypes" class="col-span-12">
+      <div class="form-group-border select active">
+        <i class="pi pi-file"></i>
+        <select v-model="sentenceMaterialTypeSlug">
+          <option selected disabled value="">
+            {{ $t("file.choose_a_file_type") }}
+          </option>
+          <option
+            v-for="(fileType, fileTypeIndex) in sentenceMaterialTypes"
+            :key="fileTypeIndex"
+            :value="fileType.material_type_slug"
+          >
+            {{ fileType.material_type_name }}
+          </option>
+        </select>
+        <label :class="{ 'label-error': errors.sentence_file_type_slug }">
+          {{
+            errors.material_type_id
+              ? $t("file.specify_the_file_type")
+              : $t("file.type")
+          }}
+        </label>
+      </div>
+    </div>
     <div class="col-span-12">
       <div class="form-group-border select active label-active">
         <i class="pi pi-replay"></i>
@@ -364,7 +409,7 @@
   </div>
 </template>
 <script setup>
-import textEditor from '../../../ui/textEditor.vue';
+import textEditor from "../../../ui/textEditor.vue";
 const props = defineProps({
   errors: {
     type: Object,
@@ -449,6 +494,13 @@ const props = defineProps({
     required: false,
   },
 
+  
+  showSecondsPerSection: {
+    default: false,
+    type: Boolean,
+    required: false,
+  },
+
   showSelectMainLang: {
     default: false,
     type: Boolean,
@@ -483,6 +535,16 @@ const props = defineProps({
     type: Boolean,
     required: false,
   },
+
+  sentenceMaterialTypes: {
+    type: Object,
+    required: false,
+  },
+
+  sentenceMaterialTypeSlug: {
+    type: Object,
+    required: false,
+  },
 });
 
 const showTaskExample = ref(false);
@@ -497,5 +559,5 @@ const missingWordOptions = [
   "with_options",
 ];
 
-const { errors, findWordOption } = toRefs(props);
+const { errors, findWordOption, sentenceMaterialTypes, sentenceMaterialTypeSlug } = toRefs(props);
 </script>

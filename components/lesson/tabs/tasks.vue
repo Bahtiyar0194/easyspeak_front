@@ -36,24 +36,43 @@
     </div>
 
     <div v-if="tasks.length" class="col-span-12">
-      <ul class="list-group">
-        <li
-          class="link"
-          v-for="(task, taskIndex) in tasks"
-          :key="taskIndex"
-          @click="openTask(task)"
-        >
-          <div class="flex items-center gap-2">
-            <i class="text-3xl" :class="task.icon"></i>
-            <div class="flex flex-col gap-y-0.5">
-              <span>{{ task.task_slug }}</span>
-              <span class="text-inactive text-xs">{{
-                task.task_type_name
-              }}</span>
+      <TransitionGroup
+        tag="ul"
+        class="list-group"
+        :move="{ transition: { duration: 0.3 } }"
+      >
+        <li v-for="(task, taskIndex) in tasks" :key="task.task_id">
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex gap-2 items-center link" @click="openTask(task)">
+              <i class="text-3xl" :class="task.icon"></i>
+              <div class="flex flex-col gap-y-0.5">
+                <span>{{ task.task_slug }}</span>
+                <span class="text-inactive text-xs">{{
+                  task.task_type_name
+                }}</span>
+              </div>
+            </div>
+            <div class="btn-wrap justify-end">
+              <roleProvider :roles="[1]">
+                <button
+                  @click="order('up', taskIndex, $event.target)"
+                  class="btn btn-square btn-light btn-sm btn-up"
+                  :title="$t('move_up')"
+                >
+                  <i class="pi pi-arrow-up"></i>
+                </button>
+                <button
+                  @click="order('down', taskIndex, $event.target)"
+                  class="btn btn-square btn-light btn-sm btn-down"
+                  :title="$t('move_down')"
+                >
+                  <i class="pi pi-arrow-down"></i>
+                </button>
+              </roleProvider>
             </div>
           </div>
         </li>
-      </ul>
+      </TransitionGroup>
     </div>
 
     <div v-else class="col-span-12">
@@ -81,12 +100,14 @@
 </template>
 
 <script setup>
+import { scrollIntoView } from "seamless-scroll-polyfill";
 import { useRouter } from "nuxt/app";
 import { provide, shallowRef } from "vue";
 import roleProvider from "../../ui/roleProvider.vue";
 import dropdownMenu from "../../ui/dropdownMenu.vue";
 import modal from "../../ui/modal.vue";
 import alert from "../../ui/alert.vue";
+import { debounceHandler } from "../../../utils/debounceHandler";
 
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
@@ -195,6 +216,57 @@ const getTaskAttributes = async () => {
         router.push("/error");
       }
     });
+};
+
+const orderTasks = async () => {
+  const form_data = new FormData();
+  form_data.append("tasks", JSON.stringify(tasks.value));
+  form_data.append("operation_type_id", 18);
+  await $axiosPlugin
+    .post("tasks/order/" + props.lesson_id, form_data)
+    .then((response) => {
+      //getLessonTasks();
+    })
+    .catch((err) => {
+      if (err.response) {
+        router.push({
+          path: "/error",
+          query: {
+            status: err.response.status,
+            message: err.response.data.message,
+            url: err.request.responseURL,
+          },
+        });
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
+const debounceOrder = debounceHandler(orderTasks, 2000);
+
+const order = (direction, index, event) => {
+  const parent = event.closest("li");
+
+  if (direction === "up" && index > 0) {
+    [tasks.value[index - 1], tasks.value[index]] = [
+      tasks.value[index],
+      tasks.value[index - 1],
+    ];
+  } else if (direction === "down" && index < tasks.value.length - 1) {
+    [tasks.value[index], tasks.value[index + 1]] = [
+      tasks.value[index + 1],
+      tasks.value[index],
+    ];
+  }
+
+  scrollIntoView(parent, {
+    behavior: "smooth",
+    block: "center",
+    inline: "center",
+  });
+
+  debounceOrder();
 };
 
 onMounted(() => {

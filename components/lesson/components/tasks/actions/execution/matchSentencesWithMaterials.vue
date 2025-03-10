@@ -9,16 +9,16 @@
     :startTask="startTask"
     :isFinished="isFinished"
     :progressPercentage="progressPercentage"
-    :reStudyItems="reStudyWords"
+    :reStudyItems="reStudySentences"
   >
     <template v-slot:task_content>
       <div class="col-span-12">
         <p v-if="timeIsUp" class="font-medium text-center text-danger">
           {{ $t("time_is_up") }}
         </p>
-        <p v-else-if="words.length > 0" class="text-center">
-          {{ $t("pages.dictionary.words_left") }}:
-          <b>{{ words.length }}</b>
+        <p v-else-if="sentences.length > 0" class="text-center">
+          {{ $t("pages.sentences.sentences_left") }}:
+          <b>{{ sentences.length }}</b>
         </p>
       </div>
 
@@ -36,11 +36,11 @@
         <div class="flex flex-col gap-y-4">
           <div
             class="flex flex-col gap-y-2"
-            v-if="currentStudiedWords.length > 0"
+            v-if="currentStudiedSentences.length > 0"
           >
             <p class="text-xl font-medium mb-0 text-success">
               {{
-                currentReStudyWords.length > 0
+                currentReStudySentences.length > 0
                   ? $t("right_answers")
                   : $t("right")
               }}
@@ -48,19 +48,19 @@
 
             <ul class="list-group nowrap">
               <li
-                v-for="(word, sIndex) in currentStudiedWords"
+                v-for="(sentence, sIndex) in currentStudiedSentences"
                 :key="sIndex"
                 class="flex justify-between items-center gap-x-2"
               >
                 <div class="flex items-center gap-x-2">
                   <div
-                    v-if="word.image_file"
+                    v-if="sentence.image_file"
                     :style="{
                       backgroundImage:
                         'url(' +
                         config.public.apiBase +
                         '/media/get/' +
-                        word.image_file +
+                        sentence.image_file +
                         ')',
                     }"
                     class="w-10 h-10 bg-cover bg-no-repeat bg-center"
@@ -69,15 +69,15 @@
                   <div
                     class="btn btn-square btn-outline-success pointer-events-none font-medium"
                   >
-                    {{ word.userInput }}
+                    {{ sentence.userInput }}
                   </div>
 
                   <div class="flex flex-col">
                     <div class="font-medium">
-                      {{ word.word }}
+                      {{ sentence.sentence }}
                     </div>
                     <span class="text-xs text-inactive">{{
-                      word.word_translate
+                      sentence.sentence_translate
                     }}</span>
                   </div>
                 </div>
@@ -93,7 +93,7 @@
 
           <div
             class="flex flex-col gap-y-2"
-            v-if="currentReStudyWords.length > 0"
+            v-if="currentReStudySentences.length > 0"
           >
             <p class="text-xl font-medium mb-0 text-danger">
               {{ $t("for_re_examination") }}
@@ -101,11 +101,11 @@
 
             <ul class="list-group nowrap">
               <li
-                v-for="(word, rIndex) in currentReStudyWords"
+                v-for="(sentence, rIndex) in currentReStudySentences"
                 :key="rIndex"
                 class="flex justify-between items-center gap-x-2"
               >
-                <div class="flex flex-wrap gap-4">
+                <div class="flex flex-col gap-2">
                   <div>
                     <p class="mb-1 text-inactive font-normal">
                       {{ $t("your_answer") }}:
@@ -115,15 +115,15 @@
                       <div
                         class="btn btn-square btn-outline-danger pointer-events-none font-medium"
                       >
-                        {{ word.userInput }}
+                        {{ sentence.userInput }}
                       </div>
 
                       <div class="flex flex-col">
                         <div class="font-medium">
-                          {{ word.word }}
+                          {{ sentence.sentence }}
                         </div>
                         <span class="text-xs text-inactive">{{
-                          word.word_translate
+                          sentence.sentence_translate
                         }}</span>
                       </div>
                     </div>
@@ -139,18 +139,19 @@
                         class="btn btn-square btn-outline-success pointer-events-none font-medium"
                       >
                         {{
-                          currentPictures.findIndex(
-                            (p) => p.task_word_id === word.task_word_id
+                          currentSentences.findIndex(
+                            (p) =>
+                              p.task_sentence_id === sentence.task_sentence_id
                           ) + 1
                         }}
                       </div>
 
                       <div class="flex flex-col">
                         <div class="font-medium">
-                          {{ word.word }}
+                          {{ sentence.sentence }}
                         </div>
                         <span class="text-xs text-inactive">{{
-                          word.word_translate
+                          sentence.sentence_translate
                         }}</span>
                       </div>
                     </div>
@@ -168,9 +169,9 @@
 
           <div class="btn-wrap right">
             <button
-              v-if="words.length > 0"
+              v-if="sentences.length > 0"
               class="btn btn-outline-primary"
-              @click="setWords()"
+              @click="setSentences()"
             >
               <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
             </button>
@@ -184,88 +185,105 @@
 
       <div v-else class="col-span-12">
         <div class="custom-grid">
-          <div class="col-span-12 lg:col-span-6">
-            <div class="custom-grid">
+          <div
+            :class="
+              taskData.options.sentence_material_type_slug == 'audio'
+                ? 'col-span-12'
+                : 'col-span-12 lg:col-span-6'
+            "
+            v-for="(sentence, sentenceIndex) in currentSentenceMaterials"
+            :key="sentenceIndex"
+          >
+            <div
+              v-if="taskData.options.sentence_material_type_slug == 'audio'"
+              class="flex gap-3 items-center text-lg"
+            >
               <div
-                v-for="(picture, pictureIndex) in currentPictures"
-                :key="pictureIndex"
-                class="col-span-3 lg:col-span-6 relative rounded-xl border-inactive overflow-hidden"
+                @click="focusInput($event)"
+                class="btn btn-square btn-lg flex justify-center items-center ml-1"
+                :class="
+                  checkingStatus === true &&
+                  (sentence.userInput === '' || sentence.userInput === ' ')
+                    ? 'pulse btn-danger'
+                    : 'btn-outline-primary'
+                "
               >
-                <div
-                  class="absolute left-2 top-2 w-6 h-6 bg-success rounded-full flex items-center justify-center text-white text-lg"
-                >
-                  {{ pictureIndex + 1 }}
-                </div>
-                <img
-                  class="w-full p-3"
+                <input
+                  v-model="sentence.userInput"
+                  @input="changeFocus($event)"
+                  type="text"
+                  class="user_input"
+                  :style="{
+                    width:
+                      currentSentences.length.toString().length + 0.5 + 'ch',
+                    textAlign: 'center',
+                  }"
+                  :maxlength="currentSentences.length.toString().length"
+                />
+              </div>
+              <div class="w-full">
+                <audioPlayerWithWave
                   :src="
-                    config.public.apiBase + '/media/get/' + picture.image_file
+                    config.public.apiBase +
+                    '/media/get/' +
+                    sentence.material.target
                   "
                 />
               </div>
             </div>
+            <div v-else class="relative">
+              <div class="absolute left-2 top-2 z-10">
+                <div
+                  @click="focusInput($event)"
+                  class="btn btn-square btn-lg flex justify-center items-center ml-1"
+                  :class="
+                    checkingStatus === true &&
+                    (sentence.userInput === '' || sentence.userInput === ' ')
+                      ? 'pulse btn-danger'
+                      : 'btn-active bg-active'
+                  "
+                >
+                  <input
+                    v-model="sentence.userInput"
+                    @input="changeFocus($event)"
+                    type="text"
+                    class="user_input"
+                    :style="{
+                      width:
+                        currentSentences.length.toString().length + 0.5 + 'ch',
+                      textAlign: 'center',
+                    }"
+                    :maxlength="currentSentences.length.toString().length"
+                  />
+                </div>
+              </div>
+              <videoPlayer
+                v-if="taskData.options.sentence_material_type_slug === 'video'"
+                :src="
+                  config.public.apiBase +
+                  '/media/get/' +
+                  sentence.material.target
+                "
+              />
+              <img
+                v-else-if="taskData.options.sentence_material_type_slug === 'image'"
+                :src="config.public.apiBase + '/media/get/' + sentence.material.target"
+                class="w-full h-auto"
+              />
+            </div>
           </div>
 
-          <div class="col-span-12 lg:col-span-6">
+          <div class="col-span-12">
             <ul class="list-group nowrap">
               <li
-                v-for="(word, wordIndex) in currentWords"
-                :key="wordIndex"
+                v-for="(sentence, sentenceIndex) in currentSentences"
+                :key="sentenceIndex"
                 class="list-item"
               >
-                <div class="flex gap-3 items-center text-lg">
-                  <div
-                    @click="focusInput($event)"
-                    class="btn btn-square btn-lg flex justify-center items-center"
-                    :class="
-                      checkingStatus === true &&
-                      (word.userInput === '' || word.userInput === ' ')
-                        ? 'pulse btn-danger'
-                        : 'btn-outline-primary'
-                    "
-                  >
-                    <input
-                      v-model="word.userInput"
-                      @input="changeFocus($event)"
-                      type="text"
-                      class="user_input"
-                      :style="{
-                        width:
-                          currentWords.length.toString().length + 0.5 + 'ch',
-                        textAlign: 'center',
-                      }"
-                      :maxlength="currentWords.length.toString().length"
-                    />
-                  </div>
-
-                  <div class="flex gap-x-2 items-center">
-                    <audioButton
-                      v-if="
-                        word.audio_file && taskData?.options?.show_audio_button
-                      "
-                      :src="
-                        config.public.apiBase + '/media/get/' + word.audio_file
-                      "
-                    />
-                    <div class="flex flex-col">
-                      <span class="font-medium">{{ word.word }}</span>
-                      <div class="flex flex-wrap gap-x-2">
-                        <span
-                          v-if="taskData?.options?.show_transcription"
-                          class="text-xs"
-                        >
-                          [{{ word.transcription }}]
-                        </span>
-                        <span
-                          v-if="taskData?.options?.show_translate"
-                          class="text-inactive text-xs"
-                        >
-                          {{ word.word_translate }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <span class="font-medium text-lg"
+                  ><span class="text-corp">{{ sentenceIndex + 1 }}. </span
+                  >{{ sentence.sentence }}</span
+                >
               </li>
             </ul>
           </div>
@@ -287,7 +305,10 @@
     </template>
 
     <template v-slot:task_result_content>
-      <result :studiedWords="studiedWords" :reStudyWords="reStudyWords" />
+      <result
+        :studiedSentences="studiedSentences"
+        :reStudySentences="reStudySentences"
+      />
     </template>
   </taskLayout>
 </template>
@@ -296,9 +317,10 @@
 import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
 import taskLayout from "../../taskLayout.vue";
-import audioButton from "../../../../../ui/audioButton.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
-import result from "../../results/dictionary/result.vue";
+import audioPlayerWithWave from "../../../../../ui/audioPlayerWithWave.vue";
+import videoPlayer from "../../../../../ui/videoPlayer.vue";
+import result from "../../results/sentences/result.vue";
 
 const router = useRouter();
 const config = useRuntimeConfig();
@@ -309,16 +331,16 @@ const taskData = ref(null);
 const materials = ref([]);
 const showMaterialsOption = ref("");
 const showMaterialsBeforeTask = ref(false);
-const words = ref([]);
-const currentWords = ref([]);
-const currentPictures = ref([]);
+const sentences = ref([]);
+const currentSentences = ref([]);
+const currentSentenceMaterials = ref([]);
 const checkingStatus = ref(false);
 
-const studiedWords = ref([]);
-const currentStudiedWords = ref([]);
+const studiedSentences = ref([]);
+const currentStudiedSentences = ref([]);
 
-const reStudyWords = ref([]);
-const currentReStudyWords = ref([]);
+const reStudySentences = ref([]);
+const currentReStudySentences = ref([]);
 
 const isStarted = ref(false);
 const isComplete = ref(false);
@@ -329,10 +351,10 @@ const timeIsUp = ref(false);
 const isFinished = ref(false);
 
 const progressPercentage = computed(() => {
-  const totalWords = taskData.value?.words?.length || 0; // Предотвращаем ошибки, если данные ещё не загружены
-  if (totalWords === 0) return 0; // Если общее количество слов равно 0, возвращаем 0
-  const completedWords = totalWords - words.value.length;
-  return (completedWords / totalWords) * 100;
+  const totalSentences = taskData.value?.sentences?.length || 0; // Предотвращаем ошибки, если данные ещё не загружены
+  if (totalSentences === 0) return 0; // Если общее количество фраз равно 0, возвращаем 0
+  const completedSentences = totalSentences - sentences.value.length;
+  return (completedSentences / totalSentences) * 100;
 });
 
 // Получаем данные задачи из пропсов
@@ -351,16 +373,16 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/match_words_by_pictures/" + props.task.task_id
+      "tasks/match_sentences_with_materials/" + props.task.task_id
     );
 
     taskData.value = res.data;
     showMaterialsOption.value = taskData.value.options.show_materials_option;
     materials.value = taskData.value.materials;
-    words.value = [...taskData.value.words];
+    sentences.value = [...taskData.value.sentences];
 
-    words.value.forEach((word) => {
-      word.attempts = taskData.value.options.max_attempts;
+    sentences.value.forEach((sentence) => {
+      sentence.attempts = taskData.value.options.max_attempts;
     });
 
     if (
@@ -402,27 +424,27 @@ const startTask = () => {
 
   showTaskTimer.value = true;
   setTimeout(() => {
-    setWords();
+    setSentences();
     showTaskTimer.value = false;
   }, 3000);
 };
 
-const setWords = () => {
-  currentStudiedWords.value = [];
-  currentReStudyWords.value = [];
+const setSentences = () => {
+  currentStudiedSentences.value = [];
+  currentReStudySentences.value = [];
 
-  if (words.value.length > 0) {
-    currentWords.value = words.value.slice(
+  if (sentences.value.length > 0) {
+    currentSentences.value = sentences.value.slice(
       0,
       taskData.value.options.impression_limit
     );
 
-    currentPictures.value = [...currentWords.value].sort(
+    currentSentenceMaterials.value = [...currentSentences.value].sort(
       () => Math.random() - 0.5
     );
 
-    currentWords.value.forEach((word) => {
-      word.userInput = "";
+    currentSentences.value.forEach((sentence) => {
+      sentence.userInput = "";
     });
 
     setTimeout(() => {
@@ -433,7 +455,8 @@ const setWords = () => {
     }, 100);
 
     time.value =
-      taskData.value.options.seconds_per_word * currentWords.value.length;
+      taskData.value.options.seconds_per_sentence *
+      currentSentences.value.length;
 
     isComplete.value = false;
     isStarted.value = true;
@@ -443,46 +466,52 @@ const setWords = () => {
 };
 
 // Проверка всех слов
-const checkWords = () => {
-  currentWords.value.forEach((word) => {
-    words.value = words.value.filter(
-      (w) => w.task_word_id !== word.task_word_id
+const checkSentences = () => {
+  currentSentenceMaterials.value.forEach((sentence) => {
+    sentences.value = sentences.value.filter(
+      (s) => s.task_sentence_id !== sentence.task_sentence_id
     );
 
     if (
-      /^\d+$/.test(word.userInput) &&
-      currentPictures.value[word.userInput - 1] &&
-      word.task_word_id ===
-        currentPictures.value[word.userInput - 1].task_word_id
+      /^\d+$/.test(sentence.userInput) &&
+      currentSentences.value[sentence.userInput - 1] &&
+      sentence.task_sentence_id ===
+        currentSentences.value[sentence.userInput - 1].task_sentence_id
     ) {
-      studiedWords.value.push(word);
-      currentStudiedWords.value.push(word);
+      studiedSentences.value.push(sentence);
+      currentStudiedSentences.value.push(sentence);
 
       if (
-        reStudyWords.value.some((w) => w.task_word_id === word.task_word_id)
+        reStudySentences.value.some(
+          (s) => s.task_sentence_id === sentence.task_sentence_id
+        )
       ) {
-        reStudyWords.value = reStudyWords.value.filter(
-          (w) => w.task_word_id !== word.task_word_id
+        reStudySentences.value = reStudySentences.value.filter(
+          (s) => s.task_sentence_id !== sentence.task_sentence_id
         );
       }
     } else {
-      currentReStudyWords.value.push(word);
+      currentReStudySentences.value.push(sentence);
 
-      if (word.attempts >= 1) {
-        words.value.push(word);
-        word.attempts--;
+      if (sentence.attempts >= 1) {
+        sentences.value.push(sentence);
+        sentence.attempts--;
       } else {
-        reStudyWords.value.push(word);
+        reStudySentences.value.push(sentence);
       }
     }
   });
 };
 
 const acceptAnswers = () => {
-  for (let wordIndex = 0; wordIndex < currentWords.value.length; wordIndex++) {
-    const word = currentWords.value[wordIndex];
+  for (
+    let sentenceIndex = 0;
+    sentenceIndex < currentSentences.value.length;
+    sentenceIndex++
+  ) {
+    const sentence = currentSentences.value[sentenceIndex];
 
-    if (word.userInput === "" || word.userInput === " ") {
+    if (sentence.userInput === "" || sentence.userInput === " ") {
       checkingStatus.value = true;
       break;
     }
@@ -495,7 +524,7 @@ const acceptAnswers = () => {
   } else {
     isComplete.value = true;
     isStarted.value = false;
-    checkWords();
+    checkSentences();
   }
 };
 
@@ -531,15 +560,15 @@ const changeFocus = (event) => {
 const timerIsUp = () => {
   timeIsUp.value = true;
   isStarted.value = false;
-  checkWords();
+  checkSentences();
 };
 
 const handleKeyPress = (event) => {
   if (event.key === "Enter") {
     if (!isFinished.value) {
       if (timeIsUp.value === true || isComplete.value === true) {
-        if (words.value.length > 0) {
-          setWords();
+        if (sentences.value.length > 0) {
+          setSentences();
         } else {
           isFinished.value = true;
         }
@@ -554,7 +583,7 @@ const handleKeyPress = (event) => {
 
 // Инициализация при монтировании
 onMounted(() => {
-  changeModalSize("modal-2xl");
+  changeModalSize("modal-xl");
   getTask();
   window.addEventListener("keydown", handleKeyPress);
 });

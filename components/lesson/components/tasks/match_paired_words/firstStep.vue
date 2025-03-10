@@ -16,7 +16,7 @@
                             <button @click="hideWordInSection(wordIndex, sectionIndex)" type="button"
                                 v-for="(word, wordIndex) in section"
                                 :key="`${word + '-' + wordIndex + '-' + sectionIndex}`" class="btn btn-sm"
-                                :class="word.target === true ? 'btn-inactive disabled' : 'btn-active'"
+                                :class="word.target === true ? 'btn-inactive disabled line-through' : 'btn-active'"
                                 :title="word.target === true ? $t('pages.dictionary.this_word_is_hidden') : $t('pages.dictionary.hide_this_word')">{{
                                     word.word
                                 }}</button>
@@ -39,9 +39,9 @@
 </template>
 
 <script setup>
-import note from '../../../ui/note.vue';
+import note from '../../../../ui/note.vue';
 import { inject, provide } from 'vue';
-import selectWordsFromDictionary from './selectWordsFromDictionary.vue';
+import selectWordsFromDictionary from '../selectWordsFromDictionary.vue';
 
 const hideWordInSection = inject('hideWordInSection');
 const swapInSection = inject('swapInSection');

@@ -26,7 +26,7 @@
   </div>
   <div v-if="uploadingNewFile === true" class="col-span-12">
     <div class="custom-grid">
-      <div class="col-span-12">
+      <div v-if="props.showFileInputName === true" class="col-span-12">
         <div class="form-group-border active">
           <i class="pi pi-file"></i>
           <input :name="props.fileInputName" type="text" placeholder=" " />
@@ -77,6 +77,11 @@ const props = defineProps({
   fileInputName: {
     type: String,
     required: true,
+  },
+  showFileInputName: {
+    type: Boolean,
+    required: false,
+    default: true,
   },
   uploadingFileName: {
     type: String,

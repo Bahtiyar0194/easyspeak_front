@@ -40,8 +40,17 @@ onMounted(() => {
   });
 
   // Пример обработки события
-  player.on("ended", () => {
-    console.log("Видео завершилось");
+  // player.on("ended", () => {
+  //   console.log("Видео завершилось");
+  // });
+
+  // Глобальный обработчик, предотвращающий параллельное воспроизведение
+  player.on("play", () => {
+    document.querySelectorAll("video").forEach((video) => {
+      if (video !== videoPlayer.value && !video.paused) {
+        video.pause();
+      }
+    });
   });
 });
 

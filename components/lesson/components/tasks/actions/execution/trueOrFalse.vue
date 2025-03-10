@@ -1,7 +1,7 @@
 <template>
   <taskLayout v-if="taskData" :task="props.task" :showTaskTimer="showTaskTimer"
     :showMaterialsOption="showMaterialsOption" :showMaterialsBeforeTask="showMaterialsBeforeTask" :materials="materials"
-    :startTask="startTask" :isFinished="isFinished" :progressPercentage="progressPercentage">
+    :startTask="startTask" :isFinished="isFinished" :progressPercentage="progressPercentage" :reStudyItems="reStudySentences">
     <template v-slot:task_content>
       <div class="col-span-12">
         <p v-if="timeIsUp" class="font-medium text-center text-danger">
