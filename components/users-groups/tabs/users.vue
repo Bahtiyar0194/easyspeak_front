@@ -122,11 +122,11 @@
                 </div>
                 <div class="btn-wrap mt-4">
                     <pagination :items="users" :setItems="getUsers" :onSelect="(count) => perPage = count" />
-                    <client-only>
+                    <!-- <client-only>
                         <tableToExcelButton :table="tableRef"
                             :fileName="$t('pages.users.title') + ' - ' + new Date().toLocaleString()"
                             :className="'btn-sm'" />
-                    </client-only>
+                    </client-only> -->
                 </div>
             </template>
 

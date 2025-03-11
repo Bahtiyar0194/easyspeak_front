@@ -240,7 +240,7 @@
             :setItems="getGroups"
             :onSelect="(count) => (perPage = count)"
           />
-          <client-only>
+          <!-- <client-only>
             <tableToExcelButton
               :table="tableRef"
               :fileName="
@@ -248,7 +248,7 @@
               "
               :className="'btn-sm'"
             />
-          </client-only>
+          </client-only> -->
         </div>
       </template>
       <alert v-else :className="'light'">
