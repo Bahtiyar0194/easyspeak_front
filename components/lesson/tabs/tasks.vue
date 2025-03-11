@@ -43,7 +43,10 @@
       >
         <li v-for="(task, taskIndex) in tasks" :key="task.task_id">
           <div class="flex items-center justify-between gap-4">
-            <div class="flex gap-2 items-center link" @click="openTask(task)">
+            <div
+              class="flex gap-2 items-center link w-full"
+              @click="openTask(task)"
+            >
               <i class="text-3xl" :class="task.icon"></i>
               <div class="flex flex-col gap-y-0.5">
                 <span>{{ task.task_slug }}</span>
@@ -52,8 +55,9 @@
                 }}</span>
               </div>
             </div>
-            <div class="btn-wrap justify-end">
-              <roleProvider :roles="[1]">
+
+            <roleProvider :roles="[1]">
+              <div class="flex gap-x-1 justify-end">
                 <button
                   @click="order('up', taskIndex, $event.target)"
                   class="btn btn-square btn-light btn-sm btn-up"
@@ -68,8 +72,8 @@
                 >
                   <i class="pi pi-arrow-down"></i>
                 </button>
-              </roleProvider>
-            </div>
+              </div>
+            </roleProvider>
           </div>
         </li>
       </TransitionGroup>
