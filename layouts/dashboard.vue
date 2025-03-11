@@ -3,7 +3,7 @@
         <div class="db__header">
             <div class="w-32 lg:w-56">
                 <!-- <img class="w-full" src="~/public/logo.svg"> -->
-                <span class="font-medium text-corp sm:text-xl md:text-2xl">EasySpeak</span>
+                <span class="font-medium text-corp text-2xl">EasySpeak</span>
             </div>
 
             <div class="btn-wrap items-center">
