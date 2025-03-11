@@ -29,7 +29,8 @@ export default {
     saving: 'Сохранение',
     restart: 'Перезагрузить',
     edit: "Редактировать",
-    welcome: 'Добро пожаловать',
+    welcome: 'Добро пожаловать!',
+    you_are_on_the_main_page: 'Мы рады видеть вас на главной странице нашего сайта.',
     on_air: 'На связи',
     or: 'Или',
     back: 'Назад',
@@ -302,7 +303,7 @@ export default {
 
         dashboard: {
             title: 'Личный кабинет',
-            go_to_dashboard: 'Перейти в личный кабинет'
+            go_to_dashboard: 'Перейти в личный кабинет',
         },
 
         "users-groups": {
