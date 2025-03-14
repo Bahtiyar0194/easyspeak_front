@@ -986,7 +986,45 @@ select.error:has(option:checked:disabled) {
 }
 
 .btn-group{
-    @apply w-fit;
+    @apply flex flex-wrap;
+}
+
+.btn-group .btn {
+    @apply border-r-0 rounded-none;
+}
+
+.btn-group .btn:first-child {
+    @apply rounded-s-xl;
+}
+
+.btn-group .btn.btn-xs:first-child {
+    @apply rounded-s-md;
+}
+
+.btn-group .btn.btn-sm:first-child {
+    @apply rounded-s-lg;
+}
+
+.btn-group .btn.btn-lg:first-child {
+    @apply rounded-s-xl;
+}
+
+
+  
+.btn-group .btn:last-child {
+    @apply border-r rounded-e-xl;
+}
+
+.btn-group .btn.btn-xs:last-child {
+    @apply rounded-e-md;
+}
+
+.btn-group .btn.btn-sm:last-child {
+    @apply rounded-e-lg;
+}
+
+.btn-group .btn.btn-lg:last-child {
+    @apply rounded-e-xl;
 }
 
 .btn-wrap{
@@ -1039,6 +1077,10 @@ select.error:has(option:checked:disabled) {
 
 .btn-light:hover{
     @apply bg-inactive;
+}
+
+.btn-light.txt-corp{
+    @apply text-corp;
 }
 
 .btn-danger{

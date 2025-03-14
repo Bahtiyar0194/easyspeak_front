@@ -43,6 +43,7 @@
 import { useRouter } from "nuxt/app";
 import steps from "../../../../../ui/steps.vue";
 import selectWordsFromDictionary from "../../selectWordsFromDictionary.vue";
+import secondStep from "../../find_the_stressed_syllable/secondStep.vue";
 import taskMaterialsForm from "../../taskMaterialsForm.vue";
 import taskOptionsForm from "../../taskOptionsForm.vue";
 
@@ -72,22 +73,21 @@ const newTaskSteps = [
     modalSize: "full",
   },
   {
+    title: t("pages.tasks.missing_letters.select_letters"),
+    component: secondStep,
+    props: { errors, selectedWords },
+    modalSize: "3xl",
+  },
+  {
     title: t("pages.tasks.task_options.title"),
     component: taskOptionsForm,
     props: {
       errors,
       showAudioButton: true,
-      showPlayAudioAtTheBegin: true,
-      showPlayAudioWithTheCorrectAnswer: true,
-      showPlayErrorSoundWithTheInCorrectAnswer: true,
-      showImage: true,
-      showTranslate: false,
-      showWord: true,
+      showTranslate: true,
       showTranscription: true,
-      showOptionsNum: true,
-      items: selectedWords.value,
+      showImpressionLimit: true,
       showSecondsPerWord: true,
-      showSelectMainLang: true,
     },
     modalSize: "4xl",
   },
@@ -118,7 +118,7 @@ const createTaskSubmit = async () => {
   formData.append("step", currentStep.value);
 
   await $axiosPlugin
-    .post("tasks/learning_words/" + props.lesson_id, formData)
+    .post("tasks/find_the_stressed_syllable/" + props.lesson_id, formData)
     .then((res) => {
       onPending(false);
       if (res.data.step) {
