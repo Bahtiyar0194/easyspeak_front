@@ -22,7 +22,7 @@
             v-if="props.task.task_example"
             :htmlData="props.task.task_example"
             :title="$t('pages.tasks.task_options.task_example')"
-            :className="'bg-inactive border-inactive px-3 py-2 rounded-lg'"
+            :className="'bg-inactive border-inactive px-3 py-2 rounded-lg card p-4'"
           />
 
           <div class="col-span-12">

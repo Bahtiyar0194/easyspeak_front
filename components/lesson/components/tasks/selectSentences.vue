@@ -233,7 +233,7 @@
           >{{ errors.sentences_count[0] }}</span
         >
         <span v-else>
-          {{ $t("pages.sentences.added_sentences_count") }}:
+          {{ $t(props.showQuestionsCount === true ? "pages.questions.added_questions_count" : "pages.sentences.added_sentences_count") }}:
           <b>{{ selectedSentences.length }}</b></span
         >
       </p>
@@ -306,6 +306,12 @@ const props = defineProps({
     type: Number,
     required: false,
   },
+
+  showQuestionsCount: {
+    default: false,
+    type: Boolean,
+    required: false
+  }
 });
 
 const { errors, selectedSentences } = toRefs(props);

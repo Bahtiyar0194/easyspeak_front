@@ -1,7 +1,7 @@
 <template>
   <client-only>
     <div class="col-span-12">
-      <div :class="props.className ? props.className : 'card p-4'">
+      <div :class="props.className">
         <p v-if="props.title" class="font-medium">{{ props.title }}</p>
         <div class="text-viewer" v-html="sanitize(props.htmlData)"></div>
       </div>

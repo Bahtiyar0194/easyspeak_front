@@ -528,8 +528,8 @@ td.th{
     @apply px-4 py-3;
 }
 
-.table.editable table tbody tr td{
-    @apply cursor-pointer;
+.table.editable table tbody tr td.selected{
+    @apply bg-corp-100;
 }
 
 .table.table-sm table thead tr th{

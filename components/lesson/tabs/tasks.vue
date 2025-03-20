@@ -225,7 +225,7 @@ const getTaskAttributes = async () => {
 const orderTasks = async () => {
   const form_data = new FormData();
   form_data.append("tasks", JSON.stringify(tasks.value));
-  form_data.append("operation_type_id", 18);
+  form_data.append("operation_type_id", 19);
   await $axiosPlugin
     .post("tasks/order/" + props.lesson_id, form_data)
     .then((response) => {

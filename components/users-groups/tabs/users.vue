@@ -480,6 +480,11 @@ const inviteUserSubmit = async () => {
     pendingInvite.value = true;
     const formData = new FormData(inviteFormRef.value);
 
+    let roles = [];
+    document.querySelectorAll('.invite_role_input:checked').forEach(role => {
+        roles.push(parseInt(role.value));
+    });
+
     formData.append('roles_count', roles.length);
     formData.append('operation_type_id', 1);
 

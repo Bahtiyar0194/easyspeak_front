@@ -60,6 +60,7 @@ export default {
     not_selected: "Таңдалмаған",
     not_specified: "Көрсетілмеген",
     your_answer: "Сіздің жауабыңыз",
+    type_your_answer: "Жауабыңызды осында енгізіңіз",
     no_answer: "Жауап жоқ",
     title: "Тақырып",
     text_center: "Мәтін ортада",
@@ -142,8 +143,11 @@ export default {
     materials: {
         material: "Материал",
         add_material: "Материал қосу",
+        delete_material: "Материалды жою",
+        delete_confirm: "Сіз бұл материалды шынымен жойғыңыз келе ме?",
         materials_count: "Материалдар саны",
         sentence_materials: "Сөйлемдердің материалдары",
+        annotation: 'Қысқаша сипаттамасы (аннотация)',
         learn: {
             video: "Тапсырманың материалымен танысу үшін осы бейнежазбаны мұқият қарап алыңыз",
             audio: "Тапсырманың материалымен танысу үшін осы аудиожазбаны мұқият тыңдап алыңыз",
@@ -175,15 +179,17 @@ export default {
     table: {
         create: "Кесте қосу",
         rows_count: "Жолдар саны",
+        add_row: "Жол қосу",
         delete_rows: "Жолдарды жою",
         columns_count: "Бағандар саны",
+        add_column: "Баған қосу",
         delete_columns: "Бағандарды жою",
         delete_table: "Кестені жою",
         has_header: "Тақырыптары бар кесте",
         is_small: "Кішкентай кесте",
         is_striped: "Жолақты кесте",
         is_bordered: "Шекарасы бар кесте",
-        error_1: "Жолдар мен бағандар саны 0-ден жоғары болуы керек",
+        error_1: "Жолдар мен бағандар саны 1-ден жоғары болуы керек",
         error_2: "Барлық жолдарды жоюға болмайды",
         error_3: "Барлық бағандарды жоюға болмайды",
         error_4: "Алдымен сізге кесте қосу қажет",
@@ -255,6 +261,7 @@ export default {
             eraser: 'Өшіргіш'
         },
         params: {
+            text_color: 'Мәтін түсі',
             border_color: 'Жақтау түсі',
             fill_color: 'Ішкі түсі',
             border_width: 'Қалыңдығы',
@@ -451,7 +458,7 @@ export default {
             add_word_title: 'Сөздікке сөз қосу',
             edit_word_title: 'Сөзді қайта өңдеу',
             transcription: 'Транскрипциясы',
-            seconds_per_word: 'Әр сөзді табуға бөлінетін секунд саны',
+            seconds_per_word: 'Әр сөзге жауап беруге бөлінетін секунд саны',
             translate: {
                 kk: 'Сөздің қазақша тілдегі аудармасы',
                 ru: 'Сөздің орысша тілдегі аудармасы'
@@ -470,7 +477,7 @@ export default {
             add_sentence_title: 'Сөйлем қосу',
             edit_sentence_title: 'Сөйлемді қайта өңдеу',
             transcription: 'Транскрипциясы',
-            seconds_per_sentence: 'Әр сөйлемді табуға бөлінетін секунд саны',
+            seconds_per_sentence: 'Әр сөйлемге жауап беруге бөлінетін секунд саны',
             translate: {
                 kk: 'Сөйлемнің қазақша тілдегі аудармасы',
                 ru: 'Сөйлемнің орысша тілдегі аудармасы'
@@ -483,7 +490,18 @@ export default {
             sections_left: "Қайталауға қалған бөлімдер саны",
             studied_sections: "Зерттелген бөлімдер",
             unstudied_sections: 'Қайта зерттеуге арналған бөлімдер',
-            seconds_per_section: 'Әр бөлімді табуға бөлінетін секунд саны',
+            seconds_per_section: 'Әр бөлімге жауап беруге бөлінетін секунд саны',
+        },
+
+        questions: {
+            added_questions_count: 'Қосылған сұрақтар саны',
+            select_questions: 'Сұрақтарды таңдау',
+            question_settings: 'Сұрақтарды өңдеу',
+            questions_left: "Қалған сұрақтар саны",
+            answered_questions: "Жауап берілген сұрақтар",
+            unanswered_questions: 'Жауап берілмеген сұрақтар',
+            seconds_per_question: 'Әр сұраққа жауап беруге бөлінетін секунд саны',
+            predefined_answer: 'Алдын ала анықталған жауап'
         },
 
         tasks: {
@@ -556,6 +574,14 @@ export default {
             },
             find_the_stressed_syllable: {
                 note_1: 'Әр сөзді буындарға бөліңіз, содан кейін әр сөздегі бір буынды екпінді ретінде таңдаңыз және белгілеңіз.'
+            },
+            answer_the_questions: {
+                answer_type: 'Сұраққа жауап беру әдісін таңдаңыз',
+                options: {
+                    option_1: 'Мәтін ретіндегі жауап',
+                    option_2: 'Бейне ретіндегі жауап',
+                    option_3: 'Аудио ретіндегі жауап',
+                },
             },
             search_filter: 'Тапсырманы іздеу сүзгісі'
         },

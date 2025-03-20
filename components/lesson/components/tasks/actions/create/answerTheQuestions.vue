@@ -43,8 +43,9 @@
 import { useRouter } from "nuxt/app";
 import steps from "../../../../../ui/steps.vue";
 import selectSentences from "../../selectSentences.vue";
-import taskOptionsForm from "../../taskOptionsForm.vue";
+import thirdStep from "../../answer_the_questions/thirdStep.vue";
 import taskMaterialsForm from "../../taskMaterialsForm.vue";
+import taskOptionsForm from "../../taskOptionsForm.vue";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -52,6 +53,7 @@ const { $axiosPlugin } = useNuxtApp();
 const createFormRef = ref(null);
 const selectedSentences = ref([]);
 const taskMaterials = ref([]);
+const answerTheQuestionsOption = ref("text");
 
 const errors = ref([]);
 
@@ -67,22 +69,34 @@ const props = defineProps({
 
 const newTaskSteps = [
   {
-    title: t("pages.sentences.select_sentences"),
-    component: selectSentences,
-    props: { errors, selectedSentences },
-    modalSize: "full",
-  },
-  {
     title: t("pages.tasks.task_options.title"),
     component: taskOptionsForm,
     props: {
       errors,
-      showPlayAudioWithTheCorrectAnswer: true,
-      showPlayErrorSoundWithTheInCorrectAnswer: true,
-      showSecondsPerSentence: true,
-      showSelectMainLang: true,
+      showImpressionLimit: true,
+      showAnswerTheQuestionsOptions: true,
+      answerTheQuestionsOption,
+      showSecondsPerQuestion: true,
+      showMaxAttempts: false,
     },
     modalSize: "4xl",
+  },
+  {
+    title: t("pages.questions.select_questions"),
+    component: selectSentences,
+    props: {
+      errors,
+      selectedSentences,
+      minimumSentencesCount: 1,
+      showQuestionsCount: true,
+    },
+    modalSize: "full",
+  },
+  {
+    title: t("pages.questions.question_settings"),
+    component: thirdStep,
+    props: { errors, selectedSentences, answerTheQuestionsOption },
+    modalSize: "3xl",
   },
   {
     title: t("pages.tasks.task_materials"),
@@ -108,13 +122,18 @@ const createTaskSubmit = async () => {
   formData.append("sentences_count", selectedSentences.value.length);
   formData.append("sentences", JSON.stringify(selectedSentences.value));
   formData.append("task_materials", JSON.stringify(taskMaterials.value));
+  formData.append(
+    "answer_the_questions_option",
+    answerTheQuestionsOption.value
+  );
   formData.append("operation_type_id", 13);
   formData.append("step", currentStep.value);
 
   await $axiosPlugin
-    .post("tasks/form_a_sentence_out_of_the_words/" + props.lesson_id, formData)
+    .post("tasks/answer_the_questions/" + props.lesson_id, formData)
     .then((res) => {
       onPending(false);
+      errors.value = [];
       if (res.data.step) {
         currentStep.value = res.data.step + 1;
         changeModalSize(
@@ -123,7 +142,6 @@ const createTaskSubmit = async () => {
       } else {
         closeModal();
       }
-      errors.value = [];
     })
     .catch((err) => {
       if (err.response) {
@@ -147,6 +165,6 @@ const createTaskSubmit = async () => {
 };
 
 onMounted(() => {
-  changeModalSize("modal-full");
+  changeModalSize("modal-4xl");
 });
 </script>

@@ -376,6 +376,7 @@
                         ).userInput
                       "
                       :disabled="false"
+                      class="lowercase"
                       :style="{
                         width:
                           sentence.missingWords.find(

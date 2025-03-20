@@ -60,6 +60,7 @@ export default {
     not_selected: "Не выбран",
     not_specified: "Не указан",
     your_answer: "Ваш ответ",
+    type_your_answer: "Введите ваш ответ",
     no_answer: "Нет ответа",
     title: "Заголовок",
     text_center: "Текст по центру",
@@ -142,8 +143,11 @@ export default {
     materials: {
         material: "Материал",
         add_material: "Добавить материал",
+        delete_material: "Удаление материала",
+        delete_confirm: "Вы действительно хотите удалить данный материал?",
         materials_count: "Материалов",
         sentence_materials: "Материалы фраз",
+        annotation: 'Краткое описание (аннотация)',
         learn: {
             video: "Для ознакомления с материалом задания внимательно просмотрите данное видео",
             audio: "Для ознакомления с материалом задания внимательно прослушайте данное аудио",
@@ -175,15 +179,17 @@ export default {
     table: {
         create: "Создать таблицу",
         rows_count: "Количество строк",
+        add_row: "Добавить строку",
         delete_rows: "Удалить строки",
         columns_count: "Количество столбцов",
+        add_column: "Добавить столбец",
         delete_columns: "Удалить столбцы",
         delete_table: "Удалить таблицу",
         has_header: "Таблица с заголовками",
         is_small: "Компактная таблица",
         is_striped: "Полосатая таблица",
         is_bordered: "Таблица с границей",
-        error_1: "Количество строк и столбцов должно быть выше 0",
+        error_1: "Количество строк и столбцов должно быть выше 1",
         error_2: "Нельзя удалять все строки!",
         error_3: "Нельзя удалять все столбцы!",
         error_4: "Для начала Вам нужно создать таблицу",
@@ -255,6 +261,7 @@ export default {
             eraser: 'Ластик'
         },
         params: {
+            text_color: 'Цвет текста',
             border_color: 'Цвет обводки',
             fill_color: 'Цвет заливки',
             border_width: 'Толщина линии',
@@ -451,7 +458,7 @@ export default {
             words_left: "Осталось слов на повторение",
             edit_word_title: 'Редактирование слова',
             transcription: 'Транскрипция',
-            seconds_per_word: 'Количество секунд, отведенное на поиск каждого слова',
+            seconds_per_word: 'Количество выделенных секунд на ответ каждого слова',
             translate: {
                 kk: 'Перевод слова на казахском языке',
                 ru: 'Перевод слова на русском языке'
@@ -470,7 +477,7 @@ export default {
             add_sentence_title: 'Добавление фразы',
             edit_sentence_title: 'Редактирование фразы',
             transcription: 'Транскрипция',
-            seconds_per_sentence: 'Количество секунд, отведенное на поиск каждой фразы',
+            seconds_per_sentence: 'Количество выделенных секунд на ответ каждой фразы',
             translate: {
                 kk: 'Перевод фразы на казахском языке',
                 ru: 'Перевод фразы на русском языке'
@@ -483,7 +490,18 @@ export default {
             sections_left: "Осталось секций на повторение",
             studied_sections: "Изученные секции",
             unstudied_sections: 'Секции для переизучения',
-            seconds_per_section: 'Количество секунд, отведенное на поиск каждой секции',
+            seconds_per_section: 'Количество выделенных секунд на ответ каждой секции',
+        },
+
+        questions: {
+            added_questions_count: 'Количество добавленных вопросов',
+            select_questions: 'Выбор вопросов',
+            question_settings: 'Настройка вопросов',
+            questions_left: "Осталось вопросов",
+            answered_questions: "Отвеченные вопросы",
+            unanswered_questions: 'Неотвеченные вопросы',
+            seconds_per_question: 'Количество выделенных секунд на ответ каждого вопроса',
+            predefined_answer: 'Предопределенный ответ',
         },
 
         tasks: {
@@ -493,7 +511,7 @@ export default {
             task_type: 'Тип задания',
             add_a_task: 'Добавить задание',
             adding_a_task: 'Добавление задания',
-            start_the_task: 'Начать задание', 
+            start_the_task: 'Начать задание',
             complete_the_task: 'Завершить задание',
             tasks_count: 'Задании',
             there_are_no_tasks: 'Для этого урока пока не добавлены задания.',
@@ -556,6 +574,14 @@ export default {
             },
             find_the_stressed_syllable: {
                 note_1: 'Разделите каждое слово на слоги, затем выберите один слог в каждом слове и отметьте его как ударный.'
+            },
+            answer_the_questions: {
+                answer_type: 'Выберите метод ответа на вопрос',
+                options: {
+                    option_1: 'Текстовый ответ',
+                    option_2: 'Ответ с помощью видео',
+                    option_3: 'Ответ с помощью аудио',
+                },
             },
             search_filter: 'Фильтр поиска по заданиям'
         },

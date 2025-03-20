@@ -267,6 +267,19 @@
         </label>
       </div>
     </div>
+    <div v-if="props.showSecondsPerQuestion" class="col-span-12">
+      <div class="form-group-border active">
+        <i class="pi pi-stopwatch"></i>
+        <input name="seconds_per_question" type="number" placeholder=" " />
+        <label :class="{ 'label-error': errors.seconds_per_question }">
+          {{
+            errors.seconds_per_question
+              ? errors.seconds_per_question[0]
+              : $t("pages.questions.seconds_per_question")
+          }}
+        </label>
+      </div>
+    </div>
     <div v-if="props.showSelectMainLang" class="col-span-12">
       <div class="flex flex-col gap-y-2">
         <label class="custom-radio">
@@ -304,6 +317,26 @@
           />
           <span>{{
             $t("pages.tasks.missing_words.options.option_" + (optionIndex + 1))
+          }}</span>
+        </label>
+      </div>
+    </div>
+    <div v-if="props.showAnswerTheQuestionsOptions" class="col-span-12">
+      <div class="flex flex-col gap-y-2">
+        <p class="mb-0">{{ $t('pages.tasks.answer_the_questions.answer_type') }}</p>
+        <label
+          v-for="(option, optionIndex) in answerTheQuestionsOptions"
+          :key="optionIndex"
+          class="custom-radio"
+        >
+          <input
+            type="radio"
+            :checked="answerTheQuestionsOption === option"
+            name="answer_option"
+            @change="answerTheQuestionsOption = option"
+          />
+          <span>{{
+            $t("pages.tasks.answer_the_questions.options.option_" + (optionIndex + 1))
           }}</span>
         </label>
       </div>
@@ -384,7 +417,7 @@
         </label>
       </div>
     </div>
-    <div class="col-span-12">
+    <div v-if="props.showMaxAttempts === true" class="col-span-12">
       <div class="form-group-border select active label-active">
         <i class="pi pi-replay"></i>
         <select name="max_attempts">
@@ -494,8 +527,13 @@ const props = defineProps({
     required: false,
   },
 
-  
   showSecondsPerSection: {
+    default: false,
+    type: Boolean,
+    required: false,
+  },
+
+  showSecondsPerQuestion: {
     default: false,
     type: Boolean,
     required: false,
@@ -514,6 +552,17 @@ const props = defineProps({
   },
 
   findWordOption: {
+    type: Object,
+    required: false,
+  },
+
+  showAnswerTheQuestionsOptions: {
+    default: false,
+    type: Boolean,
+    required: false,
+  },
+
+  answerTheQuestionsOption: {
     type: Object,
     required: false,
   },
@@ -545,6 +594,12 @@ const props = defineProps({
     type: Object,
     required: false,
   },
+
+  showMaxAttempts: {
+    default: true,
+    type: Boolean,
+    required: false
+  }
 });
 
 const showTaskExample = ref(false);
@@ -559,5 +614,11 @@ const missingWordOptions = [
   "with_options",
 ];
 
-const { errors, findWordOption, sentenceMaterialTypes, sentenceMaterialTypeSlug } = toRefs(props);
+const answerTheQuestionsOptions = [
+  "text",
+  "video",
+  "audio",
+];
+
+const { errors, findWordOption, answerTheQuestionsOption, sentenceMaterialTypes, sentenceMaterialTypeSlug } = toRefs(props);
 </script>

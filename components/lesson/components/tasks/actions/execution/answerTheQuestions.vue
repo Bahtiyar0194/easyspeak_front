@@ -16,9 +16,9 @@
         <p v-if="timeIsUp" class="font-medium text-center text-danger">
           {{ $t("time_is_up") }}
         </p>
-        <p v-else-if="sentences.length > 0" class="text-center">
-          {{ $t("pages.sentences.sentences_left") }}:
-          <b>{{ sentences.length }}</b>
+        <p v-else-if="questions.length > 0" class="text-center">
+          {{ $t("pages.questions.questions_left") }}:
+          <b>{{ questions.length }}</b>
         </p>
       </div>
 
@@ -33,7 +33,8 @@
       </div>
 
       <div v-if="timeIsUp || isComplete" class="col-span-12">
-        <div class="flex flex-col gap-y-4">
+        time is up or is complete
+        <!-- <div class="flex flex-col gap-y-4">
           <div
             class="flex flex-col gap-y-2"
             v-if="currentStudiedSentences.length > 0"
@@ -180,12 +181,12 @@
               {{ $t("pages.tasks.complete_the_task") }}
             </button>
           </div>
-        </div>
+        </div> -->
       </div>
 
       <div v-else class="col-span-12">
         <div class="custom-grid">
-          <div
+          <!-- <div
             :class="
               taskData.options.sentence_material_type_slug == 'audio'
                 ? 'col-span-12'
@@ -266,24 +267,51 @@
                 "
               />
               <img
-                v-else-if="taskData.options.sentence_material_type_slug === 'image'"
-                :src="config.public.apiBase + '/media/get/' + sentence.material.target"
+                v-else-if="
+                  taskData.options.sentence_material_type_slug === 'image'
+                "
+                :src="
+                  config.public.apiBase +
+                  '/media/get/' +
+                  sentence.material.target
+                "
                 class="w-full h-auto"
               />
             </div>
-          </div>
+          </div> -->
 
           <div class="col-span-12">
             <ul class="list-group nowrap">
               <li
-                v-for="(sentence, sentenceIndex) in currentSentences"
-                :key="sentenceIndex"
+                v-for="(question, questionIndex) in currentQuestions"
+                :key="questionIndex"
                 class="list-item"
               >
-                <span class="font-medium text-lg"
-                  ><span class="text-corp">{{ sentenceIndex + 1 }}. </span
-                  >{{ sentence.sentence }}</span
-                >
+                <div class="custom-grid">
+                  <div class="col-span-12">
+                    <span class="font-medium text-lg"
+                      ><span class="text-corp">{{ questionIndex + 1 }}. </span
+                      >{{ question.question }}</span
+                    >
+                  </div>
+
+                  <div
+                    v-if="taskData.options.answer_the_questions_option == 'text'"
+                    class="col-span-12"
+                  >
+                    <div class="form-group-border active">
+                      <i class="pi pi-reply"></i>
+                      <input
+                        :name="'answer_' + questionIndex"
+                        type="text"
+                        placeholder=" "
+                      />
+                      <label>
+                        {{ $t("type_your_answer") }}
+                      </label>
+                    </div>
+                  </div>
+                </div>
               </li>
             </ul>
           </div>
@@ -305,10 +333,10 @@
     </template>
 
     <template v-slot:task_result_content>
-      <result
+      <!-- <result
         :studiedSentences="studiedSentences"
         :reStudySentences="reStudySentences"
-      />
+      /> -->
     </template>
   </taskLayout>
 </template>
@@ -331,9 +359,8 @@ const taskData = ref(null);
 const materials = ref([]);
 const showMaterialsOption = ref("");
 const showMaterialsBeforeTask = ref(false);
-const sentences = ref([]);
-const currentSentences = ref([]);
-const currentSentenceMaterials = ref([]);
+const questions = ref([]);
+const currentQuestions = ref([]);
 const checkingStatus = ref(false);
 
 const studiedSentences = ref([]);
@@ -373,17 +400,13 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/match_sentences_with_materials/" + props.task.task_id
+      "tasks/answer_the_questions/" + props.task.task_id
     );
 
     taskData.value = res.data;
     showMaterialsOption.value = taskData.value.options.show_materials_option;
     materials.value = taskData.value.materials;
-    sentences.value = [...taskData.value.sentences];
-
-    sentences.value.forEach((sentence) => {
-      sentence.attempts = taskData.value.options.max_attempts;
-    });
+    questions.value = [...taskData.value.questions];
 
     if (
       materials.value.length > 0 &&
@@ -424,39 +447,35 @@ const startTask = () => {
 
   showTaskTimer.value = true;
   setTimeout(() => {
-    setSentences();
+    setQuestions();
     showTaskTimer.value = false;
   }, 3000);
 };
 
-const setSentences = () => {
+const setQuestions = () => {
   currentStudiedSentences.value = [];
   currentReStudySentences.value = [];
 
-  if (sentences.value.length > 0) {
-    currentSentences.value = sentences.value.slice(
+  if (questions.value.length > 0) {
+    currentQuestions.value = questions.value.slice(
       0,
       taskData.value.options.impression_limit
     );
 
-    currentSentenceMaterials.value = [...currentSentences.value].sort(
-      () => Math.random() - 0.5
-    );
-
-    currentSentences.value.forEach((sentence) => {
-      sentence.userInput = "";
+    currentQuestions.value.forEach((question) => {
+      question.userInput = "";
     });
 
-    setTimeout(() => {
-      const firstInput = document.querySelector(".user_input");
-      if (firstInput) {
-        firstInput.focus();
-      }
-    }, 100);
+    // setTimeout(() => {
+    //   const firstInput = document.querySelector(".user_input");
+    //   if (firstInput) {
+    //     firstInput.focus();
+    //   }
+    // }, 100);
 
     time.value =
-      taskData.value.options.seconds_per_sentence *
-      currentSentences.value.length;
+      taskData.value.options.seconds_per_question *
+      currentQuestions.value.length;
 
     isComplete.value = false;
     isStarted.value = true;

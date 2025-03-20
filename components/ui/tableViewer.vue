@@ -5,10 +5,10 @@
         <div
           class="table table-responsive"
           :class="{
-            'table-sm': props.tableData.small,
-            'table-striped': props.tableData.isStriped,
-            bordered: props.tableData.isBordered,
-            'text-center': props.tableData.textCentered,
+            'table-sm': tableData.isSmall,
+            'table-striped': tableData.isStriped,
+            bordered: tableData.isBordered,
+            'text-center': tableData.textCentered,
           }"
         >
           <table>
@@ -16,11 +16,16 @@
               <tr v-for="(row, rowIndex) in props.tableData.table" :key="rowIndex">
                 <template v-for="(cell, colIndex) in row" :key="colIndex">
                   <td
-                    v-if="cell"
+                  v-if="cell && !cell.merged"
                     :rowspan="cell.rowspan"
                     :colspan="cell.colspan"
                     :class="{
-                      th: cell.isHeader,
+                      [cell.textColorClass]: true, // Динамический ключ
+                      th: rowIndex === 0 && tableData.hasHeader === true,
+                      'font-medium': cell.isBold,
+                      italic: cell.isItalic,
+                      underline: cell.isUnderLine,
+                      'line-through': cell.isStrike,
                     }"
                   >
                     <span>{{ cell.text }}</span>
