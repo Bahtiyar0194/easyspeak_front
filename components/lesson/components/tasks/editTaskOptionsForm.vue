@@ -1,9 +1,14 @@
 <template>
-  <div class="custom-grid">
+  <div v-if="task.task_id" class="custom-grid">
     <div class="col-span-12">
       <div class="form-group-border active">
         <i class="pi pi-clock"></i>
-        <input name="task_slug" type="text" placeholder=" " />
+        <input
+          name="task_slug"
+          v-model="task.task_slug"
+          type="text"
+          placeholder=" "
+        />
         <label :class="{ 'label-error': errors.task_slug }">
           {{
             errors.task_slug ? errors.task_slug[0] : $t("pages.tasks.task_slug")
@@ -14,7 +19,12 @@
     <div class="col-span-12 lg:col-span-6">
       <div class="form-group-border active">
         <i class="pi pi-clock"></i>
-        <input name="task_name_kk" type="text" placeholder=" " />
+        <input
+          name="task_name_kk"
+          v-model="task.langs[0].task_name"
+          type="text"
+          placeholder=" "
+        />
         <label :class="{ 'label-error': errors.task_name_kk }">
           {{
             errors.task_name_kk
@@ -27,7 +37,12 @@
     <div class="col-span-12 lg:col-span-6">
       <div class="form-group-border active">
         <i class="pi pi-clock"></i>
-        <input name="task_name_ru" type="text" placeholder=" " />
+        <input
+          name="task_name_ru"
+          v-model="task.langs[1].task_name"
+          type="text"
+          placeholder=" "
+        />
         <label :class="{ 'label-error': errors.task_name_ru }">
           {{
             errors.task_name_ru
@@ -54,11 +69,7 @@
         <textEditor
           :inputName="'task_example'"
           :errors="errors"
-          :content="
-            '<p>' +
-            $t('pages.tasks.task_options.task_example_message') +
-            '🚀</p>'
-          "
+          :content="task.task_example"
         />
       </div>
     </div>
@@ -205,10 +216,10 @@
       <div class="form-group-border select active label-active">
         <i class="pi pi-eye"></i>
         <select name="impression_limit">
-          <option selected disabled value="">
+          <option disabled value="">
             {{ $t("choose_your_option") }}
           </option>
-          <option v-for="item in impressionLimits" :key="item" :value="item">
+          <option v-for="item in impressionLimits" :selected="item === taskOptions.impression_limit" :key="item" :value="item">
             {{ item }}
           </option>
         </select>
@@ -249,7 +260,7 @@
     <div v-if="props.showSecondsPerSentence" class="col-span-12">
       <div class="form-group-border active">
         <i class="pi pi-stopwatch"></i>
-        <input name="seconds_per_sentence" type="number" placeholder=" " />
+        <input name="seconds_per_sentence" type="number" v-model="taskOptions.seconds_per_sentence" placeholder=" " />
         <label :class="{ 'label-error': errors.seconds_per_sentence }">
           {{
             errors.seconds_per_sentence
@@ -434,7 +445,7 @@
           <option selected disabled value="">
             {{ $t("choose_your_option") }}
           </option>
-          <option v-for="item in maxAttempts" :key="item" :value="item">
+          <option v-for="item in maxAttempts" :key="item" :selected="item === taskOptions.max_attempts" :value="item">
             {{ item }}
           </option>
         </select>
@@ -445,7 +456,7 @@
     </div>
     <div class="col-span-12">
       <label class="custom-radio-checkbox text-nowrap">
-        <input type="checkbox" checked="true" name="random_order" />
+        <input type="checkbox" :checked="taskOptions.random_order === 1" name="random_order" />
         <span>{{ $t("random_order") }}</span>
       </label>
     </div>
@@ -454,6 +465,14 @@
 <script setup>
 import textEditor from "../../../ui/textEditor.vue";
 const props = defineProps({
+  task: {
+    type: Object,
+    required: true,
+  },
+  taskOptions: {
+    type: Object,
+    required: true,
+  },
   errors: {
     type: Object,
     required: true,
@@ -612,7 +631,17 @@ const props = defineProps({
   },
 });
 
-const showTaskExample = ref(false);
+const {
+  task,
+  taskOptions,
+  errors,
+  findWordOption,
+  answerTheQuestionsOption,
+  sentenceMaterialTypes,
+  sentenceMaterialTypeSlug,
+} = toRefs(props);
+
+const showTaskExample = ref(task.value.task_example ? true : false);
 const impressionLimits = ref([2, 4]);
 const optionsNum = ref([2, 3, 4]);
 const maxAttempts = ref([0, 1, 2, 3, 4, 5]);
@@ -625,12 +654,4 @@ const missingWordOptions = [
 ];
 
 const answerTheQuestionsOptions = ["text", "video", "audio"];
-
-const {
-  errors,
-  findWordOption,
-  answerTheQuestionsOption,
-  sentenceMaterialTypes,
-  sentenceMaterialTypeSlug,
-} = toRefs(props);
 </script>

@@ -53,7 +53,7 @@
             :accept="material.material_type_slug" :icon="material.icon" :errors="errors" />
           <textEditor v-else-if="material.material_type_slug === 'text'" :inputName="'text_' + materialIndex"
             :errors="errors" />
-          <editableTable v-else-if="material.material_type_slug === 'table'" :tableName="'table_' + materialIndex"
+          <tableEditor v-else-if="material.material_type_slug === 'table'" :tableName="'table_' + materialIndex"
             :errors="errors" />
         </div>
       </div>
@@ -83,7 +83,7 @@ import dropdownMenu from "../../../ui/dropdownMenu.vue";
 import loader from "../../../ui/loader.vue";
 import uploadOrSelectFile from "../../../ui/uploadOrSelectFile.vue";
 import textEditor from "../../../ui/textEditor.vue";
-import editableTable from "../../../ui/editableTable.vue";
+import tableEditor from "../../../ui/tableEditor.vue";
 
 const { $axiosPlugin } = useNuxtApp();
 const pending = ref(false);

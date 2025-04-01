@@ -25,10 +25,10 @@
                   type="button"
                   class="btn"
                   :class="
-                    ((sentence.removedWordsIndex &&
+                    (sentence.removedWordsIndex && sentence.removedWordsIndex.length > 0 &&
                       sentence.removedWordsIndex.includes(wordIndex)) ||
-                    (sentence.removedWordIndex &&
-                      sentence.removedWordIndex === wordIndex))
+                    (sentence.removedWordIndex != null &&
+                      sentence.removedWordIndex === wordIndex)
                       ? 'btn-outline-danger line-through'
                       : 'btn-light'
                   "

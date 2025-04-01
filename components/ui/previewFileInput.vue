@@ -7,21 +7,23 @@
     }"
   >
     <template v-if="props.previewUrl">
-      <div v-if="props.fileType === 'image'" class="flex gap-x-4 items-center">
+      <div v-if="props.fileType === 'image'" class="flex gap-x-2 items-center">
         <img
           :src="props.previewUrl"
           :key="'image_' + props.previewUrl"
-          class="rounded-xl" :class="props.onChange ? 'w-auto h-16' : 'w-full'"
+          class="rounded-xl"
+          :class="props.onChange ? 'w-auto h-32' : 'w-full'"
         />
         <div v-if="props.onChange" class="flex flex-col gap-y-2">
-          <p class="mb-0 text-center">
+          <p class="mb-1 text-center">
             {{ $t("file." + props.fileType + ".current") }}
           </p>
           <button
             type="button"
-            class="btn btn-sm btn-light mx-auto"
+            class="btn btn-light mx-auto"
             @click="props.onChange"
           >
+          <i class="pi pi-file"></i>
             {{ $t("file.change_file") }}
           </button>
         </div>
@@ -39,14 +41,15 @@
           :src="props.previewUrl"
         />
         <div v-if="props.onChange">
-          <p class="mb-0 text-center">
+          <p class="mb-2 text-center">
             {{ $t("file." + props.fileType + ".current") }}
           </p>
           <button
             type="button"
-            class="btn btn-sm btn-light mx-auto"
+            class="btn btn-light mx-auto"
             @click="props.onChange"
           >
+            <i class="pi pi-file"></i>
             {{ $t("file.change_file") }}
           </button>
         </div>

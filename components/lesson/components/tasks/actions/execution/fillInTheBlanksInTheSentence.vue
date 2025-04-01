@@ -581,7 +581,7 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/fill_in_the_blanks_in_the_sentence/" + props.task.task_id
+      "tasks/get/fill_in_the_blanks_in_the_sentence/" + props.task.task_id
     );
 
     taskData.value = res.data;
@@ -654,7 +654,7 @@ const setSentences = () => {
 
         for (let index = 0; index < sentence.missingWords.length; index++) {
           const word = sentence.missingWords[index];
-          if (word.word_position > 0) {
+          if (word.word_position >= 0) {
             sentence.missingWordPositionIndex = word.word_position;
             break;
           }

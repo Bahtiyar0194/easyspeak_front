@@ -140,7 +140,7 @@ const props = defineProps({
   },
 });
 
-const content = ref("<p>" + (props.content ? props.content : t("text.welcome")) + " 🚀</p>");
+const content = ref(props.content ? props.content : ('<p>' + t("text.welcome")) + '🚀</p>');
 
 const editor = useEditor({
   content: content.value,

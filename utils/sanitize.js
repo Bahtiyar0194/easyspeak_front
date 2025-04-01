@@ -26,6 +26,10 @@ export function sanitize(input) {
             "code",
             "pre",
             "img",
+            "table",
+            "tr",
+            "th",
+            "td"
         ],
         allowedStyles: {
             "*": {

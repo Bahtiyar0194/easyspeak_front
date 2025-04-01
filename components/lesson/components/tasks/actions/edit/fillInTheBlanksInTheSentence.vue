@@ -1,8 +1,8 @@
 <template>
-  <steps :currentStep="currentStep" :steps="newTaskSteps">
-    <form @submit.prevent="createTaskSubmit" class="mt-2" ref="createFormRef">
+  <steps v-if="task.task_id" :currentStep="currentStep" :steps="editTaskSteps">
+    <form @submit.prevent="editTaskSubmit" class="mt-2" ref="editFormRef">
       <div
-        v-for="(step, index) in newTaskSteps"
+        v-for="(step, index) in editTaskSteps"
         :key="index"
         :class="currentStep === index + 1 ? 'block' : 'hidden'"
       >
@@ -25,7 +25,7 @@
         </button>
 
         <button class="btn btn-primary" type="submit">
-          <template v-if="currentStep !== newTaskSteps.length">
+          <template v-if="currentStep !== editTaskSteps.length">
             <i class="pi pi-arrow-right"></i>
             {{ $t("continue") }}
           </template>
@@ -45,14 +45,22 @@ import steps from "../../../../../ui/steps.vue";
 import selectSentences from "../../selectSentences.vue";
 import thirdStep from "../../fill-in-the-blanks-in-the-sentence/thirdStep.vue";
 import taskMaterialsForm from "../../taskMaterialsForm.vue";
-import taskOptionsForm from "../../taskOptionsForm.vue";
+import editTaskOptionsForm from "../../editTaskOptionsForm.vue";
 import { watch } from "vue";
+
+const props = defineProps({
+  task: {
+    required: true,
+  },
+});
 
 const { t } = useI18n();
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
-const createFormRef = ref(null);
+const editFormRef = ref(null);
 const selectedSentences = ref([]);
+const task = ref({});
+const taskOptions = ref({});
 const taskMaterials = ref([]);
 const findWordOption = ref("with_hints");
 
@@ -62,17 +70,13 @@ const onPending = inject("onPending");
 const changeModalSize = inject("changeModalSize");
 const closeModal = inject("closeModal");
 
-const props = defineProps({
-  lesson_id: {
-    required: true,
-  },
-});
-
-const newTaskSteps = [
+const editTaskSteps = [
   {
     title: t("pages.tasks.task_options.title"),
-    component: taskOptionsForm,
+    component: editTaskOptionsForm,
     props: {
+      task,
+      taskOptions,
       errors,
       showImpressionLimit: true,
       showMissingWordsOptions: true,
@@ -108,22 +112,79 @@ const currentStep = ref(1);
 
 const backToStep = (step) => {
   currentStep.value = step;
-  changeModalSize("modal-" + newTaskSteps[step - 1].modalSize);
+  changeModalSize("modal-" + editTaskSteps[step - 1].modalSize);
 };
 
-const createTaskSubmit = async () => {
+// Получение задачи
+const getTask = async () => {
+  try {
+    onPending(true);
+    const res = await $axiosPlugin.get(
+      "tasks/get/fill_in_the_blanks_in_the_sentence/" + props.task.task_id
+    );
+    task.value = res.data.task;
+    taskOptions.value = res.data.options;
+    taskMaterials.value = res.data.materials;
+    findWordOption.value = res.data.options.find_word_option;
+    setTimeout(() => {
+      selectedSentences.value = res.data.sentences;
+
+      selectedSentences.value.forEach((sentence) => {
+        if (findWordOption.value === "with_options") {
+          if (!sentence.removedWordOptions) {
+            sentence.removedWordOptions = [];
+          }
+
+          // sentence.addOptionInput = "";
+          // sentence.addOptionInputError = false;
+
+          sentence.missingWords.forEach((word) => {
+            if (Number.isInteger(word.word_position)) {
+              sentence.removedWordIndex = word.word_position;
+            }
+            sentence.removedWordOptions.push(word.word_option);
+          });
+        } else {
+          if (!sentence.removedWordsIndex) {
+            sentence.removedWordsIndex = [];
+          }
+
+          sentence.missingWords.forEach((word) => {
+            sentence.removedWordsIndex.push(word.word_position);
+          });
+        }
+      });
+    }, 200);
+  } catch (err) {
+    const errorRoute = err.response
+      ? {
+          path: "/error",
+          query: {
+            status: err.response.status,
+            message: err.response.data.message,
+            url: err.request.responseURL,
+          },
+        }
+      : { path: "/error" };
+    router.push(errorRoute);
+  } finally {
+    onPending(false);
+  }
+};
+
+const editTaskSubmit = async () => {
   onPending(true);
-  const formData = new FormData(createFormRef.value);
+  const formData = new FormData(editFormRef.value);
   formData.append("sentences_count", selectedSentences.value.length);
   formData.append("sentences", JSON.stringify(selectedSentences.value));
   formData.append("task_materials", JSON.stringify(taskMaterials.value));
   formData.append("find_word_option", findWordOption.value);
-  formData.append("operation_type_id", 13);
+  formData.append("operation_type_id", 14);
   formData.append("step", currentStep.value);
 
   await $axiosPlugin
     .post(
-      "tasks/create/fill_in_the_blanks_in_the_sentence/" + props.lesson_id,
+      "tasks/edit/fill_in_the_blanks_in_the_sentence/" + props.task.task_id,
       formData
     )
     .then((res) => {
@@ -132,7 +193,7 @@ const createTaskSubmit = async () => {
       if (res.data.step) {
         currentStep.value = res.data.step + 1;
         changeModalSize(
-          "modal-" + newTaskSteps[currentStep.value - 1].modalSize
+          "modal-" + editTaskSteps[currentStep.value - 1].modalSize
         );
       } else {
         closeModal();
@@ -160,6 +221,7 @@ const createTaskSubmit = async () => {
 };
 
 onMounted(() => {
+  getTask();
   changeModalSize("modal-4xl");
 });
 

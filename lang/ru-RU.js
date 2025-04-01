@@ -143,6 +143,7 @@ export default {
     materials: {
         material: "Материал",
         add_material: "Добавить материал",
+        edit_material: "Редактирование материала",
         delete_material: "Удаление материала",
         delete_confirm: "Вы действительно хотите удалить данный материал?",
         materials_count: "Материалов",
@@ -178,6 +179,7 @@ export default {
 
     table: {
         create: "Создать таблицу",
+        copy_and_paste_the_table_here: "Скопируйте таблицу и вставьте сюда",
         rows_count: "Количество строк",
         add_row: "Добавить строку",
         delete_rows: "Удалить строки",
@@ -185,6 +187,7 @@ export default {
         add_column: "Добавить столбец",
         delete_columns: "Удалить столбцы",
         delete_table: "Удалить таблицу",
+        table_options: "Настройки таблицы",
         has_header: "Таблица с заголовками",
         is_small: "Компактная таблица",
         is_striped: "Полосатая таблица",
@@ -264,6 +267,7 @@ export default {
             text_color: 'Цвет текста',
             border_color: 'Цвет обводки',
             fill_color: 'Цвет заливки',
+            cell_color: 'Цвет ячейки',
             border_width: 'Толщина линии',
             text_params: 'Параметры текста'
         },
@@ -511,6 +515,8 @@ export default {
             task_type: 'Тип задания',
             add_a_task: 'Добавить задание',
             adding_a_task: 'Добавление задания',
+            delete_task: "Удаление задания",
+            delete_confirm: "Вы действительно хотите удалить данное задание?",
             start_the_task: 'Начать задание',
             complete_the_task: 'Завершить задание',
             tasks_count: 'Задании',

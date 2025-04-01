@@ -1,47 +1,30 @@
 <template>
-  <div v-if="props.tableData.table && tableData.table.length > 0" class="col-span-12">
+  <div v-if="props.tableData" class="col-span-12">
     <div class="custom-grid">
       <div class="col-span-12">
         <div
           class="table table-responsive"
           :class="{
-            'table-sm': tableData.isSmall,
-            'table-striped': tableData.isStriped,
-            bordered: tableData.isBordered,
-            'text-center': tableData.textCentered,
+            'table-sm': props.options.tableSmall,
+            'table-striped': props.options.tableStriped,
+            bordered: props.options.tableBordered,
+            'text-center': props.options.textCentered,
           }"
-        >
-          <table>
-            <tbody>
-              <tr v-for="(row, rowIndex) in props.tableData.table" :key="rowIndex">
-                <template v-for="(cell, colIndex) in row" :key="colIndex">
-                  <td
-                  v-if="cell && !cell.merged"
-                    :rowspan="cell.rowspan"
-                    :colspan="cell.colspan"
-                    :class="{
-                      [cell.textColorClass]: true, // Динамический ключ
-                      th: rowIndex === 0 && tableData.hasHeader === true,
-                      'font-medium': cell.isBold,
-                      italic: cell.isItalic,
-                      underline: cell.isUnderLine,
-                      'line-through': cell.isStrike,
-                    }"
-                  >
-                    <span>{{ cell.text }}</span>
-                  </td>
-                </template>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+          v-html="sanitize(props.tableData)"
+        ></div>
       </div>
     </div>
   </div>
 </template>
 <script setup>
+import { sanitize } from "../../utils/sanitize";
+
 const props = defineProps({
   tableData: {
+    type: String,
+    required: true,
+  },
+  options: {
     type: Object,
     required: true,
   },

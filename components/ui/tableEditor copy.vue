@@ -138,19 +138,50 @@
             <template v-slot:btn_content>
               <button type="button" class="btn btn-sm btn-light">
                 <i class="pi pi-align-left" :class="currentTextColorClass"></i>
-                <span :class="currentTextColorClass">{{
-                  $t("board.params.text_color")
-                }}</span>
+                <span>{{ $t("board.params.text_color") }}</span>
               </button>
             </template>
 
             <template v-slot:menu_content>
-              <li v-for="(color, colorIndex) in colors" :key="colorIndex">
-                <button type="button" @click="changeTextColor(color)">
-                  <i class="pi pi-circle-fill" :class="color.class"></i>
-                  <span :class="color.class"> {{ color.name }}</span>
+              <div class="grid grid-cols-4 gap-1.5 py-2">
+                <button
+                  v-for="(color, colorIndex) in textColors"
+                  :key="colorIndex"
+                  type="button"
+                  @click="changeTextColor(color)"
+                >
+                  <i class="pi pi-circle-fill text-lg" :class="color"></i>
                 </button>
-              </li>
+              </div>
+            </template>
+          </dropdownMenu>
+
+          <dropdownMenu
+            :dropdownArrow="false"
+            :position="'left'"
+            :noAbsolute="false"
+          >
+            <template v-slot:btn_content>
+              <button type="button" class="btn btn-sm btn-light" :class="tableData.isStriped && 'disabled'">
+                <div
+                  class="rounded-full h-5 w-5 border-inactive"
+                  :class="currentCellColorClass"
+                ></div>
+                <span>{{ $t("board.params.cell_color") }}</span>
+              </button>
+            </template>
+
+            <template v-slot:menu_content>
+              <div class="grid grid-cols-4 gap-1.5 py-2">
+                <button
+                  v-for="(color, colorIndex) in cellColors"
+                  :key="colorIndex"
+                  type="button"
+                  @click="changeCellColor(color)"
+                >
+                  <div class="rounded-full h-5 w-5 border-inactive" :class="color"></div>
+                </button>
+              </div>
             </template>
           </dropdownMenu>
         </div>
@@ -175,7 +206,8 @@
                     :rowspan="cell.rowspan"
                     :colspan="cell.colspan"
                     :class="{
-                      [cell.textColorClass]: true, // Динамический ключ
+                      [cell.textColorClass]: true, // Динамический ключ цвета текста
+                      [cell.cellColorClass]: !tableData.isStriped, // Динамический ключ цвета ячейки
                       selected: cell.selected === true,
                       th: rowIndex === 0 && tableData.hasHeader === true,
                       'font-medium': cell.isBold,
@@ -188,7 +220,7 @@
                     @mousedown="onMouseDown"
                     @mouseover="onMouseOver(rowIndex, cellIndex)"
                   >
-                    {{ cell.text }}
+                    <span>{{ cell.text }}</span>
                   </td>
                 </template>
               </tr>
@@ -288,6 +320,7 @@ const isItalicActive = ref(false);
 const isUnderlineActive = ref(false);
 const isStrikeActive = ref(false);
 const currentTextColorClass = ref("text-active");
+const currentCellColorClass = ref("bg-active");
 
 const props = defineProps({
   tableName: {
@@ -300,56 +333,52 @@ const props = defineProps({
   },
 });
 
-const colors = [
-  {
-    class: "text-active",
-    name: "default",
-  },
-  {
-    class: "text-inactive",
-    name: "gray",
-  },
-  {
-    class: "text-red-500",
-    name: "red",
-  },
-  {
-    class: "text-green-500",
-    name: "green",
-  },
-  {
-    class: "text-blue-500",
-    name: "blue",
-  },
-  {
-    class: "text-yellow-500",
-    name: "yellow",
-  },
-  {
-    class: "text-orange-500",
-    name: "orange",
-  },
-  {
-    class: "text-cyan-500",
-    name: "cyan",
-  },
-  {
-    class: "text-violet-500",
-    name: "violet",
-  },
-  {
-    class: "text-rose-500",
-    name: "rose",
-  },
+const textColors = [
+  "text-active",
+  "text-inactive",
+  "text-red-500",
+  "text-green-500",
+  "text-blue-500",
+  "text-yellow-500",
+  "text-orange-500",
+  "text-cyan-500",
+  "text-violet-500",
+  "text-rose-500",
+];
+
+const cellColors = [
+  "bg-active",
+  "bg-inactive",
+  "bg-red-500",
+  "bg-green-500",
+  "bg-blue-500",
+  "bg-yellow-500",
+  "bg-orange-500",
+  "bg-cyan-500",
+  "bg-violet-500",
+  "bg-rose-500",
 ];
 
 const changeTextColor = (color) => {
-  currentTextColorClass.value = color.class;
+  currentTextColorClass.value = color;
 
   tableData.value.table.forEach((tr) => {
     tr.forEach((td) => {
       if (td.selected === true) {
-        td.textColorClass = color.class;
+        td.textColorClass = color;
+        td.selected = false;
+      }
+    });
+  });
+};
+
+const changeCellColor = (color) => {
+  currentCellColorClass.value = color;
+
+  tableData.value.table.forEach((tr) => {
+    tr.forEach((td) => {
+      if (td.selected === true) {
+        td.cellColorClass = color;
         td.selected = false;
       }
     });
@@ -438,6 +467,7 @@ const generateTable = () => {
     table: Array.from({ length: rows.value }, (_, rowIndex) =>
       Array.from({ length: columns.value }, (_, colIndex) => ({
         text: "",
+        cellColorClass: currentCellColorClass.value,
         textColorClass: currentTextColorClass.value,
         isBold: isBoldActive.value,
         isItalic: isItalicActive.value,

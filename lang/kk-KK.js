@@ -143,6 +143,7 @@ export default {
     materials: {
         material: "Материал",
         add_material: "Материал қосу",
+        edit_material: "Материалды өңдеу",
         delete_material: "Материалды жою",
         delete_confirm: "Сіз бұл материалды шынымен жойғыңыз келе ме?",
         materials_count: "Материалдар саны",
@@ -178,6 +179,7 @@ export default {
 
     table: {
         create: "Кесте қосу",
+        copy_and_paste_the_table_here: "Кестені осында көшіріп қойыңыз",
         rows_count: "Жолдар саны",
         add_row: "Жол қосу",
         delete_rows: "Жолдарды жою",
@@ -185,6 +187,7 @@ export default {
         add_column: "Баған қосу",
         delete_columns: "Бағандарды жою",
         delete_table: "Кестені жою",
+        table_options: "Кестенің баптаулары",
         has_header: "Тақырыптары бар кесте",
         is_small: "Кішкентай кесте",
         is_striped: "Жолақты кесте",
@@ -264,6 +267,7 @@ export default {
             text_color: 'Мәтін түсі',
             border_color: 'Жақтау түсі',
             fill_color: 'Ішкі түсі',
+            cell_color: 'Ұяшық түсі',
             border_width: 'Қалыңдығы',
             text_params: 'Мәтіннің баптаулары'
         },
@@ -511,6 +515,8 @@ export default {
             task_type: 'Тапсырманың түрі',
             add_a_task: 'Тапсырма қосу',
             adding_a_task: 'Тапсырма қосу',
+            delete_task: "Тапсырманы жою",
+            delete_confirm: "Сіз бұл тапсырманы шынымен жойғыңыз келе ме?",
             start_the_task: 'Тапсырманы бастау',
             complete_the_task: 'Тапсырманы аяқтау',
             tasks_count: 'Тапсырмалар',

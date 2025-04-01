@@ -72,6 +72,20 @@
                 >
                   <i class="pi pi-arrow-down"></i>
                 </button>
+                <button
+                  @click="openEditTask(task)"
+                  class="btn btn-square btn-light btn-sm"
+                  :title="$t('edit')"
+                >
+                  <i class="pi pi-pencil"></i>
+                </button>
+                <button
+                  @click="openDeleteModal(task)"
+                  class="btn btn-square btn-outline-danger btn-sm"
+                  :title="$t('delete')"
+                >
+                  <i class="pi pi-trash"></i>
+                </button>
               </div>
             </roleProvider>
           </div>
@@ -101,6 +115,31 @@
       <component :is="currentModal" v-bind="modalProps" />
     </template>
   </modal>
+
+  <modal
+    :show="deleteModalIsVisible"
+    :onClose="() => (deleteModalIsVisible = false)"
+    :className="'modal-lg'"
+    :showLoader="pendingDelete"
+    :closeOnClickSelf="true"
+  >
+    <template v-slot:header_content>
+      <h4>{{ $t("pages.tasks.delete_task") }}</h4>
+    </template>
+    <template v-slot:body_content>
+      <p>{{ $t("pages.tasks.delete_confirm") }}</p>
+      <div class="btn-wrap justify-end mt-4">
+        <button @click="deleteTaskSubmit()" class="btn btn-outline-danger">
+          <i class="pi pi-trash"></i>
+          {{ $t("yes") }}
+        </button>
+        <button @click="deleteModalIsVisible = false" class="btn btn-light">
+          <i class="pi pi-ban"></i>
+          {{ $t("no") }}
+        </button>
+      </div>
+    </template>
+  </modal>
 </template>
 
 <script setup>
@@ -117,14 +156,17 @@ const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
 const pendingTasks = ref(false);
 const pendingModal = ref(false);
+const pendingDelete = ref(false);
 
 const task = ref(null);
+const deleteTaskId = ref(null);
 const tasks = ref([]);
 const taskAttributes = ref([]);
 const modalClass = ref("modal-lg");
 const modalProps = ref({});
 const modalIsVisible = ref(false);
 const currentModal = shallowRef(null);
+const deleteModalIsVisible = ref(false);
 
 const props = defineProps({
   lesson_id: {
@@ -143,7 +185,6 @@ const changeModalSize = (size) => {
 const closeModal = () => {
   modalIsVisible.value = false;
   pendingModal.value = false;
-  // currentModal.value = shallowRef(null);
   task.value = null;
   getTaskAttributes();
   getLessonTasks();
@@ -163,6 +204,13 @@ provide("closeModal", closeModal);
 const openTask = (currentTask) => {
   task.value = currentTask;
   openTaskModal(task.value.task_type_component, "execution", {
+    task: currentTask,
+  });
+};
+
+const openEditTask = (currentTask) => {
+  task.value = currentTask;
+  openTaskModal(task.value.task_type_component, "edit", {
     task: currentTask,
   });
 };
@@ -219,6 +267,48 @@ const getTaskAttributes = async () => {
       } else {
         router.push("/error");
       }
+    });
+};
+
+const openDeleteModal = (task) => {
+  currentModal.value = null;
+  deleteTaskId.value = task.task_id;
+  deleteModalIsVisible.value = true;
+};
+
+const deleteTaskSubmit = async () => {
+  pendingDelete.value = true;
+  await $axiosPlugin
+    .delete(
+      "tasks/delete_task/" + props.lesson_id + "/" + deleteTaskId.value,
+      {
+        params: { operation_type_id: 22 }, // Передача параметра в URL
+      }
+    )
+    .then((response) => {
+      deleteModalIsVisible.value = false;
+      getLessonTasks();
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    })
+    .finally(() => {
+      pendingDelete.value = false;
     });
 };
 

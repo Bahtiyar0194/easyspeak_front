@@ -95,6 +95,13 @@
                   <i class="pi pi-arrow-down"></i>
                 </button>
                 <button
+                  @click="openEditModal(material)"
+                  class="btn btn-square btn-light btn-sm"
+                  :title="$t('edit')"
+                >
+                  <i class="pi pi-pencil"></i>
+                </button>
+                <button
                   @click="openDeleteModal(material)"
                   class="btn btn-square btn-outline-danger btn-sm"
                   :title="$t('delete')"
@@ -118,7 +125,11 @@
   <modal
     :show="materialModalIsVisible"
     :onClose="() => closeMaterialModal()"
-    :className="'modal-4xl'"
+    :className="
+      currentMaterial && currentMaterial.block_material_type_slug
+        ? 'modal-4xl'
+        : 'modal-lg'
+    "
     :showLoader="false"
     :closeOnClickSelf="false"
   >
@@ -126,10 +137,14 @@
       <h4>{{ currentMaterial?.annotation }}</h4>
     </template>
     <template v-slot:body_content>
-      <materialViewer
-        v-if="currentMaterial?.lesson_material_id"
-        :material="currentMaterial"
-      />
+      <div class="custom-grid">
+        <div
+          v-if="currentMaterial && currentMaterial?.lesson_material_id"
+          class="col-span-12"
+        >
+          <materialViewer :material="currentMaterial" />
+        </div>
+      </div>
     </template>
   </modal>
 
@@ -166,22 +181,22 @@
           </div>
           <uploadOrSelectFile
             v-if="currentMaterialType.material_type_category === 'file'"
-            :radioName="'upload_lesson_file'"
-            :fileInputName="'lesson_file_name'"
-            :uploadingFileName="'lesson_file'"
-            :libraryFileName="'lesson_file_from_library'"
+            :radioName="'upload_lesson_file_create'"
+            :fileInputName="'lesson_file_name_create'"
+            :uploadingFileName="'lesson_file_create'"
+            :libraryFileName="'lesson_file_from_library_create'"
             :accept="currentMaterialType.material_type_slug"
             :icon="currentMaterialType.icon"
             :errors="errors"
           />
           <textEditor
             v-else-if="currentMaterialType.material_type_slug === 'text'"
-            :inputName="'lesson_text'"
+            :inputName="'lesson_text_create'"
             :errors="errors"
           />
-          <editableTable
+          <tableEditor
             v-else-if="currentMaterialType.material_type_slug === 'table'"
-            :tableName="'lesson_table'"
+            :tableName="'lesson_table_create'"
             :errors="errors"
           />
         </div>
@@ -189,6 +204,101 @@
           <button class="btn btn-primary" type="submit">
             <i class="pi pi-check"></i>
             {{ $t("add") }}
+          </button>
+        </div>
+      </form>
+    </template>
+  </modal>
+
+  <modal
+    :show="editModalIsVisible"
+    :onClose="() => closeEditModal()"
+    :className="
+      currentMaterial && currentMaterial.block_material_type_slug
+        ? 'modal-4xl'
+        : 'modal-lg'
+    "
+    :showLoader="pendingEdit"
+    :closeOnClickSelf="false"
+  >
+    <template v-slot:header_content>
+      <h4>{{ $t("materials.edit_material") }}</h4>
+    </template>
+    <template v-if="currentMaterial" v-slot:body_content>
+      <form @submit.prevent="editMaterialSubmit" ref="editFormRef">
+        <div class="custom-grid">
+          <div class="col-span-12 mt-2">
+            <div class="form-group-border active">
+              <i class="pi pi-thumbtack"></i>
+              <input
+                name="annotation"
+                type="text"
+                :value="currentMaterial.annotation"
+                placeholder=" "
+              />
+              <label :class="{ 'label-error': errors.annotation }">
+                {{
+                  errors.annotation
+                    ? errors.annotation[0]
+                    : $t("materials.annotation")
+                }}
+              </label>
+            </div>
+          </div>
+
+          <div
+            v-if="currentMaterial.file_material_type_slug"
+            class="col-span-12"
+          >
+            <previewFileInput
+              v-if="selectOtherFile === false"
+              :fileType="currentMaterial.file_material_type_slug"
+              :previewUrl="
+                config.public.apiBase + '/media/get/' + currentMaterial.target
+              "
+              :onChange="() => (selectOtherFile = true)"
+            />
+            <div v-else class="card p-4">
+              <p class="mb-2 font-medium">
+                {{
+                  $t(
+                    "file." +
+                      currentMaterial.file_material_type_slug +
+                      ".select"
+                  )
+                }}
+              </p>
+              <div class="custom-grid">
+                <uploadOrSelectFile
+                  :radioName="'upload_lesson_file_edit'"
+                  :fileInputName="'lesson_file_name_edit'"
+                  :uploadingFileName="'lesson_file_edit'"
+                  :libraryFileName="'lesson_file_from_library_edit'"
+                  :accept="currentMaterial.file_material_type_slug"
+                  :icon="currentMaterial.file_icon"
+                  :errors="errors"
+                />
+              </div>
+            </div>
+          </div>
+
+          <textEditor
+            v-else-if="currentMaterial.block_material_type_slug === 'text'"
+            :inputName="'lesson_text_edit'"
+            :content="currentMaterial.content"
+            :errors="errors"
+          />
+          <tableEditor
+            v-else-if="currentMaterial.block_material_type_slug === 'table'"
+            :tableName="'lesson_table_edit'"
+            :material="currentMaterial"
+            :errors="errors"
+          />
+        </div>
+        <div class="btn-wrap justify-end mt-4">
+          <button class="btn btn-primary" type="submit">
+            <i class="pi pi-check"></i>
+            {{ $t("save") }}
           </button>
         </div>
       </form>
@@ -208,7 +318,10 @@
     <template v-slot:body_content>
       <p>{{ $t("materials.delete_confirm") }}</p>
       <div class="btn-wrap justify-end mt-4">
-        <button @click="deleteMaterialSubmit()" class="btn btn-outline-danger">
+        <button
+          @click="deleteMaterialSubmit(currentMaterial.lesson_material_id)"
+          class="btn btn-outline-danger"
+        >
           <i class="pi pi-trash"></i>
           {{ $t("yes") }}
         </button>
@@ -226,24 +339,30 @@ import { useRouter } from "nuxt/app";
 import dropdownMenu from "../../ui/dropdownMenu.vue";
 import roleProvider from "../../ui/roleProvider.vue";
 import modal from "../../ui/modal.vue";
+import previewFileInput from "../../ui/previewFileInput.vue";
 import uploadOrSelectFile from "../../ui/uploadOrSelectFile.vue";
 import textEditor from "../../ui/textEditor.vue";
-import editableTable from "../../ui/editableTable.vue";
+import tableEditor from "../../ui/tableEditor.vue";
 import materialViewer from "../components/materialViewer.vue";
 import alert from "../../ui/alert.vue";
 import { debounceHandler } from "../../../utils/debounceHandler";
 
 const router = useRouter();
+const config = useRuntimeConfig();
 const { $axiosPlugin } = useNuxtApp();
 const materialModalIsVisible = ref(false);
 const addModalIsVisible = ref(false);
+const editModalIsVisible = ref(false);
 const deleteModalIsVisible = ref(false);
 const addFormRef = ref(null);
+const editFormRef = ref(null);
 const pendingAdd = ref(false);
+const pendingEdit = ref(false);
 const pendingDelete = ref(false);
 const currentMaterial = ref(null);
 const currentMaterialType = ref(null);
 const errors = ref([]);
+const selectOtherFile = ref(false);
 
 const getLesson = inject("getLesson");
 
@@ -268,7 +387,9 @@ const openMaterial = (material) => {
 
 const closeMaterialModal = () => {
   currentMaterial.value = null;
-  materialModalIsVisible.value = false;
+  setTimeout(() => {
+    materialModalIsVisible.value = false;
+  }, 100);
 };
 
 const addMaterial = (material_type_slug, material_type_category, icon) => {
@@ -320,6 +441,119 @@ const addMaterialSubmit = async () => {
       } else {
         router.push("/error");
       }
+    });
+};
+
+const openEditModal = (material) => {
+  selectOtherFile.value = false;
+  currentMaterial.value = material;
+  currentMaterialType.value = {
+    material_type_slug:
+      material.file_material_type_slug || material.block_material_type_slug,
+    material_type_category:
+      material.file_material_type_category ||
+      material.block_material_type_category,
+    icon: material.file_icon || material.block_icon,
+  };
+
+  editModalIsVisible.value = true;
+};
+
+const closeEditModal = () => {
+  currentMaterial.value = null;
+  currentMaterialType.value = null;
+  pendingEdit.value = false;
+  editModalIsVisible.value = false;
+  errors.value = [];
+};
+
+const editMaterialSubmit = async () => {
+  pendingEdit.value = true;
+  const formData = new FormData(editFormRef.value);
+  formData.append("operation_type_id", 24);
+  formData.append(
+    "material_type_slug",
+    currentMaterialType.value.material_type_slug
+  );
+
+  formData.append("select_other_file", selectOtherFile.value);
+
+  await $axiosPlugin
+    .post(
+      "courses/edit_material/" +
+        props.lessonData.lesson_id +
+        "/" +
+        currentMaterial.value.lesson_material_id,
+      formData
+    )
+    .then((response) => {
+      closeEditModal();
+      getLesson();
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          pendingEdit.value = false;
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
+const openDeleteModal = (material) => {
+  currentMaterial.value = null;
+  materialModalIsVisible.value = false;
+  currentMaterial.value = material;
+  deleteModalIsVisible.value = true;
+};
+
+const deleteMaterialSubmit = async (lesson_material_id) => {
+  pendingDelete.value = true;
+  await $axiosPlugin
+    .delete(
+      "courses/delete_material/" +
+        props.lessonData.lesson_id +
+        "/" +
+        lesson_material_id,
+      {
+        params: { operation_type_id: 23 }, // Передача параметра в URL
+      }
+    )
+    .then((response) => {
+      deleteModalIsVisible.value = false;
+      getLesson();
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    })
+    .finally(() => {
+      pendingDelete.value = false;
     });
 };
 
@@ -380,50 +614,5 @@ const order = (direction, index, event) => {
   });
 
   debounceOrder();
-};
-
-const openDeleteModal = (material) => {
-  currentMaterial.value = material;
-  deleteModalIsVisible.value = true;
-};
-
-const deleteMaterialSubmit = async () => {
-  pendingDelete.value = true;
-  const formData = new FormData();
-  formData.append("operation_type_id", 23);
-
-  await $axiosPlugin
-    .post(
-      "courses/delete_material/" +
-        props.lessonData.lesson_id +
-        "/" +
-        currentMaterial.value.lesson_material_id,
-      formData
-    )
-    .then((response) => {
-      deleteModalIsVisible.value = false;
-      getLesson();
-    })
-    .catch((err) => {
-      if (err.response) {
-        if (err.response.status == 422) {
-          errors.value = err.response.data;
-        } else {
-          router.push({
-            path: "/error",
-            query: {
-              status: err.response.status,
-              message: err.response.data.message,
-              url: err.request.responseURL,
-            },
-          });
-        }
-      } else {
-        router.push("/error");
-      }
-    })
-    .finally(() => {
-      pendingDelete.value = false;
-    });
 };
 </script>

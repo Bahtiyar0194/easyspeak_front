@@ -18,7 +18,7 @@
   />
   <tableViewer
     v-else-if="props.material.block_material_type_slug === 'table'"
-    :tableData="JSON.parse(props.material.content)"
+    :tableData="props.material.content" :options="JSON.parse(props.material.options)"
   />
 </template>
 <script setup>
