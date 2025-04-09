@@ -715,14 +715,21 @@ const disableTheHiddenWord = () => {
   currentSentences.value.forEach((sentence) => {
     sentence.missingWords.forEach((word) => {
       if (word.userInput.length > 0) {
-        userInputs.push(word.userInput.toLowerCase());
+        userInputs.push({
+          word: word.userInput.toLowerCase(),
+          disabled: false,
+        });
       }
     });
   });
 
   hiddenWords.value.forEach((word) => {
-    if (userInputs.includes(word.word.toLowerCase())) {
+    const userInput = userInputs.find(
+      (w) => w.word === word.word.toLowerCase() && w.disabled === false
+    );
+    if (userInput) {
       word.disabled = true;
+      userInput.disabled = true;
     } else {
       word.disabled = false;
     }

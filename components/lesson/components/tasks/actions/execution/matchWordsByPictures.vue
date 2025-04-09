@@ -684,13 +684,20 @@ const disableTheHiddenWord = () => {
 
   currentPictures.value.forEach((picture) => {
     if (picture.userInput.length > 0) {
-      userInputs.push(picture.userInput.toLowerCase());
+      userInputs.push({
+          word: picture.userInput.toLowerCase(),
+          disabled: false,
+        });
     }
   });
 
   currentWords.value.forEach((word) => {
-    if (userInputs.includes(word.word.toLowerCase())) {
+    const userInput = userInputs.find(
+      (w) => w.word === word.word.toLowerCase() && w.disabled === false
+    );
+    if (userInput) {
       word.disabled = true;
+      userInput.disabled = true;
     } else {
       word.disabled = false;
     }
