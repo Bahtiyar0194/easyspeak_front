@@ -419,10 +419,10 @@
                   <div
                     v-for="(picture, pictureIndex) in currentPictures"
                     :key="pictureIndex"
-                    class="col-span-12 lg:col-span-6 relative rounded-xl border-inactive overflow-hidden"
+                    class="col-span-6 relative rounded-xl border-inactive overflow-hidden flex items-center justify-center"
                   >
                     <div
-                      class="absolute top-4 left-4 py-1.5 px-2 rounded-lg flex items-center border"
+                      class="absolute top-1.5 lg:top-4 left-1.5 lg:left-4 py-1.5 px-2 rounded-lg flex items-center border"
                       :class="
                         checkingStatus === true &&
                         (picture.userInput === '' || picture.userInput === ' ')

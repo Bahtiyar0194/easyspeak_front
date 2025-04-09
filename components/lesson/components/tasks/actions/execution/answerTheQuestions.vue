@@ -400,7 +400,7 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/answer_the_questions/" + props.task.task_id
+      "tasks/get/answer_the_questions/" + props.task.task_id
     );
 
     taskData.value = res.data;
