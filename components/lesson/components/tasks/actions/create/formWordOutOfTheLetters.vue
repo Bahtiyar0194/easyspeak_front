@@ -122,7 +122,7 @@ const createTaskSubmit = async () => {
   formData.append("step", currentStep.value);
 
   await $axiosPlugin
-    .post("tasks/form_a_word_out_of_the_letters/" + props.lesson_id, formData)
+    .post("tasks/create/form_a_word_out_of_the_letters/" + props.lesson_id, formData)
     .then((res) => {
       onPending(false);
       if (res.data.step) {

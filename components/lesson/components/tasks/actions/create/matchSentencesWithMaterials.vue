@@ -123,7 +123,7 @@ const createTaskSubmit = async () => {
   formData.append("step", currentStep.value);
 
   await $axiosPlugin
-    .post("tasks/match_sentences_with_materials/" + props.lesson_id, formData)
+    .post("tasks/create/match_sentences_with_materials/" + props.lesson_id, formData)
     .then((res) => {
       onPending(false);
       errors.value = [];

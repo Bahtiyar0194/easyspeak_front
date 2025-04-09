@@ -403,6 +403,46 @@
         </label>
       </div>
     </div>
+
+    <div
+      v-if="props.showMatchPicturesOptions"
+      class="col-span-12"
+    >
+      <div class="flex flex-col gap-y-2.5">
+        <p
+          class="mb-0 text-inactive"
+        >
+          {{
+            $t(
+              "pages.tasks.task_options.choose_one_of_the_methods_for_matching_words_by_pictures"
+            )
+          }}
+        </p>
+        <label class="custom-radio">
+          <input
+            type="radio"
+            :checked="true"
+            value="match_by_typing"
+            name="match_words_by_pictures_option"
+          />
+          <span>{{
+            $t("pages.tasks.match_words_by_pictures.option_1")
+          }}</span>
+        </label>
+        <label class="custom-radio">
+          <input
+            type="radio"
+            :checked="false"
+            value="match_by_number"
+            name="match_words_by_pictures_option"
+          />
+          <span>{{
+            $t("pages.tasks.match_words_by_pictures.option_2")
+          }}</span>
+        </label>
+      </div>
+    </div>
+
     <div v-if="props.sentenceMaterialTypes" class="col-span-12">
       <div class="form-group-border select active">
         <i class="pi pi-file"></i>
@@ -427,6 +467,7 @@
         </label>
       </div>
     </div>
+    
     <div v-if="props.showMaxAttempts === true" class="col-span-12">
       <div class="form-group-border select active label-active">
         <i class="pi pi-replay"></i>
@@ -563,6 +604,12 @@ const props = defineProps({
 
   findWordOption: {
     type: Object,
+    required: false,
+  },
+
+  showMatchPicturesOptions: {
+    default: false,
+    type: Boolean,
     required: false,
   },
 

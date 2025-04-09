@@ -163,29 +163,54 @@
                 v-for="(section, sectionIndex) in currentSections"
                 :key="sectionIndex"
               >
-                <div class="btn-wrap items-center">
+                <div class="flex gap-x-2 items-center">
                   <b>{{ sectionIndex + 1 }}.</b>
-                  <button
-                    type="button"
-                    v-for="(word, wordIndex) in section.words"
-                    :key="wordIndex"
-                    @click="selectWordInSection(wordIndex, sectionIndex)"
-                    class="btn btn-sm"
-                    :class="
-                      checkingStatus && section.userInput == null
-                        ? 'pulse btn-danger'
-                        : section.userInput === wordIndex
-                        ? 'btn-outline-danger pointer-events-none'
-                        : 'btn-active'
-                    "
-                    :title="
-                      section.userInput === wordIndex
-                        ? $t('pages.dictionary.this_word_is_extra')
-                        : $t('pages.dictionary.make_this_word_extra')
-                    "
-                  >
-                    {{ word.word }}
-                  </button>
+                  <div class="btn-wrap">
+                    <button
+                      type="button"
+                      v-for="(word, wordIndex) in section.words"
+                      :key="wordIndex"
+                      @click="selectWordInSection(wordIndex, sectionIndex)"
+                      class="btn"
+                      :class="
+                        checkingStatus && section.userInput == null
+                          ? 'pulse btn-danger'
+                          : section.userInput === wordIndex
+                          ? 'btn-outline-danger pointer-events-none'
+                          : 'btn-active'
+                      "
+                      :title="
+                        section.userInput === wordIndex
+                          ? $t('pages.dictionary.this_word_is_extra')
+                          : $t('pages.dictionary.make_this_word_extra')
+                      "
+                    >
+                      <audioButtonMini
+                        v-if="
+                          word.audio_file && taskData.options.show_audio_button
+                        "
+                        :src="
+                          config.public.apiBase +
+                          '/media/get/' +
+                          word.audio_file
+                        "
+                        @click.stop
+                      />
+                      <div class="flex">
+                        <span
+                          v-for="(letter, letterIndex) in word.word"
+                          :key="letterIndex"
+                          class="select-none"
+                          :class="
+                            word.missingLetters &&
+                            word.missingLetters.includes(letterIndex + 1) &&
+                            'font-medium'
+                          "
+                          >{{ letter }}</span
+                        >
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </li>
             </ul>
@@ -287,13 +312,16 @@ import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
 import taskLayout from "../../taskLayout.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
+import audioButtonMini from "../../../../../ui/audioButtonMini.vue";
+
+const config = useRuntimeConfig();
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
 
 const showTaskTimer = ref(false);
 const taskData = ref(null);
 const materials = ref([]);
-const showMaterialsOption = ref('');
+const showMaterialsOption = ref("");
 const showMaterialsBeforeTask = ref(false);
 const sections = ref([]);
 const currentSections = ref([]);
@@ -338,7 +366,7 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/find_an_extra_word/" + props.task.task_id
+      "tasks/get/find_an_extra_word/" + props.task.task_id
     );
 
     taskData.value = res.data;
@@ -351,7 +379,11 @@ const getTask = async () => {
       section.attempts = taskData.value.options.max_attempts;
     });
 
-    if (materials.value.length > 0 && (showMaterialsOption.value == 'before_starting_a_task' || showMaterialsOption.value == 'use_both')) {
+    if (
+      materials.value.length > 0 &&
+      (showMaterialsOption.value == "before_starting_a_task" ||
+        showMaterialsOption.value == "use_both")
+    ) {
       showMaterialsBeforeTask.value = true;
     } else {
       startTask();
@@ -376,7 +408,11 @@ const getTask = async () => {
 const startTask = () => {
   showMaterialsBeforeTask.value = false;
 
-  if (materials.value.length > 0 && (showMaterialsOption.value == 'during_a_task' || showMaterialsOption.value == 'use_both')) {
+  if (
+    materials.value.length > 0 &&
+    (showMaterialsOption.value == "during_a_task" ||
+      showMaterialsOption.value == "use_both")
+  ) {
     changeModalSize("modal-6xl");
   }
 

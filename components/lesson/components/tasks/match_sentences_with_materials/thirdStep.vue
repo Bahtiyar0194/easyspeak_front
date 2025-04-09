@@ -7,16 +7,27 @@
           v-for="(sentence, sentenceIndex) in selectedSentences"
           :key="sentenceIndex"
         >
-          <div class="flex flex-col gap-y-3">
-            <b class="text-xl my-2"
-              >{{ sentenceIndex + 1 }}. {{ sentence.sentence }}</b
-            >
-          </div>
+          <p class="text-xl font-medium mb-3 mt-2">
+            {{ sentenceIndex + 1 }}. {{ sentence.sentence }}
+          </p>
+
           <div class="custom-grid">
-            <div class="col-span-12">
+            <div v-if="sentence.material" class="col-span-12">
+              <previewFileInput
+                :fileType="sentenceMaterialTypeSlug"
+                :previewUrl="
+                  config.public.apiBase +
+                  '/media/get/' +
+                  sentence.material.target
+                "
+                :onChange="() => (sentence.material = null)"
+              />
+            </div>
+            <div v-else class="col-span-12">
               <div class="card p-4">
                 <div class="custom-grid">
                   <uploadOrSelectFile
+                    :key="'upload_sentence_file_' + sentenceIndex"
                     :radioName="'upload_sentence_file_' + sentenceIndex"
                     :fileInputName="'file_name_' + sentenceIndex"
                     :uploadingFileName="'file_' + sentenceIndex"
@@ -46,6 +57,8 @@
 <script setup>
 import { toRefs, defineProps } from "vue";
 import uploadOrSelectFile from "../../../../ui/uploadOrSelectFile.vue";
+import previewFileInput from "../../../../ui/previewFileInput.vue";
+const config = useRuntimeConfig();
 
 const props = defineProps({
   errors: {

@@ -13,7 +13,7 @@
         >
           <div class="custom-grid">
             <div class="col-span-12">
-              <div class="btn-wrap justify-between">
+              <div class="btn-wrap items-center justify-between">
                 <p class="mb-0 font-medium">
                   {{ $t("materials.material") }} № {{ materialIndex + 1 }}
                 </p>
@@ -45,29 +45,39 @@
                 </div>
               </div>
             </div>
-            <uploadOrSelectFile
-              v-if="material.material_type_category === 'file'"
-              :key="'upload_task_file_' + materialIndex"
-              :radioName="'upload_task_file_' + materialIndex"
-              :fileInputName="'file_name_' + materialIndex"
-              :uploadingFileName="'file_' + materialIndex"
-              :libraryFileName="'file_from_library_' + materialIndex"
-              :accept="material.material_type_slug"
-              :icon="material.icon"
-              :errors="errors"
-            />
-            <textEditor
-              v-else-if="material.material_type_slug === 'text'"
-              :key="'upload_task_text_' + materialIndex"
-              :inputName="'text_' + materialIndex"
-              :errors="errors"
-            />
-            <tableEditor
-              v-else-if="material.material_type_slug === 'table'"
-              :key="'upload_task_table_' + materialIndex"
-              :tableName="'table_' + materialIndex"
-              :errors="errors"
-            />
+            <div v-if="material.target || material.content" class="col-span-12">
+              <materialViewer
+                :material="material"
+                :key="materialIndex + '_' + material.target"
+              />
+            </div>
+            <div v-else class="col-span-12">
+              <div class="custom-grid">
+                <uploadOrSelectFile
+                  v-if="material.material_type_category === 'file'"
+                  :key="'upload_task_file_' + materialIndex"
+                  :radioName="'upload_task_file_' + materialIndex"
+                  :fileInputName="'file_name_' + materialIndex"
+                  :uploadingFileName="'file_' + materialIndex"
+                  :libraryFileName="'file_from_library_' + materialIndex"
+                  :accept="material.material_type_slug"
+                  :icon="material.icon"
+                  :errors="errors"
+                />
+                <textEditor
+                  v-else-if="material.material_type_slug === 'text'"
+                  :key="'upload_task_text_' + materialIndex"
+                  :inputName="'text_' + materialIndex"
+                  :errors="errors"
+                />
+                <tableEditor
+                  v-else-if="material.material_type_slug === 'table'"
+                  :key="'upload_task_table_' + materialIndex"
+                  :tableName="'table_' + materialIndex"
+                  :errors="errors"
+                />
+              </div>
+            </div>
           </div>
         </li>
       </TransitionGroup>
@@ -107,7 +117,10 @@
           <input
             type="radio"
             value="use_both"
-            :checked="true"
+            :checked="
+              taskOptions.show_materials_option == null ||
+              taskOptions.show_materials_option === 'use_both'
+            "
             name="show_materials_option"
           />
           <span>{{
@@ -119,6 +132,7 @@
           <input
             type="radio"
             value="during_a_task"
+            :checked="taskOptions.show_materials_option === 'during_a_task'"
             name="show_materials_option"
           />
           <span>{{
@@ -130,6 +144,9 @@
           <input
             type="radio"
             value="before_starting_a_task"
+            :checked="
+              taskOptions.show_materials_option === 'before_starting_a_task'
+            "
             name="show_materials_option"
           />
           <span>{{
@@ -149,6 +166,7 @@ import loader from "../../../ui/loader.vue";
 import uploadOrSelectFile from "../../../ui/uploadOrSelectFile.vue";
 import textEditor from "../../../ui/textEditor.vue";
 import tableEditor from "../../../ui/tableEditor.vue";
+import materialViewer from "../materialViewer.vue";
 
 const { $axiosPlugin } = useNuxtApp();
 const pending = ref(false);
@@ -169,9 +187,15 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+
+  taskOptions: {
+    type: Object,
+    required: true,
+  },
 });
 
-const { errors, sentenceMaterialTypes, taskMaterials } = toRefs(props);
+const { errors, sentenceMaterialTypes, taskMaterials, taskOptions } =
+  toRefs(props);
 
 const addMaterial = (material_type) => {
   taskMaterials.value.push(material_type);

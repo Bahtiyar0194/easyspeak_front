@@ -77,12 +77,15 @@
     <div v-if="props.showAudioButton" class="col-span-12 lg:col-span-6">
       <div class="form-group-border select active label-active">
         <i class="pi pi-volume-up"></i>
-        <select name="show_audio_button">
-          <option selected disabled value="">
+        <select
+          name="show_audio_button"
+          v-model="taskOptions.show_audio_button"
+        >
+          <option disabled value="">
             {{ $t("choose_your_option") }}
           </option>
-          <option value="1">{{ $t("yes") }}</option>
-          <option value="0">{{ $t("no") }}</option>
+          <option :value="1">{{ $t("yes") }}</option>
+          <option :value="0">{{ $t("no") }}</option>
         </select>
         <label :class="{ 'label-error': errors.show_audio_button }">
           {{ $t("pages.tasks.task_options.show_audio_button") }}
@@ -92,12 +95,15 @@
     <div v-if="props.showPlayAudioAtTheBegin" class="col-span-12 lg:col-span-6">
       <div class="form-group-border select active label-active">
         <i class="pi pi-volume-up"></i>
-        <select name="play_audio_at_the_begin">
-          <option selected disabled value="">
+        <select
+          name="play_audio_at_the_begin"
+          v-model="taskOptions.play_audio_at_the_begin"
+        >
+          <option disabled value="">
             {{ $t("choose_your_option") }}
           </option>
-          <option value="1">{{ $t("yes") }}</option>
-          <option value="0">{{ $t("no") }}</option>
+          <option :value="1">{{ $t("yes") }}</option>
+          <option :value="0">{{ $t("no") }}</option>
         </select>
         <label :class="{ 'label-error': errors.play_audio_at_the_begin }">
           {{ $t("pages.tasks.task_options.play_audio_at_the_begin") }}
@@ -110,12 +116,15 @@
     >
       <div class="form-group-border select active label-active">
         <i class="pi pi-check-circle"></i>
-        <select name="play_audio_with_the_correct_answer">
-          <option selected disabled value="">
+        <select
+          name="play_audio_with_the_correct_answer"
+          v-model="taskOptions.play_audio_with_the_correct_answer"
+        >
+          <option disabled value="">
             {{ $t("choose_your_option") }}
           </option>
-          <option value="1">{{ $t("yes") }}</option>
-          <option value="0">{{ $t("no") }}</option>
+          <option :value="1">{{ $t("yes") }}</option>
+          <option :value="0">{{ $t("no") }}</option>
         </select>
         <label
           :class="{ 'label-error': errors.play_audio_with_the_correct_answer }"
@@ -132,12 +141,15 @@
     >
       <div class="form-group-border select active label-active">
         <i class="pi pi-exclamation-circle"></i>
-        <select name="play_error_sound_with_the_incorrect_answer">
-          <option selected disabled value="">
+        <select
+          name="play_error_sound_with_the_incorrect_answer"
+          v-model="taskOptions.play_error_sound_with_the_incorrect_answer"
+        >
+          <option disabled value="">
             {{ $t("choose_your_option") }}
           </option>
-          <option value="1">{{ $t("yes") }}</option>
-          <option value="0">{{ $t("no") }}</option>
+          <option :value="1">{{ $t("yes") }}</option>
+          <option :value="0">{{ $t("no") }}</option>
         </select>
         <label
           :class="{
@@ -155,12 +167,12 @@
     <div v-if="props.showImage" class="col-span-12">
       <div class="form-group-border select active label-active">
         <i class="pi pi-image"></i>
-        <select name="show_image">
-          <option selected disabled value="">
+        <select name="show_image" v-model="taskOptions.show_image">
+          <option disabled value="">
             {{ $t("choose_your_option") }}
           </option>
-          <option value="1">{{ $t("yes") }}</option>
-          <option value="0">{{ $t("no") }}</option>
+          <option :value="1">{{ $t("yes") }}</option>
+          <option :value="0">{{ $t("no") }}</option>
         </select>
         <label :class="{ 'label-error': errors.show_image }">
           {{ $t("pages.tasks.task_options.show_image") }}
@@ -170,12 +182,12 @@
     <div v-if="props.showWord" class="col-span-12 lg:col-span-6">
       <div class="form-group-border select active label-active">
         <i class="pi pi-file-word"></i>
-        <select name="show_word">
-          <option selected disabled value="">
+        <select name="show_word" v-model="taskOptions.show_word">
+          <option disabled value="">
             {{ $t("choose_your_option") }}
           </option>
-          <option value="1">{{ $t("yes") }}</option>
-          <option value="0">{{ $t("no") }}</option>
+          <option :value="1">{{ $t("yes") }}</option>
+          <option :value="0">{{ $t("no") }}</option>
         </select>
         <label :class="{ 'label-error': errors.show_word }">
           {{ $t("pages.tasks.task_options.show_word") }}
@@ -185,12 +197,15 @@
     <div v-if="props.showTranscription" class="col-span-12 lg:col-span-6">
       <div class="form-group-border select active label-active">
         <i class="bi bi-braces"></i>
-        <select name="show_transcription">
-          <option selected disabled value="">
+        <select
+          name="show_transcription"
+          v-model="taskOptions.show_transcription"
+        >
+          <option disabled value="">
             {{ $t("choose_your_option") }}
           </option>
-          <option value="1">{{ $t("yes") }}</option>
-          <option value="0">{{ $t("no") }}</option>
+          <option :value="1">{{ $t("yes") }}</option>
+          <option :value="0">{{ $t("no") }}</option>
         </select>
         <label :class="{ 'label-error': errors.show_transcription }">
           {{ $t("pages.tasks.task_options.show_transcription") }}
@@ -200,12 +215,12 @@
     <div v-if="props.showTranslate" class="col-span-12">
       <div class="form-group-border select active label-active">
         <i class="pi pi-language"></i>
-        <select name="show_translate">
-          <option selected disabled value="">
+        <select name="show_translate" v-model="taskOptions.show_translate">
+          <option disabled value="">
             {{ $t("choose_your_option") }}
           </option>
-          <option value="1">{{ $t("yes") }}</option>
-          <option value="0">{{ $t("no") }}</option>
+          <option :value="1">{{ $t("yes") }}</option>
+          <option :value="0">{{ $t("no") }}</option>
         </select>
         <label :class="{ 'label-error': errors.show_translate }">
           {{ $t("pages.tasks.task_options.show_translate") }}
@@ -215,11 +230,11 @@
     <div v-if="props.showImpressionLimit" class="col-span-12">
       <div class="form-group-border select active label-active">
         <i class="pi pi-eye"></i>
-        <select name="impression_limit">
+        <select name="impression_limit" v-model="taskOptions.impression_limit">
           <option disabled value="">
             {{ $t("choose_your_option") }}
           </option>
-          <option v-for="item in impressionLimits" :selected="item === taskOptions.impression_limit" :key="item" :value="item">
+          <option v-for="item in impressionLimits" :key="item" :value="item">
             {{ item }}
           </option>
         </select>
@@ -231,8 +246,8 @@
     <div v-if="props.showOptionsNum" class="col-span-12">
       <div class="form-group-border select active label-active">
         <i class="pi pi-th-large"></i>
-        <select name="options_num">
-          <option selected disabled value="">
+        <select name="options_num" v-model="taskOptions.options_num">
+          <option disabled value="">
             {{ $t("choose_your_option") }}
           </option>
           <option v-for="item in optionsNum" :key="item" :value="item">
@@ -247,7 +262,12 @@
     <div v-if="props.showSecondsPerWord" class="col-span-12">
       <div class="form-group-border active">
         <i class="pi pi-stopwatch"></i>
-        <input name="seconds_per_word" type="number" placeholder=" " />
+        <input
+          name="seconds_per_word"
+          type="number"
+          v-model="taskOptions.seconds_per_word"
+          placeholder=" "
+        />
         <label :class="{ 'label-error': errors.seconds_per_word }">
           {{
             errors.seconds_per_word
@@ -260,7 +280,12 @@
     <div v-if="props.showSecondsPerSentence" class="col-span-12">
       <div class="form-group-border active">
         <i class="pi pi-stopwatch"></i>
-        <input name="seconds_per_sentence" type="number" v-model="taskOptions.seconds_per_sentence" placeholder=" " />
+        <input
+          name="seconds_per_sentence"
+          type="number"
+          v-model="taskOptions.seconds_per_sentence"
+          placeholder=" "
+        />
         <label :class="{ 'label-error': errors.seconds_per_sentence }">
           {{
             errors.seconds_per_sentence
@@ -273,7 +298,12 @@
     <div v-if="props.showSecondsPerSection" class="col-span-12">
       <div class="form-group-border active">
         <i class="pi pi-stopwatch"></i>
-        <input name="seconds_per_section" type="number" placeholder=" " />
+        <input
+          name="seconds_per_section"
+          type="number"
+          v-model="taskOptions.seconds_per_section"
+          placeholder=" "
+        />
         <label :class="{ 'label-error': errors.seconds_per_section }">
           {{
             errors.seconds_per_section
@@ -286,7 +316,12 @@
     <div v-if="props.showSecondsPerQuestion" class="col-span-12">
       <div class="form-group-border active">
         <i class="pi pi-stopwatch"></i>
-        <input name="seconds_per_question" type="number" placeholder=" " />
+        <input
+          name="seconds_per_question"
+          type="number"
+          v-model="taskOptions.seconds_per_question"
+          placeholder=" "
+        />
         <label :class="{ 'label-error': errors.seconds_per_question }">
           {{
             errors.seconds_per_question
@@ -301,7 +336,7 @@
         <label class="custom-radio">
           <input
             type="radio"
-            :checked="true"
+            :checked="taskOptions.in_the_main_lang === 1"
             value="1"
             name="in_the_main_lang"
           />
@@ -311,7 +346,12 @@
         </label>
 
         <label class="custom-radio">
-          <input type="radio" value="0" name="in_the_main_lang" />
+          <input
+            type="radio"
+            :checked="taskOptions.in_the_main_lang === 0"
+            value="0"
+            name="in_the_main_lang"
+          />
           <span>{{
             $t("pages.tasks.translate.from_the_current_lang_to_the_main_lang")
           }}</span>
@@ -387,7 +427,11 @@
           v-if="props.showMatchByTyping"
           class="custom-radio-checkbox text-nowrap"
         >
-          <input type="checkbox" :checked="false" name="match_by_typing" />
+          <input
+            type="checkbox"
+            :checked="taskOptions.match_by_typing === 1"
+            name="match_by_typing"
+          />
           <span>{{ $t("pages.tasks.task_options.match_by_typing") }}</span>
         </label>
 
@@ -395,7 +439,11 @@
           v-if="props.showMatchByClicking"
           class="custom-radio-checkbox text-nowrap"
         >
-          <input type="checkbox" :checked="false" name="match_by_clicking" />
+          <input
+            type="checkbox"
+            :checked="taskOptions.match_by_clicking === 1"
+            name="match_by_clicking"
+          />
           <span>{{ $t("pages.tasks.task_options.match_by_clicking") }}</span>
         </label>
 
@@ -405,7 +453,7 @@
         >
           <input
             type="checkbox"
-            :checked="false"
+            :checked="taskOptions.match_by_drag_and_drop === 1"
             name="match_by_drag_and_drop"
           />
           <span>{{
@@ -414,11 +462,51 @@
         </label>
       </div>
     </div>
-    <div v-if="props.sentenceMaterialTypes" class="col-span-12">
+
+    <div
+      v-if="props.showMatchPicturesOptions"
+      class="col-span-12"
+    >
+      <div class="flex flex-col gap-y-2.5">
+        <p
+          class="mb-0 text-inactive"
+        >
+          {{
+            $t(
+              "pages.tasks.task_options.choose_one_of_the_methods_for_matching_words_by_pictures"
+            )
+          }}
+        </p>
+        <label class="custom-radio">
+          <input
+            type="radio"
+            :checked="taskOptions.match_words_by_pictures_option === 'match_by_typing'"
+            value="match_by_typing"
+            name="match_words_by_pictures_option"
+          />
+          <span>{{
+            $t("pages.tasks.match_words_by_pictures.option_1")
+          }}</span>
+        </label>
+        <label class="custom-radio">
+          <input
+            type="radio"
+            :checked="taskOptions.match_words_by_pictures_option === 'match_by_number'"
+            value="match_by_number"
+            name="match_words_by_pictures_option"
+          />
+          <span>{{
+            $t("pages.tasks.match_words_by_pictures.option_2")
+          }}</span>
+        </label>
+      </div>
+    </div>
+
+    <div v-if="sentenceMaterialTypes" class="col-span-12">
       <div class="form-group-border select active">
         <i class="pi pi-file"></i>
-        <select v-model="sentenceMaterialTypeSlug">
-          <option selected disabled value="">
+        <select v-model="sentenceMaterialTypeSlug" @change="removeSentenceMaterials()">
+          <option disabled value="">
             {{ $t("file.choose_a_file_type") }}
           </option>
           <option
@@ -441,11 +529,11 @@
     <div v-if="props.showMaxAttempts === true" class="col-span-12">
       <div class="form-group-border select active label-active">
         <i class="pi pi-replay"></i>
-        <select name="max_attempts">
+        <select name="max_attempts" v-model="taskOptions.max_attempts">
           <option selected disabled value="">
             {{ $t("choose_your_option") }}
           </option>
-          <option v-for="item in maxAttempts" :key="item" :selected="item === taskOptions.max_attempts" :value="item">
+          <option v-for="item in maxAttempts" :key="item" :value="item">
             {{ item }}
           </option>
         </select>
@@ -456,7 +544,11 @@
     </div>
     <div class="col-span-12">
       <label class="custom-radio-checkbox text-nowrap">
-        <input type="checkbox" :checked="taskOptions.random_order === 1" name="random_order" />
+        <input
+          type="checkbox"
+          :checked="taskOptions.random_order === 1"
+          name="random_order"
+        />
         <span>{{ $t("random_order") }}</span>
       </label>
     </div>
@@ -585,6 +677,12 @@ const props = defineProps({
     required: false,
   },
 
+  showMatchPicturesOptions: {
+    default: false,
+    type: Boolean,
+    required: false,
+  },
+
   showAnswerTheQuestionsOptions: {
     default: false,
     type: Boolean,
@@ -641,7 +739,7 @@ const {
   sentenceMaterialTypeSlug,
 } = toRefs(props);
 
-const showTaskExample = ref(task.value.task_example ? true : false);
+const showTaskExample = ref(false);
 const impressionLimits = ref([2, 4]);
 const optionsNum = ref([2, 3, 4]);
 const maxAttempts = ref([0, 1, 2, 3, 4, 5]);
@@ -654,4 +752,11 @@ const missingWordOptions = [
 ];
 
 const answerTheQuestionsOptions = ["text", "video", "audio"];
+
+watch(
+  () => task.value.task_example,
+  (newVal) => {
+    showTaskExample.value = (task.value.task_example ? true : false);
+  }
+);
 </script>

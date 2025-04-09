@@ -43,26 +43,20 @@
 import { useRouter } from "nuxt/app";
 import steps from "../../../../../ui/steps.vue";
 import selectSentences from "../../selectSentences.vue";
-import thirdStep from "../../fill-in-the-blanks-in-the-sentence/thirdStep.vue";
+import thirdStep from "../../match_sentences_with_materials/thirdStep.vue";
 import editTaskMaterialsForm from "../../editTaskMaterialsForm.vue";
 import editTaskOptionsForm from "../../editTaskOptionsForm.vue";
-import { watch } from "vue";
-
-const props = defineProps({
-  task: {
-    required: true,
-  },
-});
 
 const { t } = useI18n();
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
 const editFormRef = ref(null);
-const selectedSentences = ref([]);
 const task = ref({});
 const taskOptions = ref({});
 const taskMaterials = ref([]);
-const findWordOption = ref("with_hints");
+const selectedSentences = ref([]);
+const sentenceMaterialTypes = ref([]);
+const sentenceMaterialTypeSlug = ref("");
 
 const errors = ref([]);
 
@@ -70,18 +64,24 @@ const onPending = inject("onPending");
 const changeModalSize = inject("changeModalSize");
 const closeModal = inject("closeModal");
 
+const props = defineProps({
+  task: {
+    required: true,
+  },
+});
+
 const editTaskSteps = [
   {
     title: t("pages.tasks.task_options.title"),
     component: editTaskOptionsForm,
     props: {
+      errors,
       task,
       taskOptions,
-      errors,
       showImpressionLimit: true,
-      showMissingWordsOptions: true,
-      findWordOption,
       showSecondsPerSentence: true,
+      sentenceMaterialTypes,
+      sentenceMaterialTypeSlug,
     },
     modalSize: "4xl",
   },
@@ -92,9 +92,9 @@ const editTaskSteps = [
     modalSize: "full",
   },
   {
-    title: t("pages.dictionary.select_words"),
+    title: t("materials.sentence_materials"),
     component: thirdStep,
-    props: { errors, selectedSentences, findWordOption },
+    props: { errors, selectedSentences, sentenceMaterialTypeSlug },
     modalSize: "3xl",
   },
   {
@@ -104,6 +104,7 @@ const editTaskSteps = [
       errors,
       taskMaterials,
       taskOptions,
+      sentenceMaterialTypes,
     },
     modalSize: "2xl",
   },
@@ -121,38 +122,13 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/get/fill_in_the_blanks_in_the_sentence/" + props.task.task_id
+      "tasks/get/match_sentences_with_materials/" + props.task.task_id
     );
     task.value = res.data.task;
     taskOptions.value = res.data.options;
     taskMaterials.value = res.data.materials;
-    findWordOption.value = res.data.options.find_word_option;
-    setTimeout(() => {
-      selectedSentences.value = res.data.sentences;
-
-      selectedSentences.value.forEach((sentence) => {
-        if (findWordOption.value === "with_options") {
-          if (!sentence.removedWordOptions) {
-            sentence.removedWordOptions = [];
-          }
-
-          sentence.missingWords.forEach((word) => {
-            if (Number.isInteger(word.word_position)) {
-              sentence.removedWordIndex = word.word_position;
-            }
-            sentence.removedWordOptions.push(word.word_option);
-          });
-        } else {
-          if (!sentence.removedWordsIndex) {
-            sentence.removedWordsIndex = [];
-          }
-
-          sentence.missingWords.forEach((word) => {
-            sentence.removedWordsIndex.push(word.word_position);
-          });
-        }
-      });
-    }, 200);
+    sentenceMaterialTypeSlug.value = res.data.options.sentence_material_type_slug;
+    selectedSentences.value = res.data.sentences;
   } catch (err) {
     const errorRoute = err.response
       ? {
@@ -175,16 +151,13 @@ const editTaskSubmit = async () => {
   const formData = new FormData(editFormRef.value);
   formData.append("sentences_count", selectedSentences.value.length);
   formData.append("sentences", JSON.stringify(selectedSentences.value));
+  formData.append("sentence_material_type_slug", sentenceMaterialTypeSlug.value);
   formData.append("task_materials", JSON.stringify(taskMaterials.value));
-  formData.append("find_word_option", findWordOption.value);
   formData.append("operation_type_id", 14);
   formData.append("step", currentStep.value);
 
   await $axiosPlugin
-    .post(
-      "tasks/edit/fill_in_the_blanks_in_the_sentence/" + props.task.task_id,
-      formData
-    )
+    .post("tasks/edit/match_sentences_with_materials/" + props.task.task_id, formData)
     .then((res) => {
       onPending(false);
       errors.value = [];
@@ -224,14 +197,13 @@ onMounted(() => {
 });
 
 watch(
-  () => findWordOption.value,
+  () => sentenceMaterialTypeSlug.value,
   (newVal) => {
-    selectedSentences.value.forEach((sentence) => {
-      sentence.removedWordIndex = null;
-      sentence.removedWordsIndex = [];
-      sentence.removedWordOptions = [];
-    });
-    selectedSentences.value = [];
+    if(newVal != taskOptions.value.sentence_material_type_slug){
+      selectedSentences.value.forEach(sentence => {
+        sentence.material = null;        
+      });
+    }
   }
 );
 </script>

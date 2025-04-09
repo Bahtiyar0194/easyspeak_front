@@ -364,7 +364,7 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/missing_letters/" + props.task.task_id
+      "tasks/get/missing_letters/" + props.task.task_id
     );
 
     taskData.value = res.data;

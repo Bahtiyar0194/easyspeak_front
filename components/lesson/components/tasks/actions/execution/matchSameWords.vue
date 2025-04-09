@@ -569,7 +569,7 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/match_words_with_same_sounds/" + props.task.task_id
+      "tasks/get/match_same_words/" + props.task.task_id
     );
     taskData.value = res.data;
     showMaterialsOption.value = taskData.value.options.show_materials_option;

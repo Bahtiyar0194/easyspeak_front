@@ -1,14 +1,14 @@
 <template>
   <div class="custom-grid">
     <note
-      :message="$t('pages.tasks.match_words_with_same_sounds.note_2')"
+      :message="$t('pages.tasks.match_same_words.note_2')"
       :className="'outline-success'"
     />
     <div class="col-span-12">
       <ul class="list-group nowrap">
         <li v-for="(section, sectionIndex) in wordSections" :key="sectionIndex">
           <div class="btn-wrap lg items-center">
-            <div v-for="(word, wordIndex) in section" :key="wordIndex">
+            <div v-for="(word, wordIndex) in section.words" :key="wordIndex">
               <!-- <p class="mb-1">{{ wordIndex + 1 }}. {{ word.word }}</p> -->
               <div class="btn-wrap items-center sm">
                 <div
@@ -64,7 +64,7 @@ const props = defineProps({
 });
 
 const toggleLetterRemoval = (letterIndex, wordIndex, sectionIndex) => {
-  const word = wordSections.value[sectionIndex][wordIndex];
+  const word = wordSections.value[sectionIndex].words[wordIndex];
   if (!word.removedLetters) {
     word.removedLetters = [];
   }

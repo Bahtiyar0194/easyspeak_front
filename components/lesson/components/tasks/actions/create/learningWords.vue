@@ -118,7 +118,7 @@ const createTaskSubmit = async () => {
   formData.append("step", currentStep.value);
 
   await $axiosPlugin
-    .post("tasks/learning_words/" + props.lesson_id, formData)
+    .post("tasks/create/learning_words/" + props.lesson_id, formData)
     .then((res) => {
       onPending(false);
       if (res.data.step) {

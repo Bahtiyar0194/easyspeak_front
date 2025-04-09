@@ -213,7 +213,7 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/form_a_sentence_out_of_the_words/" + props.task.task_id
+      "tasks/get/form_a_sentence_out_of_the_words/" + props.task.task_id
     );
     taskData.value = res.data;
     showMaterialsOption.value = taskData.value.options.show_materials_option;

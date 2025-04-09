@@ -14,7 +14,7 @@
                         <div class="btn-wrap items-center">
                             <b>{{ sectionIndex + 1 }}.</b>
                             <button @click="targetWordInSection(wordIndex, sectionIndex)" type="button"
-                                v-for="(word, wordIndex) in section"
+                                v-for="(word, wordIndex) in section.words"
                                 :key="`${word + '-' + wordIndex + '-' + sectionIndex}`" class="btn btn-sm"
                                 :class="word.target === true ? 'btn-outline-danger line-through pointer-events-none' : 'btn-active'"
                                 :title="word.target === true ? $t('pages.dictionary.this_word_is_extra') : $t('pages.dictionary.make_this_word_extra')">{{

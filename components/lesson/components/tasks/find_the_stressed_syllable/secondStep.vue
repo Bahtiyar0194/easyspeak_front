@@ -35,16 +35,18 @@
           </div>
 
           <div
-            v-if="word.wordSyllables && word.wordSyllables.length > 1"
+            v-if="word.syllables && word.syllables.length > 1"
             class="btn-wrap mt-2"
           >
             <button
-              v-for="(syllable, syllableIndex) in word.wordSyllables"
-              :key="syllableIndex"
+              v-for="(syllable, syllableIndex) in word.syllables"
+              :key="wordIndex + '-' + syllableIndex"
               type="button"
               class="btn btn-sm lowercase"
               :class="
-                syllable.target === true ? 'btn-outline-primary underline' : 'btn-light'
+                syllable.target === true
+                  ? 'btn-outline-primary underline'
+                  : 'btn-light'
               "
               @click="selectSyllable(syllableIndex, wordIndex)"
               v-motion="{
@@ -102,7 +104,7 @@ const toggleSyllable = (letterIndex, wordIndex) => {
   }
 
   // Разделение слова на части
-  word.wordSyllables = splitWordBySyllables(word.word, word.syllableIndexes);
+  word.syllables = splitWordBySyllables(word.word, word.syllableIndexes);
 };
 
 const splitWordBySyllables = (word, syllableIndexes) => {
@@ -128,11 +130,11 @@ const splitWordBySyllables = (word, syllableIndexes) => {
 };
 
 const selectSyllable = (syllableIndex, wordIndex) => {
-  selectedWords.value[wordIndex].wordSyllables.forEach((syllable) => {
+  selectedWords.value[wordIndex].syllables.forEach((syllable) => {
     syllable.target = false;
   });
 
-  selectedWords.value[wordIndex].wordSyllables[syllableIndex].target = true;
+  selectedWords.value[wordIndex].syllables[syllableIndex].target = true;
 };
 
 const { errors, selectedWords } = toRefs(props);

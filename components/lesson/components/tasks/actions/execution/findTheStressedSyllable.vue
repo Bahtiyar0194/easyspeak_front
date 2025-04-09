@@ -328,7 +328,7 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/find_the_stressed_syllable/" + props.task.task_id
+      "tasks/get/find_the_stressed_syllable/" + props.task.task_id
     );
 
     taskData.value = res.data;
@@ -422,7 +422,7 @@ const checkWords = () => {
       (w) => w.task_word_id !== word.task_word_id
     );
 
-    if (word.syllables[word.userInput].target == true) {
+    if (word.userInput !== "" && word.syllables[word.userInput].target == true) {
       studiedWords.value.push(word);
       currentStudiedWords.value.push(word);
 

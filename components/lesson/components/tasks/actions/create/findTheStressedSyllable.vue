@@ -118,7 +118,7 @@ const createTaskSubmit = async () => {
   formData.append("step", currentStep.value);
 
   await $axiosPlugin
-    .post("tasks/find_the_stressed_syllable/" + props.lesson_id, formData)
+    .post("tasks/create/find_the_stressed_syllable/" + props.lesson_id, formData)
     .then((res) => {
       onPending(false);
       if (res.data.step) {

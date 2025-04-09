@@ -1,6 +1,6 @@
 <template>
     <div class="custom-grid">
-        <note :message="$t('pages.tasks.match_words_with_same_sounds.note_1')" :className="'outline-success text-sm'" />
+        <note :message="$t('pages.tasks.match_same_words.note_1')" :className="'outline-success text-sm'" />
 
         <div v-if="addWordsSectionIsVisible === true" class="col-span-12">
             <selectWordsFromDictionary :selectedWords="selectedWords" :minimumWordsCount="minimumWordsCount"
@@ -14,7 +14,7 @@
                         <div class="btn-wrap items-center">
                             <b>{{ sectionIndex + 1 }}.</b>
                             <div
-                                v-for="(word, wordIndex) in section"
+                                v-for="(word, wordIndex) in section.words"
                                 :key="`${word + '-' + wordIndex + '-' + sectionIndex}`" class="btn btn-sm select-none"
                                 :class="word.target === true ? 'btn-outline-danger pointer-events-none line-through' : 'btn-active'">{{
                                     word.word

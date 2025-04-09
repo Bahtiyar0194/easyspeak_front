@@ -17,7 +17,7 @@
                 class="btn btn-square btn-sm lowercase font-medium"
                 :class="
                   word.removedLetters?.includes(letterIndex)
-                    ? 'btn-inactive line-through opacity-50'
+                    ? 'btn-outline-danger line-through'
                     : 'btn-light'
                 "
                 @click="toggleLetterRemoval(letterIndex, wordIndex)"

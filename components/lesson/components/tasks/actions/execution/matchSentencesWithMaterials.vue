@@ -373,7 +373,7 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/match_sentences_with_materials/" + props.task.task_id
+      "tasks/get/match_sentences_with_materials/" + props.task.task_id
     );
 
     taskData.value = res.data;

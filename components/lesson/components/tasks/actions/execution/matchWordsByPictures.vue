@@ -63,10 +63,14 @@
                         word.image_file +
                         ')',
                     }"
-                    class="w-10 h-10 bg-cover bg-no-repeat bg-center"
+                    class="w-16 h-16 bg-cover bg-no-repeat bg-center border-inactive rounded-xl"
                   ></div>
 
                   <div
+                    v-if="
+                      taskData.options.match_words_by_pictures_option ===
+                      'match_by_number'
+                    "
                     class="btn btn-square btn-outline-success pointer-events-none font-medium"
                   >
                     {{ word.userInput }}
@@ -105,13 +109,31 @@
                 :key="rIndex"
                 class="flex justify-between items-center gap-x-2"
               >
-                <div class="flex flex-wrap gap-4">
+                <div class="flex flex-wrap gap-4 items-center">
+                  <div
+                    v-if="word.image_file"
+                    :style="{
+                      backgroundImage:
+                        'url(' +
+                        config.public.apiBase +
+                        '/media/get/' +
+                        word.image_file +
+                        ')',
+                    }"
+                    class="w-16 h-16 bg-cover bg-no-repeat bg-center border-inactive rounded-xl"
+                  ></div>
                   <div>
-                    <p class="mb-1 text-inactive font-normal">
+                    <p class="mb-1 text-xs text-inactive font-normal">
                       {{ $t("your_answer") }}:
                     </p>
 
-                    <div class="flex items-center gap-x-2">
+                    <div
+                      v-if="
+                        taskData.options.match_words_by_pictures_option ===
+                        'match_by_number'
+                      "
+                      class="flex items-center gap-x-2"
+                    >
                       <div
                         class="btn btn-square btn-outline-danger pointer-events-none font-medium"
                       >
@@ -127,14 +149,54 @@
                         }}</span>
                       </div>
                     </div>
+
+                    <div
+                      v-else-if="
+                        taskData.options.match_words_by_pictures_option ===
+                        'match_by_typing'
+                      "
+                      class="flex items-center gap-x-2 text-danger"
+                    >
+                      <div class="flex flex-col">
+                        <div class="font-medium">
+                          {{
+                            currentPictures.find(
+                              (p) => p.task_word_id === word.task_word_id
+                            ).userInput === "" ||
+                            currentPictures.find(
+                              (p) => p.task_word_id === word.task_word_id
+                            ).userInput === " "
+                              ? "_______"
+                              : currentPictures.find(
+                                  (p) => p.task_word_id === word.task_word_id
+                                ).userInput
+                          }}
+                        </div>
+                        <span class="text-xs">
+                          {{
+                            findTranslate(
+                              currentPictures.find(
+                                (p) => p.task_word_id === word.task_word_id
+                              ).userInput
+                            )
+                          }}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
                   <div>
-                    <p class="mb-1 text-inactive font-normal">
+                    <p class="mb-1 text-xs text-inactive font-normal">
                       {{ $t("right_answer") }}:
                     </p>
 
-                    <div class="flex items-center gap-x-2">
+                    <div
+                      v-if="
+                        taskData.options.match_words_by_pictures_option ===
+                        'match_by_number'
+                      "
+                      class="flex items-center gap-x-2"
+                    >
                       <div
                         class="btn btn-square btn-outline-success pointer-events-none font-medium"
                       >
@@ -152,6 +214,21 @@
                         <span class="text-xs text-inactive">{{
                           word.word_translate
                         }}</span>
+                      </div>
+                    </div>
+
+                    <div
+                      v-else-if="
+                        taskData.options.match_words_by_pictures_option ===
+                        'match_by_typing'
+                      "
+                      class="flex items-center gap-x-2 text-success"
+                    >
+                      <div class="flex flex-col">
+                        <div class="font-medium">
+                          {{ word.word }}
+                        </div>
+                        <span class="text-xs">{{ word.word_translate }}</span>
                       </div>
                     </div>
                   </div>
@@ -184,70 +261,140 @@
 
       <div v-else class="col-span-12">
         <div class="custom-grid">
-          <div class="col-span-12 lg:col-span-6">
+          <div
+            v-if="
+              taskData.options.match_words_by_pictures_option ===
+              'match_by_number'
+            "
+            class="col-span-12"
+          >
             <div class="custom-grid">
-              <div
-                v-for="(picture, pictureIndex) in currentPictures"
-                :key="pictureIndex"
-                class="col-span-3 lg:col-span-6 relative rounded-xl border-inactive overflow-hidden"
-              >
-                <div
-                  class="absolute left-2 top-2 w-6 h-6 bg-success rounded-full flex items-center justify-center text-white text-lg"
-                >
-                  {{ pictureIndex + 1 }}
+              <div class="col-span-12 lg:col-span-6">
+                <div class="custom-grid">
+                  <div
+                    v-for="(picture, pictureIndex) in currentPictures"
+                    :key="pictureIndex"
+                    class="col-span-3 lg:col-span-6 relative rounded-xl border-inactive overflow-hidden"
+                  >
+                    <div
+                      class="absolute left-2 top-2 w-6 h-6 bg-success rounded-full flex items-center justify-center text-white text-lg"
+                    >
+                      {{ pictureIndex + 1 }}
+                    </div>
+                    <img
+                      class="w-full p-3"
+                      :src="
+                        config.public.apiBase +
+                        '/media/get/' +
+                        picture.image_file
+                      "
+                    />
+                  </div>
                 </div>
-                <img
-                  class="w-full p-3"
-                  :src="
-                    config.public.apiBase + '/media/get/' + picture.image_file
-                  "
-                />
+              </div>
+
+              <div class="col-span-12 lg:col-span-6">
+                <ul class="list-group nowrap">
+                  <li
+                    v-for="(word, wordIndex) in currentWords"
+                    :key="wordIndex"
+                    class="list-item"
+                  >
+                    <div class="flex gap-3 items-center text-lg">
+                      <div
+                        @click="focusInput($event)"
+                        class="btn btn-square btn-lg flex justify-center items-center"
+                        :class="
+                          checkingStatus === true &&
+                          (word.userInput === '' || word.userInput === ' ')
+                            ? 'pulse btn-danger'
+                            : 'btn-outline-primary'
+                        "
+                      >
+                        <input
+                          v-model="word.userInput"
+                          @input="changeFocus($event)"
+                          type="text"
+                          class="user_input"
+                          :style="{
+                            width:
+                              currentWords.length.toString().length +
+                              0.5 +
+                              'ch',
+                            textAlign: 'center',
+                          }"
+                          :maxlength="currentWords.length.toString().length"
+                        />
+                      </div>
+
+                      <div class="flex gap-x-2 items-center">
+                        <audioButton
+                          v-if="
+                            word.audio_file &&
+                            taskData?.options?.show_audio_button
+                          "
+                          :src="
+                            config.public.apiBase +
+                            '/media/get/' +
+                            word.audio_file
+                          "
+                        />
+                        <div class="flex flex-col">
+                          <span class="font-medium">{{ word.word }}</span>
+                          <div class="flex flex-wrap gap-x-2">
+                            <span
+                              v-if="taskData?.options?.show_transcription"
+                              class="text-xs"
+                            >
+                              [{{ word.transcription }}]
+                            </span>
+                            <span
+                              v-if="taskData?.options?.show_translate"
+                              class="text-inactive text-xs"
+                            >
+                              {{ word.word_translate }}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
-
-          <div class="col-span-12 lg:col-span-6">
-            <ul class="list-group nowrap">
-              <li
-                v-for="(word, wordIndex) in currentWords"
-                :key="wordIndex"
-                class="list-item"
-              >
-                <div class="flex gap-3 items-center text-lg">
-                  <div
-                    @click="focusInput($event)"
-                    class="btn btn-square btn-lg flex justify-center items-center"
-                    :class="
-                      checkingStatus === true &&
-                      (word.userInput === '' || word.userInput === ' ')
-                        ? 'pulse btn-danger'
-                        : 'btn-outline-primary'
-                    "
+          <div
+            class="col-span-12"
+            v-else-if="
+              taskData.options.match_words_by_pictures_option ===
+              'match_by_typing'
+            "
+          >
+            <div class="custom-grid">
+              <div class="col-span-12">
+                <div class="btn-wrap items-start">
+                  <button
+                    v-for="(word, wordIndex) in currentWords"
+                    :key="wordIndex"
+                    type="button"
+                    class="btn btn btn-light draggable"
+                    :class="{
+                      'disabled line-through': word.disabled,
+                    }"
+                    :draggable="true"
+                    @dragstart="onDragStart($event, wordIndex)"
+                    @click="insertWordToInput(word)"
                   >
-                    <input
-                      v-model="word.userInput"
-                      @input="changeFocus($event)"
-                      type="text"
-                      class="user_input"
-                      :style="{
-                        width:
-                          currentWords.length.toString().length + 0.5 + 'ch',
-                        textAlign: 'center',
-                      }"
-                      :maxlength="currentWords.length.toString().length"
-                    />
-                  </div>
-
-                  <div class="flex gap-x-2 items-center">
-                    <audioButton
+                    <audioButtonMini
                       v-if="
-                        word.audio_file && taskData?.options?.show_audio_button
+                        word.audio_file && taskData.options.show_audio_button
                       "
                       :src="
                         config.public.apiBase + '/media/get/' + word.audio_file
                       "
+                      @click.stop
                     />
-                    <div class="flex flex-col">
+                    <div class="flex gap-y-0 flex-col items-start">
                       <span class="font-medium">{{ word.word }}</span>
                       <div class="flex flex-wrap gap-x-2">
                         <span
@@ -264,12 +411,61 @@
                         </span>
                       </div>
                     </div>
+                  </button>
+                </div>
+              </div>
+              <div class="col-span-12">
+                <div class="custom-grid">
+                  <div
+                    v-for="(picture, pictureIndex) in currentPictures"
+                    :key="pictureIndex"
+                    class="col-span-12 lg:col-span-6 relative rounded-xl border-inactive overflow-hidden"
+                  >
+                    <div
+                      class="absolute top-4 left-4 py-1.5 px-2 rounded-lg flex items-center border"
+                      :class="
+                        checkingStatus === true &&
+                        (picture.userInput === '' || picture.userInput === ' ')
+                          ? 'pulse border-danger bg-danger'
+                          : 'border-active bg-active'
+                      "
+                      @drop="onDrop($event, pictureIndex)"
+                      @dragover="onDragOver"
+                    >
+                      <input
+                        v-model="picture.userInput"
+                        :disabled="false"
+                        :style="{
+                          width:
+                            picture.userInput !== ''
+                              ? picture.userInput.length + 0.5 + 'ch'
+                              : '10ch',
+                          'text-align': 'center',
+                        }"
+                        @input="disableTheHiddenWord()"
+                        type="text"
+                      />
+                      <button
+                        v-if="picture.userInput !== ''"
+                        @click="clearInput(pictureIndex)"
+                        class="text-danger ml-0.5 mt-1"
+                      >
+                        <i class="pi pi-delete-left"></i>
+                      </button>
+                    </div>
+                    <img
+                      class="w-full p-3"
+                      :src="
+                        config.public.apiBase +
+                        '/media/get/' +
+                        picture.image_file
+                      "
+                    />
                   </div>
                 </div>
-              </li>
-            </ul>
+              </div>
+            </div>
           </div>
-
           <div class="col-span-12">
             <div class="btn-wrap right">
               <button
@@ -297,6 +493,7 @@ import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
 import taskLayout from "../../taskLayout.vue";
 import audioButton from "../../../../../ui/audioButton.vue";
+import audioButtonMini from "../../../../../ui/audioButtonMini.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import result from "../../results/dictionary/result.vue";
 
@@ -351,7 +548,7 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/match_words_by_pictures/" + props.task.task_id
+      "tasks/get/match_words_by_pictures/" + props.task.task_id
     );
 
     taskData.value = res.data;
@@ -421,9 +618,25 @@ const setWords = () => {
       () => Math.random() - 0.5
     );
 
-    currentWords.value.forEach((word) => {
-      word.userInput = "";
-    });
+    if (
+      taskData.value.options.match_words_by_pictures_option ===
+      "match_by_typing"
+    ) {
+      currentPictures.value.forEach((picture) => {
+        picture.userInput = "";
+      });
+
+      currentWords.value.forEach((word) => {
+        word.disabled = false;
+      });
+    } else if (
+      taskData.value.options.match_words_by_pictures_option ===
+      "match_by_number"
+    ) {
+      currentWords.value.forEach((word) => {
+        word.userInput = "";
+      });
+    }
 
     setTimeout(() => {
       const firstInput = document.querySelector(".user_input");
@@ -442,49 +655,168 @@ const setWords = () => {
   }
 };
 
-// Проверка всех слов
-const checkWords = () => {
+const onDragStart = (event, wordIndex) => {
+  // Установить данные для перетаскивания
+  event.dataTransfer.setData("wordIndex", wordIndex);
+};
+
+const onDrop = (event, pictureIndex) => {
+  // Остановить поведение по умолчанию
+  event.preventDefault();
+
+  // Получить данные из события
+  const wIndex = event.dataTransfer.getData("wordIndex");
+
+  const word = currentWords.value[wIndex];
+  word.disabled = true;
+
+  currentPictures.value[pictureIndex].userInput = word.word;
+  disableTheHiddenWord();
+};
+
+const onDragOver = (event) => {
+  // Остановить поведение по умолчанию, чтобы разрешить drop
+  event.preventDefault();
+};
+
+const disableTheHiddenWord = () => {
+  const userInputs = [];
+
+  currentPictures.value.forEach((picture) => {
+    if (picture.userInput.length > 0) {
+      userInputs.push(picture.userInput.toLowerCase());
+    }
+  });
+
   currentWords.value.forEach((word) => {
-    words.value = words.value.filter(
-      (w) => w.task_word_id !== word.task_word_id
-    );
-
-    if (
-      /^\d+$/.test(word.userInput) &&
-      currentPictures.value[word.userInput - 1] &&
-      word.task_word_id ===
-        currentPictures.value[word.userInput - 1].task_word_id
-    ) {
-      studiedWords.value.push(word);
-      currentStudiedWords.value.push(word);
-
-      if (
-        reStudyWords.value.some((w) => w.task_word_id === word.task_word_id)
-      ) {
-        reStudyWords.value = reStudyWords.value.filter(
-          (w) => w.task_word_id !== word.task_word_id
-        );
-      }
+    if (userInputs.includes(word.word.toLowerCase())) {
+      word.disabled = true;
     } else {
-      currentReStudyWords.value.push(word);
-
-      if (word.attempts >= 1) {
-        words.value.push(word);
-        word.attempts--;
-      } else {
-        reStudyWords.value.push(word);
-      }
+      word.disabled = false;
     }
   });
 };
 
-const acceptAnswers = () => {
-  for (let wordIndex = 0; wordIndex < currentWords.value.length; wordIndex++) {
-    const word = currentWords.value[wordIndex];
+const insertWordToInput = (w) => {
+  let emptyWordFind = false;
+  currentPictures.value.forEach((picture) => {
+    if (picture.userInput === "" && !emptyWordFind) {
+      picture.userInput = w.word;
+      disableTheHiddenWord();
+      emptyWordFind = true;
+    }
+  });
+};
 
-    if (word.userInput === "" || word.userInput === " ") {
-      checkingStatus.value = true;
-      break;
+const clearInput = (pictureIndex) => {
+  currentPictures.value[pictureIndex].userInput = "";
+  disableTheHiddenWord();
+};
+
+// Проверка всех слов
+const checkWords = () => {
+  if (
+    taskData.value.options.match_words_by_pictures_option === "match_by_typing"
+  ) {
+    currentPictures.value.forEach((picture) => {
+      const word = currentWords.value.find(
+        (w) => picture.task_word_id === w.task_word_id
+      );
+
+      words.value = words.value.filter(
+        (w) => w.task_word_id !== word.task_word_id
+      );
+
+      if (word.word.toLowerCase() === picture.userInput.toLowerCase()) {
+        studiedWords.value.push(word);
+        currentStudiedWords.value.push(word);
+
+        if (
+          reStudyWords.value.some((w) => w.task_word_id === word.task_word_id)
+        ) {
+          reStudyWords.value = reStudyWords.value.filter(
+            (w) => w.task_word_id !== word.task_word_id
+          );
+        }
+      } else {
+        currentReStudyWords.value.push(word);
+
+        if (word.attempts >= 1) {
+          words.value.push(word);
+          word.attempts--;
+        } else {
+          reStudyWords.value.push(word);
+        }
+      }
+    });
+  } else if (
+    taskData.value.options.match_words_by_pictures_option === "match_by_number"
+  ) {
+    currentWords.value.forEach((word) => {
+      words.value = words.value.filter(
+        (w) => w.task_word_id !== word.task_word_id
+      );
+
+      if (
+        /^\d+$/.test(word.userInput) &&
+        currentPictures.value[word.userInput - 1] &&
+        word.task_word_id ===
+          currentPictures.value[word.userInput - 1].task_word_id
+      ) {
+        studiedWords.value.push(word);
+        currentStudiedWords.value.push(word);
+
+        if (
+          reStudyWords.value.some((w) => w.task_word_id === word.task_word_id)
+        ) {
+          reStudyWords.value = reStudyWords.value.filter(
+            (w) => w.task_word_id !== word.task_word_id
+          );
+        }
+      } else {
+        currentReStudyWords.value.push(word);
+
+        if (word.attempts >= 1) {
+          words.value.push(word);
+          word.attempts--;
+        } else {
+          reStudyWords.value.push(word);
+        }
+      }
+    });
+  }
+};
+
+const acceptAnswers = () => {
+  if (
+    taskData.value.options.match_words_by_pictures_option === "match_by_typing"
+  ) {
+    for (
+      let pictureIndex = 0;
+      pictureIndex < currentPictures.value.length;
+      pictureIndex++
+    ) {
+      const picture = currentPictures.value[pictureIndex];
+
+      if (picture.userInput === "" || picture.userInput === " ") {
+        checkingStatus.value = true;
+        break;
+      }
+    }
+  } else if (
+    taskData.value.options.match_words_by_pictures_option === "match_by_number"
+  ) {
+    for (
+      let wordIndex = 0;
+      wordIndex < currentWords.value.length;
+      wordIndex++
+    ) {
+      const word = currentWords.value[wordIndex];
+
+      if (word.userInput === "" || word.userInput === " ") {
+        checkingStatus.value = true;
+        break;
+      }
     }
   }
 
@@ -550,6 +882,16 @@ const handleKeyPress = (event) => {
       }
     }
   }
+};
+
+const findTranslate = (w) => {
+  for (const picture of currentPictures.value) {
+    if (w.toLowerCase() === picture.word.toLowerCase()) {
+      return picture.word_translate;
+    }
+  }
+
+  return "________";
 };
 
 // Инициализация при монтировании
