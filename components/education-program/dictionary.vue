@@ -247,7 +247,9 @@
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
-      <h4>{{ $t("pages.dictionary.add_word_title") }}</h4>
+      <div class="pr-2">
+        <h4>{{ $t("pages.dictionary.add_word_title") }}</h4>
+      </div>
     </template>
     <template v-slot:body_content>
       <div class="mt-2">
@@ -480,7 +482,9 @@
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
-      <h4>{{ $t("pages.dictionary.edit_word_title") }}</h4>
+      <div class="pr-2">
+        <h4>{{ $t("pages.dictionary.edit_word_title") }}</h4>
+      </div>
     </template>
     <template v-if="word" v-slot:body_content>
       <div class="mt-2">

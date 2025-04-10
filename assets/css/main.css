@@ -35,15 +35,12 @@
 
 @keyframes pulse {
     0% {
-        transform: scale(1);
         opacity: 1;
     }
     50% {
-        transform: scale(1.1);
         opacity: 0;
     }
     100% {
-        transform: scale(1);
         opacity: 1;
     }
 }
@@ -663,11 +660,15 @@ select.error:has(option:checked:disabled) {
 }
 
 .form-group-border {
-    @apply relative border-2 border-corp rounded-xl;
+    @apply relative border border-corp rounded-xl;
 }
 
 .form-group-border.active{
     @apply border-inactive;
+}
+
+.form-group-border.danger{
+    @apply border-danger;
 }
 
 .form-group-border > input, 
@@ -1520,6 +1521,10 @@ select.error:has(option:checked:disabled) {
 
 .step-item.failed .step-icon{
     @apply bg-danger border-danger text-white;
+}
+
+.step-item.warning .step-icon{
+    @apply bg-warning border-warning text-white;
 }
 
 .tasks-list-group{

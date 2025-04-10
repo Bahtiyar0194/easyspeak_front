@@ -467,7 +467,7 @@
         </label>
       </div>
     </div>
-    
+
     <div v-if="props.showMaxAttempts === true" class="col-span-12">
       <div class="form-group-border select active label-active">
         <i class="pi pi-replay"></i>
@@ -484,6 +484,24 @@
         </label>
       </div>
     </div>
+
+    <div v-if="props.showMaxAnswerAttempts === true" class="col-span-12">
+      <div class="form-group-border select active label-active">
+        <i class="pi pi-replay"></i>
+        <select name="max_answer_attempts">
+          <option selected disabled value="">
+            {{ $t("choose_your_option") }}
+          </option>
+          <option v-for="item in maxAnswerAttempts" :key="item" :value="item">
+            {{ item }}
+          </option>
+        </select>
+        <label :class="{ 'label-error': errors.max_answer_attempts }">
+          {{ $t("pages.questions.number_of_answer_attempts") }}
+        </label>
+      </div>
+    </div>
+
     <div class="col-span-12">
       <label class="custom-radio-checkbox text-nowrap">
         <input type="checkbox" checked="true" name="random_order" />
@@ -657,12 +675,19 @@ const props = defineProps({
     type: Boolean,
     required: false,
   },
+
+  showMaxAnswerAttempts: {
+    default: false,
+    type: Boolean,
+    required: false,
+  },
 });
 
 const showTaskExample = ref(false);
 const impressionLimits = ref([2, 4]);
 const optionsNum = ref([2, 3, 4]);
 const maxAttempts = ref([0, 1, 2, 3, 4, 5]);
+const maxAnswerAttempts = ref([0, 1, 2, 3, 4, 5]);
 
 const missingWordOptions = [
   "with_hints",

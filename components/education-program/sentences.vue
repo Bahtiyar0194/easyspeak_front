@@ -364,15 +364,13 @@
     :closeOnClickSelf="true"
   >
     <template v-slot:header_content>
-      <h3>{{ sentence?.sentence }}</h3>
+      <div class="pr-2">
+        <h4>{{ sentence?.sentence }}</h4>
+      </div>
     </template>
     <template v-if="sentence" v-slot:body_content>
       <div class="custom-grid">
-        <div
-          :class="
-            sentence.audio_file ? 'col-span-9 lg:col-span-8' : 'col-span-12'
-          "
-        >
+        <div class="col-span-12">
           <div class="flex flex-col gap-y-3">
             <audioPlayerWithWave
               :src="config.public.apiBase + '/media/get/' + sentence.audio_file"
@@ -380,8 +378,8 @@
 
             <p class="mb-0">
               <span class="text-inactive"
-                >{{ $t("pages.courses.course") }}:</span
-              >
+                >{{ $t("pages.courses.course") }}:
+              </span>
               <b>{{ sentence.course_name }}</b>
             </p>
 
@@ -391,16 +389,14 @@
               class="mb-0"
             >
               <span class="text-inactive"
-                >{{
-                  $t("pages.sentences.translate." + translate.lang_tag)
-                }}:</span
-              >
+                >{{ $t("pages.sentences.translate." + translate.lang_tag) }}:
+              </span>
               <b>{{ translate.sentence_translate }}</b>
             </p>
 
             <div class="flex gap-x-2 items-center">
               <p class="mb-0">
-                <span class="text-inactive">{{ $t("operator") }}:</span>
+                <span class="text-inactive">{{ $t("operator") }}: </span>
               </p>
               <userTag v-if="sentence.operator" :user="sentence.operator" />
             </div>
@@ -427,7 +423,9 @@
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
-      <h4>{{ $t("pages.sentences.edit_sentence_title") }}</h4>
+      <div class="pr-2">
+        <h4>{{ $t("pages.sentences.edit_sentence_title") }}</h4>
+      </div>
     </template>
     <template v-if="sentence" v-slot:body_content>
       <div class="mt-2">

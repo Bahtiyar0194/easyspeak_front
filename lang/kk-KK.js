@@ -498,6 +498,10 @@ export default {
         },
 
         questions: {
+            question: 'Сұрақ',
+            answered_questions: 'Жауап берілген сұрақтар',
+            unanswered_questions: 'Жауап берілмеген сұрақтар',
+            number_of_answer_attempts: 'Жауап беруге арналған әрекеттер саны',
             added_questions_count: 'Қосылған сұрақтар саны',
             select_questions: 'Сұрақтарды таңдау',
             question_settings: 'Сұрақтарды өңдеу',

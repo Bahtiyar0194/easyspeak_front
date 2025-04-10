@@ -498,6 +498,10 @@ export default {
         },
 
         questions: {
+            question: 'Вопрос',
+            answered_questions: 'Отвеченные вопросы',
+            unanswered_questions: 'Неотвеченные вопросы',
+            number_of_answer_attempts: 'Количество попыток ответа на вопрос',
             added_questions_count: 'Количество добавленных вопросов',
             select_questions: 'Выбор вопросов',
             question_settings: 'Настройка вопросов',

@@ -9,7 +9,7 @@
     :startTask="startTask"
     :isFinished="isFinished"
     :progressPercentage="progressPercentage"
-    :reStudyItems="reStudySentences"
+    :reStudyItems="reAnswerQuestions"
   >
     <template v-slot:task_content>
       <div class="col-span-12">
@@ -33,59 +33,40 @@
       </div>
 
       <div v-if="timeIsUp || isComplete" class="col-span-12">
-        time is up or is complete
-        <!-- <div class="flex flex-col gap-y-4">
+        <div class="flex flex-col gap-y-4">
           <div
             class="flex flex-col gap-y-2"
-            v-if="currentStudiedSentences.length > 0"
+            v-if="currentAnsweredQuestions.length > 0"
           >
             <p class="text-xl font-medium mb-0 text-success">
-              {{
-                currentReStudySentences.length > 0
-                  ? $t("right_answers")
-                  : $t("right")
-              }}
+              {{ $t("pages.questions.answered_questions") }}
             </p>
 
             <ul class="list-group nowrap">
               <li
-                v-for="(sentence, sIndex) in currentStudiedSentences"
-                :key="sIndex"
+                v-for="(question, qIndex) in currentAnsweredQuestions"
+                :key="qIndex"
                 class="flex justify-between items-center gap-x-2"
               >
-                <div class="flex items-center gap-x-2">
-                  <div
-                    v-if="sentence.image_file"
-                    :style="{
-                      backgroundImage:
-                        'url(' +
-                        config.public.apiBase +
-                        '/media/get/' +
-                        sentence.image_file +
-                        ')',
-                    }"
-                    class="w-10 h-10 bg-cover bg-no-repeat bg-center"
-                  ></div>
+                <div class="flex flex-col">
+                  <p class="mb-1">
+                    <span class="text-inactive"
+                      >{{ $t("pages.questions.question") }}:</span
+                    >
+                    <span class="font-medium">{{ question.sentence }}</span>
+                  </p>
 
-                  <div
-                    class="btn btn-square btn-outline-success pointer-events-none font-medium"
-                  >
-                    {{ sentence.userInput }}
-                  </div>
-
-                  <div class="flex flex-col">
-                    <div class="font-medium">
-                      {{ sentence.sentence }}
-                    </div>
-                    <span class="text-xs text-inactive">{{
-                      sentence.sentence_translate
+                  <p class="mb-0">
+                    <span class="text-inactive">{{ $t("your_answer") }}:</span>
+                    <span class="text-corp font-medium">{{
+                      question.userInput
                     }}</span>
-                  </div>
+                  </p>
                 </div>
 
                 <div class="step-item xs completed">
                   <div class="step-icon">
-                    <i class="pi pi-check"></i>
+                    <i class="pi pi-clock"></i>
                   </div>
                 </div>
               </li>
@@ -94,74 +75,25 @@
 
           <div
             class="flex flex-col gap-y-2"
-            v-if="currentReStudySentences.length > 0"
+            v-if="currentReAnswerQuestions.length > 0"
           >
             <p class="text-xl font-medium mb-0 text-danger">
-              {{ $t("for_re_examination") }}
+              {{ $t("pages.questions.unanswered_questions") }}
             </p>
 
             <ul class="list-group nowrap">
               <li
-                v-for="(sentence, rIndex) in currentReStudySentences"
+                v-for="(question, rIndex) in currentReAnswerQuestions"
                 :key="rIndex"
                 class="flex justify-between items-center gap-x-2"
               >
-                <div class="flex flex-col gap-2">
-                  <div>
-                    <p class="mb-1 text-inactive font-normal">
-                      {{ $t("your_answer") }}:
-                    </p>
-
-                    <div class="flex items-center gap-x-2">
-                      <div
-                        class="btn btn-square btn-outline-danger pointer-events-none font-medium"
-                      >
-                        {{ sentence.userInput }}
-                      </div>
-
-                      <div class="flex flex-col">
-                        <div class="font-medium">
-                          {{ sentence.sentence }}
-                        </div>
-                        <span class="text-xs text-inactive">{{
-                          sentence.sentence_translate
-                        }}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p class="mb-1 text-inactive font-normal">
-                      {{ $t("right_answer") }}:
-                    </p>
-
-                    <div class="flex items-center gap-x-2">
-                      <div
-                        class="btn btn-square btn-outline-success pointer-events-none font-medium"
-                      >
-                        {{
-                          currentSentences.findIndex(
-                            (p) =>
-                              p.task_sentence_id === sentence.task_sentence_id
-                          ) + 1
-                        }}
-                      </div>
-
-                      <div class="flex flex-col">
-                        <div class="font-medium">
-                          {{ sentence.sentence }}
-                        </div>
-                        <span class="text-xs text-inactive">{{
-                          sentence.sentence_translate
-                        }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <p class="mb-0">
+                  <span class="font-medium">{{ question.sentence }}</span>
+                </p>
 
                 <div class="step-item xs failed">
                   <div class="step-icon">
-                    <i class="pi pi-replay"></i>
+                    <i class="pi pi-times-circle"></i>
                   </div>
                 </div>
               </li>
@@ -170,9 +102,9 @@
 
           <div class="btn-wrap right">
             <button
-              v-if="sentences.length > 0"
+              v-if="questions.length > 0"
               class="btn btn-outline-primary"
-              @click="setSentences()"
+              @click="setQuestions()"
             >
               <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
             </button>
@@ -181,105 +113,11 @@
               {{ $t("pages.tasks.complete_the_task") }}
             </button>
           </div>
-        </div> -->
+        </div>
       </div>
 
       <div v-else class="col-span-12">
         <div class="custom-grid">
-          <!-- <div
-            :class="
-              taskData.options.sentence_material_type_slug == 'audio'
-                ? 'col-span-12'
-                : 'col-span-12 lg:col-span-6'
-            "
-            v-for="(sentence, sentenceIndex) in currentSentenceMaterials"
-            :key="sentenceIndex"
-          >
-            <div
-              v-if="taskData.options.sentence_material_type_slug == 'audio'"
-              class="flex gap-3 items-center text-lg"
-            >
-              <div
-                @click="focusInput($event)"
-                class="btn btn-square btn-lg flex justify-center items-center ml-1"
-                :class="
-                  checkingStatus === true &&
-                  (sentence.userInput === '' || sentence.userInput === ' ')
-                    ? 'pulse btn-danger'
-                    : 'btn-outline-primary'
-                "
-              >
-                <input
-                  v-model="sentence.userInput"
-                  @input="changeFocus($event)"
-                  type="text"
-                  class="user_input"
-                  :style="{
-                    width:
-                      currentSentences.length.toString().length + 0.5 + 'ch',
-                    textAlign: 'center',
-                  }"
-                  :maxlength="currentSentences.length.toString().length"
-                />
-              </div>
-              <div class="w-full">
-                <audioPlayerWithWave
-                  :src="
-                    config.public.apiBase +
-                    '/media/get/' +
-                    sentence.material.target
-                  "
-                />
-              </div>
-            </div>
-            <div v-else class="relative">
-              <div class="absolute left-2 top-2 z-10">
-                <div
-                  @click="focusInput($event)"
-                  class="btn btn-square btn-lg flex justify-center items-center ml-1"
-                  :class="
-                    checkingStatus === true &&
-                    (sentence.userInput === '' || sentence.userInput === ' ')
-                      ? 'pulse btn-danger'
-                      : 'btn-active bg-active'
-                  "
-                >
-                  <input
-                    v-model="sentence.userInput"
-                    @input="changeFocus($event)"
-                    type="text"
-                    class="user_input"
-                    :style="{
-                      width:
-                        currentSentences.length.toString().length + 0.5 + 'ch',
-                      textAlign: 'center',
-                    }"
-                    :maxlength="currentSentences.length.toString().length"
-                  />
-                </div>
-              </div>
-              <videoPlayer
-                v-if="taskData.options.sentence_material_type_slug === 'video'"
-                :src="
-                  config.public.apiBase +
-                  '/media/get/' +
-                  sentence.material.target
-                "
-              />
-              <img
-                v-else-if="
-                  taskData.options.sentence_material_type_slug === 'image'
-                "
-                :src="
-                  config.public.apiBase +
-                  '/media/get/' +
-                  sentence.material.target
-                "
-                class="w-full h-auto"
-              />
-            </div>
-          </div> -->
-
           <div class="col-span-12">
             <ul class="list-group nowrap">
               <li
@@ -291,25 +129,53 @@
                   <div class="col-span-12">
                     <span class="font-medium text-lg"
                       ><span class="text-corp">{{ questionIndex + 1 }}. </span
-                      >{{ question.question }}</span
+                      >{{ question.sentence }}</span
                     >
                   </div>
 
-                  <div
-                    v-if="taskData.options.answer_the_questions_option == 'text'"
-                    class="col-span-12"
-                  >
-                    <div class="form-group-border active">
+                  <div class="col-span-12">
+                    <div
+                      v-if="
+                        taskData.options.answer_the_questions_option == 'text'
+                      "
+                      class="form-group-border"
+                      :class="
+                        checkingStatus === true && !question.userInput
+                          ? 'pulse danger'
+                          : 'active'
+                      "
+                    >
                       <i class="pi pi-reply"></i>
                       <input
-                        :name="'answer_' + questionIndex"
+                        v-model="question.userInput"
                         type="text"
                         placeholder=" "
                       />
-                      <label>
+                      <label
+                        :class="
+                          checkingStatus === true && !question.userInput
+                            ? 'label-error'
+                            : ''
+                        "
+                      >
                         {{ $t("type_your_answer") }}
                       </label>
                     </div>
+
+                    <fileUploadButton
+                      v-else
+                      :id="'upload_file_' + questionIndex"
+                      :name="'upload_file_' + questionIndex"
+                      :accept="
+                        taskData.options.answer_the_questions_option + '/*'
+                      "
+                      :error="
+                        checkingStatus === true && !question.userInput
+                          ? $t('pages.questions.required'q)
+                          : ''"
+                      :icon="'pi pi-' + taskData.options.answer_the_questions_option"
+                      :label="$t('file.' + taskData.options.answer_the_questions_option + '.select')"
+                    />
                   </div>
                 </div>
               </li>
@@ -334,8 +200,8 @@
 
     <template v-slot:task_result_content>
       <!-- <result
-        :studiedSentences="studiedSentences"
-        :reStudySentences="reStudySentences"
+        :answeredQuestions="answeredQuestions"
+        :reAnswerQuestions="reAnswerQuestions"
       /> -->
     </template>
   </taskLayout>
@@ -346,9 +212,10 @@ import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
 import taskLayout from "../../taskLayout.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
+import fileUploadButton from "../../../../../ui/fileUploadButton.vue";
 import audioPlayerWithWave from "../../../../../ui/audioPlayerWithWave.vue";
 import videoPlayer from "../../../../../ui/videoPlayer.vue";
-import result from "../../results/sentences/result.vue";
+//import result from "../../results/questions/result.vue";
 
 const router = useRouter();
 const config = useRuntimeConfig();
@@ -363,11 +230,11 @@ const questions = ref([]);
 const currentQuestions = ref([]);
 const checkingStatus = ref(false);
 
-const studiedSentences = ref([]);
-const currentStudiedSentences = ref([]);
+const answeredQuestions = ref([]);
+const currentAnsweredQuestions = ref([]);
 
-const reStudySentences = ref([]);
-const currentReStudySentences = ref([]);
+const reAnswerQuestions = ref([]);
+const currentReAnswerQuestions = ref([]);
 
 const isStarted = ref(false);
 const isComplete = ref(false);
@@ -378,10 +245,10 @@ const timeIsUp = ref(false);
 const isFinished = ref(false);
 
 const progressPercentage = computed(() => {
-  const totalSentences = taskData.value?.sentences?.length || 0; // Предотвращаем ошибки, если данные ещё не загружены
-  if (totalSentences === 0) return 0; // Если общее количество фраз равно 0, возвращаем 0
-  const completedSentences = totalSentences - sentences.value.length;
-  return (completedSentences / totalSentences) * 100;
+  const totalQuestions = taskData.value?.questions?.length || 0; // Предотвращаем ошибки, если данные ещё не загружены
+  if (totalQuestions === 0) return 0; // Если общее количество фраз равно 0, возвращаем 0
+  const completedQuestions = totalQuestions - questions.value.length;
+  return (completedQuestions / totalQuestions) * 100;
 });
 
 // Получаем данные задачи из пропсов
@@ -406,7 +273,11 @@ const getTask = async () => {
     taskData.value = res.data;
     showMaterialsOption.value = taskData.value.options.show_materials_option;
     materials.value = taskData.value.materials;
+
     questions.value = [...taskData.value.questions];
+    questions.value.forEach((question) => {
+      question.attempts = taskData.value.options.max_answer_attempts;
+    });
 
     if (
       materials.value.length > 0 &&
@@ -453,8 +324,8 @@ const startTask = () => {
 };
 
 const setQuestions = () => {
-  currentStudiedSentences.value = [];
-  currentReStudySentences.value = [];
+  currentAnsweredQuestions.value = [];
+  currentReAnswerQuestions.value = [];
 
   if (questions.value.length > 0) {
     currentQuestions.value = questions.value.slice(
@@ -465,13 +336,6 @@ const setQuestions = () => {
     currentQuestions.value.forEach((question) => {
       question.userInput = "";
     });
-
-    // setTimeout(() => {
-    //   const firstInput = document.querySelector(".user_input");
-    //   if (firstInput) {
-    //     firstInput.focus();
-    //   }
-    // }, 100);
 
     time.value =
       taskData.value.options.seconds_per_question *
@@ -484,39 +348,34 @@ const setQuestions = () => {
   }
 };
 
-// Проверка всех фраз
-const checkSentences = () => {
-  currentSentenceMaterials.value.forEach((sentence) => {
-    sentences.value = sentences.value.filter(
-      (s) => s.task_sentence_id !== sentence.task_sentence_id
+// Проверка всех ответов
+const checkAnswers = () => {
+  currentQuestions.value.forEach((question) => {
+    questions.value = questions.value.filter(
+      (s) => s.task_question_id !== question.task_question_id
     );
 
-    if (
-      /^\d+$/.test(sentence.userInput) &&
-      currentSentences.value[sentence.userInput - 1] &&
-      sentence.task_sentence_id ===
-        currentSentences.value[sentence.userInput - 1].task_sentence_id
-    ) {
-      studiedSentences.value.push(sentence);
-      currentStudiedSentences.value.push(sentence);
+    if (question.userInput !== "" && question.userInput !== " ") {
+      answeredQuestions.value.push(question);
+      currentAnsweredQuestions.value.push(question);
 
       if (
-        reStudySentences.value.some(
-          (s) => s.task_sentence_id === sentence.task_sentence_id
+        reAnswerQuestions.value.some(
+          (q) => q.task_question_id === question.task_question_id
         )
       ) {
-        reStudySentences.value = reStudySentences.value.filter(
-          (s) => s.task_sentence_id !== sentence.task_sentence_id
+        reAnswerQuestions.value = reAnswerQuestions.value.filter(
+          (q) => q.task_question_id !== question.task_question_id
         );
       }
     } else {
-      currentReStudySentences.value.push(sentence);
+      currentReAnswerQuestions.value.push(question);
 
-      if (sentence.attempts >= 1) {
-        sentences.value.push(sentence);
-        sentence.attempts--;
+      if (question.attempts >= 1) {
+        questions.value.push(question);
+        question.attempts--;
       } else {
-        reStudySentences.value.push(sentence);
+        reAnswerQuestions.value.push(question);
       }
     }
   });
@@ -524,13 +383,13 @@ const checkSentences = () => {
 
 const acceptAnswers = () => {
   for (
-    let sentenceIndex = 0;
-    sentenceIndex < currentSentences.value.length;
-    sentenceIndex++
+    let questionIndex = 0;
+    questionIndex < currentQuestions.value.length;
+    questionIndex++
   ) {
-    const sentence = currentSentences.value[sentenceIndex];
+    const question = currentQuestions.value[questionIndex];
 
-    if (sentence.userInput === "" || sentence.userInput === " ") {
+    if (question.userInput === "" || question.userInput === " ") {
       checkingStatus.value = true;
       break;
     }
@@ -543,51 +402,22 @@ const acceptAnswers = () => {
   } else {
     isComplete.value = true;
     isStarted.value = false;
-    checkSentences();
-  }
-};
-
-const focusInput = (event) => {
-  const input = event.currentTarget.querySelector("input");
-  if (input) {
-    input.focus();
-  }
-};
-
-const changeFocus = (event) => {
-  const currentInput = event.target;
-  const value = currentInput.value;
-
-  if (value == "") {
-    return false;
-  } else if (value == " ") {
-    value = "";
-  } else {
-    const inputs = Array.from(document.getElementsByClassName("user_input"));
-    const currentIndex = inputs.indexOf(currentInput);
-
-    // Найти следующий пустой input
-    for (let i = currentIndex + 1; i < inputs.length; i++) {
-      if (inputs[i].value === "") {
-        inputs[i].focus();
-        break;
-      }
-    }
+    checkAnswers();
   }
 };
 
 const timerIsUp = () => {
   timeIsUp.value = true;
   isStarted.value = false;
-  checkSentences();
+  checkAnswers();
 };
 
 const handleKeyPress = (event) => {
   if (event.key === "Enter") {
     if (!isFinished.value) {
       if (timeIsUp.value === true || isComplete.value === true) {
-        if (sentences.value.length > 0) {
-          setSentences();
+        if (questions.value.length > 0) {
+          setQuestions();
         } else {
           isFinished.value = true;
         }
