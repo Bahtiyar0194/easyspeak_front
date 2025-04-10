@@ -171,7 +171,7 @@
                       "
                       :error="
                         checkingStatus === true && !question.userInput
-                          ? $t('pages.questions.required'q)
+                          ? $t('pages.questions.required')
                           : ''"
                       :icon="'pi pi-' + taskData.options.answer_the_questions_option"
                       :label="$t('file.' + taskData.options.answer_the_questions_option + '.select')"
