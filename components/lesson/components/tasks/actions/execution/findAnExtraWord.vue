@@ -10,6 +10,7 @@
     :isFinished="isFinished"
     :progressPercentage="progressPercentage"
     :reStudyItems="reStudySections"
+    :taskResult="taskResult"
   >
     <template v-slot:task_content>
       <div class="col-span-12">
@@ -46,23 +47,24 @@
               }}
             </p>
 
-            <ul class="list-group nowrap">
+            <ul class="list-group nowrap" ref="rightAnswers">
               <li
                 v-for="(section, sIndex) in currentStudiedSections"
                 :key="sIndex"
                 class="flex justify-between items-center gap-x-2"
               >
-                <div class="btn-wrap items-center">
-                  <b>{{ sIndex + 1 }}.</b>
-                  <div
-                    v-for="(word, wordIndex) in section.words"
-                    :key="wordIndex"
-                    class="btn btn-sm pointer-events-none"
-                    :class="
-                      word.target == 1 ? 'btn-outline-success' : 'btn-light'
-                    "
-                  >
-                    {{ word.word }}
+                <div :id="'right_answer_' + section.word_section_id">
+                  <div class="btn-wrap items-center">
+                    <div
+                      v-for="(word, wordIndex) in section.words"
+                      :key="wordIndex"
+                      class="btn btn-sm pointer-events-none"
+                      :class="
+                        word.target == 1 ? 'btn-outline-success' : 'btn-light'
+                      "
+                    >
+                      {{ word.word }}
+                    </div>
                   </div>
                 </div>
 
@@ -83,7 +85,7 @@
               {{ $t("for_re_examination") }}
             </p>
 
-            <ul class="list-group nowrap">
+            <ul class="list-group nowrap" ref="wrongAnswers">
               <li
                 v-for="(section, rIndex) in currentReStudySections"
                 :key="rIndex"
@@ -94,18 +96,20 @@
                     <p class="mb-1 text-inactive font-normal text-xs">
                       {{ $t("your_answer") }}:
                     </p>
-                    <div class="btn-wrap items-center">
-                      <div
-                        v-for="(word, wordIndex) in section.words"
-                        :key="wordIndex"
-                        class="btn btn-sm pointer-events-none"
-                        :class="
-                          section.userInput === wordIndex
-                            ? 'btn-outline-danger'
-                            : 'btn-light'
-                        "
-                      >
-                        {{ word.word }}
+                    <div :id="'user_answer_' + section.word_section_id">
+                      <div class="btn-wrap items-center">
+                        <div
+                          v-for="(word, wordIndex) in section.words"
+                          :key="wordIndex"
+                          class="btn btn-sm pointer-events-none"
+                          :class="
+                            section.userInput === wordIndex
+                              ? 'btn-outline-danger'
+                              : 'btn-light'
+                          "
+                        >
+                          {{ word.word }}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -114,16 +118,20 @@
                     <p class="mb-1 text-inactive font-normal text-xs">
                       {{ $t("right_answer") }}:
                     </p>
-                    <div class="btn-wrap items-center">
-                      <div
-                        v-for="(word, wordIndex) in section.words"
-                        :key="wordIndex"
-                        class="btn btn-sm pointer-events-none"
-                        :class="
-                          word.target == 1 ? 'btn-outline-success' : 'btn-light'
-                        "
-                      >
-                        {{ word.word }}
+                    <div :id="'right_answer_' + section.word_section_id">
+                      <div class="btn-wrap items-center">
+                        <div
+                          v-for="(word, wordIndex) in section.words"
+                          :key="wordIndex"
+                          class="btn btn-sm pointer-events-none"
+                          :class="
+                            word.target == 1
+                              ? 'btn-outline-success'
+                              : 'btn-light'
+                          "
+                        >
+                          {{ word.word }}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -308,7 +316,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, inject } from "vue";
+import { ref, onMounted, inject, nextTick } from "vue";
 import { useRouter } from "nuxt/app";
 import taskLayout from "../../taskLayout.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
@@ -334,6 +342,11 @@ const reStudySections = ref([]);
 const currentReStudySections = ref([]);
 
 const unFilledSections = ref([]);
+
+const rightAnswers = ref(null);
+const wrongAnswers = ref(null);
+const taskResult = ref([]);
+const taskResultCollection = ref([]);
 
 const isStarted = ref(false);
 const isComplete = ref(false);
@@ -456,34 +469,70 @@ const checkSections = () => {
     section.words.forEach((word, wordIndex) => {
       if (word.target == 1) {
         if (section.userInput === wordIndex) {
-          studiedSections.value.push(section);
-          currentStudiedSections.value.push(section);
-
-          if (
-            reStudySections.value.some(
-              (ws) => ws.word_section_id === section.word_section_id
-            )
-          ) {
-            reStudySections.value = reStudySections.value.filter(
-              (ws) => ws.word_section_id !== section.word_section_id
-            );
-          }
+          pushToStudySections(section);
         } else {
-          currentReStudySections.value.push(section);
-
-          if (section.attempts >= 1) {
-            sections.value.push(section);
-            const removeSectionAttempt = sections.value.find(
-              (ws) => ws.word_section_id === section.word_section_id
-            );
-            removeSectionAttempt.attempts--;
-          } else {
-            reStudySections.value.push(section);
-          }
+          pushToCurrentReStudySections(section);
         }
       }
     });
   });
+};
+
+const pushToStudySections = async (section) => {
+  studiedSections.value.push(section);
+  currentStudiedSections.value.push(section);
+
+  await nextTick();
+  const answer = rightAnswers.value.querySelector(
+    "#right_answer_" + section.word_section_id
+  );
+
+  if (answer) {
+    taskResultCollection.value.push({
+      is_correct: true,
+      right_answer: answer.innerHTML,
+    });
+  }
+
+  if (
+    reStudySections.value.some(
+      (ws) => ws.word_section_id === section.word_section_id
+    )
+  ) {
+    reStudySections.value = reStudySections.value.filter(
+      (ws) => ws.word_section_id !== section.word_section_id
+    );
+  }
+};
+
+const pushToCurrentReStudySections = async (section) => {
+  currentReStudySections.value.push(section);
+
+  if (section.attempts >= 1) {
+    sections.value.push(section);
+    const removeSectionAttempt = sections.value.find(
+      (ws) => ws.word_section_id === section.word_section_id
+    );
+    removeSectionAttempt.attempts--;
+  } else {
+    await nextTick();
+    const userAnswer = wrongAnswers.value.querySelector(
+      "#user_answer_" + section.word_section_id
+    );
+
+    const rightAnswer = wrongAnswers.value.querySelector(
+      "#right_answer_" + section.word_section_id
+    );
+
+    if (userAnswer && rightAnswer) {
+      taskResultCollection.value.push({
+        is_correct: false,
+        user_answer: userAnswer.innerHTML,
+        right_answer: rightAnswer.innerHTML,
+      });
+    }
+    reStudySections.value.push(section);
+  }
 };
 
 const selectWordInSection = (wordIndex, sectionIndex) => {
@@ -534,6 +583,39 @@ const handleKeyPress = (event) => {
   }
 };
 
+const saveTaskResult = async () => {
+  onPending(true);
+  const formData = new FormData();
+  formData.append("task_result", JSON.stringify(taskResultCollection.value));
+  formData.append("operation_type_id", 25);
+
+  await $axiosPlugin
+    .post("tasks/save_result/" + props.task.task_id, formData)
+    .then((res) => {
+      taskResult.value = res.data;
+      onPending(false);
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          onPending(false);
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
 // Инициализация при монтировании
 onMounted(() => {
   changeModalSize("modal-2xl");
@@ -544,4 +626,13 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleKeyPress);
 });
+
+watch(
+  () => taskResultCollection.value.length,
+  (newVal) => {
+    if (newVal === taskData.value.word_sections.length) {
+      saveTaskResult();
+    }
+  }
+);
 </script>

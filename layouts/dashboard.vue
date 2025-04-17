@@ -101,6 +101,12 @@ const dashboardMenu = [
     roles: [1],
   },
   {
+    title: "pages.checking-tasks.title",
+    icon: "pi pi-list-check",
+    link: "/dashboard/checking-tasks",
+    roles: [1, 4],
+  },
+  {
     title: "pages.files.title",
     icon: "pi pi-file",
     link: "/dashboard/files",

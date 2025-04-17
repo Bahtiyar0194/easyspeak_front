@@ -68,8 +68,10 @@ export default {
     wrong: "Неправильно!",
     right_answer: "Правильный ответ",
     right_answers: "Правильные ответы",
+    right_answers_count: "Правильных ответов",
     wrong_answer: "Неправильный ответ",
     wrong_answers: "Неправильные ответы",
+    wrong_answers_count: "Неправильных ответов",
     answer_options: "Варианты ответа",
     for_re_examination: "Для повторного изучения",
     get_ready: "Приготовьтесь",
@@ -526,6 +528,8 @@ export default {
             tasks_count: 'Задании',
             there_are_no_tasks: 'Для этого урока пока не добавлены задания.',
             task_materials: 'Материалы задания',
+            try_again: 'Пройти заново',
+            show_task_result: 'Показать результат',
             task_options: {
                 title: 'Настройки задания',
                 task_example: 'Пример задания',
@@ -596,6 +600,10 @@ export default {
                 },
             },
             search_filter: 'Фильтр поиска по заданиям'
+        },
+
+        'checking-tasks': {
+            title: 'Проверка заданий'
         },
 
         training: {

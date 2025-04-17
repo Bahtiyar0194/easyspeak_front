@@ -38,56 +38,69 @@
     <div v-if="tasks.length" class="col-span-12">
       <TransitionGroup
         tag="ul"
-        class="list-group"
+        class="list-group overflow-hidden"
         :move="{ transition: { duration: 0.3 } }"
       >
-        <li v-for="(task, taskIndex) in tasks" :key="task.task_id">
+        <loader v-if="pendingTasks" :className="'overlay'" />
+        <li v-for="(taskItem, taskIndex) in tasks" :key="taskItem.task_id">
           <div class="flex items-center justify-between gap-4">
             <div
               class="flex gap-2 items-center link w-full"
-              @click="openTask(task)"
+              @click="
+                taskItem.task_result.answers
+                  ? openTaskResult(taskItem)
+                  : openTask(taskItem)
+              "
             >
-              <i class="text-3xl" :class="task.icon"></i>
+              <i class="text-3xl" :class="taskItem.icon"></i>
               <div class="flex flex-col gap-y-0.5">
-                <span>{{ task.task_slug }}</span>
+                <span>{{ taskItem.task_slug }}</span>
                 <span class="text-inactive text-xs">{{
-                  task.task_type_name
+                  taskItem.task_type_name
                 }}</span>
               </div>
             </div>
 
-            <roleProvider :roles="[1]">
-              <div class="flex gap-x-1 justify-end">
-                <button
-                  @click="order('up', taskIndex, $event.target)"
-                  class="btn btn-square btn-light btn-sm btn-up"
-                  :title="$t('move_up')"
-                >
-                  <i class="pi pi-arrow-up"></i>
-                </button>
-                <button
-                  @click="order('down', taskIndex, $event.target)"
-                  class="btn btn-square btn-light btn-sm btn-down"
-                  :title="$t('move_down')"
-                >
-                  <i class="pi pi-arrow-down"></i>
-                </button>
-                <button
-                  @click="openEditTask(task)"
-                  class="btn btn-square btn-light btn-sm"
-                  :title="$t('edit')"
-                >
-                  <i class="pi pi-pencil"></i>
-                </button>
-                <button
-                  @click="openDeleteModal(task)"
-                  class="btn btn-square btn-outline-danger btn-sm"
-                  :title="$t('delete')"
-                >
-                  <i class="pi pi-trash"></i>
-                </button>
+            <div>
+              <div class="flex items-center gap-x-2">
+                <roleProvider :roles="[1]">
+                  <div class="flex gap-x-1 justify-end">
+                    <button
+                      @click="order('up', taskIndex, $event.target)"
+                      class="btn btn-square btn-light btn-sm btn-up"
+                      :title="$t('move_up')"
+                    >
+                      <i class="pi pi-arrow-up"></i>
+                    </button>
+                    <button
+                      @click="order('down', taskIndex, $event.target)"
+                      class="btn btn-square btn-light btn-sm btn-down"
+                      :title="$t('move_down')"
+                    >
+                      <i class="pi pi-arrow-down"></i>
+                    </button>
+                    <button
+                      @click="openEditTask(task)"
+                      class="btn btn-square btn-light btn-sm"
+                      :title="$t('edit')"
+                    >
+                      <i class="pi pi-pencil"></i>
+                    </button>
+                    <button
+                      @click="openDeleteModal(task)"
+                      class="btn btn-square btn-outline-danger btn-sm"
+                      :title="$t('delete')"
+                    >
+                      <i class="pi pi-trash"></i>
+                    </button>
+                  </div>
+                </roleProvider>
+                <circleProgressBar
+                  v-if="taskItem.task_result"
+                  :progress="taskItem.task_result.percentage"
+                />
               </div>
-            </roleProvider>
+            </div>
           </div>
         </li>
       </TransitionGroup>
@@ -140,9 +153,36 @@
       </div>
     </template>
   </modal>
+
+  <modal
+    :show="taskResultModalIsVisible"
+    :onClose="() => (taskResultModalIsVisible = false)"
+    :className="'modal-xl'"
+    :showLoader="false"
+    :closeOnClickSelf="false"
+  >
+    <template v-slot:header_content v-if="task">
+      <h4>{{ task.task_name }}</h4>
+    </template>
+    <template v-slot:body_content v-if="task && task.task_result.answers">
+      <taskResultChart :taskResult="task.task_result">
+        <template v-slot:footer_content>
+          <div class="col-span-12">
+            <div class="btn-wrap justify-end">
+              <button class="btn btn-outline-primary" @click="openTask(task)">
+                <i class="pi pi-replay"></i>
+                {{ $t("pages.tasks.try_again") }}
+              </button>
+            </div>
+          </div>
+        </template>
+      </taskResultChart>
+    </template>
+  </modal>
 </template>
 
 <script setup>
+import loader from "../../ui/loader.vue";
 import { scrollIntoView } from "seamless-scroll-polyfill";
 import { useRouter } from "nuxt/app";
 import { provide, shallowRef } from "vue";
@@ -151,6 +191,8 @@ import dropdownMenu from "../../ui/dropdownMenu.vue";
 import modal from "../../ui/modal.vue";
 import alert from "../../ui/alert.vue";
 import { debounceHandler } from "../../../utils/debounceHandler";
+import taskResultChart from "../components/tasks/taskResultChart.vue";
+import circleProgressBar from "../../ui/circleProgressBar.vue";
 
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
@@ -166,6 +208,7 @@ const modalClass = ref("modal-lg");
 const modalProps = ref({});
 const modalIsVisible = ref(false);
 const currentModal = shallowRef(null);
+const taskResultModalIsVisible = ref(false);
 const deleteModalIsVisible = ref(false);
 
 const props = defineProps({
@@ -195,6 +238,7 @@ const closeModalByUser = () => {
   pendingModal.value = false;
   currentModal.value = null;
   task.value = null;
+  getLessonTasks();
 };
 
 provide("onPending", onPending);
@@ -203,9 +247,16 @@ provide("closeModal", closeModal);
 
 const openTask = (currentTask) => {
   task.value = currentTask;
+  taskResultModalIsVisible.value = false;
   openTaskModal(task.value.task_type_component, "execution", {
     task: currentTask,
   });
+};
+
+const openTaskResult = (currentTask) => {
+  task.value = currentTask;
+  currentModal.value = null;
+  taskResultModalIsVisible.value = true;
 };
 
 const openEditTask = (currentTask) => {
@@ -279,12 +330,9 @@ const openDeleteModal = (task) => {
 const deleteTaskSubmit = async () => {
   pendingDelete.value = true;
   await $axiosPlugin
-    .delete(
-      "tasks/delete_task/" + props.lesson_id + "/" + deleteTaskId.value,
-      {
-        params: { operation_type_id: 22 }, // Передача параметра в URL
-      }
-    )
+    .delete("tasks/delete_task/" + props.lesson_id + "/" + deleteTaskId.value, {
+      params: { operation_type_id: 22 }, // Передача параметра в URL
+    })
     .then((response) => {
       deleteModalIsVisible.value = false;
       getLessonTasks();

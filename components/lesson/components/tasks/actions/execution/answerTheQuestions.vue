@@ -172,9 +172,18 @@
                       :error="
                         checkingStatus === true && !question.userInput
                           ? $t('pages.questions.required')
-                          : ''"
-                      :icon="'pi pi-' + taskData.options.answer_the_questions_option"
-                      :label="$t('file.' + taskData.options.answer_the_questions_option + '.select')"
+                          : ''
+                      "
+                      :icon="
+                        'pi pi-' + taskData.options.answer_the_questions_option
+                      "
+                      :label="
+                        $t(
+                          'file.' +
+                            taskData.options.answer_the_questions_option +
+                            '.select'
+                        )
+                      "
                     />
                   </div>
                 </div>
@@ -208,17 +217,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted, inject } from "vue";
+import { ref, onMounted, inject, watch } from "vue";
 import { useRouter } from "nuxt/app";
 import taskLayout from "../../taskLayout.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import fileUploadButton from "../../../../../ui/fileUploadButton.vue";
-import audioPlayerWithWave from "../../../../../ui/audioPlayerWithWave.vue";
-import videoPlayer from "../../../../../ui/videoPlayer.vue";
 //import result from "../../results/questions/result.vue";
 
 const router = useRouter();
-const config = useRuntimeConfig();
 const { $axiosPlugin } = useNuxtApp();
 
 const showTaskTimer = ref(false);

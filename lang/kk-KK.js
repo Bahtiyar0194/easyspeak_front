@@ -68,8 +68,10 @@ export default {
     wrong: "Дұрыс емес!",
     right_answer: "Дұрыс жауабы",
     right_answers: "Дұрыс жауаптар",
+    right_answers_count: "Дұрыс жауаптар саны",
     wrong_answer: "Дұрыс емес жауап",
     wrong_answers: "Қате жауаптар",
+    wrong_answers_count: "Қате жауаптар саны",
     answer_options: "Жауап нұсқалары",
     for_re_examination: "Қайта оқуға арналған",
     get_ready: "Дайын болыңыз",
@@ -526,6 +528,8 @@ export default {
             tasks_count: 'Тапсырмалар',
             there_are_no_tasks: 'Бұл сабаққа әзірше тапсырмалар қосылмаған.',
             task_materials: 'Тапсырманың материалдары',
+            try_again: 'Қайта орындау',
+            show_task_result: 'Нәтижесін көру',
             task_options: {
                 title: 'Тапсырманың баптаулары',
                 task_example: 'Тапсырманың мысалы',
@@ -596,6 +600,10 @@ export default {
                 },
             },
             search_filter: 'Тапсырманы іздеу сүзгісі'
+        },
+
+        'checking-tasks': {
+            title: 'Тапсырмаларды тексеру'
         },
 
         training: {

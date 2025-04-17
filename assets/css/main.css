@@ -462,7 +462,7 @@ ul > li::marker
 }
 
 hr{
-    @apply border-inactive my-3;
+    @apply border-inactive !border-t-0 my-1;
 }
 
 blockquote{

@@ -10,6 +10,7 @@
     :isFinished="isFinished"
     :progressPercentage="progressPercentage"
     :reStudyItems="reStudySentences"
+    :taskResult="taskResult"
   >
     <template v-slot:task_content>
       <div class="col-span-12">
@@ -45,7 +46,7 @@
                   : $t("right")
               }}
             </p>
-            <ul class="list-group nowrap">
+            <ul class="list-group nowrap" ref="rightAnswers">
               <li
                 class="list-item"
                 v-for="(sentence, sIndex) in currentStudiedSentences"
@@ -53,41 +54,44 @@
               >
                 <div class="flex justify-between items-center gap-x-2">
                   <div>
-                    <div class="flex flex-wrap gap-x-1 font-medium">
-                      <div
-                        v-for="(word, wordIndex) in sentence.sentence.split(
-                          ' '
-                        )"
-                        :key="wordIndex"
-                      >
-                        <span
-                          :class="
-                            ((taskData?.options.find_word_option ==
-                              'with_options' &&
-                              sentence.missingWordPositionIndex == wordIndex) ||
-                              ((taskData?.options.find_word_option ==
-                                'with_hints' ||
-                                taskData?.options.find_word_option ==
-                                  'without_hints') &&
-                                sentence.missingWords
-                                  .find((w) => w.word_position == wordIndex)
-                                  ?.userInput.toLowerCase() ==
-                                  removePunctuation(word).toLowerCase()) ||
-                              (taskData?.options.find_word_option ==
-                                'with_first_letter' &&
-                                removePunctuation(
-                                  sentence.missingWords.find(
-                                    (w) => w.word_position == wordIndex
-                                  )?.userInput
-                                ).toLowerCase() ==
-                                  removePunctuation(word)
-                                    .toLowerCase()
-                                    .slice(1) &&
-                                word.length > 1)) &&
-                            'text-success'
-                          "
-                          >{{ word }}</span
+                    <div :id="'right_answer_' + sentence.task_sentence_id">
+                      <div class="flex flex-wrap gap-x-1 font-medium">
+                        <div
+                          v-for="(word, wordIndex) in sentence.sentence.split(
+                            ' '
+                          )"
+                          :key="wordIndex"
                         >
+                          <span
+                            :class="
+                              ((taskData?.options.find_word_option ==
+                                'with_options' &&
+                                sentence.missingWordPositionIndex ==
+                                  wordIndex) ||
+                                ((taskData?.options.find_word_option ==
+                                  'with_hints' ||
+                                  taskData?.options.find_word_option ==
+                                    'without_hints') &&
+                                  sentence.missingWords
+                                    .find((w) => w.word_position == wordIndex)
+                                    ?.userInput.toLowerCase() ==
+                                    removePunctuation(word).toLowerCase()) ||
+                                (taskData?.options.find_word_option ==
+                                  'with_first_letter' &&
+                                  removePunctuation(
+                                    sentence.missingWords.find(
+                                      (w) => w.word_position == wordIndex
+                                    )?.userInput
+                                  ).toLowerCase() ==
+                                    removePunctuation(word)
+                                      .toLowerCase()
+                                      .slice(1) &&
+                                  word.length > 1)) &&
+                              'text-success'
+                            "
+                            >{{ word }}</span
+                          >
+                        </div>
                       </div>
                     </div>
                     <p class="mb-0 text-xs text-inactive font-medium">
@@ -122,7 +126,7 @@
             <p class="text-xl font-medium mb-0 text-danger">
               {{ $t("for_re_examination") }}
             </p>
-            <ul class="list-group nowrap">
+            <ul class="list-group nowrap" ref="wrongAnswers">
               <li
                 class="list-item"
                 v-for="(sentence, rIndex) in currentReStudySentences"
@@ -133,121 +137,136 @@
                     <p class="mb-0 text-xs text-inactive font-normal">
                       {{ $t("your_answer") }}:
                     </p>
-                    <div class="flex flex-wrap gap-x-1 font-medium mb-2">
-                      <div
-                        v-for="(word, wordIndex) in sentence.sentence.split(
-                          ' '
-                        )"
-                        :key="wordIndex"
-                      >
-                        <span
-                          class="underline text-danger"
-                          v-if="
-                            taskData?.options.find_word_option ==
-                              'with_options' &&
-                            wordIndex === sentence.missingWordPositionIndex &&
-                            sentence.selectedOptionIndex !== undefined &&
-                            sentence.selectedOptionIndex >= 0
-                          "
-                        >
-                          {{
-                            sentence.missingWords[sentence.selectedOptionIndex]
-                              ?.word_option
-                          }}
-                        </span>
-                        <span
-                          class="underline flex"
-                          v-else-if="
-                            taskData?.options.find_word_option !=
-                              'with_options' &&
-                            sentence.missingWords.find(
-                              (w) => w.word_position == wordIndex
-                            )?.userInput
-                          "
-                          :class="
-                            ((taskData?.options.find_word_option ==
-                              'with_hints' ||
-                              taskData?.options.find_word_option ==
-                                'without_hints') &&
-                              sentence.missingWords
-                                .find((w) => w.word_position == wordIndex)
-                                ?.userInput.toLowerCase() ==
-                                removePunctuation(word).toLowerCase()) ||
-                            (taskData?.options.find_word_option ==
-                              'with_first_letter' &&
-                              removePunctuation(
-                                sentence.missingWords.find(
-                                  (w) => w.word_position == wordIndex
-                                )?.userInput
-                              ).toLowerCase() ==
-                                removePunctuation(word)
-                                  .toLowerCase()
-                                  .slice(1) &&
-                              word.length > 1)
-                              ? 'text-success'
-                              : 'text-danger'
-                          "
+                    <div :id="'user_answer_' + sentence.task_sentence_id">
+                      <div class="flex flex-wrap gap-x-1 font-medium">
+                        <div
+                          v-for="(word, wordIndex) in sentence.sentence.split(
+                            ' '
+                          )"
+                          :key="wordIndex"
                         >
                           <span
+                            class="underline text-danger"
                             v-if="
                               taskData?.options.find_word_option ==
-                              'with_first_letter'
-                            "
-                            class="text-corp"
-                            >{{ word[0] }}</span
-                          >
-                          {{
-                            sentence.missingWords.find(
-                              (w) => w.word_position == wordIndex
-                            )?.userInput
-                          }}
-                        </span>
-
-                        <span
-                          class="text-danger"
-                          v-else-if="
-                            (taskData?.options.find_word_option ==
-                              'with_options' &&
+                                'with_options' &&
                               wordIndex === sentence.missingWordPositionIndex &&
-                              sentence.selectedOptionIndex === undefined) ||
-                            (taskData?.options.find_word_option !=
-                              'task_options' &&
+                              sentence.selectedOptionIndex !== undefined &&
+                              sentence.selectedOptionIndex >= 0
+                            "
+                          >
+                            {{
+                              sentence.missingWords[
+                                sentence.selectedOptionIndex
+                              ]?.word_option
+                            }}
+                          </span>
+                          <span
+                            class="underline flex"
+                            v-else-if="
+                              taskData?.options.find_word_option !=
+                                'with_options' &&
                               sentence.missingWords.find(
                                 (w) => w.word_position == wordIndex
-                              )?.userInput == '')
-                          "
-                        >
-                          _______
-                        </span>
+                              )?.userInput
+                            "
+                            :class="
+                              ((taskData?.options.find_word_option ==
+                                'with_hints' ||
+                                taskData?.options.find_word_option ==
+                                  'without_hints') &&
+                                sentence.missingWords
+                                  .find((w) => w.word_position == wordIndex)
+                                  ?.userInput.toLowerCase() ==
+                                  removePunctuation(word).toLowerCase()) ||
+                              (taskData?.options.find_word_option ==
+                                'with_first_letter' &&
+                                removePunctuation(
+                                  sentence.missingWords.find(
+                                    (w) => w.word_position == wordIndex
+                                  )?.userInput
+                                ).toLowerCase() ==
+                                  removePunctuation(word)
+                                    .toLowerCase()
+                                    .slice(1) &&
+                                word.length > 1)
+                                ? 'text-success'
+                                : 'text-danger'
+                            "
+                          >
+                            <span
+                              v-if="
+                                taskData?.options.find_word_option ==
+                                'with_first_letter'
+                              "
+                              class="text-corp"
+                              >{{ word[0] }}</span
+                            >
+                            {{
+                              sentence.missingWords.find(
+                                (w) => w.word_position == wordIndex
+                              )?.userInput
+                            }}
+                          </span>
 
-                        <span v-else>{{ word }}</span>
+                          <span
+                            class="text-danger"
+                            v-else-if="
+                              (taskData?.options.find_word_option ==
+                                'with_options' &&
+                                wordIndex ===
+                                  sentence.missingWordPositionIndex &&
+                                sentence.selectedOptionIndex === undefined) ||
+                              (taskData?.options.find_word_option !=
+                                'task_options' &&
+                                sentence.missingWords.find(
+                                  (w) => w.word_position == wordIndex
+                                )?.userInput == '')
+                            "
+                          >
+                            <span
+                              v-if="
+                                taskData?.options.find_word_option ==
+                                'with_first_letter'
+                              "
+                              class="text-corp"
+                              >{{ word[0] }}</span
+                            >_____
+                          </span>
+
+                          <span v-else>{{ word }}</span>
+                        </div>
                       </div>
                     </div>
+
                     <p class="mb-0 text-xs text-inactive font-normal">
                       {{ $t("right_answer") }}:
                     </p>
-                    <div class="flex flex-wrap gap-x-1 font-medium">
-                      <div
-                        v-for="(word, wordIndex) in sentence.sentence.split(
-                          ' '
-                        )"
-                        :key="wordIndex"
-                      >
-                        <span
-                          class="underline text-success"
-                          v-if="
-                            (taskData?.options.find_word_option ==
-                              'with_options' &&
-                              sentence.missingWordPositionIndex == wordIndex) ||
-                            (taskData?.options.find_word_option !=
-                              'with_options' &&
-                              sentence.missingWords.find(
-                                (w) => w.word_position == wordIndex
-                              )?.word_position == wordIndex)
-                          "
-                          >{{ word }}</span
+                    <div :id="'right_answer_' + sentence.task_sentence_id">
+                      <div class="flex flex-wrap gap-x-1 font-medium">
+                        <div
+                          v-for="(word, wordIndex) in sentence.sentence.split(
+                            ' '
+                          )"
+                          :key="wordIndex"
                         >
-                        <span v-else>{{ word }}</span>
+                          <span
+                            class="underline text-success"
+                            v-if="
+                              (taskData?.options.find_word_option ==
+                                'with_options' &&
+                                sentence.missingWordPositionIndex ==
+                                  wordIndex) ||
+                              (taskData?.options.find_word_option !=
+                                'with_options' &&
+                                sentence.missingWords.find(
+                                  (w) => w.word_position == wordIndex
+                                )?.word_position == wordIndex)
+                            "
+                            >{{ word }}</span
+                          >
+                          <span v-else>{{ word }}</span>
+                        </div>
                       </div>
                     </div>
                     <p class="mb-0 text-xs text-inactive font-medium">
@@ -518,7 +537,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, inject } from "vue";
+import { ref, onMounted, inject, nextTick } from "vue";
 import { useRouter } from "nuxt/app";
 import taskLayout from "../../taskLayout.vue";
 import audioButton from "../../../../../ui/audioButton.vue";
@@ -549,6 +568,11 @@ const reStudySentences = ref([]);
 const currentReStudySentences = ref([]);
 
 const unFilledSentences = ref([]);
+
+const rightAnswers = ref(null);
+const wrongAnswers = ref(null);
+const taskResult = ref([]);
+const taskResultCollection = ref([]);
 
 const isStarted = ref(false);
 const isComplete = ref(false);
@@ -822,9 +846,21 @@ const checkSentences = () => {
   });
 };
 
-const pushToStudySentences = (sentence) => {
+const pushToStudySentences = async (sentence) => {
   studiedSentences.value.push(sentence);
   currentStudiedSentences.value.push(sentence);
+
+  await nextTick();
+  const answer = rightAnswers.value.querySelector(
+    "#right_answer_" + sentence.task_sentence_id
+  );
+
+  if (answer) {
+    taskResultCollection.value.push({
+      is_correct: true,
+      right_answer: answer.innerHTML,
+    });
+  }
 
   if (
     reStudySentences.value.some(
@@ -837,13 +873,31 @@ const pushToStudySentences = (sentence) => {
   }
 };
 
-const pushToCurrentReStudySentences = (sentence) => {
+const pushToCurrentReStudySentences = async (sentence) => {
   currentReStudySentences.value.push(sentence);
 
   if (sentence.attempts >= 1) {
     sentences.value.push(sentence);
     sentence.attempts--;
   } else {
+    await nextTick();
+
+    const userAnswer = wrongAnswers.value.querySelector(
+      "#user_answer_" + sentence.task_sentence_id
+    );
+
+    const rightAnswer = wrongAnswers.value.querySelector(
+      "#right_answer_" + sentence.task_sentence_id
+    );
+
+    if (userAnswer && rightAnswer) {
+      taskResultCollection.value.push({
+        is_correct: false,
+        user_answer: userAnswer.innerHTML,
+        right_answer: rightAnswer.innerHTML,
+      });
+    }
+
     reStudySentences.value.push(sentence);
   }
 };
@@ -903,6 +957,39 @@ const handleKeyPress = (event) => {
   }
 };
 
+const saveTaskResult = async () => {
+  onPending(true);
+  const formData = new FormData();
+  formData.append("task_result", JSON.stringify(taskResultCollection.value));
+  formData.append("operation_type_id", 25);
+
+  await $axiosPlugin
+    .post("tasks/save_result/" + props.task.task_id, formData)
+    .then((res) => {
+      taskResult.value = res.data;
+      onPending(false);
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          onPending(false);
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
 // Инициализация при монтировании
 onMounted(() => {
   changeModalSize("modal-2xl");
@@ -913,4 +1000,13 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleKeyPress);
 });
+
+watch(
+  () => taskResultCollection.value.length,
+  (newVal) => {
+    if (newVal === taskData.value.sentences.length) {
+      saveTaskResult();
+    }
+  }
+);
 </script>

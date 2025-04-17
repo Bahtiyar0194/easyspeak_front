@@ -1,7 +1,7 @@
 <template>
   <div class="custom-grid">
     <div class="col-span-12">
-      <ul class="list-group" :class="{nowrap: answerTheQuestionsOption === 'text'}">
+      <ul class="list-group nowrap">
         <li
           class="list-item"
           v-for="(sentence, sentenceIndex) in selectedSentences"
@@ -13,7 +13,7 @@
                 >{{ sentenceIndex + 1 }}. {{ sentence.sentence }}</b
               >
             </div>
-            <div v-if="answerTheQuestionsOption === 'text'" class="col-span-12">
+            <div class="col-span-12">
               <div class="form-group-border active">
                 <i class="pi pi-reply"></i>
                 <input v-model="sentence.predefined_answer" type="text" placeholder=" " />
