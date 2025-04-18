@@ -10,6 +10,7 @@
     :isFinished="isFinished"
     :progressPercentage="progressPercentage"
     :reStudyItems="reStudyWords"
+    :taskResult="taskResult"
   >
     <template v-slot:task_content>
       <div class="col-span-12">
@@ -46,7 +47,7 @@
               }}
             </p>
 
-            <ul class="list-group nowrap">
+            <ul class="list-group nowrap" ref="rightAnswers">
               <li
                 v-for="(word, sIndex) in currentStudiedWords"
                 :key="sIndex"
@@ -63,16 +64,18 @@
                   />
 
                   <div class="flex flex-col">
-                    <div class="text-xl font-medium">
-                      <span
-                        v-for="(syllable, syllableIndex) in word.syllables"
-                        :key="syllableIndex"
-                        :class="
-                          syllable.target == true && 'text-success underline'
-                        "
-                      >
-                        {{ syllable.syllable }}
-                      </span>
+                    <div :id="'right_answer_' + word.task_word_id">
+                      <div class="text-xl font-medium">
+                        <span
+                          v-for="(syllable, syllableIndex) in word.syllables"
+                          :key="syllableIndex"
+                          :class="
+                            syllable.target == true && 'text-success underline'
+                          "
+                        >
+                          {{ syllable.syllable }}
+                        </span>
+                      </div>
                     </div>
                     <span class="text-xs text-inactive">{{
                       word.word_translate
@@ -97,7 +100,7 @@
               {{ $t("for_re_examination") }}
             </p>
 
-            <ul class="list-group nowrap">
+            <ul class="list-group nowrap" ref="wrongAnswers">
               <li
                 v-for="(word, rIndex) in currentReStudyWords"
                 :key="rIndex"
@@ -120,19 +123,21 @@
                           <p class="mb-0 text-xs text-inactive font-normal">
                             {{ $t("your_answer") }}:
                           </p>
-                          <div class="text-xl font-medium">
-                            <span
-                              v-for="(
-                                syllable, syllableIndex
-                              ) in word.syllables"
-                              :key="syllableIndex"
-                              :class="
-                                word.userInput === syllableIndex &&
-                                'text-danger underline'
-                              "
-                            >
-                              {{ syllable.syllable }}
-                            </span>
+                          <div :id="'user_answer_' + word.task_word_id">
+                            <div class="text-xl font-medium">
+                              <span
+                                v-for="(
+                                  syllable, syllableIndex
+                                ) in word.syllables"
+                                :key="syllableIndex"
+                                :class="
+                                  word.userInput === syllableIndex &&
+                                  'text-danger underline'
+                                "
+                              >
+                                {{ syllable.syllable }}
+                              </span>
+                            </div>
                           </div>
                         </div>
 
@@ -140,19 +145,21 @@
                           <p class="mb-0 text-xs text-inactive font-normal">
                             {{ $t("right_answer") }}:
                           </p>
-                          <div class="text-xl font-medium">
-                            <span
-                              v-for="(
-                                syllable, syllableIndex
-                              ) in word.syllables"
-                              :key="syllableIndex"
-                              :class="
-                                syllable.target == true &&
-                                'text-success underline'
-                              "
-                            >
-                              {{ syllable.syllable }}
-                            </span>
+                          <div :id="'right_answer_' + word.task_word_id">
+                            <div class="text-xl font-medium">
+                              <span
+                                v-for="(
+                                  syllable, syllableIndex
+                                ) in word.syllables"
+                                :key="syllableIndex"
+                                :class="
+                                  syllable.target == true &&
+                                  'text-success underline'
+                                "
+                              >
+                                {{ syllable.syllable }}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -297,6 +304,11 @@ const currentStudiedWords = ref([]);
 const reStudyWords = ref([]);
 const currentReStudyWords = ref([]);
 
+const rightAnswers = ref(null);
+const wrongAnswers = ref(null);
+const taskResult = ref([]);
+const taskResultCollection = ref([]);
+
 const isStarted = ref(false);
 const isComplete = ref(false);
 
@@ -422,28 +434,67 @@ const checkWords = () => {
       (w) => w.task_word_id !== word.task_word_id
     );
 
-    if (word.userInput !== "" && word.syllables[word.userInput].target == true) {
-      studiedWords.value.push(word);
-      currentStudiedWords.value.push(word);
-
-      if (
-        reStudyWords.value.some((w) => w.task_word_id === word.task_word_id)
-      ) {
-        reStudyWords.value = reStudyWords.value.filter(
-          (w) => w.task_word_id !== word.task_word_id
-        );
-      }
+    if (
+      word.userInput !== "" &&
+      word.syllables[word.userInput].target == true
+    ) {
+      pushToStudyWords(word);
     } else {
-      currentReStudyWords.value.push(word);
-
-      if (word.attempts >= 1) {
-        words.value.push(word);
-        word.attempts--;
-      } else {
-        reStudyWords.value.push(word);
-      }
+      pushToCurrentReStudyWords(word);
     }
   });
+};
+
+const pushToStudyWords = async (word) => {
+  studiedWords.value.push(word);
+  currentStudiedWords.value.push(word);
+
+  await nextTick();
+  const answer = rightAnswers.value.querySelector(
+    "#right_answer_" + word.task_word_id
+  );
+
+  if (answer) {
+    taskResultCollection.value.push({
+      is_correct: true,
+      right_answer: answer.innerHTML,
+      word_id: word.word_id,
+    });
+  }
+
+  if (reStudyWords.value.some((w) => w.task_word_id === word.task_word_id)) {
+    reStudyWords.value = reStudyWords.value.filter(
+      (w) => w.task_word_id !== word.task_word_id
+    );
+  }
+};
+
+const pushToCurrentReStudyWords = async (word) => {
+  currentReStudyWords.value.push(word);
+
+  if (word.attempts >= 1) {
+    words.value.push(word);
+    word.attempts--;
+  } else {
+    await nextTick();
+    const userAnswer = wrongAnswers.value.querySelector(
+      "#user_answer_" + word.task_word_id
+    );
+
+    const rightAnswer = wrongAnswers.value.querySelector(
+      "#right_answer_" + word.task_word_id
+    );
+
+    if (userAnswer && rightAnswer) {
+      taskResultCollection.value.push({
+        is_correct: false,
+        user_answer: userAnswer.innerHTML,
+        right_answer: rightAnswer.innerHTML,
+        word_id: word.word_id,
+      });
+    }
+    reStudyWords.value.push(word);
+  }
 };
 
 const selectSyllable = (syllableIndex, wordIndex) => {
@@ -495,6 +546,39 @@ const handleKeyPress = (event) => {
   }
 };
 
+const saveTaskResult = async () => {
+  onPending(true);
+  const formData = new FormData();
+  formData.append("task_result", JSON.stringify(taskResultCollection.value));
+  formData.append("operation_type_id", 25);
+
+  await $axiosPlugin
+    .post("tasks/save_result/" + props.task.task_id, formData)
+    .then((res) => {
+      taskResult.value = res.data;
+      onPending(false);
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          onPending(false);
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
 // Инициализация при монтировании
 onMounted(() => {
   changeModalSize("modal-2xl");
@@ -505,4 +589,13 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleKeyPress);
 });
+
+watch(
+  () => taskResultCollection.value.length,
+  (newVal) => {
+    if (newVal === taskData.value.words.length) {
+      saveTaskResult();
+    }
+  }
+);
 </script>

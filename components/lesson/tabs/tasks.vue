@@ -80,14 +80,14 @@
                       <i class="pi pi-arrow-down"></i>
                     </button>
                     <button
-                      @click="openEditTask(task)"
+                      @click="openEditTask(taskItem)"
                       class="btn btn-square btn-light btn-sm"
                       :title="$t('edit')"
                     >
                       <i class="pi pi-pencil"></i>
                     </button>
                     <button
-                      @click="openDeleteModal(task)"
+                      @click="openDeleteModal(taskItem)"
                       class="btn btn-square btn-outline-danger btn-sm"
                       :title="$t('delete')"
                     >

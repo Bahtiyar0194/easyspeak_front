@@ -10,6 +10,7 @@
     :isFinished="isFinished"
     :progressPercentage="progressPercentage"
     :reStudyItems="reStudySentences"
+    :taskResult="taskResult"
   >
     <template v-slot:task_content>
       <div class="col-span-12">
@@ -176,6 +177,11 @@ const errorButtonsIndex = ref([]);
 const studiedSentences = ref([]);
 const reStudySentences = ref([]);
 
+const rightAnswers = ref(null);
+const wrongAnswers = ref(null);
+const taskResult = ref([]);
+const taskResultCollection = ref([]);
+
 const displayedSentence = ref([]);
 const isStarted = ref(false);
 const isComplete = ref(false);
@@ -316,6 +322,12 @@ const moveToEnd = () => {
     currentSentence.value.attempts--;
     sentences.value.push(currentSentence.value);
   } else {
+    taskResultCollection.value.push({
+      is_correct: false,
+      right_answer: "<b>" + currentSentence.value.sentence + "</b>",
+      sentence_id: currentSentence.value.sentence_id,
+    });
+
     reStudySentences.value.push(currentSentence.value);
   }
 };
@@ -347,6 +359,12 @@ const checkSentence = (word, wordIndex) => {
       }
 
       studiedSentences.value.push(currentSentence.value);
+
+      taskResultCollection.value.push({
+        is_correct: true,
+        right_answer: "<b>" + currentSentence.value.sentence + "</b>",
+        sentence_id: currentSentence.value.sentence_id,
+      });
 
       if (
         reStudySentences.value.some(
@@ -403,6 +421,39 @@ const handleKeyPress = (event) => {
   }
 };
 
+const saveTaskResult = async () => {
+  onPending(true);
+  const formData = new FormData();
+  formData.append("task_result", JSON.stringify(taskResultCollection.value));
+  formData.append("operation_type_id", 25);
+
+  await $axiosPlugin
+    .post("tasks/save_result/" + props.task.task_id, formData)
+    .then((res) => {
+      taskResult.value = res.data;
+      onPending(false);
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          onPending(false);
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
 // Инициализация при монтировании
 onMounted(() => {
   changeModalSize("modal-2xl");
@@ -413,4 +464,13 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleKeyPress);
 });
+
+watch(
+  () => taskResultCollection.value.length,
+  (newVal) => {
+    if (newVal === taskData.value.sentences.length) {
+      saveTaskResult();
+    }
+  }
+);
 </script>

@@ -453,6 +453,7 @@
                         ).userInput
                       "
                       :disabled="false"
+                      class="lowercase"
                       :style="{
                         marginTop: '0.05rem',
                         width:
@@ -739,6 +740,7 @@ const disableTheHiddenWord = () => {
   currentSentences.value.forEach((sentence) => {
     sentence.missingWords.forEach((word) => {
       if (word.userInput.length > 0) {
+        word.userInput = word.userInput.trim();
         userInputs.push({
           word: word.userInput.toLowerCase(),
           disabled: false,
@@ -747,17 +749,19 @@ const disableTheHiddenWord = () => {
     });
   });
 
-  hiddenWords.value.forEach((word) => {
-    const userInput = userInputs.find(
-      (w) => w.word === word.word.toLowerCase() && w.disabled === false
-    );
-    if (userInput) {
-      word.disabled = true;
-      userInput.disabled = true;
-    } else {
-      word.disabled = false;
-    }
-  });
+  if (hiddenWords.value.length > 0) {
+    hiddenWords.value.forEach((word) => {
+      const userInput = userInputs.find(
+        (w) => w.word === word.word.toLowerCase() && w.disabled === false
+      );
+      if (userInput) {
+        word.disabled = true;
+        userInput.disabled = true;
+      } else {
+        word.disabled = false;
+      }
+    });
+  }
 };
 
 const insertWord = (sentenceIndex, optionIndex) => {
@@ -859,6 +863,7 @@ const pushToStudySentences = async (sentence) => {
     taskResultCollection.value.push({
       is_correct: true,
       right_answer: answer.innerHTML,
+      sentence_id: sentence.sentence_id,
     });
   }
 
@@ -895,6 +900,7 @@ const pushToCurrentReStudySentences = async (sentence) => {
         is_correct: false,
         user_answer: userAnswer.innerHTML,
         right_answer: rightAnswer.innerHTML,
+        sentence_id: sentence.sentence_id,
       });
     }
 

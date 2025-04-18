@@ -1484,7 +1484,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .step-item{
-    @apply flex items-center justify-center flex-col gap-y-2 text-center font-medium text-xs md:text-base w-min md:w-auto z-10 bg-active text-inactive px-2 lg:px-4;
+    @apply flex items-center justify-center flex-col gap-y-2 text-center font-medium text-xs md:text-base w-min md:w-auto z-10 bg-active text-inactive px-2;
 }
 
 .step-item.xs{
@@ -1504,7 +1504,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .step-item.xs .step-icon{
-    @apply w-8 h-8 text-lg;
+    @apply w-9 h-9 text-lg;
 }
 
 .step-item.current, .step-item.completed{
