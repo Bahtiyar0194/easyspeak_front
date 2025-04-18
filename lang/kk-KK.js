@@ -508,8 +508,6 @@ export default {
             select_questions: 'Сұрақтарды таңдау',
             question_settings: 'Сұрақтарды өңдеу',
             questions_left: "Қалған сұрақтар саны",
-            answered_questions: "Жауап берілген сұрақтар",
-            unanswered_questions: 'Жауап берілмеген сұрақтар',
             seconds_per_question: 'Әр сұраққа жауап беруге бөлінетін секунд саны',
             predefined_answer: 'Алдын ала анықталған жауап'
         },

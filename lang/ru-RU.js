@@ -508,8 +508,6 @@ export default {
             select_questions: 'Выбор вопросов',
             question_settings: 'Настройка вопросов',
             questions_left: "Осталось вопросов",
-            answered_questions: "Отвеченные вопросы",
-            unanswered_questions: 'Неотвеченные вопросы',
             seconds_per_question: 'Количество выделенных секунд на ответ каждого вопроса',
             predefined_answer: 'Предопределенный ответ',
         },
@@ -608,7 +606,6 @@ export default {
 
         training: {
             title: 'Тренировка',
-            keyboard: 'Используйте цифры на клавиатуре для выбора ответа',
             keyboard: {
                 title: 'Вы также можете использовать клавиатуру для выбора букв',
                 numbers: 'Вы также можете использовать цифры на клавиатуре для выбора ответа',
