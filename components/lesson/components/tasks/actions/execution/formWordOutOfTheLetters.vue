@@ -10,6 +10,7 @@
     :isFinished="isFinished"
     :progressPercentage="progressPercentage"
     :reStudyItems="reStudyWords"
+    :taskResult="taskResult"
   >
     <template v-slot:task_content>
       <div class="col-span-12">
@@ -206,6 +207,9 @@ const timeIsUp = ref(false);
 const studiedWords = ref([]);
 const reStudyWords = ref([]);
 
+const taskResult = ref([]);
+const taskResultCollection = ref([]);
+
 const isStarted = ref(false);
 const isComplete = ref(false);
 
@@ -346,13 +350,20 @@ const moveToEnd = () => {
     currentWord.value.attempts--;
     words.value.push(currentWord.value);
   } else {
+    taskResultCollection.value.push({
+      is_correct: false,
+      right_answer: "<b>" + currentWord.value.word + "</b>",
+      word_id: currentWord.value.word_id,
+    });
+
     reStudyWords.value.push(currentWord.value);
   }
 };
 
 const checkWord = (letter, event) => {
   if (
-    letter === currentWord.value.word[missingLetters.value[0] - 1].toLowerCase()
+    letter.toLowerCase() ===
+    currentWord.value.word[missingLetters.value[0] - 1].toLowerCase()
   ) {
     missingLetters.value.shift();
 
@@ -370,7 +381,7 @@ const checkWord = (letter, event) => {
 
         if (
           !button.classList.contains("disabled") &&
-          button.innerText === letter
+          button.innerText.toLowerCase() === letter.toLowerCase()
         ) {
           button.classList.replace("btn-light", "btn-success");
           setTimeout(() => {
@@ -385,6 +396,12 @@ const checkWord = (letter, event) => {
     if (missingLetters.value.length === 0) {
       if (isStarted.value === true) {
         studiedWords.value.push(currentWord.value);
+
+        taskResultCollection.value.push({
+          is_correct: true,
+          right_answer: "<b>" + currentWord.value.word + "</b>",
+          word_id: currentWord.value.word_id,
+        });
       }
 
       if (Boolean(taskData.value.options.play_audio_with_the_correct_answer)) {
@@ -504,6 +521,39 @@ const logKey = (event) => {
   }
 };
 
+const saveTaskResult = async () => {
+  onPending(true);
+  const formData = new FormData();
+  formData.append("task_result", JSON.stringify(taskResultCollection.value));
+  formData.append("operation_type_id", 25);
+
+  await $axiosPlugin
+    .post("tasks/save_result/" + props.task.task_id, formData)
+    .then((res) => {
+      taskResult.value = res.data;
+      onPending(false);
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          onPending(false);
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
 // Инициализация при монтировании
 onMounted(() => {
   changeModalSize("modal-2xl");
@@ -514,4 +564,13 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", logKey);
 });
+
+watch(
+  () => taskResultCollection.value.length,
+  (newVal) => {
+    if (newVal === taskData.value.words.length) {
+      saveTaskResult();
+    }
+  }
+);
 </script>

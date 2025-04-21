@@ -177,8 +177,6 @@ const errorButtonsIndex = ref([]);
 const studiedSentences = ref([]);
 const reStudySentences = ref([]);
 
-const rightAnswers = ref(null);
-const wrongAnswers = ref(null);
 const taskResult = ref([]);
 const taskResultCollection = ref([]);
 

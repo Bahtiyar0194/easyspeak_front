@@ -78,6 +78,8 @@ export default {
     number_of_options: "Нұсқалар саны",
     number_of_attempts: "Қателерді түзету әрекеттерінің саны",
     random_order: "Кездейсоқ тәртіпте шығару",
+    random_order_words: "Сөздерді кездейсоқ тәртіпте шығару",
+    random_order_pictures: "Суреттерді кездейсоқ тәртіпте шығару",
 
     created_at: "Шыққан уақыты",
     created_at_from: "Шыққан уақыты (бастап)",

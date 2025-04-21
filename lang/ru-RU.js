@@ -78,6 +78,8 @@ export default {
     number_of_options: "Количество вариантов",
     number_of_attempts: "Количество попыток на исправление ошибок",
     random_order: "Выводить в случайном порядке",
+    random_order_words: "Выводить слова в случайном порядке",
+    random_order_pictures: "Выводить изображения в случайном порядке",
 
     created_at: "Дата создания",
     created_at_from: "Дата создания (с)",

@@ -505,7 +505,14 @@
     <div class="col-span-12">
       <label class="custom-radio-checkbox text-nowrap">
         <input type="checkbox" checked="true" name="random_order" />
-        <span>{{ $t("random_order") }}</span>
+        <span>{{ props.showOrderWordsOption === true ? $t("random_order_words") : $t("random_order") }}</span>
+      </label>
+    </div>
+
+    <div v-if="props.showOrderPicturesOption === true" class="col-span-12">
+      <label class="custom-radio-checkbox text-nowrap">
+        <input type="checkbox" checked="true" name="random_order_pictures" />
+        <span>{{ $t("random_order_pictures") }}</span>
       </label>
     </div>
   </div>
@@ -677,6 +684,18 @@ const props = defineProps({
   },
 
   showMaxAnswerAttempts: {
+    default: false,
+    type: Boolean,
+    required: false,
+  },
+
+  showOrderWordsOption: {
+    default: false,
+    type: Boolean,
+    required: false,
+  },
+
+  showOrderPicturesOption: {
     default: false,
     type: Boolean,
     required: false,

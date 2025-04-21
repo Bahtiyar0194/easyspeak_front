@@ -463,14 +463,9 @@
       </div>
     </div>
 
-    <div
-      v-if="props.showMatchPicturesOptions"
-      class="col-span-12"
-    >
+    <div v-if="props.showMatchPicturesOptions" class="col-span-12">
       <div class="flex flex-col gap-y-2.5">
-        <p
-          class="mb-0 text-inactive"
-        >
+        <p class="mb-0 text-inactive">
           {{
             $t(
               "pages.tasks.task_options.choose_one_of_the_methods_for_matching_words_by_pictures"
@@ -480,24 +475,24 @@
         <label class="custom-radio">
           <input
             type="radio"
-            :checked="taskOptions.match_words_by_pictures_option === 'match_by_typing'"
+            :checked="
+              taskOptions.match_words_by_pictures_option === 'match_by_typing'
+            "
             value="match_by_typing"
             name="match_words_by_pictures_option"
           />
-          <span>{{
-            $t("pages.tasks.match_words_by_pictures.option_1")
-          }}</span>
+          <span>{{ $t("pages.tasks.match_words_by_pictures.option_1") }}</span>
         </label>
         <label class="custom-radio">
           <input
             type="radio"
-            :checked="taskOptions.match_words_by_pictures_option === 'match_by_number'"
+            :checked="
+              taskOptions.match_words_by_pictures_option === 'match_by_number'
+            "
             value="match_by_number"
             name="match_words_by_pictures_option"
           />
-          <span>{{
-            $t("pages.tasks.match_words_by_pictures.option_2")
-          }}</span>
+          <span>{{ $t("pages.tasks.match_words_by_pictures.option_2") }}</span>
         </label>
       </div>
     </div>
@@ -505,7 +500,10 @@
     <div v-if="sentenceMaterialTypes" class="col-span-12">
       <div class="form-group-border select active">
         <i class="pi pi-file"></i>
-        <select v-model="sentenceMaterialTypeSlug" @change="removeSentenceMaterials()">
+        <select
+          v-model="sentenceMaterialTypeSlug"
+          @change="removeSentenceMaterials()"
+        >
           <option disabled value="">
             {{ $t("file.choose_a_file_type") }}
           </option>
@@ -547,7 +545,10 @@
     <div v-if="props.showMaxAnswerAttempts === true" class="col-span-12">
       <div class="form-group-border select active label-active">
         <i class="pi pi-replay"></i>
-        <select name="max_answer_attempts" v-model="taskOptions.max_answer_attempts">
+        <select
+          name="max_answer_attempts"
+          v-model="taskOptions.max_answer_attempts"
+        >
           <option disabled value="">
             {{ $t("choose_your_option") }}
           </option>
@@ -568,7 +569,18 @@
           :checked="taskOptions.random_order === 1"
           name="random_order"
         />
-        <span>{{ $t("random_order") }}</span>
+        <span>{{ props.showOrderWordsOption === true ? $t("random_order_words") : $t("random_order") }}</span>
+      </label>
+    </div>
+
+    <div v-if="props.showOrderPicturesOption === true" class="col-span-12">
+      <label class="custom-radio-checkbox text-nowrap">
+        <input
+          type="checkbox"
+          :checked="taskOptions.random_order_pictures === 1"
+          name="random_order_pictures"
+        />
+        <span>{{ $t("random_order_pictures") }}</span>
       </label>
     </div>
   </div>
@@ -752,6 +764,18 @@ const props = defineProps({
     type: Boolean,
     required: false,
   },
+
+  showOrderWordsOption: {
+    default: false,
+    type: Boolean,
+    required: false,
+  },
+
+  showOrderPicturesOption: {
+    default: false,
+    type: Boolean,
+    required: false,
+  },
 });
 
 const {
@@ -782,7 +806,7 @@ const answerTheQuestionsOptions = ["text", "video", "audio"];
 watch(
   () => task.value.task_example,
   (newVal) => {
-    showTaskExample.value = (task.value.task_example ? true : false);
+    showTaskExample.value = task.value.task_example ? true : false;
   }
 );
 </script>

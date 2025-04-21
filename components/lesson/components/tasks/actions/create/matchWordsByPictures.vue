@@ -82,6 +82,8 @@ const newTaskSteps = [
       showImpressionLimit: true,
       showSecondsPerWord: true,
       showMatchPicturesOptions: true,
+      showOrderWordsOption: true,
+      showOrderPicturesOption: true,
     },
     modalSize: "4xl",
   },

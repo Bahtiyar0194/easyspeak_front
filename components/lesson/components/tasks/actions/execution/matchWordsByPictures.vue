@@ -609,14 +609,20 @@ const setWords = () => {
   currentReStudyWords.value = [];
 
   if (words.value.length > 0) {
-    currentWords.value = words.value.slice(
+    const currentWordsCollection = words.value.slice(
       0,
       taskData.value.options.impression_limit
     );
 
-    currentPictures.value = [...currentWords.value].sort(
-      () => Math.random() - 0.5
-    );
+    currentWords.value =
+      taskData.value.options.random_order === 1
+        ? [...currentWordsCollection].sort(() => Math.random() - 0.5)
+        : [...currentWordsCollection];
+
+    currentPictures.value =
+      taskData.value.options.random_order_pictures === 1
+        ? [...currentWordsCollection].sort(() => Math.random() - 0.5)
+        : [...currentWordsCollection];
 
     if (
       taskData.value.options.match_words_by_pictures_option ===
@@ -685,9 +691,9 @@ const disableTheHiddenWord = () => {
   currentPictures.value.forEach((picture) => {
     if (picture.userInput.length > 0) {
       userInputs.push({
-          word: picture.userInput.toLowerCase(),
-          disabled: false,
-        });
+        word: picture.userInput.toLowerCase(),
+        disabled: false,
+      });
     }
   });
 
