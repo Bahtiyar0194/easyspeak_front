@@ -10,6 +10,7 @@
     :isFinished="isFinished"
     :progressPercentage="progressPercentage"
     :reStudyItems="reStudyWords"
+    :taskResult="taskResult"
   >
     <template v-slot:task_content>
       <div class="col-span-12">
@@ -517,6 +518,9 @@ const currentStudiedWords = ref([]);
 const reStudyWords = ref([]);
 const currentReStudyWords = ref([]);
 
+const taskResult = ref([]);
+const taskResultCollection = ref([]);
+
 const isStarted = ref(false);
 const isComplete = ref(false);
 
@@ -741,25 +745,9 @@ const checkWords = () => {
       );
 
       if (word.word.toLowerCase() === picture.userInput.toLowerCase()) {
-        studiedWords.value.push(word);
-        currentStudiedWords.value.push(word);
-
-        if (
-          reStudyWords.value.some((w) => w.task_word_id === word.task_word_id)
-        ) {
-          reStudyWords.value = reStudyWords.value.filter(
-            (w) => w.task_word_id !== word.task_word_id
-          );
-        }
+        pushToStudyWords(word);
       } else {
-        currentReStudyWords.value.push(word);
-
-        if (word.attempts >= 1) {
-          words.value.push(word);
-          word.attempts--;
-        } else {
-          reStudyWords.value.push(word);
-        }
+        pushToCurrentReStudyWords(word);
       }
     });
   } else if (
@@ -776,27 +764,65 @@ const checkWords = () => {
         word.task_word_id ===
           currentPictures.value[word.userInput - 1].task_word_id
       ) {
-        studiedWords.value.push(word);
-        currentStudiedWords.value.push(word);
-
-        if (
-          reStudyWords.value.some((w) => w.task_word_id === word.task_word_id)
-        ) {
-          reStudyWords.value = reStudyWords.value.filter(
-            (w) => w.task_word_id !== word.task_word_id
-          );
-        }
+        pushToStudyWords(word);
       } else {
-        currentReStudyWords.value.push(word);
-
-        if (word.attempts >= 1) {
-          words.value.push(word);
-          word.attempts--;
-        } else {
-          reStudyWords.value.push(word);
-        }
+        pushToCurrentReStudyWords(word);
       }
     });
+  }
+};
+
+const pushToStudyWords = async (word) => {
+  studiedWords.value.push(word);
+  currentStudiedWords.value.push(word);
+
+  taskResultCollection.value.push({
+    is_correct: true,
+    right_answer:
+      "<b class='text-success'>" +
+      word.word +
+      "</b><br><b class='text-inactive text-xs'>" +
+      word.word_translate +
+      "</b>",
+    word_id: word.word_id,
+  });
+
+  if (reStudyWords.value.some((w) => w.task_word_id === word.task_word_id)) {
+    reStudyWords.value = reStudyWords.value.filter(
+      (w) => w.task_word_id !== word.task_word_id
+    );
+  }
+};
+
+const pushToCurrentReStudyWords = async (word) => {
+  currentReStudyWords.value.push(word);
+
+  if (word.attempts >= 1) {
+    words.value.push(word);
+    word.attempts--;
+  } else {
+    taskResultCollection.value.push({
+      is_correct: false,
+      user_answer:
+        "<b class='text-danger'>" +
+        (taskData.value.options.match_words_by_pictures_option ===
+        "match_by_typing"
+          ? currentPictures.value.find(
+              (p) => p.task_word_id === word.task_word_id
+            ).userInput || "______"
+          : currentWords.value.find((w) => w.task_word_id === word.task_word_id)
+              .userInput || "______") +
+        "</b>",
+      right_answer:
+        "<b class='text-success'>" +
+        word.word +
+        "</b><br><b class='text-inactive text-xs'>" +
+        word.word_translate +
+        "</b>",
+      word_id: word.word_id,
+    });
+
+    reStudyWords.value.push(word);
   }
 };
 
@@ -907,6 +933,39 @@ const findTranslate = (w) => {
   return "________";
 };
 
+const saveTaskResult = async () => {
+  onPending(true);
+  const formData = new FormData();
+  formData.append("task_result", JSON.stringify(taskResultCollection.value));
+  formData.append("operation_type_id", 25);
+
+  await $axiosPlugin
+    .post("tasks/save_result/" + props.task.task_id, formData)
+    .then((res) => {
+      taskResult.value = res.data;
+      onPending(false);
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          onPending(false);
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
 // Инициализация при монтировании
 onMounted(() => {
   changeModalSize("modal-2xl");
@@ -917,4 +976,13 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleKeyPress);
 });
+
+watch(
+  () => taskResultCollection.value.length,
+  (newVal) => {
+    if (newVal === taskData.value.words.length) {
+      saveTaskResult();
+    }
+  }
+);
 </script>

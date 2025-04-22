@@ -47,11 +47,13 @@
                 <div v-html="answer.right_answer"></div>
                 <div class="flex items-center">
                   <audioButton
-                    v-if="answer.word || answer.sentence" :key="answer.task_answer_id"
+                    v-if="answer.word || answer.sentence"
+                    :key="answer.task_answer_id + '_' + answer.task_id"
                     :src="
                       config.public.apiBase +
                       '/media/get/' +
-                      ((answer.word && answer.word.audio_file) || (answer.sentence && answer.sentence.audio_file))
+                      ((answer.word && answer.word.audio_file) ||
+                        (answer.sentence && answer.sentence.audio_file))
                     "
                   />
                   <div class="step-item xs completed">
@@ -87,14 +89,20 @@
               <div class="flex gap-x-2 justify-between items-center">
                 <div class="flex flex-col gap-y-2">
                   <div>
-                    <p v-if="answer.user_answer" class="mb-0 text-xs text-inactive font-normal">
+                    <p
+                      v-if="answer.user_answer"
+                      class="mb-1 text-xs text-inactive font-normal"
+                    >
                       {{ $t("your_answer") }}:
                     </p>
                     <div v-html="answer.user_answer"></div>
                   </div>
 
                   <div>
-                    <p v-if="answer.user_answer" class="mb-0 text-xs text-inactive font-normal">
+                    <p
+                      v-if="answer.user_answer"
+                      class="mb-1 text-xs text-inactive font-normal"
+                    >
                       {{ $t("right_answer") }}:
                     </p>
                     <div v-html="answer.right_answer"></div>
@@ -103,15 +111,17 @@
                 <div class="flex items-center">
                   <audioButton
                     v-if="answer.word || answer.sentence"
+                    :key="answer.task_answer_id + '_' + answer.task_id"
                     :src="
                       config.public.apiBase +
                       '/media/get/' +
-                      ((answer.word && answer.word.audio_file) || (answer.sentence && answer.sentence.audio_file))
+                      ((answer.word && answer.word.audio_file) ||
+                        (answer.sentence && answer.sentence.audio_file))
                     "
                   />
                   <div class="step-item xs failed">
                     <div class="step-icon">
-                      <i class="pi pi-check"></i>
+                      <i class="pi pi-times"></i>
                     </div>
                   </div>
                 </div>

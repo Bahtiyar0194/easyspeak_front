@@ -10,6 +10,7 @@
     :isFinished="isFinished"
     :progressPercentage="progressPercentage"
     :reStudyItems="reStudyWords"
+    :taskResult="taskResult"
   >
     <template v-slot:task_content>
       <div class="col-span-12">
@@ -205,6 +206,9 @@ const timeIsUp = ref(false);
 const studiedWords = ref([]);
 const reStudyWords = ref([]);
 
+const taskResult = ref([]);
+const taskResultCollection = ref([]);
+
 const isStarted = ref(false);
 const isComplete = ref(false);
 
@@ -304,6 +308,7 @@ const setWord = () => {
     currentWord.value = null;
     currentWord.value = words.value[0];
     currentWord.value.wrongWordAttempts = maxWrongWordAttempts.value;
+    currentWord.value.userInput = "";
     checkingStatus.value = false;
 
     if (Boolean(taskData.value.options.play_audio_at_the_begin)) {
@@ -327,13 +332,26 @@ const setWord = () => {
   }
 };
 
-const moveToEnd = () => {
+const moveToEnd = (answerIndex) => {
   words.value.shift();
 
   if (currentWord.value.attempts >= 1) {
     currentWord.value.attempts--;
     words.value.push(currentWord.value);
   } else {
+
+    if(answerIndex !== undefined) {
+      const userInput = currentWord.value.answer_options[answerIndex].word;
+      currentWord.value.userInput = userInput;
+    }
+
+    taskResultCollection.value.push({
+      is_correct: false,
+      user_answer: "<b class='text-danger'>" + currentWord.value.userInput || '______' + "</b>",
+      right_answer: "<b class='text-success'>" + currentWord.value.word + "</b><br><b class='text-inactive text-xs'>" + currentWord.value.word_translate + "</b>",
+      word_id: currentWord.value.word_id,
+    });
+
     reStudyWords.value.push(currentWord.value);
   }
 };
@@ -348,6 +366,12 @@ const checkAnswer = (answerIndex) => {
 
     if (isStarted.value === true) {
       studiedWords.value.push(currentWord.value);
+
+      taskResultCollection.value.push({
+        is_correct: true,
+        right_answer: "<b class='text-success'>" + currentWord.value.word + "</b><br><b class='text-inactive text-xs'>" + currentWord.value.word_translate + "</b>",
+        word_id: currentWord.value.word_id,
+      });
     }
 
     isComplete.value = true;
@@ -395,7 +419,7 @@ const checkAnswer = (answerIndex) => {
     } else {
       isWrong.value = true;
       isStarted.value = false;
-      moveToEnd();
+      moveToEnd(answerIndex);
     }
   }
 };
@@ -425,6 +449,39 @@ const logKey = (event) => {
   }
 };
 
+const saveTaskResult = async () => {
+  onPending(true);
+  const formData = new FormData();
+  formData.append("task_result", JSON.stringify(taskResultCollection.value));
+  formData.append("operation_type_id", 25);
+
+  await $axiosPlugin
+    .post("tasks/save_result/" + props.task.task_id, formData)
+    .then((res) => {
+      taskResult.value = res.data;
+      onPending(false);
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          onPending(false);
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
 // Инициализация при монтировании
 onMounted(() => {
   changeModalSize("modal-2xl");
@@ -437,4 +494,13 @@ onBeforeUnmount(() => {
   // Убираем обработчик событий при размонтировании компонента
   window.removeEventListener("keydown", logKey);
 });
+
+watch(
+  () => taskResultCollection.value.length,
+  (newVal) => {
+    if (newVal === taskData.value.words.length) {
+      saveTaskResult();
+    }
+  }
+);
 </script>

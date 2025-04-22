@@ -548,6 +548,7 @@ import {
   endsWithPunctuation,
   removePunctuation,
 } from "../../../../../../utils/endsWithPunctuation";
+import { normalizeQuotes } from "../../../../../../utils/normalizeQuotes";
 const router = useRouter();
 const config = useRuntimeConfig();
 const { $axiosPlugin } = useNuxtApp();
@@ -815,6 +816,8 @@ const checkSentences = () => {
         if (endsWithPunctuation(missingWord.userInput)) {
           missingWord.userInput = missingWord.userInput.slice(0, -1);
         }
+
+        missingWord.userInput = normalizeQuotes(missingWord.userInput);
 
         if (taskData.value.options.find_word_option == "with_first_letter") {
           if (

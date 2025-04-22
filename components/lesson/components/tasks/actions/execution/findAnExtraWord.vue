@@ -531,6 +531,7 @@ const pushToCurrentReStudySections = async (section) => {
         right_answer: rightAnswer.innerHTML,
       });
     }
+    
     reStudySections.value.push(section);
   }
 };

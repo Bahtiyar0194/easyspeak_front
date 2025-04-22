@@ -10,6 +10,7 @@
     :isFinished="isFinished"
     :progressPercentage="progressPercentage"
     :reStudyItems="reStudySentences"
+    :taskResult="taskResult"
   >
     <template v-slot:task_content>
       <div class="col-span-12">
@@ -150,6 +151,9 @@ const currentSentence = ref(null);
 const studiedSentences = ref([]);
 const reStudySentences = ref([]);
 
+const taskResult = ref([]);
+const taskResultCollection = ref([]);
+
 const isStarted = ref(false);
 const isComplete = ref(false);
 
@@ -289,6 +293,17 @@ const checkSentence = (answer) => {
     }
 
     studiedSentences.value.push(currentSentence.value);
+
+    taskResultCollection.value.push({
+      is_correct: true,
+      right_answer:
+        "<b class='text-success'>" +
+        currentSentence.value.sentence +
+        "</b><br><b class='text-inactive text-xs'>" +
+        currentSentence.value.userAnswer +
+        "</b>",
+      sentence_id: currentSentence.value.sentence_id,
+    });
 
     if (
       reStudySentences.value.some(

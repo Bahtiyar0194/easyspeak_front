@@ -10,6 +10,7 @@
     :isFinished="isFinished"
     :progressPercentage="progressPercentage"
     :reStudyItems="reStudyWords"
+    :taskResult="taskResult"
   >
     <template v-slot:task_content>
       <div class="col-span-12">
@@ -46,31 +47,33 @@
               }}
             </p>
 
-            <ul class="list-group nowrap">
+            <ul class="list-group nowrap" ref="rightAnswers">
               <li
                 v-for="(word, sIndex) in currentStudiedWords"
                 :key="sIndex"
                 class="flex justify-between items-center gap-x-2"
               >
                 <div class="flex flex-col">
-                  <div class="flex gap-x-0.5">
-                    <div
-                      v-for="(letter, letterIndex) in word.word"
-                      :key="letterIndex"
-                      class="font-medium text-xl"
-                    >
+                  <div :id="'right_answer_' + word.task_word_id">
+                    <div class="flex gap-x-0.5">
                       <div
-                        v-if="letter === ' ' || letter === ''"
-                        class="mx-1"
-                      ></div>
-                      <div
-                        :class="
-                          word.missingLetters.includes(letterIndex + 1) &&
-                          'text-success'
-                        "
-                        v-else
+                        v-for="(letter, letterIndex) in word.word"
+                        :key="letterIndex"
+                        class="font-medium text-xl"
                       >
-                        {{ letter }}
+                        <div
+                          v-if="letter === ' ' || letter === ''"
+                          class="mx-1"
+                        ></div>
+                        <div
+                          :class="
+                            word.missingLetters.includes(letterIndex + 1) &&
+                            'text-success'
+                          "
+                          v-else
+                        >
+                          {{ letter }}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -96,7 +99,7 @@
               {{ $t("for_re_examination") }}
             </p>
 
-            <ul class="list-group nowrap">
+            <ul class="list-group nowrap" ref="wrongAnswers">
               <li
                 v-for="(word, rIndex) in currentReStudyWords"
                 :key="rIndex"
@@ -108,7 +111,7 @@
                       {{ $t("your_answer") }}:
                     </p>
 
-                    <div>
+                    <div :id="'user_answer_' + word.task_word_id">
                       <div class="flex gap-x-0.5">
                         <div
                           v-for="(letter, letterIndex) in word.word"
@@ -145,7 +148,7 @@
                       {{ $t("right_answer") }}:
                     </p>
 
-                    <div>
+                    <div :id="'right_answer_' + word.task_word_id">
                       <div class="flex gap-x-0.5">
                         <div
                           v-for="(letter, letterIndex) in word.word"
@@ -334,6 +337,11 @@ const currentStudiedWords = ref([]);
 const reStudyWords = ref([]);
 const currentReStudyWords = ref([]);
 
+const rightAnswers = ref(null);
+const wrongAnswers = ref(null);
+const taskResult = ref([]);
+const taskResultCollection = ref([]);
+
 const isStarted = ref(false);
 const isComplete = ref(false);
 
@@ -478,27 +486,64 @@ const checkWords = () => {
     }
 
     if (!wrongLetter) {
-      studiedWords.value.push(word);
-      currentStudiedWords.value.push(word);
-
-      if (
-        reStudyWords.value.some((w) => w.task_word_id === word.task_word_id)
-      ) {
-        reStudyWords.value = reStudyWords.value.filter(
-          (w) => w.task_word_id !== word.task_word_id
-        );
-      }
+      pushToStudyWords(word);
     } else {
-      currentReStudyWords.value.push(word);
-
-      if (word.attempts >= 1) {
-        words.value.push(word);
-        word.attempts--;
-      } else {
-        reStudyWords.value.push(word);
-      }
+      pushToCurrentReStudyWords(word);
     }
   });
+};
+
+const pushToStudyWords = async (word) => {
+  studiedWords.value.push(word);
+  currentStudiedWords.value.push(word);
+
+  await nextTick();
+  const answer = rightAnswers.value.querySelector(
+    "#right_answer_" + word.task_word_id
+  );
+
+  if (answer) {
+    taskResultCollection.value.push({
+      is_correct: true,
+      right_answer: answer.innerHTML,
+      word_id: word.word_id,
+    });
+  }
+
+  if (reStudyWords.value.some((w) => w.task_word_id === word.task_word_id)) {
+    reStudyWords.value = reStudyWords.value.filter(
+      (w) => w.task_word_id !== word.task_word_id
+    );
+  }
+};
+
+const pushToCurrentReStudyWords = async (word) => {
+  currentReStudyWords.value.push(word);
+
+  if (word.attempts >= 1) {
+    words.value.push(word);
+    word.attempts--;
+  } else {
+    await nextTick();
+
+    const userAnswer = wrongAnswers.value.querySelector(
+      "#user_answer_" + word.task_word_id
+    );
+
+    const rightAnswer = wrongAnswers.value.querySelector(
+      "#right_answer_" + word.task_word_id
+    );
+
+    if (userAnswer && rightAnswer) {
+      taskResultCollection.value.push({
+        is_correct: false,
+        user_answer: userAnswer.innerHTML,
+        right_answer: rightAnswer.innerHTML,
+        word_id: word.word_id,
+      });
+    }
+    reStudyWords.value.push(word);
+  }
 };
 
 const acceptAnswers = () => {
@@ -578,6 +623,39 @@ const handleKeyPress = (event) => {
   }
 };
 
+const saveTaskResult = async () => {
+  onPending(true);
+  const formData = new FormData();
+  formData.append("task_result", JSON.stringify(taskResultCollection.value));
+  formData.append("operation_type_id", 25);
+
+  await $axiosPlugin
+    .post("tasks/save_result/" + props.task.task_id, formData)
+    .then((res) => {
+      taskResult.value = res.data;
+      onPending(false);
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          onPending(false);
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
 // Инициализация при монтировании
 onMounted(() => {
   changeModalSize("modal-2xl");
@@ -588,4 +666,14 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleKeyPress);
 });
+
+
+watch(
+  () => taskResultCollection.value.length,
+  (newVal) => {
+    if (newVal === taskData.value.words.length) {
+      saveTaskResult();
+    }
+  }
+);
 </script>

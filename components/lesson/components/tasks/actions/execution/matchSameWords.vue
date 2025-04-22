@@ -10,6 +10,7 @@
     :isFinished="isFinished"
     :progressPercentage="progressPercentage"
     :reStudyItems="reStudySections"
+    :taskResult="taskResult"
   >
     <template v-slot:task_content>
       <div class="col-span-12">
@@ -46,46 +47,48 @@
               }}
             </p>
 
-            <ul class="list-group nowrap">
+            <ul class="list-group nowrap" ref="rightAnswers">
               <li
                 v-for="(section, sIndex) in currentStudiedSections"
                 :key="sIndex"
                 class="flex justify-between items-center gap-x-2"
               >
-                <div class="btn-wrap items-center">
-                  <div
-                    v-for="(word, wordIndex) in section.words"
-                    :key="wordIndex"
-                    class="text-success"
-                  >
-                    <div class="flex items-center gap-x-2">
-                      <div class="flex flex-col">
-                        <b class="mb-0">{{
-                          word.target === 1
-                            ? section.words.find(
-                                (w) =>
-                                  w.word.toLowerCase() ===
-                                  word.userInput.toLowerCase()
-                              ).word
-                            : word.word
-                        }}</b>
-                        <span class="text-xs text-inactive">
-                          {{
+                <div :id="'right_answer_' + section.word_section_id">
+                  <div class="btn-wrap items-center">
+                    <div
+                      v-for="(word, wordIndex) in section.words"
+                      :key="wordIndex"
+                      class="text-success"
+                    >
+                      <div class="flex items-center gap-x-2">
+                        <div class="flex flex-col">
+                          <b class="mb-0">{{
                             word.target === 1
                               ? section.words.find(
                                   (w) =>
                                     w.word.toLowerCase() ===
                                     word.userInput.toLowerCase()
-                                ).word_translate
-                              : word.word_translate
-                          }}
-                        </span>
+                                ).word
+                              : word.word
+                          }}</b>
+                          <span class="text-xs text-inactive">
+                            {{
+                              word.target === 1
+                                ? section.words.find(
+                                    (w) =>
+                                      w.word.toLowerCase() ===
+                                      word.userInput.toLowerCase()
+                                  ).word_translate
+                                : word.word_translate
+                            }}
+                          </span>
+                        </div>
+                        <span
+                          v-if="wordIndex + 1 < section.words.length"
+                          class="text-active"
+                          >-</span
+                        >
                       </div>
-                      <span
-                        v-if="wordIndex + 1 < section.words.length"
-                        class="text-active"
-                        >-</span
-                      >
                     </div>
                   </div>
                 </div>
@@ -107,7 +110,7 @@
               {{ $t("for_re_examination") }}
             </p>
 
-            <ul class="list-group nowrap">
+            <ul class="list-group nowrap" ref="wrongAnswers">
               <li
                 v-for="(section, rIndex) in currentReStudySections"
                 :key="rIndex"
@@ -119,69 +122,71 @@
                       {{ $t("your_answer") }}:
                     </p>
 
-                    <div class="btn-wrap items-center">
-                      <div
-                        v-for="(word, wordIndex) in section.words"
-                        :key="wordIndex"
-                      >
-                        <div class="flex items-center gap-x-2">
-                          <div class="flex flex-col">
-                            <b
-                              class="mb-0"
-                              :class="
-                                word.target === 0 ||
-                                section.words.find(
-                                  (w) =>
-                                    w.word.toLowerCase() ===
-                                    word.userInput.toLowerCase()
-                                )
-                                  ? 'text-success'
-                                  : 'text-danger'
-                              "
-                              >{{
-                                word.target === 1
-                                  ? word.userInput === "" ||
-                                    word.userInput === " "
-                                    ? "________"
-                                    : !section.words.find(
+                    <div :id="'user_answer_' + section.word_section_id">
+                      <div class="btn-wrap items-center">
+                        <div
+                          v-for="(word, wordIndex) in section.words"
+                          :key="wordIndex"
+                        >
+                          <div class="flex items-center gap-x-2">
+                            <div class="flex flex-col">
+                              <b
+                                class="mb-0"
+                                :class="
+                                  word.target === 0 ||
+                                  section.words.find(
+                                    (w) =>
+                                      w.word.toLowerCase() ===
+                                      word.userInput.toLowerCase()
+                                  )
+                                    ? 'text-success'
+                                    : 'text-danger'
+                                "
+                                >{{
+                                  word.target === 1
+                                    ? word.userInput === "" ||
+                                      word.userInput === " "
+                                      ? "________"
+                                      : !section.words.find(
+                                          (w) =>
+                                            w.word.toLowerCase() ===
+                                            word.userInput.toLowerCase()
+                                        )
+                                      ? word.userInput
+                                      : section.words.find(
+                                          (w) =>
+                                            w.word.toLowerCase() ===
+                                            word.userInput.toLowerCase()
+                                        ).word
+                                    : word.word
+                                }}</b
+                              >
+                              <span class="text-xs text-inactive">
+                                {{
+                                  word.target === 1
+                                    ? word.userInput === "" ||
+                                      word.userInput === " " ||
+                                      !section.words.find(
                                         (w) =>
                                           w.word.toLowerCase() ===
                                           word.userInput.toLowerCase()
                                       )
-                                    ? word.userInput
-                                    : section.words.find(
-                                        (w) =>
-                                          w.word.toLowerCase() ===
-                                          word.userInput.toLowerCase()
-                                      ).word
-                                  : word.word
-                              }}</b
+                                      ? findTranslate(word.userInput)
+                                      : section.words.find(
+                                          (w) =>
+                                            w.word.toLowerCase() ===
+                                            word.userInput.toLowerCase()
+                                        ).word_translate
+                                    : word.word_translate
+                                }}
+                              </span>
+                            </div>
+                            <span
+                              v-if="wordIndex + 1 < section.words.length"
+                              class="text-active"
+                              >-</span
                             >
-                            <span class="text-xs text-inactive">
-                              {{
-                                word.target === 1
-                                  ? word.userInput === "" ||
-                                    word.userInput === " " ||
-                                    !section.words.find(
-                                      (w) =>
-                                        w.word.toLowerCase() ===
-                                        word.userInput.toLowerCase()
-                                    )
-                                    ? findTranslate(word.userInput)
-                                    : section.words.find(
-                                        (w) =>
-                                          w.word.toLowerCase() ===
-                                          word.userInput.toLowerCase()
-                                      ).word_translate
-                                  : word.word_translate
-                              }}
-                            </span>
                           </div>
-                          <span
-                            v-if="wordIndex + 1 < section.words.length"
-                            class="text-active"
-                            >-</span
-                          >
                         </div>
                       </div>
                     </div>
@@ -191,24 +196,26 @@
                     <p class="mb-1 text-inactive font-normal text-xs">
                       {{ $t("right_answer") }}:
                     </p>
-                    <div class="btn-wrap items-center">
-                      <div
-                        v-for="(word, wordIndex) in section.words"
-                        :key="wordIndex"
-                        class="text-success"
-                      >
-                        <div class="flex items-center gap-x-2">
-                          <div class="flex flex-col">
-                            <b class="mb-0">{{ word.word }}</b>
-                            <span class="text-xs text-inactive">
-                              {{ word.word_translate }}
-                            </span>
+                    <div :id="'right_answer_' + section.word_section_id">
+                      <div class="btn-wrap items-center">
+                        <div
+                          v-for="(word, wordIndex) in section.words"
+                          :key="wordIndex"
+                          class="text-success"
+                        >
+                          <div class="flex items-center gap-x-2">
+                            <div class="flex flex-col">
+                              <b class="mb-0">{{ word.word }}</b>
+                              <span class="text-xs text-inactive">
+                                {{ word.word_translate }}
+                              </span>
+                            </div>
+                            <span
+                              v-if="wordIndex + 1 < section.words.length"
+                              class="text-active"
+                              >-</span
+                            >
                           </div>
-                          <span
-                            v-if="wordIndex + 1 < section.words.length"
-                            class="text-active"
-                            >-</span
-                          >
                         </div>
                       </div>
                     </div>
@@ -538,6 +545,11 @@ const currentReStudySections = ref([]);
 
 const unFilledSections = ref([]);
 
+const rightAnswers = ref(null);
+const wrongAnswers = ref(null);
+const taskResult = ref([]);
+const taskResultCollection = ref([]);
+
 const isStarted = ref(false);
 const isComplete = ref(false);
 
@@ -752,26 +764,63 @@ const checkSections = () => {
       JSON.stringify(correctWords) !== JSON.stringify(userWords);
 
     if (!sectionFailed) {
-      // Секция пройдена
-      studiedSections.value.push(section);
-      currentStudiedSections.value.push(section);
-
-      // Убираем её из reStudySections, если она там есть
-      reStudySections.value = reStudySections.value.filter(
-        (ws) => ws.word_section_id !== section.word_section_id
-      );
+      pushToStudySections(section);
     } else {
-      // Секция не пройдена
-      currentReStudySections.value.push(section);
-
-      if (section.attempts > 0) {
-        section.attempts--; // Уменьшаем попытки
-        sections.value.push(section);
-      } else {
-        reStudySections.value.push(section); // Переносим в reStudySections
-      }
+      pushToCurrentReStudySections(section);
     }
   });
+};
+
+const pushToStudySections = async (section) => {
+  // Секция пройдена
+  studiedSections.value.push(section);
+  currentStudiedSections.value.push(section);
+
+  await nextTick();
+  const answer = rightAnswers.value.querySelector(
+    "#right_answer_" + section.word_section_id
+  );
+
+  if (answer) {
+    taskResultCollection.value.push({
+      is_correct: true,
+      right_answer: answer.innerHTML,
+    });
+  }
+
+  // Убираем её из reStudySections, если она там есть
+  reStudySections.value = reStudySections.value.filter(
+    (ws) => ws.word_section_id !== section.word_section_id
+  );
+};
+
+const pushToCurrentReStudySections = async (section) => {
+  // Секция не пройдена
+  currentReStudySections.value.push(section);
+
+  if (section.attempts > 0) {
+    section.attempts--; // Уменьшаем попытки
+    sections.value.push(section);
+  } else {
+    await nextTick();
+    const userAnswer = wrongAnswers.value.querySelector(
+      "#user_answer_" + section.word_section_id
+    );
+
+    const rightAnswer = wrongAnswers.value.querySelector(
+      "#right_answer_" + section.word_section_id
+    );
+
+    if (userAnswer && rightAnswer) {
+      taskResultCollection.value.push({
+        is_correct: false,
+        user_answer: userAnswer.innerHTML,
+        right_answer: rightAnswer.innerHTML,
+      });
+    }
+
+    reStudySections.value.push(section); // Переносим в reStudySections
+  }
 };
 
 const acceptAnswers = () => {
@@ -835,6 +884,39 @@ const findTranslate = (w) => {
   return "________";
 };
 
+const saveTaskResult = async () => {
+  onPending(true);
+  const formData = new FormData();
+  formData.append("task_result", JSON.stringify(taskResultCollection.value));
+  formData.append("operation_type_id", 25);
+
+  await $axiosPlugin
+    .post("tasks/save_result/" + props.task.task_id, formData)
+    .then((res) => {
+      taskResult.value = res.data;
+      onPending(false);
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          onPending(false);
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
 // Инициализация при монтировании
 onMounted(() => {
   changeModalSize("modal-2xl");
@@ -845,4 +927,13 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleKeyPress);
 });
+
+watch(
+  () => taskResultCollection.value.length,
+  (newVal) => {
+    if (newVal === taskData.value.word_sections.length) {
+      saveTaskResult();
+    }
+  }
+);
 </script>
