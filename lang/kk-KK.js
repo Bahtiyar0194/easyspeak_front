@@ -163,7 +163,7 @@ export default {
         show_materials_option: {
             use_both_options: "Екі нұсқаны қолдану",
             show_materials_during_a_task: "Материалдарды тапсырма өтіп жатқан кезде көрсету",
-            show_materials_before_starting_a_task: "Материалдарды тапсырманы бастамас бұрын көрсету"    
+            show_materials_before_starting_a_task: "Материалдарды тапсырманы бастамас бұрын көрсету"
         }
     },
 
@@ -585,7 +585,7 @@ export default {
             true_or_false: {
                 true: "Шын",
                 false: "Жалған",
-                doesn_t_say: "Сілтеме жоқ",
+                "doesn't_say": "Сілтеме жоқ",
                 undefined: "Жауап берілмеді"
             },
             find_the_stressed_syllable: {

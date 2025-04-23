@@ -162,7 +162,7 @@
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content v-if="task">
-      <h4>{{ task.task_name }}</h4>
+      <h4>{{ task.task_slug }}</h4>
     </template>
     <template v-slot:body_content v-if="task && task.task_result.answers">
       <taskResultChart :taskResult="task.task_result">

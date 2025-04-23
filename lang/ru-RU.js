@@ -585,7 +585,7 @@ export default {
             true_or_false: {
                 true: "Правда",
                 false: "Ложь",
-                doesn_t_say: "Нет упоминания",
+                "doesn't_say": "Нет упоминания",
                 undefined: "Ответ не указан"
             },
             find_the_stressed_syllable: {

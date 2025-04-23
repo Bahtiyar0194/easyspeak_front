@@ -26,7 +26,7 @@
                 "
                 @click="selectAnswer(sentenceIndex, button)"
               >
-                {{ $t('pages.tasks.true_or_false.' + button) }}
+                {{ button }}
               </button>
             </div>
           </div>
@@ -42,7 +42,7 @@
 <script setup>
 import { toRefs, defineProps } from "vue";
 
-const answerButtons = ["true", "false", "doesn_t_say"];
+const answerButtons = ["True", "False", "Doesn't say"];
 
 const props = defineProps({
   errors: {

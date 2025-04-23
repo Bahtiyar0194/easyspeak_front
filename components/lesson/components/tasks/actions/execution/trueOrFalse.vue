@@ -66,11 +66,7 @@
                 {{ $t("your_answer") }}
               </p>
               <p class="text-danger font-medium mb-0">
-                {{
-                  $t(
-                    "pages.tasks.true_or_false." + currentSentence?.userAnswer
-                  ) || $t("no_answer")
-                }}
+                {{ currentSentence?.userAnswer || $t("no_answer") }}
               </p>
             </div>
           </div>
@@ -80,7 +76,7 @@
                 {{ $t("right_answer") }}
               </p>
               <p class="text-success font-medium mb-0">
-                {{ $t("pages.tasks.true_or_false." + currentSentence?.answer) }}
+                {{ currentSentence?.answer }}
               </p>
             </div>
           </div>
@@ -98,7 +94,7 @@
                 class="btn btn-light btn-sm"
                 @click="checkSentence(button)"
               >
-                {{ $t("pages.tasks.true_or_false." + button) }}
+                {{ button }}
               </button>
             </div>
           </div>
@@ -162,7 +158,7 @@ const timeIsUp = ref(false);
 
 const isWrong = ref(false);
 
-const answerButtons = ["true", "false", "doesn_t_say"];
+const answerButtons = ["True", "False", "Doesn't say"];
 
 const sentencesLeft = computed(() => sentences.value.length);
 
@@ -297,9 +293,9 @@ const checkSentence = (answer) => {
     taskResultCollection.value.push({
       is_correct: true,
       right_answer:
-        "<b class='text-success'>" +
+        "<b>" +
         currentSentence.value.sentence +
-        "</b><br><b class='text-inactive text-xs'>" +
+        "</b><br><b class='text-success capitalize'>" +
         currentSentence.value.userAnswer +
         "</b>",
       sentence_id: currentSentence.value.sentence_id,
@@ -328,6 +324,23 @@ const checkSentence = (answer) => {
       currentSentence.value.attempts--;
       sentences.value.push(currentSentence.value);
     } else {
+      taskResultCollection.value.push({
+        is_correct: false,
+        user_answer:
+          "<b>" +
+          currentSentence.value.sentence +
+          "</b><br><b class='text-danger capitalize'>" +
+          currentSentence.value.userAnswer +
+          "</b>",
+        right_answer:
+          "<b>" +
+          currentSentence.value.sentence +
+          "</b><br><b class='text-success capitalize'>" +
+          currentSentence.value.answer +
+          "</b>",
+        sentence_id: currentSentence.value.sentence_id,
+      });
+
       reStudySentences.value.push(currentSentence.value);
     }
   }
@@ -353,6 +366,39 @@ const handleKeyPress = (event) => {
   }
 };
 
+const saveTaskResult = async () => {
+  onPending(true);
+  const formData = new FormData();
+  formData.append("task_result", JSON.stringify(taskResultCollection.value));
+  formData.append("operation_type_id", 25);
+
+  await $axiosPlugin
+    .post("tasks/save_result/" + props.task.task_id, formData)
+    .then((res) => {
+      taskResult.value = res.data;
+      onPending(false);
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          onPending(false);
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
 // Инициализация при монтировании
 onMounted(() => {
   changeModalSize("modal-2xl");
@@ -363,4 +409,13 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleKeyPress);
 });
+
+watch(
+  () => taskResultCollection.value.length,
+  (newVal) => {
+    if (newVal === taskData.value.sentences.length) {
+      saveTaskResult();
+    }
+  }
+);
 </script>
