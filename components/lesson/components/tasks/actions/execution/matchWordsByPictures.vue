@@ -64,7 +64,7 @@
                         word.image_file +
                         ')',
                     }"
-                    class="w-16 h-16 bg-cover bg-no-repeat bg-center border-inactive rounded-xl"
+                    class="w-16 h-16 bg-contain bg-no-repeat bg-center border-inactive rounded-xl"
                   ></div>
 
                   <div
@@ -121,7 +121,7 @@
                         word.image_file +
                         ')',
                     }"
-                    class="w-16 h-16 bg-cover bg-no-repeat bg-center border-inactive rounded-xl"
+                    class="w-16 h-16 bg-contain bg-no-repeat bg-center border-inactive rounded-xl"
                   ></div>
                   <div>
                     <p class="mb-1 text-xs text-inactive font-normal">
@@ -420,10 +420,10 @@
                   <div
                     v-for="(picture, pictureIndex) in currentPictures"
                     :key="pictureIndex"
-                    class="col-span-6 relative rounded-xl border-inactive overflow-hidden flex items-center justify-center"
+                    class="col-span-12 lg:col-span-6 relative rounded-xl border-inactive overflow-hidden flex items-center justify-center"
                   >
                     <div
-                      class="absolute top-1.5 lg:top-4 left-1.5 lg:left-4 py-1.5 px-2 rounded-lg flex items-center border"
+                      class="absolute bottom-1.5 lg:bottom-4 left-1.5 lg:left-4 py-1.5 px-2 rounded-lg flex items-center border"
                       :class="
                         checkingStatus === true &&
                         (picture.userInput === '' || picture.userInput === ' ')
@@ -779,11 +779,19 @@ const pushToStudyWords = async (word) => {
   taskResultCollection.value.push({
     is_correct: true,
     right_answer:
-      "<b class='text-success'>" +
-      word.word +
-      "</b><br><b class='text-inactive text-xs'>" +
-      word.word_translate +
-      "</b>",
+      taskData.value.options.match_words_by_pictures_option ===
+      "match_by_typing"
+        ? "<b class='text-success'>" + word.word + "</b>"
+        : "<div class='flex items-center gap-x-2'><div class='btn btn-square btn-outline-success pointer-events-none font-medium'>" +
+          (currentPictures.value.findIndex(
+            (p) => p.task_word_id === word.task_word_id
+          ) +
+            1) +
+          "</div><div class='flex flex-col'><div class='font-medium'>" +
+          word.word +
+          "</div><span class='text-xs text-inactive'>" +
+          word.word_translate +
+          "</span></div></div>",
     word_id: word.word_id,
   });
 
@@ -804,21 +812,35 @@ const pushToCurrentReStudyWords = async (word) => {
     taskResultCollection.value.push({
       is_correct: false,
       user_answer:
-        "<b class='text-danger'>" +
-        (taskData.value.options.match_words_by_pictures_option ===
+        taskData.value.options.match_words_by_pictures_option ===
         "match_by_typing"
-          ? currentPictures.value.find(
-              (p) => p.task_word_id === word.task_word_id
-            ).userInput || "______"
-          : currentWords.value.find((w) => w.task_word_id === word.task_word_id)
-              .userInput || "______") +
-        "</b>",
+          ? "<b class='text-danger'>" +
+              currentPictures.value.find(
+                (p) => p.task_word_id === word.task_word_id
+              ).userInput || "______" + "</b>"
+          : "<div class='flex items-center gap-x-2'><div class='btn btn-square btn-outline-danger pointer-events-none font-medium'>" +
+            currentWords.value.find((w) => w.task_word_id === word.task_word_id)
+              .userInput +
+            "</div><div class='flex flex-col'><div class='font-medium'>" +
+            word.word +
+            "</div><span class='text-xs text-inactive'>" +
+            word.word_translate +
+            "</span></div></div>",
+
       right_answer:
-        "<b class='text-success'>" +
-        word.word +
-        "</b><br><b class='text-inactive text-xs'>" +
-        word.word_translate +
-        "</b>",
+        taskData.value.options.match_words_by_pictures_option ===
+        "match_by_typing"
+          ? "<b class='text-success'>" + word.word + "</b>"
+          : "<div class='flex items-center gap-x-2'><div class='btn btn-square btn-outline-success pointer-events-none font-medium'>" +
+            (currentPictures.value.findIndex(
+              (p) => p.task_word_id === word.task_word_id
+            ) +
+              1) +
+            "</div><div class='flex flex-col'><div class='font-medium'>" +
+            word.word +
+            "</div><span class='text-xs text-inactive'>" +
+            word.word_translate +
+            "</span></div></div>",
       word_id: word.word_id,
     });
 

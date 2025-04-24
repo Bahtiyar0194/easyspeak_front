@@ -44,7 +44,22 @@
               :key="answerIndex"
             >
               <div class="flex gap-x-2 justify-between items-center">
-                <div v-html="answer.right_answer"></div>
+                <div class="flex gap-x-2 items-center">
+                  <div
+                    v-if="answer.word && answer.word.image_file"
+                    :key="answer.task_answer_id + '_' + answer.task_id"
+                    :style="{
+                      backgroundImage:
+                        'url(' +
+                        config.public.apiBase +
+                        '/media/get/' +
+                        (answer.word && answer.word.image_file) +
+                        ')',
+                    }"
+                    class="w-16 h-16 bg-contain bg-no-repeat bg-center border-inactive rounded-xl"
+                  ></div>
+                  <div v-html="answer.right_answer"></div>
+                </div>
                 <div class="flex items-center">
                   <audioButton
                     v-if="answer.word || answer.sentence"
@@ -87,25 +102,40 @@
               :key="answerIndex"
             >
               <div class="flex gap-x-2 justify-between items-center">
-                <div class="flex flex-col gap-y-2">
-                  <div>
-                    <p
-                      v-if="answer.user_answer"
-                      class="mb-1 text-xs text-inactive font-normal"
-                    >
-                      {{ $t("your_answer") }}:
-                    </p>
-                    <div v-html="answer.user_answer"></div>
-                  </div>
+                <div class="flex gap-x-2 justify-between items-center">
+                  <div
+                    v-if="answer.word && answer.word.image_file"
+                    :key="answer.task_answer_id + '_' + answer.task_id"
+                    :style="{
+                      backgroundImage:
+                        'url(' +
+                        config.public.apiBase +
+                        '/media/get/' +
+                        (answer.word && answer.word.image_file) +
+                        ')',
+                    }"
+                    class="w-16 h-16 bg-contain bg-no-repeat bg-center border-inactive rounded-xl"
+                  ></div>
+                  <div class="flex gap-2" :class="!answer.word && 'flex-col'">
+                    <div>
+                      <p
+                        v-if="answer.user_answer"
+                        class="mb-1 text-xs text-inactive font-normal"
+                      >
+                        {{ $t("your_answer") }}:
+                      </p>
+                      <div v-html="answer.user_answer"></div>
+                    </div>
 
-                  <div>
-                    <p
-                      v-if="answer.user_answer"
-                      class="mb-1 text-xs text-inactive font-normal"
-                    >
-                      {{ $t("right_answer") }}:
-                    </p>
-                    <div v-html="answer.right_answer"></div>
+                    <div>
+                      <p
+                        v-if="answer.user_answer"
+                        class="mb-1 text-xs text-inactive font-normal"
+                      >
+                        {{ $t("right_answer") }}:
+                      </p>
+                      <div v-html="answer.right_answer"></div>
+                    </div>
                   </div>
                 </div>
                 <div class="flex items-center">
