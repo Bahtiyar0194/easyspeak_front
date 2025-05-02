@@ -10,6 +10,7 @@
     :isFinished="isFinished"
     :progressPercentage="progressPercentage"
     :reStudyItems="reAnswerQuestions"
+    :taskResult="taskResult"
   >
     <template v-slot:task_content>
       <div class="col-span-12">
@@ -51,13 +52,13 @@
                 <div class="flex flex-col">
                   <p class="mb-1">
                     <span class="text-inactive"
-                      >{{ $t("pages.questions.question") }}:</span
-                    >
+                      >{{ $t("pages.questions.question") }}:
+                    </span>
                     <span class="font-medium">{{ question.sentence }}</span>
                   </p>
 
                   <p class="mb-0">
-                    <span class="text-inactive">{{ $t("your_answer") }}:</span>
+                    <span class="text-inactive">{{ $t("your_answer") }}: </span>
                     <span class="text-corp font-medium">{{
                       question.userInput
                     }}</span>
@@ -208,10 +209,85 @@
     </template>
 
     <template v-slot:task_result_content>
-      <!-- <result
-        :answeredQuestions="answeredQuestions"
-        :reAnswerQuestions="reAnswerQuestions"
-      /> -->
+      <div class="col-span-12">
+        <div class="flex flex-col gap-y-4">
+          <div
+            class="flex flex-col gap-y-2"
+            v-if="answeredQuestions.length > 0"
+          >
+            <p class="text-xl font-medium mb-0 text-success">
+              {{ $t("pages.questions.answered_questions") }}
+            </p>
+
+            <ul class="list-group nowrap">
+              <li
+                v-for="(question, qIndex) in answeredQuestions"
+                :key="qIndex"
+                class="flex justify-between items-center gap-x-2"
+              >
+                <div>
+                  <p class="mb-0 font-medium">{{ question.sentence }}</p>
+                  <p class="mb-0">
+                    <span class="text-inactive">{{ $t("your_answer") }}: </span>
+                    <span class="text-corp font-medium">{{
+                      question.userInput
+                    }}</span>
+                  </p>
+                </div>
+
+                <div class="flex items-center">
+                  <audioButton
+                    v-if="question.audio_file"
+                    :src="
+                      config.public.apiBase +
+                      '/media/get/' +
+                      question.audio_file
+                    "
+                  />
+                  <div class="step-item xs completed">
+                    <div class="step-icon">
+                      <i class="pi pi-check"></i>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div class="flex flex-col gap-y-2" v-if="reAnswerQuestions > 0">
+            <p class="text-xl font-medium mb-0 text-danger">
+              {{ $t("pages.questions.unanswered_questions") }}
+            </p>
+            <ul class="list-group nowrap">
+              <li
+                v-for="(question, qIndex) in reAnswerQuestions"
+                :key="qIndex"
+                class="flex justify-between items-center gap-x-2"
+              >
+                <div>
+                  <p class="mb-0 font-medium">{{ question.sentence }}</p>
+                </div>
+
+                <div class="flex items-center">
+                  <audioButton
+                    v-if="question.audio_file"
+                    :src="
+                      config.public.apiBase +
+                      '/media/get/' +
+                      question.audio_file
+                    "
+                  />
+                  <div class="step-item xs failed">
+                    <div class="step-icon">
+                      <i class="pi pi-replay"></i>
+                    </div>
+                  </div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </template>
   </taskLayout>
 </template>
@@ -222,9 +298,10 @@ import { useRouter } from "nuxt/app";
 import taskLayout from "../../taskLayout.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import fileUploadButton from "../../../../../ui/fileUploadButton.vue";
-//import result from "../../results/questions/result.vue";
+import audioButton from "../../../../../ui/audioButton.vue";
 
 const router = useRouter();
+const config = useRuntimeConfig();
 const { $axiosPlugin } = useNuxtApp();
 
 const showTaskTimer = ref(false);
@@ -241,6 +318,9 @@ const currentAnsweredQuestions = ref([]);
 
 const reAnswerQuestions = ref([]);
 const currentReAnswerQuestions = ref([]);
+
+const taskResult = ref([]);
+const taskResultCollection = ref([]);
 
 const isStarted = ref(false);
 const isComplete = ref(false);
@@ -365,6 +445,8 @@ const checkAnswers = () => {
       answeredQuestions.value.push(question);
       currentAnsweredQuestions.value.push(question);
 
+      taskResultCollection.value.push(question);
+
       if (
         reAnswerQuestions.value.some(
           (q) => q.task_question_id === question.task_question_id
@@ -382,6 +464,8 @@ const checkAnswers = () => {
         question.attempts--;
       } else {
         reAnswerQuestions.value.push(question);
+
+        taskResultCollection.value.push(question);
       }
     }
   });
@@ -436,6 +520,39 @@ const handleKeyPress = (event) => {
   }
 };
 
+const saveTaskResult = async () => {
+  onPending(true);
+  const formData = new FormData();
+  formData.append("questions", JSON.stringify(taskResultCollection.value));
+  formData.append("operation_type_id", 25);
+
+  await $axiosPlugin
+    .post("tasks/check_answers/" + props.task.task_id, formData)
+    .then((res) => {
+      taskResult.value = res.data;
+      onPending(false);
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          onPending(false);
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
 // Инициализация при монтировании
 onMounted(() => {
   changeModalSize("modal-xl");
@@ -446,4 +563,13 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleKeyPress);
 });
+
+watch(
+  () => taskResultCollection.value.length,
+  (newVal) => {
+    if (newVal === taskData.value.questions.length) {
+      saveTaskResult();
+    }
+  }
+);
 </script>

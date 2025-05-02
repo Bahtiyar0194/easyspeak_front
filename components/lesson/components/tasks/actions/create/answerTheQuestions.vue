@@ -168,4 +168,18 @@ const createTaskSubmit = async () => {
 onMounted(() => {
   changeModalSize("modal-4xl");
 });
+
+watch(
+  () => selectedSentences.value,
+  (newVal) => {
+    selectedSentences.value.forEach((sentence) => {
+      if (sentence.addOptionInput === undefined) {
+        sentence.answerOptions = [];
+        sentence.addAnswerInput = "";
+        sentence.addAnswerInputError = false;
+        sentence.checking_by = 'by_ai';
+      }
+    });
+  }
+);
 </script>

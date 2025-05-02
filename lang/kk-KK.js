@@ -6,10 +6,12 @@ export default {
     added: 'Қосылды',
     not_added: 'Қосылмаған',
     delete: 'Жойып тастау',
+    instructions: 'Нұсқаулықтар',
     choose: "Таңдау",
     choose_an_option: "Нұсқаны таңдаңыз",
     choose_your_option: "Өз нұсқаңызды таңдаңыз",
     download: "Жүктеп алу",
+    loading: "Жүктелуде",
     export_to_png: "PNG экпорттау",
     export_to_xlsx: "XLSX экспорттау",
     export_to_pdf: "PDF экпорттау",
@@ -27,6 +29,7 @@ export default {
     split: "Бөліп тастау",
     save: 'Сақтау',
     saving: 'Сақтау',
+    generate: "Генерациялау",
     restart: 'Қайта жүктеу',
     edit: "Қайта өңдеу",
     welcome: 'Қош келдіңіз!',
@@ -73,6 +76,8 @@ export default {
     wrong_answers: "Қате жауаптар",
     wrong_answers_count: "Қате жауаптар саны",
     answer_options: "Жауап нұсқалары",
+    comment: "Пікір",
+    comments: "Пікірлер",
     for_re_examination: "Қайта оқуға арналған",
     get_ready: "Дайын болыңыз",
     number_of_options: "Нұсқалар саны",
@@ -119,6 +124,7 @@ export default {
         uploading_a_new_file: "Жаңа файл жүктеу",
         uploading_file: "Файл жүктелініп жатыр...",
         upload_from_media: "Бұрын жүктелгендердің ішінен таңдау",
+        generate: "ЖИ арқылы генерациялау",
         deleting_a_file: "Файлды жою",
         file_delete_confirm: "Сіз расыменде бұл файлды жойғыңыз келе ме? Осы файлға байланысты барлық нәрсе де сонымен бірге жойылады.",
         kilobyte: "КБ",
@@ -136,7 +142,8 @@ export default {
         },
         audio: {
             select: "Аудиофайл таңдаңыз",
-            current: "Ағымдағы жүктеліп тұрған аудио"
+            current: "Ағымдағы жүктеліп тұрған аудио",
+            voice: "Дыбыс"
         },
         video: {
             select: "Бейнефайл таңдаңыз",
@@ -417,7 +424,8 @@ export default {
             course_level: 'Курстың санаты',
             choose_a_course_level: 'Курстың санатын таңдаңыз',
             course_section: 'Тарау',
-            choose_a_course_section: 'Тарауды таңдаңыз'
+            choose_a_course_section: 'Тарауды таңдаңыз',
+            course_is_not_available: 'Курс қолжетімсіз. Курсқа кіру үшін тәлімгерге хабарласыңыз.',
         },
 
         lessons: {
@@ -486,6 +494,7 @@ export default {
             edit_sentence_title: 'Сөйлемді қайта өңдеу',
             transcription: 'Транскрипциясы',
             seconds_per_sentence: 'Әр сөйлемге жауап беруге бөлінетін секунд саны',
+            required: 'Сөйлемді енгізу қажет',
             translate: {
                 kk: 'Сөйлемнің қазақша тілдегі аудармасы',
                 ru: 'Сөйлемнің орысша тілдегі аудармасы'
@@ -598,6 +607,10 @@ export default {
                     option_2: 'Бейне ретіндегі жауап',
                     option_3: 'Аудио ретіндегі жауап',
                 },
+            },
+            check: {
+                by_ai: 'Жауапты ЖИ арқылы тексеру',
+                by_mentor: 'Жауапты тәлімгер арқылы тексеру',
             },
             search_filter: 'Тапсырманы іздеу сүзгісі'
         },

@@ -249,9 +249,11 @@
                 <i class="pi pi-align-left"></i>
                 <input
                   autoComplete="new-sentence"
+                  ref="new_sentence"
                   name="sentence"
                   type="text"
                   placeholder=" "
+                  @change="handleSentence($event)"
                 />
                 <label :class="{ 'label-error': errors.sentence }">
                   {{
@@ -268,6 +270,7 @@
                 <i class="pi pi-align-left"></i>
                 <input
                   autoComplete="new-sentence-kk-translate"
+                  ref="new_sentence_kk"
                   name="sentence_kk"
                   type="text"
                   placeholder=" "
@@ -287,6 +290,7 @@
                 <i class="pi pi-align-left"></i>
                 <input
                   autoComplete="new-sentence-ru-translate"
+                  ref="new_sentence_ru"
                   name="sentence_ru"
                   type="text"
                   placeholder=" "
@@ -331,6 +335,10 @@
                 <p class="mb-2 font-medium">{{ $t("file.audio.select") }}</p>
                 <div class="custom-grid">
                   <uploadOrSelectFile
+                    :allowGenerate="true"
+                    :generateText="new_sentence?.value"
+                    :generateFileInputName="'generate_new_sentence_audio_file'"
+                    :generateFileError="$t('pages.sentences.required')"
                     :radioName="'upload_new_sentence_audio_file'"
                     :fileInputName="'new_sentence_audio_file_name'"
                     :showFileInputName="false"
@@ -345,10 +353,12 @@
             </div>
 
             <div class="col-span-12">
-              <button class="btn btn-primary" type="submit">
-                <i class="pi pi-check"></i>
-                {{ $t("add") }}
-              </button>
+              <div class="btn-wrap justify-end">
+                <button class="btn btn-primary" type="submit">
+                  <i class="pi pi-check"></i>
+                  {{ $t("add") }}
+                </button>
+              </div>
             </div>
           </div>
         </form>
@@ -531,10 +541,12 @@
             </div>
 
             <div class="col-span-12">
-              <button class="btn btn-primary" type="submit">
-                <i class="pi pi-check"></i>
-                {{ $t("save") }}
-              </button>
+              <div class="btn-wrap justify-end">
+                <button class="btn btn-primary" type="submit">
+                  <i class="pi pi-check"></i>
+                  {{ $t("save") }}
+                </button>
+              </div>
             </div>
           </div>
         </form>
@@ -580,6 +592,10 @@ const perPage = ref(10);
 const sentences = ref([]);
 const sentence = ref(null);
 const attributes = ref([]);
+
+const new_sentence = ref(null);
+const new_sentence_kk = ref(null);
+const new_sentence_ru = ref(null);
 
 const current_sentence_audio = ref(false);
 
@@ -705,6 +721,39 @@ const getSentenceAttributes = async () => {
             url: err.request.responseURL,
           },
         });
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
+const handleSentence = async (event) => {
+  pendingAdd.value = true;
+
+  await $axiosPlugin
+    .get("openai/translate", {
+      params: { text: event.target.value },
+    })
+    .then((response) => {
+      new_sentence_kk.value.value = response.data.kk;
+      new_sentence_ru.value.value = response.data.ru;
+      pendingAdd.value = false;
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          pendingAdd.value = false;
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
       } else {
         router.push("/error");
       }

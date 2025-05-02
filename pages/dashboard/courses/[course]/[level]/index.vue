@@ -1,6 +1,9 @@
 <template>
   <loader v-if="pending" :className="'full-overlay'" />
-  <div class="col-span-12">
+  <div
+    v-if="lessonsData && lessonsData?.level?.is_available"
+    class="col-span-12"
+  >
     <div class="custom-grid">
       <div class="col-span-12">
         <roleProvider :roles="[1]" :redirect="false">
@@ -17,7 +20,7 @@
       <div class="col-span-12">
         <ul class="list-group">
           <li
-            v-for="(section, sectionIndex) in lessonsData"
+            v-for="(section, sectionIndex) in lessonsData.sections"
             :key="sectionIndex"
             class="list-item"
           >
@@ -110,6 +113,11 @@
         </ul>
       </div>
     </div>
+  </div>
+  <div v-else class="col-span-12">
+    <alert :className="'light'">
+      <p class="mb-0">{{ $t("pages.courses.course_is_not_available") }}</p>
+    </alert>
   </div>
 
   <roleProvider :roles="[1]" :redirect="false">
@@ -251,6 +259,7 @@
 import roleProvider from "../../../../../components/ui/roleProvider.vue";
 import loader from "../../../../../components/ui/loader.vue";
 import modal from "../../../../../components/ui/modal.vue";
+import alert from "../../../../../components/ui/alert.vue";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
 
@@ -328,7 +337,7 @@ const getLessons = async () => {
 
       pageTitle.value = response.data.level.level_name;
 
-      lessonsData.value = response.data.sections;
+      lessonsData.value = response.data;
       pending.value = false;
     })
     .catch((err) => {

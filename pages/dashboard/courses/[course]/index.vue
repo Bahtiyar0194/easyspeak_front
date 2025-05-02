@@ -8,13 +8,19 @@
         class="col-span-12 lg:col-span-3"
       >
         <nuxt-link
+          :class="level.is_available === false ? 'cursor-not-allowed' : ''"
           :to="
-            localePath(
-              '/dashboard/courses/' + course_slug + '/' + level.level_slug
-            )
+            level.is_available === false
+              ? null
+              : localePath(
+                  '/dashboard/courses/' + course_slug + '/' + level.level_slug
+                )
           "
         >
-          <div class="card">
+          <div
+            class="card"
+            :class="level.is_available === false ? 'grayscale opacity-25' : ''"
+          >
             <img
               :src="
                 config.public.apiBase +

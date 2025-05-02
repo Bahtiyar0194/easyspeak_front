@@ -272,20 +272,20 @@
       <div v-if="currentGroup" class="flex flex-col gap-y-3">
         <p v-if="currentGroup.group_description" class="mb-0">
           <span class="text-inactive"
-            >{{ $t("pages.groups.group_description") }}:</span
-          >
+            >{{ $t("pages.groups.group_description") }}:
+          </span>
           <b>{{ currentGroup.group_description }}</b>
         </p>
         <p class="mb-0">
           <span class="text-inactive"
-            >{{ $t("pages.groups.group_category") }}:</span
-          >
+            >{{ $t("pages.groups.group_category") }}:
+          </span>
           <b>{{ currentGroup.level.level_name }}</b>
         </p>
 
         <div class="flex gap-x-2 items-center">
           <p class="mb-0">
-            <span class="text-inactive">{{ $t("mentor") }}:</span>
+            <span class="text-inactive">{{ $t("mentor") }}: </span>
           </p>
           <userTag v-if="currentGroup.mentor" :user="currentGroup.mentor" />
         </div>
@@ -299,8 +299,8 @@
 
         <p class="mb-0" v-if="currentGroup.group_members">
           <span class="text-inactive"
-            >{{ $t("pages.groups.members_count") }}:</span
-          >
+            >{{ $t("pages.groups.members_count") }}:
+          </span>
           <b>{{ currentGroup.group_members.length }}</b>
         </p>
         <p class="mb-0">

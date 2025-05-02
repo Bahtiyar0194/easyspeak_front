@@ -204,4 +204,18 @@ onMounted(() => {
   getTask();
   changeModalSize("modal-4xl");
 });
+
+watch(
+  () => selectedSentences.value,
+  (newVal) => {
+    selectedSentences.value.forEach((sentence) => {
+      if (!sentence.checking_by) {
+        sentence.answerOptions = [];
+        sentence.addAnswerInput = "";
+        sentence.addAnswerInputError = false;
+        sentence.checking_by = 'by_ai';
+      }
+    });
+  }
+);
 </script>

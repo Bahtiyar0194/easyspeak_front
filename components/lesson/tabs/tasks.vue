@@ -118,6 +118,7 @@
     :onClose="() => closeModalByUser()"
     :className="modalClass"
     :showLoader="pendingModal"
+    :showPendingText="true"
     :loaderOpacityFull="true"
     :closeOnClickSelf="false"
   >

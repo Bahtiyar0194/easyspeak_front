@@ -58,7 +58,26 @@
                     }"
                     class="w-16 h-16 bg-contain bg-no-repeat bg-center border-inactive rounded-xl"
                   ></div>
-                  <div v-html="answer.right_answer"></div>
+                  <div class="flex flex-col gap-2">
+                    <div v-if="answer.question">
+                      <p
+                        
+                        class="mb-1 text-xs text-inactive font-normal"
+                      >
+                        {{ $t("pages.questions.question") }}:
+                      </p>
+                      <p class="font-medium mb-0">{{ answer.question.sentence }}</p>
+                    </div>
+                    <div>
+                      <p
+                        v-if="answer.right_answer"
+                        class="mb-1 text-xs text-inactive font-normal"
+                      >
+                        {{ $t("your_answer") }}:
+                      </p>
+                      <div v-html="answer.right_answer"></div>
+                    </div>
+                  </div>
                 </div>
                 <div class="flex items-center">
                   <audioButton
@@ -117,6 +136,16 @@
                     class="w-16 h-16 bg-contain bg-no-repeat bg-center border-inactive rounded-xl"
                   ></div>
                   <div class="flex gap-2" :class="!answer.word && 'flex-col'">
+                    <div v-if="answer.question">
+                      <p
+                        
+                        class="mb-1 text-xs text-inactive font-normal"
+                      >
+                        {{ $t("pages.questions.question") }}:
+                      </p>
+                      <p class="font-medium mb-0">{{ answer.question.sentence }}</p>
+                    </div>
+
                     <div>
                       <p
                         v-if="answer.user_answer"
@@ -127,7 +156,7 @@
                       <div v-html="answer.user_answer"></div>
                     </div>
 
-                    <div>
+                    <div v-if="answer.right_answer">
                       <p
                         v-if="answer.user_answer"
                         class="mb-1 text-xs text-inactive font-normal"
@@ -135,6 +164,15 @@
                         {{ $t("right_answer") }}:
                       </p>
                       <div v-html="answer.right_answer"></div>
+                    </div>
+
+                    <div v-if="answer.comment">
+                      <p
+                        class="mb-1 text-xs text-inactive font-normal"
+                      >
+                        {{ $t("comment") }}:
+                      </p>
+                      <p class="text-danger" v-html="answer.comment"></p>
                     </div>
                   </div>
                 </div>

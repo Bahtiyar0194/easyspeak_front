@@ -1,9 +1,16 @@
 <template>
   <loader v-if="pending" :className="'full-overlay'" />
-  <tabs :tabs="tabs_data" />
+  <tabs v-if="isAvailable" :tabs="tabs_data" />
+
+  <div v-else class="col-span-12">
+    <alert :className="'light'">
+      <p class="mb-0">{{ $t("pages.courses.course_is_not_available") }}</p>
+    </alert>
+  </div>
 </template>
 
 <script setup>
+import alert from "../../../../../../components/ui/alert.vue";
 import loader from "../../../../../../components/ui/loader.vue";
 import tabs from "../../../../../../components/ui/tabs.vue";
 import materials from "../../../../../../components/lesson/tabs/materials.vue";
@@ -22,6 +29,7 @@ const { $axiosPlugin } = useNuxtApp();
 const pending = ref(true);
 const materialTypes = ref([]);
 const lessonData = ref([]);
+const isAvailable = ref(false);
 const pageTitle = ref("");
 
 useHead(() => ({
@@ -119,6 +127,7 @@ const getLesson = async () => {
       pageTitle.value = response.data.lesson.lesson_name;
 
       lessonData.value = response.data.lesson;
+      isAvailable.value = response.data.level.is_available;
       pending.value = false;
     })
     .catch((err) => {

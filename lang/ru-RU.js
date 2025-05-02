@@ -6,10 +6,12 @@ export default {
     added: 'Добавлен',
     not_added: 'Не добавлен',
     delete: 'Удалить',
+    instructions: 'Инструкции',
     choose: "Выбрать",
     choose_an_option: "Выберите вариант",
     choose_your_option: "Выберите свой вариант",
     download: "Скачать",
+    loading: "Идет загрузка",
     export_to_png: "Экспорт в PNG",
     export_to_xlsx: "Экспорт в XLSX",
     export_to_pdf: "Экспорт в PDF",
@@ -27,6 +29,7 @@ export default {
     move_right: "Переместить вправо",
     save: 'Сохранить',
     saving: 'Сохранение',
+    generate: "Cгенерировать",
     restart: 'Перезагрузить',
     edit: "Редактировать",
     welcome: 'Добро пожаловать!',
@@ -73,6 +76,8 @@ export default {
     wrong_answers: "Неправильные ответы",
     wrong_answers_count: "Неправильных ответов",
     answer_options: "Варианты ответа",
+    comment: "Комментарий",
+    comments: "Комментарии",
     for_re_examination: "Для повторного изучения",
     get_ready: "Приготовьтесь",
     number_of_options: "Количество вариантов",
@@ -119,6 +124,7 @@ export default {
         uploading_a_new_file: "Загрузка нового файла",
         uploading_file: "Идет загрузка файла...",
         upload_from_media: "Выбрать из ранее загруженных",
+        generate: "Cгенерировать с помощью ИИ",
         deleting_a_file: "Удаление файла",
         file_delete_confirm: "Вы действительно хотите удалить данный файл? Все связанное с ним будет также удалено.",
         kilobyte: "КБ",
@@ -136,7 +142,8 @@ export default {
         },
         audio: {
             select: "Выберите аудиофайл",
-            current: "Текущий загруженный аудиофайл"
+            current: "Текущий загруженный аудиофайл",
+            voice: "Голос", 
         },
         video: {
             select: "Выберите видеофайл",
@@ -417,7 +424,8 @@ export default {
             course_level: 'Категория курса',
             choose_a_course_level: 'Выберите категорию курса',
             course_section: 'Глава',
-            choose_a_course_section: 'Выберите главу'
+            choose_a_course_section: 'Выберите главу',
+            course_is_not_available: 'Курс недоступен. Пожалуйста, свяжитесь с куратором для получения доступа к курсу.',
         },
 
         lessons: {
@@ -486,6 +494,7 @@ export default {
             edit_sentence_title: 'Редактирование фразы',
             transcription: 'Транскрипция',
             seconds_per_sentence: 'Количество выделенных секунд на ответ каждой фразы',
+            required: 'Фраза обязательна для заполнения',
             translate: {
                 kk: 'Перевод фразы на казахском языке',
                 ru: 'Перевод фразы на русском языке'
@@ -598,6 +607,10 @@ export default {
                     option_2: 'Ответ с помощью видео',
                     option_3: 'Ответ с помощью аудио',
                 },
+            },
+            check: {
+                by_ai: 'Проверка ответа с помощью ИИ',
+                by_mentor: 'Проверка ответа куратором',
             },
             search_filter: 'Фильтр поиска по заданиям'
         },
