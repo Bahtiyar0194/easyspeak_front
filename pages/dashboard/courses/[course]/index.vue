@@ -19,7 +19,7 @@
         >
           <div
             class="card"
-            :class="level.is_available === false ? 'grayscale opacity-25' : ''"
+            :class="level.is_available === false ? 'grayscale' : ''"
           >
             <img
               :src="
@@ -31,11 +31,17 @@
             />
 
             <div
-              class="absolute left-0 top-0 w-full h-full flex justify-center items-center p-4 bg-black bg-opacity-50"
+              class="absolute left-0 top-0 w-full h-full flex justify-center items-center p-4 bg-black bg-opacity-60"
             >
-              <h6 class="mb-0 text-center text-white">
-                {{ level.level_name }}
-              </h6>
+              <div class="flex flex-col gap-y-1">
+                <h6 class="mb-0 text-center text-white">
+                  {{ level.level_name }}
+                </h6>
+
+                <p v-if="level.is_available === false" class="mb-0 text-white text-center text-sm">
+                  {{ $t("pages.courses.course_is_not_available") }}
+                </p>
+              </div>
             </div>
           </div>
         </nuxt-link>

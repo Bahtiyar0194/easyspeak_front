@@ -425,7 +425,7 @@ export default {
             choose_a_course_level: 'Курстың санатын таңдаңыз',
             course_section: 'Тарау',
             choose_a_course_section: 'Тарауды таңдаңыз',
-            course_is_not_available: 'Курс қолжетімсіз. Курсқа кіру үшін тәлімгерге хабарласыңыз.',
+            course_is_not_available: 'Курс қолжетімсіз. Курс қолжетімді болу үшін әкімшілікпен хабарласуыңызды өтінеміз.',
         },
 
         lessons: {
@@ -475,6 +475,7 @@ export default {
             edit_word_title: 'Сөзді қайта өңдеу',
             transcription: 'Транскрипциясы',
             seconds_per_word: 'Әр сөзге жауап беруге бөлінетін секунд саны',
+            required: 'Сөзді енгізу қажет',
             translate: {
                 kk: 'Сөздің қазақша тілдегі аудармасы',
                 ru: 'Сөздің орысша тілдегі аудармасы'

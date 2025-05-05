@@ -253,7 +253,7 @@
                   name="sentence"
                   type="text"
                   placeholder=" "
-                  @change="handleSentence($event)"
+                  @change="handleNewSentence($event)"
                 />
                 <label :class="{ 'label-error': errors.sentence }">
                   {{
@@ -384,6 +384,7 @@
           <div class="flex flex-col gap-y-3">
             <audioPlayerWithWave
               :src="config.public.apiBase + '/media/get/' + sentence.audio_file"
+              :key="sentence.audio_file"
             />
 
             <p class="mb-0">
@@ -445,11 +446,12 @@
               <div class="form-group-border active">
                 <i class="pi pi-align-left"></i>
                 <input
-                  autoComplete="eidt-sentence"
+                  autoComplete="edit-sentence"
                   v-model="sentence.sentence"
                   name="sentence"
                   type="text"
                   placeholder=" "
+                  @change="handleEditSentence()"
                 />
                 <label :class="{ 'label-error': errors.sentence }">
                   {{
@@ -470,9 +472,9 @@
                 <i class="pi pi-align-left"></i>
                 <input
                   :autocomplete="
-                    'edit-sentence-kk-translate-' + translate.lang_tag
+                    'edit-sentence-translate-' + translate.lang_tag
                   "
-                  v-model="translate.sentence_translate"
+                  v-model="sentence.translates[index].sentence_translate"
                   :name="'sentence_' + translate.lang_tag"
                   type="text"
                   placeholder=" "
@@ -527,6 +529,10 @@
                 <p class="mb-2 font-medium">{{ $t("file.audio.select") }}</p>
                 <div class="custom-grid">
                   <uploadOrSelectFile
+                    :allowGenerate="true"
+                    :generateText="sentence.sentence"
+                    :generateFileInputName="'generate_edit_sentence_audio_file'"
+                    :generateFileError="$t('pages.sentences.required')"
                     :radioName="'upload_edit_sentence_audio_file'"
                     :fileInputName="'edit_sentence_audio_file_name'"
                     :showFileInputName="false"
@@ -727,7 +733,7 @@ const getSentenceAttributes = async () => {
     });
 };
 
-const handleSentence = async (event) => {
+const handleNewSentence = async (event) => {
   pendingAdd.value = true;
 
   await $axiosPlugin
@@ -744,6 +750,40 @@ const handleSentence = async (event) => {
         if (err.response.status == 422) {
           errors.value = err.response.data;
           pendingAdd.value = false;
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
+const handleEditSentence = async () => {
+  pendingEdit.value = true;
+
+  await $axiosPlugin
+    .get("openai/translate", {
+      params: { text: sentence.value.sentence },
+    })
+    .then((response) => {
+      sentence.value.translates.forEach((translate) => {
+        translate.sentence_translate = response.data[translate.lang_tag];
+      });
+      pendingEdit.value = false;
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          pendingEdit.value = false;
         } else {
           router.push({
             path: "/error",

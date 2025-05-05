@@ -1,298 +1,308 @@
 <template>
-  <taskLayout
-    v-if="taskData"
-    :task="props.task"
-    :showTaskTimer="showTaskTimer"
-    :showMaterialsOption="showMaterialsOption"
-    :showMaterialsBeforeTask="showMaterialsBeforeTask"
-    :materials="materials"
-    :startTask="startTask"
-    :isFinished="isFinished"
-    :progressPercentage="progressPercentage"
-    :reStudyItems="reAnswerQuestions"
-    :taskResult="taskResult"
-  >
-    <template v-slot:task_content>
-      <div class="col-span-12">
-        <p v-if="timeIsUp" class="font-medium text-center text-danger">
-          {{ $t("time_is_up") }}
-        </p>
-        <p v-else-if="questions.length > 0" class="text-center">
-          {{ $t("pages.questions.questions_left") }}:
-          <b>{{ questions.length }}</b>
-        </p>
-      </div>
-
-      <div class="col-span-12">
-        <div class="flex justify-center items-center">
-          <countdownCircleTimer
-            :totalSeconds="time"
-            :startCommand="isStarted"
-            @timeIsUp="timerIsUp()"
-          />
+  <alert v-if="errors.length > 0" :className="'light'">
+    <p class="mb-0">{{ errors[0] }}</p>
+  </alert>
+  <div v-else-if="taskData && errors.length === 0">
+    <taskLayout
+      :task="props.task"
+      :showTaskTimer="showTaskTimer"
+      :showMaterialsOption="showMaterialsOption"
+      :showMaterialsBeforeTask="showMaterialsBeforeTask"
+      :materials="materials"
+      :startTask="startTask"
+      :isFinished="isFinished"
+      :progressPercentage="progressPercentage"
+      :reStudyItems="reAnswerQuestions"
+      :taskResult="taskResult"
+    >
+      <template v-slot:task_content>
+        <div class="col-span-12">
+          <p v-if="timeIsUp" class="font-medium text-center text-danger">
+            {{ $t("time_is_up") }}
+          </p>
+          <p v-else-if="questions.length > 0" class="text-center">
+            {{ $t("pages.questions.questions_left") }}:
+            <b>{{ questions.length }}</b>
+          </p>
         </div>
-      </div>
 
-      <div v-if="timeIsUp || isComplete" class="col-span-12">
-        <div class="flex flex-col gap-y-4">
-          <div
-            class="flex flex-col gap-y-2"
-            v-if="currentAnsweredQuestions.length > 0"
-          >
-            <p class="text-xl font-medium mb-0 text-success">
-              {{ $t("pages.questions.answered_questions") }}
-            </p>
+        <div class="col-span-12">
+          <div class="flex justify-center items-center">
+            <countdownCircleTimer
+              :totalSeconds="time"
+              :startCommand="isStarted"
+              @timeIsUp="timerIsUp()"
+            />
+          </div>
+        </div>
 
-            <ul class="list-group nowrap">
-              <li
-                v-for="(question, qIndex) in currentAnsweredQuestions"
-                :key="qIndex"
-                class="flex justify-between items-center gap-x-2"
-              >
-                <div class="flex flex-col">
-                  <p class="mb-1">
-                    <span class="text-inactive"
-                      >{{ $t("pages.questions.question") }}:
-                    </span>
+        <div v-if="timeIsUp || isComplete" class="col-span-12">
+          <div class="flex flex-col gap-y-4">
+            <div
+              class="flex flex-col gap-y-2"
+              v-if="currentAnsweredQuestions.length > 0"
+            >
+              <p class="text-xl font-medium mb-0 text-success">
+                {{ $t("pages.questions.answered_questions") }}
+              </p>
+
+              <ul class="list-group nowrap">
+                <li
+                  v-for="(question, qIndex) in currentAnsweredQuestions"
+                  :key="qIndex"
+                  class="flex justify-between items-center gap-x-2"
+                >
+                  <div class="flex flex-col">
+                    <p class="mb-1">
+                      <span class="text-inactive"
+                        >{{ $t("pages.questions.question") }}:
+                      </span>
+                      <span class="font-medium">{{ question.sentence }}</span>
+                    </p>
+
+                    <p class="mb-0">
+                      <span class="text-inactive"
+                        >{{ $t("your_answer") }}:
+                      </span>
+                      <span class="text-corp font-medium">{{
+                        question.userInput
+                      }}</span>
+                    </p>
+                  </div>
+
+                  <div class="step-item xs completed">
+                    <div class="step-icon">
+                      <i class="pi pi-clock"></i>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div
+              class="flex flex-col gap-y-2"
+              v-if="currentReAnswerQuestions.length > 0"
+            >
+              <p class="text-xl font-medium mb-0 text-danger">
+                {{ $t("pages.questions.unanswered_questions") }}
+              </p>
+
+              <ul class="list-group nowrap">
+                <li
+                  v-for="(question, rIndex) in currentReAnswerQuestions"
+                  :key="rIndex"
+                  class="flex justify-between items-center gap-x-2"
+                >
+                  <p class="mb-0">
                     <span class="font-medium">{{ question.sentence }}</span>
                   </p>
 
-                  <p class="mb-0">
-                    <span class="text-inactive">{{ $t("your_answer") }}: </span>
-                    <span class="text-corp font-medium">{{
-                      question.userInput
-                    }}</span>
-                  </p>
-                </div>
-
-                <div class="step-item xs completed">
-                  <div class="step-icon">
-                    <i class="pi pi-clock"></i>
-                  </div>
-                </div>
-              </li>
-            </ul>
-          </div>
-
-          <div
-            class="flex flex-col gap-y-2"
-            v-if="currentReAnswerQuestions.length > 0"
-          >
-            <p class="text-xl font-medium mb-0 text-danger">
-              {{ $t("pages.questions.unanswered_questions") }}
-            </p>
-
-            <ul class="list-group nowrap">
-              <li
-                v-for="(question, rIndex) in currentReAnswerQuestions"
-                :key="rIndex"
-                class="flex justify-between items-center gap-x-2"
-              >
-                <p class="mb-0">
-                  <span class="font-medium">{{ question.sentence }}</span>
-                </p>
-
-                <div class="step-item xs failed">
-                  <div class="step-icon">
-                    <i class="pi pi-times-circle"></i>
-                  </div>
-                </div>
-              </li>
-            </ul>
-          </div>
-
-          <div class="btn-wrap right">
-            <button
-              v-if="questions.length > 0"
-              class="btn btn-outline-primary"
-              @click="setQuestions()"
-            >
-              <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
-            </button>
-            <button v-else class="btn btn-light" @click="isFinished = true">
-              <i class="pi pi-check"></i>
-              {{ $t("pages.tasks.complete_the_task") }}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div v-else class="col-span-12">
-        <div class="custom-grid">
-          <div class="col-span-12">
-            <ul class="list-group nowrap">
-              <li
-                v-for="(question, questionIndex) in currentQuestions"
-                :key="questionIndex"
-                class="list-item"
-              >
-                <div class="custom-grid">
-                  <div class="col-span-12">
-                    <span class="font-medium text-lg"
-                      ><span class="text-corp">{{ questionIndex + 1 }}. </span
-                      >{{ question.sentence }}</span
-                    >
-                  </div>
-
-                  <div class="col-span-12">
-                    <div
-                      v-if="
-                        taskData.options.answer_the_questions_option == 'text'
-                      "
-                      class="form-group-border"
-                      :class="
-                        checkingStatus === true && !question.userInput
-                          ? 'pulse danger'
-                          : 'active'
-                      "
-                    >
-                      <i class="pi pi-reply"></i>
-                      <input
-                        v-model="question.userInput"
-                        type="text"
-                        placeholder=" "
-                      />
-                      <label
-                        :class="
-                          checkingStatus === true && !question.userInput
-                            ? 'label-error'
-                            : ''
-                        "
-                      >
-                        {{ $t("type_your_answer") }}
-                      </label>
+                  <div class="step-item xs failed">
+                    <div class="step-icon">
+                      <i class="pi pi-times-circle"></i>
                     </div>
-
-                    <fileUploadButton
-                      v-else
-                      :id="'upload_file_' + questionIndex"
-                      :name="'upload_file_' + questionIndex"
-                      :accept="
-                        taskData.options.answer_the_questions_option + '/*'
-                      "
-                      :error="
-                        checkingStatus === true && !question.userInput
-                          ? $t('pages.questions.required')
-                          : ''
-                      "
-                      :icon="
-                        'pi pi-' + taskData.options.answer_the_questions_option
-                      "
-                      :label="
-                        $t(
-                          'file.' +
-                            taskData.options.answer_the_questions_option +
-                            '.select'
-                        )
-                      "
-                    />
                   </div>
-                </div>
-              </li>
-            </ul>
-          </div>
+                </li>
+              </ul>
+            </div>
 
-          <div class="col-span-12">
             <div class="btn-wrap right">
               <button
+                v-if="questions.length > 0"
                 class="btn btn-outline-primary"
-                :class="checkingStatus && 'disabled'"
-                @click="acceptAnswers()"
+                @click="setQuestions()"
               >
+                <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
+              </button>
+              <button v-else class="btn btn-light" @click="isFinished = true">
                 <i class="pi pi-check"></i>
-                {{ $t("check") }}
+                {{ $t("pages.tasks.complete_the_task") }}
               </button>
             </div>
           </div>
         </div>
-      </div>
-    </template>
 
-    <template v-slot:task_result_content>
-      <div class="col-span-12">
-        <div class="flex flex-col gap-y-4">
-          <div
-            class="flex flex-col gap-y-2"
-            v-if="answeredQuestions.length > 0"
-          >
-            <p class="text-xl font-medium mb-0 text-success">
-              {{ $t("pages.questions.answered_questions") }}
-            </p>
+        <div v-else class="col-span-12">
+          <div class="custom-grid">
+            <div class="col-span-12">
+              <ul class="list-group nowrap">
+                <li
+                  v-for="(question, questionIndex) in currentQuestions"
+                  :key="questionIndex"
+                  class="list-item"
+                >
+                  <div class="custom-grid">
+                    <div class="col-span-12">
+                      <span class="font-medium text-lg"
+                        ><span class="text-corp">{{ questionIndex + 1 }}. </span
+                        >{{ question.sentence }}</span
+                      >
+                    </div>
 
-            <ul class="list-group nowrap">
-              <li
-                v-for="(question, qIndex) in answeredQuestions"
-                :key="qIndex"
-                class="flex justify-between items-center gap-x-2"
-              >
-                <div>
-                  <p class="mb-0 font-medium">{{ question.sentence }}</p>
-                  <p class="mb-0">
-                    <span class="text-inactive">{{ $t("your_answer") }}: </span>
-                    <span class="text-corp font-medium">{{
-                      question.userInput
-                    }}</span>
-                  </p>
-                </div>
+                    <div class="col-span-12">
+                      <div
+                        v-if="
+                          taskData.options.answer_the_questions_option == 'text'
+                        "
+                        class="form-group-border"
+                        :class="
+                          checkingStatus === true && !question.userInput
+                            ? 'pulse danger'
+                            : 'active'
+                        "
+                      >
+                        <i class="pi pi-reply"></i>
+                        <input
+                          v-model="question.userInput"
+                          type="text"
+                          placeholder=" "
+                        />
+                        <label
+                          :class="
+                            checkingStatus === true && !question.userInput
+                              ? 'label-error'
+                              : ''
+                          "
+                        >
+                          {{ $t("type_your_answer") }}
+                        </label>
+                      </div>
 
-                <div class="flex items-center">
-                  <audioButton
-                    v-if="question.audio_file"
-                    :src="
-                      config.public.apiBase +
-                      '/media/get/' +
-                      question.audio_file
-                    "
-                  />
-                  <div class="step-item xs completed">
-                    <div class="step-icon">
-                      <i class="pi pi-check"></i>
+                      <fileUploadButton
+                        v-else
+                        :id="'upload_file_' + questionIndex"
+                        :name="'upload_file_' + questionIndex"
+                        :accept="
+                          taskData.options.answer_the_questions_option + '/*'
+                        "
+                        :error="
+                          checkingStatus === true && !question.userInput
+                            ? $t('pages.questions.required')
+                            : ''
+                        "
+                        :icon="
+                          'pi pi-' +
+                          taskData.options.answer_the_questions_option
+                        "
+                        :label="
+                          $t(
+                            'file.' +
+                              taskData.options.answer_the_questions_option +
+                              '.select'
+                          )
+                        "
+                      />
                     </div>
                   </div>
-                </div>
-              </li>
-            </ul>
-          </div>
+                </li>
+              </ul>
+            </div>
 
-          <div class="flex flex-col gap-y-2" v-if="reAnswerQuestions > 0">
-            <p class="text-xl font-medium mb-0 text-danger">
-              {{ $t("pages.questions.unanswered_questions") }}
-            </p>
-            <ul class="list-group nowrap">
-              <li
-                v-for="(question, qIndex) in reAnswerQuestions"
-                :key="qIndex"
-                class="flex justify-between items-center gap-x-2"
-              >
-                <div>
-                  <p class="mb-0 font-medium">{{ question.sentence }}</p>
-                </div>
-
-                <div class="flex items-center">
-                  <audioButton
-                    v-if="question.audio_file"
-                    :src="
-                      config.public.apiBase +
-                      '/media/get/' +
-                      question.audio_file
-                    "
-                  />
-                  <div class="step-item xs failed">
-                    <div class="step-icon">
-                      <i class="pi pi-replay"></i>
-                    </div>
-                  </div>
-                </div>
-              </li>
-            </ul>
+            <div class="col-span-12">
+              <div class="btn-wrap right">
+                <button
+                  class="btn btn-outline-primary"
+                  :class="checkingStatus && 'disabled'"
+                  @click="acceptAnswers()"
+                >
+                  <i class="pi pi-check"></i>
+                  {{ $t("check") }}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </template>
-  </taskLayout>
+      </template>
+
+      <template v-slot:task_result_content>
+        <div class="col-span-12">
+          <div class="flex flex-col gap-y-4">
+            <div
+              class="flex flex-col gap-y-2"
+              v-if="answeredQuestions.length > 0"
+            >
+              <p class="text-xl font-medium mb-0 text-success">
+                {{ $t("pages.questions.answered_questions") }}
+              </p>
+
+              <ul class="list-group nowrap">
+                <li
+                  v-for="(question, qIndex) in answeredQuestions"
+                  :key="qIndex"
+                  class="flex justify-between items-center gap-x-2"
+                >
+                  <div>
+                    <p class="mb-0 font-medium">{{ question.sentence }}</p>
+                    <p class="mb-0">
+                      <span class="text-inactive"
+                        >{{ $t("your_answer") }}:
+                      </span>
+                      <span class="text-corp font-medium">{{
+                        question.userInput
+                      }}</span>
+                    </p>
+                  </div>
+
+                  <div class="flex items-center">
+                    <audioButton
+                      v-if="question.audio_file"
+                      :src="
+                        config.public.apiBase +
+                        '/media/get/' +
+                        question.audio_file
+                      "
+                    />
+                    <div class="step-item xs completed">
+                      <div class="step-icon">
+                        <i class="pi pi-check"></i>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="flex flex-col gap-y-2" v-if="reAnswerQuestions > 0">
+              <p class="text-xl font-medium mb-0 text-danger">
+                {{ $t("pages.questions.unanswered_questions") }}
+              </p>
+              <ul class="list-group nowrap">
+                <li
+                  v-for="(question, qIndex) in reAnswerQuestions"
+                  :key="qIndex"
+                  class="flex justify-between items-center gap-x-2"
+                >
+                  <div>
+                    <p class="mb-0 font-medium">{{ question.sentence }}</p>
+                  </div>
+
+                  <div class="flex items-center">
+                    <audioButton
+                      v-if="question.audio_file"
+                      :src="
+                        config.public.apiBase +
+                        '/media/get/' +
+                        question.audio_file
+                      "
+                    />
+                    <div class="step-item xs failed">
+                      <div class="step-icon">
+                        <i class="pi pi-replay"></i>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </template>
+    </taskLayout>
+  </div>
 </template>
 
 <script setup>
+import alert from "../../../../../ui/alert.vue";
 import { ref, onMounted, inject, watch } from "vue";
 import { useRouter } from "nuxt/app";
 import taskLayout from "../../taskLayout.vue";
@@ -303,6 +313,7 @@ import audioButton from "../../../../../ui/audioButton.vue";
 const router = useRouter();
 const config = useRuntimeConfig();
 const { $axiosPlugin } = useNuxtApp();
+const errors = ref([]);
 
 const showTaskTimer = ref(false);
 const taskData = ref(null);
@@ -375,17 +386,23 @@ const getTask = async () => {
       startTask();
     }
   } catch (err) {
-    const errorRoute = err.response
-      ? {
+    if (err.response) {
+      if (err.response.status == 422) {
+        errors.value = err.response.data;
+        console.log(errors.value);
+      } else {
+        router.push({
           path: "/error",
           query: {
             status: err.response.status,
             message: err.response.data.message,
             url: err.request.responseURL,
           },
-        }
-      : { path: "/error" };
-    router.push(errorRoute);
+        });
+      }
+    } else {
+      router.push("/error");
+    }
   } finally {
     onPending(false);
   }

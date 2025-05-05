@@ -116,7 +116,7 @@
   <modal
     :show="modalIsVisible"
     :onClose="() => closeModalByUser()"
-    :className="modalClass"
+    :className="modalClass + ' min-h-40'"
     :showLoader="pendingModal"
     :showPendingText="true"
     :loaderOpacityFull="true"

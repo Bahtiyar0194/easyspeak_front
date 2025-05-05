@@ -260,9 +260,11 @@
                 <i class="pi pi-align-left"></i>
                 <input
                   autoComplete="new-word"
+                  ref="new_word"
                   name="word"
                   type="text"
                   placeholder=" "
+                  @change="handleNewWord($event)"
                 />
                 <label :class="{ 'label-error': errors.word }">
                   {{
@@ -277,6 +279,7 @@
                 <i class="bi bi-braces"></i>
                 <input
                   autoComplete="new-word-transcription"
+                  ref="new_word_transcription"
                   name="transcription"
                   type="text"
                   placeholder=" "
@@ -296,6 +299,7 @@
                 <i class="pi pi-align-left"></i>
                 <input
                   autoComplete="new-word-kk-translate"
+                  ref="new_word_kk"
                   name="word_kk"
                   type="text"
                   placeholder=" "
@@ -315,6 +319,7 @@
                 <i class="pi pi-align-left"></i>
                 <input
                   autoComplete="new-word-ru-translate"
+                  ref="new_word_ru"
                   name="word_ru"
                   type="text"
                   placeholder=" "
@@ -377,6 +382,10 @@
                 <p class="mb-2 font-medium">{{ $t("file.audio.select") }}</p>
                 <div class="custom-grid">
                   <uploadOrSelectFile
+                    :allowGenerate="true"
+                    :generateText="new_word?.value"
+                    :generateFileInputName="'generate_new_word_audio_file'"
+                    :generateFileError="$t('pages.dictionary.required')"
                     :radioName="'upload_new_word_audio_file'"
                     :fileInputName="'new_word_audio_file_name'"
                     :showFileInputName="false"
@@ -429,14 +438,14 @@
             />
             <p class="mb-0">
               <span class="text-inactive"
-                >{{ $t("pages.dictionary.transcription") }}:</span
-              >
+                >{{ $t("pages.dictionary.transcription") }}:
+              </span>
               <b>[{{ word.transcription }}]</b>
             </p>
             <p class="mb-0">
               <span class="text-inactive"
-                >{{ $t("pages.courses.course") }}:</span
-              >
+                >{{ $t("pages.courses.course") }}:
+              </span>
               <b>{{ word.course_name }}</b>
             </p>
 
@@ -446,16 +455,14 @@
               class="mb-0"
             >
               <span class="text-inactive"
-                >{{
-                  $t("pages.dictionary.translate." + translate.lang_tag)
-                }}:</span
-              >
+                >{{ $t("pages.dictionary.translate." + translate.lang_tag) }}:
+              </span>
               <b>{{ translate.word_translate }}</b>
             </p>
 
             <div class="flex gap-x-2 items-center">
               <p class="mb-0">
-                <span class="text-inactive">{{ $t("operator") }}:</span>
+                <span class="text-inactive">{{ $t("operator") }}: </span>
               </p>
               <userTag v-if="word.operator" :user="word.operator" />
             </div>
@@ -499,6 +506,7 @@
                   name="word"
                   type="text"
                   placeholder=" "
+                  @change="handleEditWord()"
                 />
                 <label :class="{ 'label-error': errors.word }">
                   {{
@@ -618,6 +626,10 @@
                 <p class="mb-2 font-medium">{{ $t("file.audio.select") }}</p>
                 <div class="custom-grid">
                   <uploadOrSelectFile
+                    :allowGenerate="true"
+                    :generateText="word.word"
+                    :generateFileInputName="'generate_edit_word_audio_file'"
+                    :generateFileError="$t('pages.dictionary.required')"
                     :radioName="'upload_edit_word_audio_file'"
                     :fileInputName="'edit_word_audio_file_name'"
                     :showFileInputName="false"
@@ -681,6 +693,11 @@ const perPage = ref(10);
 const words = ref([]);
 const word = ref(null);
 const attributes = ref([]);
+
+const new_word = ref(null);
+const new_word_transcription = ref(null);
+const new_word_kk = ref(null);
+const new_word_ru = ref(null);
 
 const current_word_image = ref(false);
 const current_word_audio = ref(false);
@@ -814,6 +831,75 @@ const getDictionaryAttributes = async () => {
             url: err.request.responseURL,
           },
         });
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
+const handleNewWord = async (event) => {
+  pendingAdd.value = true;
+
+  await $axiosPlugin
+    .get("openai/translate", {
+      params: { text: event.target.value, transcription: true },
+    })
+    .then((response) => {
+      new_word_transcription.value.value = response.data.transcription;
+      new_word_kk.value.value = response.data.kk;
+      new_word_ru.value.value = response.data.ru;
+      pendingAdd.value = false;
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          pendingAdd.value = false;
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
+const handleEditWord = async () => {
+  pendingEdit.value = true;
+
+  await $axiosPlugin
+    .get("openai/translate", {
+      params: { text: word.value.word, transcription: true },
+    })
+    .then((response) => {
+      word.value.transcription = response.data.transcription;
+      word.value.translates.forEach((translate) => {
+        translate.word_translate = response.data[translate.lang_tag];
+      });
+      pendingEdit.value = false;
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          pendingEdit.value = false;
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
       } else {
         router.push("/error");
       }
