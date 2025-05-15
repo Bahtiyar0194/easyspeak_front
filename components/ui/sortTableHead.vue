@@ -2,7 +2,7 @@
     <th class="cursor-pointer" @click="sortTable()"
         :title="props.sortKey !== props.keyName ? $t('sort_by_this_column') : (props.sortDirection === 'asc' ? $t('sort_asc') : $t('sort_desc'))">
         <div class="flex items-center gap-1">
-            <span>{{ props.title }}</span>
+            <span class="text-left">{{ props.title }}</span>
             <i v-if="props.sortKey === props.keyName" class="pi text-[10px] text-corp"
                 :class="props.sortDirection === 'asc' ? ('pi-sort-' + props.sortType + '-down') : 'pi-sort-' + props.sortType + '-down-alt'"></i>
         </div>

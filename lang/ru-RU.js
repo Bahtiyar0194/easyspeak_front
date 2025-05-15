@@ -1,12 +1,21 @@
 export default {
+    all: 'Все',
     yes: 'Да',
     no: 'Нет',
     you: 'Это вы',
+    start: 'Начать',    
+    finish: 'Закончить',
+    create: 'Создать',
+    created: 'Создано',
     add: 'Добавить',
     added: 'Добавлен',
     not_added: 'Не добавлен',
     delete: 'Удалить',
     instructions: 'Инструкции',
+    result: 'Результат',
+    results: 'Результаты',
+    verified: 'Проверено',
+    not_verified: 'Не проверено',
     choose: "Выбрать",
     choose_an_option: "Выберите вариант",
     choose_your_option: "Выберите свой вариант",
@@ -57,12 +66,14 @@ export default {
     operator: "Оператор",
     executor: "Исполнитель",
     mentor: "Куратор",
+    learner: "Ученик",
     applicant: "Заявитель",
     recipient: "Получатель",
     selected: "Выбрано",
     not_selected: "Не выбран",
     not_specified: "Не указан",
     your_answer: "Ваш ответ",
+    learner_answer: "Ответ ученика",
     type_your_answer: "Введите ваш ответ",
     no_answer: "Нет ответа",
     title: "Заголовок",
@@ -75,7 +86,11 @@ export default {
     wrong_answer: "Неправильный ответ",
     wrong_answers: "Неправильные ответы",
     wrong_answers_count: "Неправильных ответов",
+    unverified_answer: "Непроверенный ответ",
+    unverified_answers: "Непроверенные ответы",
+    unverified_answers_count: "Непроверенных ответов",
     answer_options: "Варианты ответа",
+    write_a_comment: "Напишите комментарий",
     comment: "Комментарий",
     comments: "Комментарии",
     for_re_examination: "Для повторного изучения",
@@ -92,6 +107,9 @@ export default {
     registered_at: "Дата регистрации",
     registered_at_from: "Дата регистрации (с)",
     registered_at_to: "Дата регистрации (по)",
+    completed_at: "Дата выполнения",
+    completed_at_from: "Дата выполнения (с)",
+    completed_at_to: "Дата выполнения (по)",
 
     reset_search_filter: "Сбросить фильтр",
     show_search_filter: 'Показать фильтр поиска',
@@ -143,7 +161,7 @@ export default {
         audio: {
             select: "Выберите аудиофайл",
             current: "Текущий загруженный аудиофайл",
-            voice: "Голос", 
+            voice: "Голос",
         },
         video: {
             select: "Выберите видеофайл",
@@ -346,6 +364,8 @@ export default {
 
         groups: {
             title: 'Группы',
+            group: 'Группа',
+            choose: 'Выберите группу',
             create_group: "Создать новую группу",
             saving_a_group: "Сохранение группы",
             create_group_title: "Создание новой группы",
@@ -360,11 +380,14 @@ export default {
             members_count: "Количество участников",
             added_members_count: "Количество добавленных участников",
             note_1: "Чтобы добавить участников в группу кликните по ним в таблице ниже",
-            warning_1: "Данный участник уже добавлен в группу"
+            warning_1: "Данный участник уже добавлен в группу",
+            not_member: "Не состоит в группе",
         },
 
         conference: {
             title: 'Видеоконференция',
+            create: 'Создать конференцию',
+            create_conference: 'Создание конференции',
             mic: 'Микрофон',
             mic_turn_on: 'Включить микрофон',
             mic_turn_off: 'Отключить микрофон',
@@ -387,7 +410,7 @@ export default {
                 requesting_access: 'Получение доступа к камере и микрофону'
             },
             statuses: {
-                current: 'Текущий',
+                current: 'Текущие',
                 planned: 'Запланированные',
                 passed: 'Пройденные',
             }

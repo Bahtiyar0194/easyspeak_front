@@ -125,7 +125,7 @@
               :number="index + 1"
               :className="
                 successButtonIndex === index
-                  ? 'btn-success'
+                  ? 'btn-success disabled'
                   : errorButtonIndex === index
                   ? 'btn-danger wobble'
                   : checkingStatus

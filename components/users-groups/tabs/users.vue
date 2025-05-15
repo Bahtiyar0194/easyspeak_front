@@ -122,11 +122,6 @@
                 </div>
                 <div class="btn-wrap mt-4">
                     <pagination :items="users" :setItems="getUsers" :onSelect="(count) => perPage = count" />
-                    <!-- <client-only>
-                        <tableToExcelButton :table="tableRef"
-                            :fileName="$t('pages.users.title') + ' - ' + new Date().toLocaleString()"
-                            :className="'btn-sm'" />
-                    </client-only> -->
                 </div>
             </template>
 
@@ -323,7 +318,6 @@ import alert from '../../ui/alert.vue';
 import userAvatar from '../../ui/userAvatar.vue';
 import stickyBox from '../../ui/stickyBox.vue';
 import pagination from '../../ui/pagination.vue';
-import tableToExcelButton from '../../ui/tableToExcelButton.vue';
 import { debounceHandler } from '../../../utils/debounceHandler';
 import roleProvider from '../../ui/roleProvider.vue';
 import multipleSelect from '../../ui/multipleSelect.vue';

@@ -240,15 +240,6 @@
             :setItems="getGroups"
             :onSelect="(count) => (perPage = count)"
           />
-          <!-- <client-only>
-            <tableToExcelButton
-              :table="tableRef"
-              :fileName="
-                $t('pages.groups.title') + ' - ' + new Date().toLocaleString()
-              "
-              :className="'btn-sm'"
-            />
-          </client-only> -->
         </div>
       </template>
       <alert v-else :className="'light'">
@@ -446,7 +437,6 @@ import userAvatar from "../../ui/userAvatar.vue";
 import userTag from "../../ui/userTag.vue";
 import stickyBox from "../../ui/stickyBox.vue";
 import pagination from "../../ui/pagination.vue";
-import tableToExcelButton from "../../ui/tableToExcelButton.vue";
 import { debounceHandler } from "../../../utils/debounceHandler";
 import steps from "../../ui/steps.vue";
 import createFirstStep from "./components/createFirstStep.vue";

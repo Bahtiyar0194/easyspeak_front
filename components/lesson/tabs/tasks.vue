@@ -116,7 +116,7 @@
   <modal
     :show="modalIsVisible"
     :onClose="() => closeModalByUser()"
-    :className="modalClass + ' min-h-40'"
+    :className="modalClass + ' min-h-0'"
     :showLoader="pendingModal"
     :showPendingText="true"
     :loaderOpacityFull="true"
@@ -167,7 +167,10 @@
     </template>
     <template v-slot:body_content v-if="task && task.task_result.answers">
       <taskResultChart :taskResult="task.task_result">
-        <template v-slot:footer_content>
+        <template
+          v-slot:footer_content
+          v-if="task.task_result.completed_task.is_completed === 1"
+        >
           <div class="col-span-12">
             <div class="btn-wrap justify-end">
               <button class="btn btn-outline-primary" @click="openTask(task)">

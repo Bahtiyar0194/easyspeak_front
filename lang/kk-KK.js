@@ -1,12 +1,21 @@
 export default {
+    all: 'Барлығы',
     yes: 'Иә',
     no: 'Жоқ',
     you: 'Бұл сіз',
+    start: 'Бастау',
+    finish: 'Аяқтау',
+    create: 'Кұру',
+    created: 'Кұрылған',
     add: 'Қосу',
     added: 'Қосылды',
     not_added: 'Қосылмаған',
     delete: 'Жойып тастау',
     instructions: 'Нұсқаулықтар',
+    result: 'Нәтиже',
+    results: 'Нәтижелер',
+    verified: 'Тексерілді',
+    not_verified: 'Тексерілмеген',
     choose: "Таңдау",
     choose_an_option: "Нұсқаны таңдаңыз",
     choose_your_option: "Өз нұсқаңызды таңдаңыз",
@@ -57,12 +66,14 @@ export default {
     operator: "Оператор",
     executor: "Орындаушы",
     mentor: "Тәлімгер",
+    learner: "Оқушы",
     applicant: "Өтініш беруші",
     recipient: "Алушы",
     selected: "Таңдалды",
     not_selected: "Таңдалмаған",
     not_specified: "Көрсетілмеген",
     your_answer: "Сіздің жауабыңыз",
+    learner_answer: "Оқушының жауабы",
     type_your_answer: "Жауабыңызды осында енгізіңіз",
     no_answer: "Жауап жоқ",
     title: "Тақырып",
@@ -75,7 +86,11 @@ export default {
     wrong_answer: "Дұрыс емес жауап",
     wrong_answers: "Қате жауаптар",
     wrong_answers_count: "Қате жауаптар саны",
+    unverified_answer: "Тексерілмеген жауап",
+    unverified_answers: "Тексерілмеген жауаптар",
+    unverified_answers_count: "Тексерілмеген жауаптар саны",
     answer_options: "Жауап нұсқалары",
+    write_a_comment: "Пікір жазыңыз",
     comment: "Пікір",
     comments: "Пікірлер",
     for_re_examination: "Қайта оқуға арналған",
@@ -92,6 +107,9 @@ export default {
     registered_at: "Тіркелген уақыты",
     registered_at_from: "Тіркелген уақыты (бастап)",
     registered_at_to: "Тіркелген уақыты (дейін)",
+    completed_at: "Орындалған уақыты",
+    completed_at_from: "Орындалған уақыты (бастап)",
+    completed_at_to: "Орындалған уақыты (дейін)",
 
     reset_search_filter: "Cүзгіні қалпына келтіру",
     show_search_filter: 'Іздеу сүзгісін көрсету',
@@ -346,6 +364,8 @@ export default {
 
         groups: {
             title: 'Топтар',
+            group: 'Топ',
+            choose: 'Топты таңдаңыз',
             create_group: "Топ құру",
             saving_a_group: "Топты сақтау",
             create_group_title: "Жаңа топ құру",
@@ -360,11 +380,14 @@ export default {
             members_count: "Қатысушылар саны",
             added_members_count: "Қосылған қатысушылар саны",
             note_1: "Қатысушыларды топқа қосу үшін төмендегі кестеде оларды басыңыз",
-            warning_1: "Бұл қатысушы топқа қосулы тұр"
+            warning_1: "Бұл қатысушы топқа қосулы тұр",
+            not_member: "Топқа қатысы жоқ"
         },
 
         conference: {
             title: 'Бейнеконференция',
+            create: 'Конференция құру',
+            create_conference: 'Конференция құру',
             mic: 'Микрофон',
             mic_turn_on: 'Микрофонды іске қосу',
             mic_turn_off: 'Микрофонды өшіру',
@@ -387,7 +410,7 @@ export default {
                 requesting_access: 'Камера мен микрофонға қолжетімділік сұралуда'
             },
             statuses: {
-                current: 'Ағымда',
+                current: 'Ағымдағы',
                 planned: 'Жоспарланған',
                 passed: 'Өтіп кеткен',
             }
