@@ -902,12 +902,11 @@ const focusInput = (event) => {
 
 const changeFocus = (event) => {
   const currentInput = event.target;
-  const value = currentInput.value;
 
-  if (value == "") {
+  if (currentInput.value == "") {
     return false;
-  } else if (value == " ") {
-    value = "";
+  } else if (currentInput.value == " ") {
+    currentInput.value = "";
   } else {
     const inputs = Array.from(document.getElementsByClassName("user_input"));
     const currentIndex = inputs.indexOf(currentInput);
