@@ -333,6 +333,7 @@ const props = defineProps({
 });
 
 const onPending = inject("onPending");
+const onCompleteTask = inject("onCompleteTask");
 const changeModalSize = inject("changeModalSize");
 
 // Получение задачи
@@ -556,6 +557,7 @@ const saveTaskResult = async () => {
     .post("tasks/save_result/" + props.task.task_id, formData)
     .then((res) => {
       taskResult.value = res.data;
+      onCompleteTask();
       onPending(false);
     })
     .catch((err) => {
