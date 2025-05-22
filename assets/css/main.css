@@ -1452,6 +1452,10 @@ select.error:has(option:checked:disabled) {
     @apply py-2;
 }
 
+.list-group.nowrap.lg > li{
+    @apply py-3;
+}
+
 .list-group > li.section{
     @apply border-dashed border-b-2;
 }
@@ -1616,7 +1620,7 @@ select.error:has(option:checked:disabled) {
 
 .modal-body{
     @apply overflow-y-auto overflow-x-hidden;
-    max-height: 85vh;
+    max-height: 80vh;
 }
 
 .modal-footer{
@@ -1708,19 +1712,11 @@ select.error:has(option:checked:disabled) {
 }
 
 .db__footer__menu{
-    @apply py-3 pr-3 pl-14 bg-active fixed bottom-0 left-0 right-0 border-t-inactive flex justify-between md:justify-center;
+    @apply py-3 pr-3 pl-14 bg-active fixed bottom-0 left-0 right-0 border-t-inactive flex gap-x-0.5 md:gap-x-3 justify-between md:justify-center;
 }
 
 .db__footer__menu button{
-    @apply px-3 duration-200 text-inactive flex items-center flex-col md:min-w-14 relative;
-}
-
-.db__footer__menu button:first-child{
-    @apply pl-0;
-}
-
-.db__footer__menu button:last-child{
-    @apply pr-0;
+    @apply duration-200 text-inactive flex items-center flex-col md:min-w-14 relative;
 }
 
 .db__footer__menu button:hover{
@@ -1728,7 +1724,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .db__footer__menu button span{
-    @apply text-[8px] sm:text-sm md:text-sm;
+    @apply text-[8px] sm:text-xs;
 }
 
 .db__footer__menu i{

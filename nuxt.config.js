@@ -57,11 +57,11 @@ export default defineNuxtConfig({
           user: '/auth/me',
         },
         redirect: {
-          keepRequestedRoute: false,
+          keepRequestedRoute: true,
           onLogin: '/dashboard',
           onLogout: '/',
           onAuthOnly: '/auth/login',
-          onGuestOnly: '/dashboard',
+          onGuestOnly: '/',
         },
         // Добавляем хук для передачи языка
         token: {

@@ -1,5 +1,8 @@
 <template>
-  <div class="custom-grid">
+  <p class="mb-0" v-if="props.attributes.groups && props.attributes.groups.length === 0">
+    {{ $t('pages.conference.not_appointed') }}
+  </p>
+  <div v-else class="custom-grid">
     <div class="col-span-12">
       <div class="form-group-border select active label-active">
         <i class="pi pi-book"></i>
@@ -16,7 +19,9 @@
             :key="groupIndex"
             :value="group.group_id"
           >
-            {{ group.group_name }} - {{ group.course_name }} ({{ group.level_name }})
+            {{ group.group_name }} - {{ group.course_name }} ({{
+              group.level_name
+            }})
           </option>
         </select>
         <label>
@@ -157,7 +162,7 @@ const resetForm = () => {
   selectedGroupId.value = "";
   selectedSectionId.value = "";
   selectedLessonId.value = "";
-}
+};
 
 defineExpose({
   resetForm,

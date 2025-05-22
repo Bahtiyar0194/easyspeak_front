@@ -5,6 +5,8 @@ export default {
     you: 'Бұл сіз',
     start: 'Бастау',
     finish: 'Аяқтау',
+    start_time: 'Басталу уақыты',
+    end_time: 'Аяқталу уақыты',
     create: 'Кұру',
     created: 'Кұрылған',
     add: 'Қосу',
@@ -52,6 +54,7 @@ export default {
     an_error_occurred: 'Қателік орнады',
     nothing_was_found_for_your_query: "Сіздің сұранымыңыз бойынша ештеңе табылған жоқ",
     time_is_up: "Уақыт бітті!",
+    remaining_time: "Қалған уақыт",
     write_here_and_press_add: "Осы жерге енгізіңіз кейін 'Қосу' батырмасын басыңыз",
 
     sort_by_this_column: 'Осы баған бойынша сұрыптау',
@@ -386,8 +389,8 @@ export default {
 
         conference: {
             title: 'Бейнеконференция',
-            create: 'Конференция құру',
-            create_conference: 'Конференция құру',
+            create: 'Конференция қосу',
+            create_conference: 'Конференция қосу',
             mic: 'Микрофон',
             mic_turn_on: 'Микрофонды іске қосу',
             mic_turn_off: 'Микрофонды өшіру',
@@ -402,6 +405,10 @@ export default {
             participants_count: 'Қатысушылар саны',
             chat: 'Хабарлар',
             search_conference: 'Конференцияны іздеу',
+            join: 'Конференцияға қосылу',
+            until_the_start_of_the_conference: 'Конференция басталғанға дейін қалды:',
+            no_current_conferences: 'Қазіргі уақытта ағымдағы конференциялар жоқ.',
+            not_appointed: 'Сіз әлі мектептегі ешбір топқа тәлімгер ретінде тағайындалмаған сияқтысыз. Бұл мәселені шешу үшін мектеп әкімшілігімен хабарласыңыз. Егер сіз әкімші болсаңыз, алдымен топ құруыңыз қажет.',
             mode: {
                 grid: 'Кесте',
                 slider: 'Карусель'
@@ -562,6 +569,14 @@ export default {
             there_are_no_tasks: 'Бұл сабаққа әзірше тапсырмалар қосылмаған.',
             task_materials: 'Тапсырманың материалдары',
             try_again: 'Қайта орындау',
+            run: 'Тапсырманы іске қосу',
+            launched: 'Тапсырма іске қосылды',
+            not_launched: 'Тапсырма әзірше іске қосылған жоқ',
+            is_available: 'Тапсырма қолжетімді',
+            is_unavailable: 'Тапсырма әзірше қолжетімсіз',
+            completed_the_task: '{name} {taskName} тапсырмасын орындап болды.',
+            is_completed: 'Тапсырма орындалды',
+            not_been_completed_yet: 'Тапсырма әзірше орындалған жоқ',
             show_task_result: 'Нәтижесін көру',
             task_options: {
                 title: 'Тапсырманың баптаулары',

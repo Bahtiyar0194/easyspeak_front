@@ -112,8 +112,6 @@ const getLesson = async () => {
         levelCrumbItem.textContent = response.data.level.level_name;
       }
 
-      pageTitle.value = response.data.level.level_name;
-
       const lessonCrumbItem = document.querySelector(
         'span[data-crumb="[lesson]"]'
       );
