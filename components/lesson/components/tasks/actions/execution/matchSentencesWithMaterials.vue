@@ -590,11 +590,12 @@ const focusInput = (event) => {
 
 const changeFocus = (event) => {
   const currentInput = event.target;
+  const value = currentInput.value;
 
-  if (currentInput.value == "") {
+  if (value === "") {
     return false;
-  } else if (currentInput.value == " ") {
-    currentInput.value = "";
+  } else if (value === " ") {
+    currentInput.value = ""; // ← исправлено
   } else {
     const inputs = Array.from(document.getElementsByClassName("user_input"));
     const currentIndex = inputs.indexOf(currentInput);
