@@ -348,7 +348,7 @@
                     <circleProgressBar
                       v-if="
                         task.task_result &&
-                        task.task_result.completed_task.is_completed == 1
+                        task.task_result.completed === true
                       "
                       :progress="task.task_result.percentage"
                     />

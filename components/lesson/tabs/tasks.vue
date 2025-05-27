@@ -95,8 +95,8 @@
                     </button>
                   </div>
                 </roleProvider>
-                <circleProgressBar
-                  v-if="taskItem.task_result"
+                4
+                  v-if="taskItem.task_result && taskItem.task_result.completed === true"
                   :progress="taskItem.task_result.percentage"
                 />
               </div>

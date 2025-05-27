@@ -45,7 +45,8 @@ export default {
     edit: "Қайта өңдеу",
     welcome: 'Қош келдіңіз!',
     you_are_on_the_main_page: 'Біз сізді сайтымыздың басты бетінде көргенімізге қуаныштымыз.',
-    on_air: 'Байланыста',
+    online: 'Желіде',
+    offline: 'Желіде емес',
     or: 'Немесе',
     back: 'Артқа',
     close: 'Жабу',
@@ -93,6 +94,7 @@ export default {
     unverified_answers: "Тексерілмеген жауаптар",
     unverified_answers_count: "Тексерілмеген жауаптар саны",
     answer_options: "Жауап нұсқалары",
+    message: "Хабарлама",
     write_a_comment: "Пікір жазыңыз",
     comment: "Пікір",
     comments: "Пікірлер",
@@ -173,6 +175,7 @@ export default {
     },
 
     materials: {
+        title: "Материалдар",
         material: "Материал",
         add_material: "Материал қосу",
         edit_material: "Материалды өңдеу",
@@ -474,7 +477,9 @@ export default {
             add_unit_title: 'Бөлім қосу',
             unit_name: 'Бөлімнің атауы',
             lesson_materials: 'Сабақтың материалдары',
-            there_are_no_materials: 'Бұл сабаққа әзірше материалдар қосылмаған.'
+            there_are_no_materials: 'Бұл сабаққа әзірше материалдар қосылмаған.',
+            is_unavailable: 'Сабақ әзірше қолжетімсіз',
+            is_unavailable_desc: 'Сабақ тәлімгермен конференция өткізілгеннен кейін қолжетімді болады.'
         },
 
         "add-lesson": {
@@ -572,12 +577,14 @@ export default {
             run: 'Тапсырманы іске қосу',
             launched: 'Тапсырма іске қосылды',
             not_launched: 'Тапсырма әзірше іске қосылған жоқ',
-            is_available: 'Тапсырма қолжетімді',
+            is_available: 'Тапсырма орындауға қолжетімді',
             is_unavailable: 'Тапсырма әзірше қолжетімсіз',
             completed_the_task: '{name} {taskName} тапсырмасын орындап болды.',
             is_completed: 'Тапсырма орындалды',
             not_been_completed_yet: 'Тапсырма әзірше орындалған жоқ',
             show_task_result: 'Нәтижесін көру',
+            show_learner_task_result: 'Оқушы тапсырмасының нәтижесін көру',
+            you_can_see_the_result: 'Оқушы тапсырмасының нәтижесін ол орындалғаннан кейін көре аласыз',
             task_options: {
                 title: 'Тапсырманың баптаулары',
                 task_example: 'Тапсырманың мысалы',

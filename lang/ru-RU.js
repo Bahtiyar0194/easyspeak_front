@@ -45,7 +45,8 @@ export default {
     edit: "Редактировать",
     welcome: 'Добро пожаловать!',
     you_are_on_the_main_page: 'Мы рады видеть вас на главной странице нашего сайта.',
-    on_air: 'На связи',
+    online: 'В сети',
+    offline: 'Не в сети',
     or: 'Или',
     back: 'Назад',
     close: 'Закрыть',
@@ -93,6 +94,7 @@ export default {
     unverified_answers: "Непроверенные ответы",
     unverified_answers_count: "Непроверенных ответов",
     answer_options: "Варианты ответа",
+    message: "Сообщение",
     write_a_comment: "Напишите комментарий",
     comment: "Комментарий",
     comments: "Комментарии",
@@ -173,6 +175,7 @@ export default {
     },
 
     materials: {
+        title: "Материалы",
         material: "Материал",
         add_material: "Добавить материал",
         edit_material: "Редактирование материала",
@@ -474,7 +477,9 @@ export default {
             add_unit_title: 'Добавление главы',
             unit_name: 'Название главы',
             lesson_materials: 'Материалы урока',
-            there_are_no_materials: 'Для этого урока пока не добавлены материалы.'
+            there_are_no_materials: 'Для этого урока пока не добавлены материалы.',
+            is_unavailable: 'Урок временно недоступен',
+            is_unavailable_desc: 'Данный урок будет доступен после проведения конференции с куратором.'
         },
 
         "add-lesson": {
@@ -571,13 +576,15 @@ export default {
             try_again: 'Пройти заново',
             run: 'Запустить задание',
             launched: 'Задание уже запущено',
-            not_launched: 'Задание еще не запущено',
-            is_available: 'Задание уже доступно',
+            not_launched: 'Задание еще не запущено для выполнения',
+            is_available: 'Задание уже доступно для выполнения',
             is_unavailable: 'Задание пока недоступно',
             completed_the_task: '{name} выполнил задание {taskName}.',
             is_completed: 'Задание выполнено',
             not_been_completed_yet: 'Задание еще не выполнено',
             show_task_result: 'Показать результат',
+            show_learner_task_result: 'Просмотреть результат задания ученика',
+            you_can_see_the_result: 'Вы можете увидеть результат задания ученика как только оно будет выполнено',
             task_options: {
                 title: 'Настройки задания',
                 task_example: 'Пример задания',

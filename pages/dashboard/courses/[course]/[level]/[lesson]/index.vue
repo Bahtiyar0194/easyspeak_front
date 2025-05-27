@@ -1,10 +1,11 @@
 <template>
   <loader v-if="pending" :className="'full-overlay'" />
-  <tabs v-if="isAvailable" :tabs="tabs_data" />
+  <tabs v-if="courseIsAvailable && lessonIsAvailable" :tabs="tabs_data" />
 
   <div v-else class="col-span-12">
     <alert :className="'light'">
-      <p class="mb-0">{{ $t("pages.courses.course_is_not_available") }}</p>
+      <p v-if="courseIsAvailable === false" class="mb-0">{{ $t("pages.courses.course_is_not_available") }}</p>
+      <p v-else-if="lessonIsAvailable === false" class="mb-0">{{ $t("pages.lessons.is_unavailable_desc") }}</p>
     </alert>
   </div>
 </template>
@@ -29,7 +30,8 @@ const { $axiosPlugin } = useNuxtApp();
 const pending = ref(true);
 const materialTypes = ref([]);
 const lessonData = ref([]);
-const isAvailable = ref(false);
+const courseIsAvailable = ref(false);
+const lessonIsAvailable = ref(false);
 const pageTitle = ref("");
 
 useHead(() => ({
@@ -125,7 +127,8 @@ const getLesson = async () => {
       pageTitle.value = response.data.lesson.lesson_name;
 
       lessonData.value = response.data.lesson;
-      isAvailable.value = response.data.level.is_available;
+      courseIsAvailable.value = response.data.level.is_available;
+      lessonIsAvailable.value = response.data.lesson.is_available;
       pending.value = false;
     })
     .catch((err) => {

@@ -278,6 +278,22 @@
     @apply border-green-500;
 }
 
+.border-t-success{
+    @apply border-t-green-500;
+}
+
+.border-r-success{
+    @apply border-r-green-500;
+}
+
+.border-b-success{
+    @apply border-b-green-500;
+}
+
+.border-l-success{
+    @apply border-l-green-500;
+}
+
 .border-inset-success{
     @apply outline-2 outline-green-500 outline;
 }
@@ -1716,7 +1732,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .db__footer__menu button{
-    @apply duration-200 text-inactive flex items-center flex-col md:min-w-14 relative;
+    @apply duration-200 text-active flex items-center flex-col md:min-w-14 relative;
 }
 
 .db__footer__menu button:hover{
@@ -1728,7 +1744,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .db__footer__menu i{
-    @apply text-xl md:text-2xl;
+    @apply md:text-2xl;
 }
 
 .content-center{
@@ -2016,6 +2032,28 @@ select.error:has(option:checked:disabled) {
 
 .review-item:last-child{
     @apply pb-0;
+}
+
+.chat{
+    @apply px-2 py-1 rounded-lg min-w-32 relative;
+}
+
+.chat.my_mess{
+    @apply bg-success text-white mr-3;
+}
+
+.chat.my_mess::after{
+    content: "";
+    @apply absolute right-0 top-3 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-l-8 border-l-success -mr-2;
+}
+
+.chat.user_mess{
+    @apply bg-inactive ml-2;
+}
+
+.chat.user_mess::before{
+    content: "";
+    @apply absolute left-0 top-3 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-8 border-r-gray-100 dark:border-r-slate-900 -ml-2;
 }
 
 .canvas-container {

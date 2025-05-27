@@ -13,11 +13,24 @@
       </p>
     </div>
   </div>
+  <div v-else-if="endedConference" class="col-span-12">
+    <div class="card p-6 flex flex-col justify-center items-center">
+      <h4 class="mb-3">{{ endedConference.message }}</h4>
+      <nuxt-link
+        class="btn btn-sm btn-outline-primary"
+        :to="localePath('/dashboard')"
+      >
+        <i class="pi pi-sign-in"></i>
+        {{ $t("pages.dashboard.go_to_dashboard") }}
+      </nuxt-link>
+    </div>
+  </div>
   <div v-else-if="errorMessage" class="col-span-12">
     <div class="card p-6 flex flex-col justify-center items-center">
       <h5 class="text-danger mb-0">{{ t("an_error_occurred") }}</h5>
       <p class="text-center">{{ errorMessage.message }}</p>
       <button class="btn btn-sm btn-outline-primary" @click="reloadPage">
+        <i class="pi pi-refresh"></i>
         {{ $t("restart") }}
       </button>
     </div>
@@ -75,12 +88,13 @@
           <i class="bi bi-people-fill"></i>
           <countBadge
             :count="streams.length"
-            :class="'badge-sm badge-light right-3 top-0'"
+            :class="'badge-sm badge-light right-1 top-0'"
           />
           <span>{{ $t("pages.conference.participants") }}</span>
         </button>
 
         <button
+          v-if="authUser.user_id === conference.mentor_id"
           @click="toggleScreenSharing"
           :title="
             isScreenSharing
@@ -100,6 +114,11 @@
 
         <button @click="messagesModalIsVisible = true">
           <i class="bi bi-chat"></i>
+          <countBadge
+            v-if="unReadMessages > 0"
+            :count="unReadMessages"
+            :class="'badge-sm badge-primary right-1 top-0'"
+          />
           <span>{{ $t("pages.conference.chat") }}</span>
         </button>
 
@@ -108,8 +127,21 @@
           <span>{{ $t("pages.conference.board") }}</span>
         </button>
 
-        <button @click="tasksModalIsVisible = true">
+        <button
+          v-if="conference.materials && conference.materials.length > 0"
+          @click="materialsModalIsVisible = true"
+        >
+          <i class="bi bi-book"></i>
+          <span>{{ $t("materials.title") }}</span>
+        </button>
+
+        <button v-if="tasks.length > 0" @click="tasksModalIsVisible = true">
           <i class="bi bi-pen"></i>
+          <countBadge
+            v-if="tasksToComplete > 0"
+            :count="tasksToComplete"
+            :class="'badge-sm badge-primary right-1 top-0'"
+          />
           <span>{{ $t("pages.tasks.title") }}</span>
         </button>
       </div>
@@ -143,8 +175,16 @@
                     <span class="font-medium"
                       >{{ stream.userInfo.last_name }}
                       {{ stream.userInfo.first_name }}
-                      <i v-if="!stream.remote">({{ $t("you") }})</i></span
-                    >
+                      <i v-if="!stream.remote">({{ $t("you") }})</i>
+                      <i
+                        class="text-success"
+                        v-if="
+                          stream.remote &&
+                          stream.user_id === conference.mentor_id
+                        "
+                        >({{ $t("mentor") }})</i
+                      >
+                    </span>
                   </div>
                   <div class="flex gap-2">
                     <i
@@ -195,27 +235,134 @@
         <h4>{{ $t("pages.conference.chat") }}</h4>
       </template>
       <template v-slot:body_content>
-        <ul
-          v-if="messages.length > 0"
-          class="list-group mb-5 min-h-full overflow-y-scroll"
-        >
-          <li v-for="(item, index) in messages" :key="index">
-            <p class="font-medium mb-2">{{ item.user_name }}</p>
-            <p class="mb-0">{{ item.message }}</p>
-          </li>
-        </ul>
-        <div class="flex gap-2">
-          <div class="form-group-border active w-full">
+        <div v-if="messages.length > 0" class="max-h-[300px] overflow-y-scroll">
+          <div class="flex flex-col gap-y-1.5">
+            <div
+              v-for="(item, index) in messages"
+              :key="index"
+              class="flex"
+              :class="
+                item.user_id === authUser.user_id
+                  ? 'justify-end'
+                  : 'justify-start'
+              "
+            >
+              <div class="flex gap-x-2">
+                <userAvatar
+                  v-if="item.user_id !== authUser.user_id"
+                  :padding="0.5"
+                  :className="'w-8 h-8'"
+                  :user="{
+                    last_name: item.userInfo.last_name,
+                    first_name: item.userInfo.first_name,
+                    avatar: item.userInfo.avatar,
+                  }"
+                />
+                <div
+                  class="chat"
+                  :class="
+                    item.user_id === authUser.user_id ? 'my_mess' : 'user_mess'
+                  "
+                >
+                  <p
+                    v-if="item.user_id !== authUser.user_id"
+                    class="font-medium mb-0.5 text-corp"
+                  >
+                    {{ item.userInfo.first_name }}
+                  </p>
+                  <p class="mb-0.5">{{ item.message }}</p>
+                  <div class="flex justify-end">
+                    <span class="mb-0 text-xs">{{ item.time }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex mt-5">
+          <div
+            class="form-group-border active w-full !border-r-0 !rounded-tr-none !rounded-br-none"
+          >
             <i class="pi pi-envelope"></i>
             <input v-model="message" type="text" placeholder=" " />
-            <label></label>
+            <label>{{ $t("message") }}</label>
           </div>
           <button
             @click="sendMessage"
-            class="btn btn-square btn-outline-primary"
+            class="btn btn-square btn-success !h-auto !w-12 !rounded-tl-none !rounded-bl-none"
           >
-            <i class="pi pi-arrow-right"></i>
+            <i class="pi pi-send"></i>
           </button>
+        </div>
+      </template>
+    </modal>
+
+    <modal
+      :show="materialsModalIsVisible"
+      :showLoader="false"
+      :onClose="() => (materialsModalIsVisible = false)"
+      :className="'modal-2xl'"
+      :closeOnClickSelf="false"
+    >
+      <template v-slot:header_content>
+        <h4>{{ $t("materials.title") }}</h4>
+      </template>
+      <template
+        v-slot:body_content
+        v-if="
+          conference && conference.materials && conference.materials.length > 0
+        "
+      >
+        <ul class="list-group nowrap lg overflow-hidden">
+          <li
+            v-for="material in conference.materials"
+            :key="material.lesson_material_id"
+          >
+            <div class="flex items-center justify-between gap-4">
+              <div
+                class="flex gap-2 items-center link w-full"
+                @click="openMaterial(material)"
+              >
+                <i
+                  class="text-3xl"
+                  :class="material.file_icon || material.block_icon"
+                ></i>
+                <div class="flex flex-col gap-y-0.5">
+                  <span>{{ material.annotation }}</span>
+                  <span class="text-inactive text-xs">{{
+                    material.file_material_type_name ||
+                    material.block_material_type_name
+                  }}</span>
+                </div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </template>
+    </modal>
+
+    <modal
+      :show="materialModalIsVisible"
+      :onClose="() => closeMaterialModal()"
+      :className="
+        currentMaterial && currentMaterial.block_material_type_slug
+          ? 'modal-4xl'
+          : 'modal-lg'
+      "
+      :showLoader="false"
+      :closeOnClickSelf="false"
+    >
+      <template v-if="currentMaterial" v-slot:header_content>
+        <h4>{{ currentMaterial?.annotation }}</h4>
+      </template>
+      <template v-if="currentMaterial" v-slot:body_content>
+        <div
+          class="custom-grid"
+          v-if="currentMaterial && currentMaterial?.lesson_material_id"
+        >
+          <div class="col-span-12">
+            <materialViewer :material="currentMaterial" />
+          </div>
         </div>
       </template>
     </modal>
@@ -253,7 +400,12 @@
 
                   <span
                     class="italic text-xs"
-                    :class="taskItem.launched ? 'text-success' : 'text-danger'"
+                    :class="
+                      taskItem.launched ||
+                      (taskItem.task_result && taskItem.task_result.completed)
+                        ? 'text-success'
+                        : 'text-danger'
+                    "
                   >
                     {{
                       taskItem.launched
@@ -262,7 +414,9 @@
                           : $t("pages.tasks.is_available")
                         : conference.mentor_id === authUser.user_id
                         ? $t("pages.tasks.not_launched")
-                        : $t("pages.tasks.is_unavailable")
+                        : taskItem.task_result.completed === false
+                        ? $t("pages.tasks.is_unavailable")
+                        : $t("pages.tasks.is_completed")
                     }}</span
                   >
                 </div>
@@ -271,7 +425,8 @@
               <circleProgressBar
                 v-if="
                   conference.mentor_id !== authUser.user_id &&
-                  taskItem.task_result
+                  taskItem.task_result &&
+                  taskItem.task_result.completed === true
                 "
                 :progress="taskItem.task_result.percentage"
               />
@@ -364,6 +519,11 @@
                     learner.task_result.completed === true &&
                       openLearnerTaskResultModal(learner)
                   "
+                  :title="
+                    learner.task_result.completed === true
+                      ? $t('pages.tasks.show_learner_task_result')
+                      : $t('pages.tasks.you_can_see_the_result')
+                  "
                 >
                   <div class="flex items-center gap-1.5">
                     <userAvatar
@@ -376,7 +536,8 @@
                         >{{ learner.last_name }}
                         {{ learner.first_name }}
                       </span>
-                      <span
+                      <div>
+                        <span
                         :class="
                           learner.task_result.completed === true
                             ? 'text-success'
@@ -389,11 +550,28 @@
                             : $t("pages.tasks.not_been_completed_yet")
                         }}</span
                       >
+                      <span class="text-xs"
+                          :class="
+                            streams.find((u) => u.user_id === learner.user_id)
+                              ? 'text-success'
+                              : 'text-danger'
+                          "
+                        >
+                          ({{
+                            streams.find((u) => u.user_id === learner.user_id)
+                              ? $t("online")
+                              : $t("offline")
+                          }})
+                        </span>
+                      </div>
                     </div>
                   </div>
 
                   <circleProgressBar
-                    v-if="learner.task_result.completed === true"
+                    v-if="
+                      learner.task_result &&
+                      learner.task_result.completed === true
+                    "
                     :progress="learner.task_result.percentage"
                   />
                 </div>
@@ -490,6 +668,7 @@ import userAvatar from "../../../components/ui/userAvatar.vue";
 import countdownTimer from "../../../components/ui/countdownTimer.vue";
 import taskResultChart from "../../../components/lesson/components/tasks/taskResultChart.vue";
 import circleProgressBar from "../../../components/ui/circleProgressBar.vue";
+import materialViewer from "../../../components/lesson/components/materialViewer.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -522,6 +701,7 @@ const screenStream = ref(null); // Поток экрана
 const streams = ref([]);
 const errorMessage = ref(null);
 const pendingConference = ref(null);
+const endedConference = ref(null);
 const isMuted = ref(false); // Состояние микрофона
 const volume = ref(0);
 const isStream = ref(false); // Состояние видео
@@ -529,14 +709,20 @@ const isScreenSharing = ref(false); // Состояние демонстраци
 
 const message = ref("");
 const messages = ref([]);
+const unReadMessages = ref(0);
 
 //Modals
 const participantsModalIsVisible = ref(false);
 const drawingBoardModalIsVisible = ref(false);
 const messagesModalIsVisible = ref(false);
+const materialsModalIsVisible = ref(false);
+const materialModalIsVisible = ref(false);
+
+const currentMaterial = ref(null);
 
 const task = ref(null);
 const tasks = ref([]);
+const tasksToComplete = ref(0);
 const taskModalIsVisible = ref(false);
 const tasksModalIsVisible = ref(false);
 const taskResultModalIsVisible = ref(false);
@@ -561,6 +747,23 @@ definePageMeta({
   layout: "dashboard",
   middleware: ["sanctum:auth"],
 });
+
+const openMaterial = (material) => {
+  currentMaterial.value = null;
+  setTimeout(() => {
+    currentMaterial.value = material;
+    materialsModalIsVisible.value = false;
+    materialModalIsVisible.value = true;
+  }, 100);
+};
+
+const closeMaterialModal = () => {
+  currentMaterial.value = null;
+  setTimeout(() => {
+    materialModalIsVisible.value = false;
+    materialsModalIsVisible.value = true;
+  }, 100);
+};
 
 const onPending = (state) => {
   pendingTaskModal.value = state;
@@ -697,6 +900,8 @@ const getConference = async () => {
         errorMessage.value = response.data;
       } else if (response.data.type === "pending") {
         pendingConference.value = response.data;
+      } else if (response.data.type === "ended") {
+        endedConference.value = response.data;
       } else {
         startStream();
         getConferenceTasks();
@@ -741,6 +946,7 @@ const getConference = async () => {
 const getConferenceTasks = async () => {
   pendingTasks.value = true;
   pendingLearnersTasksResult.value = true;
+  tasksToComplete.value = 0;
   await $axiosPlugin
     .get("conferences/get_conference_tasks/" + conference.value.uuid)
     .then((response) => {
@@ -751,6 +957,12 @@ const getConferenceTasks = async () => {
       }
       pendingTasks.value = false;
       pendingLearnersTasksResult.value = false;
+
+      tasks.value.forEach((task) => {
+        if (task.to_complete) {
+          tasksToComplete.value++;
+        }
+      });
     })
     .catch((err) => {
       if (err.response) {
@@ -811,7 +1023,7 @@ const startStream = async () => {
         toggleStream();
       }
 
-      trackMicrophone(localStream.value);
+      //trackMicrophone(localStream.value);
       joinToRoom();
     });
 
@@ -839,11 +1051,17 @@ const startStream = async () => {
         );
       });
 
+      call.on("close", () => {
+        delete peers[call.peer];
+      });
+
       call.on("error", (error) => {
         errorMessage.value = {
           message: error.message,
           pending: false,
         };
+
+        delete peers[call.peer];
       });
 
       peers[call.peer] = call;
@@ -852,7 +1070,7 @@ const startStream = async () => {
     $socketPlugin.off("user-connected");
 
     $socketPlugin.on("user-connected", (connectedUserInfo) => {
-      toast(connectedUserInfo.first_name + " " + t("on_air").toLowerCase(), {
+      toast(connectedUserInfo.first_name + " " + t("online").toLowerCase(), {
         toastClassName: ["custom-toast", "info"],
         timeout: 10000,
       });
@@ -864,6 +1082,9 @@ const startStream = async () => {
 
     $socketPlugin.on("new-message", (data) => {
       messages.value.push(data);
+      if (messagesModalIsVisible.value === false) {
+        unReadMessages.value++;
+      }
     });
 
     $socketPlugin.on("toggle-video", (data) => {
@@ -903,7 +1124,13 @@ const startStream = async () => {
     $socketPlugin.on("show_task", (data) => {
       if (authUser.value.user_id !== conference.value.mentor_id) {
         getConferenceTasks();
-        openTask(tasks.value.find((t) => t.task_id === data.taskId));
+        const selectedTask = tasks.value.find((t) => t.task_id === data.taskId);
+
+        if (!selectedTask.task_result.answers) {
+          openTask(selectedTask);
+        } else {
+          openTaskResult(selectedTask);
+        }
       }
     });
 
@@ -944,6 +1171,7 @@ const joinToRoom = async () => {
     (response) => {
       if (response.success) {
         errorMessage.value = null;
+
         $socketPlugin.emit("get-room-info", (roomInfo) => {
           roomInfo.forEach((user) => {
             if (user.peerId !== myPeer.id) {
@@ -972,11 +1200,17 @@ const joinToRoom = async () => {
                 );
               });
 
+              outgoingCall.on("close", () => {
+                delete peers[outgoingCall.peer];
+              });
+
               outgoingCall.on("error", (error) => {
                 errorMessage.value = {
                   message: error.message,
                   pending: false,
                 };
+
+                delete peers[outgoingCall.peer];
               });
 
               peers[user.peerId] = outgoingCall;
@@ -1032,6 +1266,7 @@ const stopLocalStream = () => {
   $socketPlugin.off("connect_error");
   $socketPlugin.off("show_task");
   $socketPlugin.off("complete_task");
+
   if (myPeer) {
     myPeer.destroy();
     myPeer = null;
@@ -1205,9 +1440,15 @@ const updateVolume = (() => {
 
 const sendMessage = () => {
   if (message.value !== "") {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, "0");
+    const minutes = String(now.getMinutes()).padStart(2, "0");
+
     const messageData = {
-      user_name: authUser.value.first_name,
+      user_id: authUser.value.user_id,
+      userInfo: authUserInfo,
       message: message.value,
+      time: `${hours}:${minutes}`,
     };
 
     messages.value.push(messageData);

@@ -4,7 +4,7 @@
     <div class="col-span-12">
       <div class="flex flex-col gap-y-4">
         <div
-          v-if="props.taskResult.completed_task.is_completed == 1"
+          v-if="props.taskResult && props.taskResult.completed === true"
           class="flex gap-x-4 items-center"
         >
           <circleProgressBar
@@ -238,7 +238,10 @@
                     }"
                     class="w-16 h-16 bg-contain bg-no-repeat bg-center border-inactive rounded-xl"
                   ></div>
-                  <div class="flex gap-2 w-full" :class="!answer.word && 'flex-col'">
+                  <div
+                    class="flex gap-2 w-full"
+                    :class="!answer.word && 'flex-col'"
+                  >
                     <div v-if="answer.question">
                       <p class="mb-1 text-xs text-inactive font-normal">
                         {{ $t("pages.questions.question") }}:
@@ -264,7 +267,11 @@
                     </div>
 
                     <div
-                      v-if="props.checkingTask === true && authUser.user_id === props.taskResult.completed_task.mentor_id"
+                      v-if="
+                        props.checkingTask === true &&
+                        authUser.user_id ===
+                          props.taskResult.completed_task.mentor_id
+                      "
                       class="flex flex-col gap-y-3"
                     >
                       <div class="flex flex-col gap-y-1">
