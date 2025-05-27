@@ -251,7 +251,7 @@
 
   <modal
     :show="groupModalIsVisible"
-    :onClose="() => (groupModalIsVisible = false)"
+    :onClose="() => closeModal()"
     :className="'modal-2xl'"
     :showLoader="pendingGroup"
     :closeOnClickSelf="true"
@@ -743,6 +743,9 @@ const closeModal = (action) => {
     editModalIsVisible.value = false;
     pendingEdit.value = false;
     editFormRef.value.reset();
+  }
+  else{
+    groupModalIsVisible.value = false;
   }
 
   groupData.value = [];
