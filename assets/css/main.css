@@ -559,7 +559,7 @@ td.th{
 }
 
 .table.table-sm table thead tr th{
-    @apply px-3 py-2 text-sm;
+    @apply px-3 py-2 text-sm text-left;
 }
 
 .table.table-sm table tbody tr td{
@@ -1289,6 +1289,14 @@ select.error:has(option:checked:disabled) {
 
 .note.outline-success{
     @apply border-success text-success;
+}
+
+.note.primary{
+    @apply bg-corp border-corp text-white;
+}
+
+.note.outline-primary{
+    @apply border-corp text-corp;
 }
 
 .custom-toast{

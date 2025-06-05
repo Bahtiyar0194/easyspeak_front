@@ -468,6 +468,8 @@ const school = $schoolPlugin;
 const attributes = ref([]);
 const errors = ref([]);
 
+const currentStep = ref(1);
+
 const createModalIsVisible = ref(false);
 const groupModalIsVisible = ref(false);
 const editModalIsVisible = ref(false);
@@ -527,7 +529,7 @@ const newGroupSteps = [
   {
     title: t("pages.groups.add_members_to_group"),
     component: secondStep,
-    props: { errors, groupMembers },
+    props: { errors, groupMembers, modalIsVisible: createModalIsVisible },
   },
   {
     title: t("pages.groups.saving_a_group"),
@@ -545,7 +547,7 @@ const editGroupSteps = [
   {
     title: t("pages.groups.edit_group_members"),
     component: secondStep,
-    props: { errors, groupMembers },
+    props: { errors, groupMembers, modalIsVisible: editModalIsVisible },
   },
   {
     title: t("pages.groups.saving_a_group"),
@@ -553,8 +555,6 @@ const editGroupSteps = [
     props: { groupData },
   },
 ];
-
-const currentStep = ref(1);
 
 const getGroups = async (url) => {
   pending.value = true;

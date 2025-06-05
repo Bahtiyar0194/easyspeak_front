@@ -70,29 +70,29 @@
                 </p>
               </div>
               <div class="col-span-12">
-              <p>
-                {{ $t("pages.groups.members") }}:
-                <b>{{ conference.members.length }}</b>
-              </p>
+                <p>
+                  {{ $t("pages.groups.members") }}:
+                  <b>{{ conference.members.length }}</b>
+                </p>
 
-              <div v-if="conference.members.length > 0" class="btn-wrap">
-                <userTag
-                  v-for="(member, index) in conference.members"
-                  :key="index"
-                  :user="member"
-                  :closable="false"
-                />
+                <div v-if="conference.members.length > 0" class="btn-wrap">
+                  <userTag
+                    v-for="(member, index) in conference.members"
+                    :key="index"
+                    :user="member"
+                    :closable="false"
+                  />
+                </div>
               </div>
-            </div>
-            <div class="col-span-12">
-              <nuxt-link
-                class="btn btn-outline-success animate-pulse-glow"
-                :to="localePath('/dashboard/conference/' + conference.uuid)"
-              >
-                <i class="pi pi-video"></i>
-                {{ $t("pages.conference.join") }}
-              </nuxt-link>
-            </div>
+              <div class="col-span-12">
+                <nuxt-link
+                  class="btn btn-outline-success animate-pulse-glow"
+                  :to="localePath('/dashboard/conference/' + conference.uuid)"
+                >
+                  <i class="pi pi-video"></i>
+                  {{ $t("pages.conference.join") }}
+                </nuxt-link>
+              </div>
             </div>
           </div>
         </div>
@@ -117,6 +117,9 @@
     </template>
     <template v-slot:body_content>
       <subscription v-if="school?.subscription_expired" />
+      <p v-else-if="conferences.length > 0" class="mb-0">
+        {{ $t("pages.conference.you_cant_create_a_conference") }}
+      </p>
       <form
         class="mt-2"
         v-else

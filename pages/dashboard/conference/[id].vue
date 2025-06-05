@@ -538,19 +538,20 @@
                       </span>
                       <div>
                         <span
-                        :class="
-                          learner.task_result.completed === true
-                            ? 'text-success'
-                            : 'text-danger'
-                        "
-                        class="text-xs"
-                        >{{
-                          learner.task_result.completed === true
-                            ? $t("pages.tasks.is_completed")
-                            : $t("pages.tasks.not_been_completed_yet")
-                        }}</span
-                      >
-                      <span class="text-xs"
+                          :class="
+                            learner.task_result.completed === true
+                              ? 'text-success'
+                              : 'text-danger'
+                          "
+                          class="text-xs"
+                          >{{
+                            learner.task_result.completed === true
+                              ? $t("pages.tasks.is_completed")
+                              : $t("pages.tasks.not_been_completed_yet")
+                          }}</span
+                        >
+                        <span
+                          class="text-xs"
                           :class="
                             streams.find((u) => u.user_id === learner.user_id)
                               ? 'text-success'
@@ -1003,6 +1004,16 @@ const startStream = async () => {
       port: process.env.NODE_ENV === "development" ? 3002 : "",
       path: "/peerjs/myapp",
       secure: process.env.NODE_ENV === "development" ? false : true,
+      config: {
+        iceServers: [
+          { urls: "stun:stun.l.google.com:19302" },
+          {
+            urls: "turn:openrelay.metered.ca:80",
+            username: "openrelayproject",
+            credential: "openrelayproject",
+          },
+        ],
+      },
     });
 
     myPeer.on("open", (id) => {

@@ -1,6 +1,6 @@
 <template>
   <loader v-if="pending" :className="'full-overlay'" />
-  <tabs v-if="courseIsAvailable && lessonIsAvailable" :tabs="tabs_data" />
+  <tabs v-if="courseIsAvailable && lessonIsAvailable" :tabs="tabs_data" :activeTabIndex="lessonData.lesson_type_slug === 'file_test' ? 1 : 0" :showTabHeader="lessonData.lesson_type_slug === 'file_test' ? false : true" />
 
   <div v-else class="col-span-12">
     <alert :className="'light'">
@@ -57,7 +57,7 @@ const tabs_data = computed(() => [
     title: t("pages.tasks.title"),
     icon: "pi pi-clock",
     component: tasks,
-    props: { lesson_id: lesson_id },
+    props: { lesson_id: lesson_id, lessonData: lessonData.value },
   },
 ]);
 

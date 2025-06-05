@@ -1,5 +1,5 @@
 <template>
-    <div class="col-span-12">
+    <div v-if="props.showTabHeader === true" class="col-span-12">
         <div class="btn-wrap md:justify-end">
             <div v-for="tab in props.tabs" :key="tab.name" @click="active_tab = tab.name" class="tab-header-item"
                 :class="active_tab === tab.name && 'active'">
@@ -23,8 +23,18 @@ const props = defineProps({
     tabs: {
         type: Array,
         required: true
+    },
+    activeTabIndex: {
+        type: Number,
+        required: false,
+        default: 0
+    },
+    showTabHeader: {
+        type: Boolean,
+        required: false,
+        default: true
     }
 });
 
-const active_tab = ref(props.tabs[0].name);
+const active_tab = ref(props.tabs[props.activeTabIndex].name);
 </script>

@@ -79,7 +79,7 @@
                     <div class="font-medium" :class="lesson.is_available === true ? 'text-corp' : 'text-inactive line-through'">{{ lessonIndex + 1 }}. {{ lesson.lesson_name }}</div>
                     <div class="flex gap-2 flex-wrap">
                       <div class="flex gap-2">
-                        <span class="text-xs" :class="lesson.is_available === true ? 'text-active' : 'text-inactive'"
+                        <span v-if="lesson.lesson_type_slug !== 'file_test'" class="text-xs" :class="lesson.is_available === true ? 'text-active' : 'text-inactive'"
                           >{{ $t("materials.materials_count") }}:
                           <b>{{ lesson.materials.length }}</b></span
                         >
