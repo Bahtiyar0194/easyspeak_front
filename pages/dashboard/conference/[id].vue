@@ -411,7 +411,9 @@
                       taskItem.launched
                         ? conference.mentor_id === authUser.user_id
                           ? $t("pages.tasks.launched")
-                          : $t("pages.tasks.is_available")
+                          : taskItem.task_result.completed === false
+                          ? $t("pages.tasks.is_available")
+                          : $t("pages.tasks.is_completed")
                         : conference.mentor_id === authUser.user_id
                         ? $t("pages.tasks.not_launched")
                         : taskItem.task_result.completed === false
@@ -532,26 +534,12 @@
                       :user="learner"
                     />
                     <div class="flex flex-col">
-                      <span class="font-medium"
-                        >{{ learner.last_name }}
-                        {{ learner.first_name }}
-                      </span>
                       <div>
+                        <span class="font-medium"
+                          >{{ learner.last_name }}
+                          {{ learner.first_name }}
+                        </span>
                         <span
-                          :class="
-                            learner.task_result.completed === true
-                              ? 'text-success'
-                              : 'text-danger'
-                          "
-                          class="text-xs"
-                          >{{
-                            learner.task_result.completed === true
-                              ? $t("pages.tasks.is_completed")
-                              : $t("pages.tasks.not_been_completed_yet")
-                          }}</span
-                        >
-                        <span
-                          class="text-xs"
                           :class="
                             streams.find((u) => u.user_id === learner.user_id)
                               ? 'text-success'
@@ -565,6 +553,19 @@
                           }})
                         </span>
                       </div>
+                      <span
+                        :class="
+                          learner.task_result.completed === true
+                            ? 'text-success'
+                            : 'text-danger'
+                        "
+                        class="text-xs"
+                        >{{
+                          learner.task_result.completed === true
+                            ? $t("pages.tasks.is_completed")
+                            : $t("pages.tasks.not_been_completed_yet")
+                        }}</span
+                      >
                     </div>
                   </div>
 
