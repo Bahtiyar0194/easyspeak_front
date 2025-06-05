@@ -1009,9 +1009,9 @@ const startStream = async () => {
         iceServers: [
           { urls: "stun:stun.l.google.com:19302" },
           {
-            urls: "turn:relay1.expressturn.com:3478",
-            username: "ef7587",
-            credential: "9YXdpUML",
+            urls: "turn:turn.easyspeak.kz:3478",
+            username: "webrtcuser",
+            credential: "securepassword",
           },
         ],
       },
