@@ -1009,9 +1009,9 @@ const startStream = async () => {
         iceServers: [
           { urls: "stun:stun.l.google.com:19302" },
           {
-            urls: "turn:openrelay.metered.ca:80",
-            username: "openrelayproject",
-            credential: "openrelayproject",
+            urls: "turn:relay1.expressturn.com:3478",
+            username: "ef7587",
+            credential: "9YXdpUML",
           },
         ],
       },
