@@ -434,10 +434,10 @@ const setWords = () => {
   currentReStudyWords.value = [];
 
   if (words.value.length > 0) {
-    currentWords.value = words.value.slice(
-      0,
-      taskData.value.options.impression_limit
-    );
+    currentWords.value =
+      taskData.value.options.impression_limit > 0
+        ? words.value.slice(0, taskData.value.options.impression_limit)
+        : words.value;
 
     currentWords.value.forEach((word) => {
       word.userInput = [];
@@ -668,7 +668,6 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener("keydown", handleKeyPress);
 });
-
 
 watch(
   () => taskResultCollection.value.length,

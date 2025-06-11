@@ -85,13 +85,20 @@
                 </div>
               </div>
               <div class="col-span-12">
-                <nuxt-link
-                  class="btn btn-outline-success animate-pulse-glow"
-                  :to="localePath('/dashboard/conference/' + conference.uuid)"
-                >
-                  <i class="pi pi-video"></i>
-                  {{ $t("pages.conference.join") }}
-                </nuxt-link>
+                <div class="btn-wrap">
+                  <nuxt-link
+                    class="btn btn-outline-success animate-pulse-glow"
+                    :to="localePath('/dashboard/conference/' + conference.uuid)"
+                  >
+                    <i class="pi pi-video"></i>
+                    {{ $t("pages.conference.join") }}
+                  </nuxt-link>
+
+                  <button v-if="authUser.user_id === conference.operator_id" class="btn btn-outline-danger" @click="openDeleteModal(conference)">
+                    <i class="pi pi-trash"></i>
+                    {{ $t('delete') }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -130,6 +137,34 @@
       </form>
     </template>
   </modal>
+
+  <modal
+    :show="deleteModalIsVisible"
+    :onClose="() => closeDeleteModal()"
+    :className="'modal-lg'"
+    :showLoader="pendingDelete"
+    :closeOnClickSelf="false"
+  >
+    <template v-slot:header_content>
+      <h4>{{ $t("pages.conference.delete_conference") }}</h4>
+    </template>
+    <template v-slot:body_content>
+      <p>{{ $t("pages.conference.delete_confirm") }}</p>
+      <div class="btn-wrap justify-end mt-4">
+        <button
+          @click="deleteConferenceSubmit()"
+          class="btn btn-outline-danger"
+        >
+          <i class="pi pi-trash"></i>
+          {{ $t("yes") }}
+        </button>
+        <button @click="deleteModalIsVisible = false" class="btn btn-light">
+          <i class="pi pi-ban"></i>
+          {{ $t("no") }}
+        </button>
+      </div>
+    </template>
+  </modal>
 </template>
 
 <script setup>
@@ -140,11 +175,7 @@ import subscription from "../../ui/subscription.vue";
 import loader from "../../ui/loader.vue";
 import alert from "../../ui/alert.vue";
 import countdownTimer from "../../ui/countdownTimer.vue";
-import userAvatar from "../../ui/userAvatar.vue";
-import pagination from "../../ui/pagination.vue";
-import { debounceHandler } from "../../../utils/debounceHandler";
 import roleProvider from "../../ui/roleProvider.vue";
-import sortTableHead from "../../ui/sortTableHead.vue";
 import userTag from "../../ui/userTag.vue";
 
 const router = useRouter();
@@ -153,17 +184,18 @@ const { $axiosPlugin, $schoolPlugin } = useNuxtApp();
 const attributes = ref([]);
 const pending = ref(true);
 const pendingAdd = ref(false);
+const pendingDelete = ref(false);
 
 const addFormRef = ref(null);
 const childRef = ref(null);
 
 const authUser = useSanctumUser();
-const { refreshIdentity } = useSanctumAuth();
 const conferences = ref([]);
 const conference = ref(null);
 const school = $schoolPlugin;
 
 const addModalIsVisible = ref(false);
+const deleteModalIsVisible = ref(false);
 
 const getConferences = async () => {
   pending.value = true;
@@ -213,7 +245,39 @@ const addConferenceSubmit = async () => {
       if (err.response) {
         if (err.response.status == 422) {
           errors.value = err.response.data;
-          pendingInvite.value = false;
+          pendingAdd.value = false;
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
+const deleteConferenceSubmit = async () => {
+  pendingDelete.value = true;
+  const formData = new FormData();
+  formData.append("operation_type_id", 29);
+  await $axiosPlugin
+    .post("conferences/delete/" + conference.value.uuid, formData)
+    .then((response) => {
+      pendingDelete.value = false;
+      closeDeleteModal();
+      getConferences();
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          pendingDelete.value = false;
         } else {
           router.push({
             path: "/error",
@@ -257,6 +321,17 @@ const getConferenceAttributes = async () => {
 const closeAddModal = () => {
   addModalIsVisible.value = false;
   pendingAdd.value = false;
+};
+
+const openDeleteModal = (conf) => {
+  conference.value = conf;
+  deleteModalIsVisible.value = true;
+}
+
+const closeDeleteModal = () => {
+  deleteModalIsVisible.value = false;
+  pendingDelete.value = false;
+  conference.value = null;
 };
 
 onMounted(() => {

@@ -9,19 +9,17 @@
           {{ errors.auth_failed[0] }}
         </p>
 
-        <client-only>
-          <div class="form-group-border active mb-5">
-            <i class="pi pi-graduation-cap"></i>
-            <input type="text" name="school_domain" placeholder=" " />
-            <label :class="{ 'label-error': errors.school_domain }">
-              {{
-                errors.school_domain
-                  ? errors.school_domain[0]
-                  : $t("form.school_domain")
-              }}
-            </label>
-          </div>
-        </client-only>
+        <div class="form-group-border active mb-5">
+          <i class="pi pi-graduation-cap"></i>
+          <input type="text" name="school_domain" placeholder=" " />
+          <label :class="{ 'label-error': errors.school_domain }">
+            {{
+              errors.school_domain
+                ? errors.school_domain[0]
+                : $t("form.school_domain")
+            }}
+          </label>
+        </div>
 
         <div class="form-group-border active mb-5">
           <i class="pi pi-at"></i>
@@ -59,7 +57,7 @@
 
         <p>
           {{ $t("pages.login.forgot_password") }}
-          <nuxt-link :to="localePath('/auth/login')">
+          <nuxt-link :to="localePath('/auth/password-recovery')">
             {{ $t("pages.login.password_recovery") }}
           </nuxt-link>
         </p>

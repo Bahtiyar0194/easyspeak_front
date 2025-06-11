@@ -644,10 +644,10 @@ const setSections = () => {
   hiddenWords.value = [];
 
   if (sections.value.length > 0) {
-    currentSections.value = sections.value.slice(
-      0,
-      taskData.value.options.impression_limit
-    );
+    currentSections.value =
+      taskData.value.options.impression_limit > 0
+        ? sections.value.slice(0, taskData.value.options.impression_limit)
+        : sections.value;
 
     currentSections.value.forEach((section) => {
       section.words.forEach((word) => {

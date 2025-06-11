@@ -41,7 +41,7 @@
           <stickyBox>
             <div class="card p-4">
               <div
-                class="flex justify-between items-center flex-wrap gap-x-2 mb-4"
+                class="flex justify-between items-center gap-x-2 mb-4"
               >
                 <h2 class="mb-2">{{ props.lessonData.lesson_name }}</h2>
                 <circleProgressBar
@@ -246,7 +246,7 @@
               <button
                 v-if="props.lessonData.lesson_type_slug !== 'file_test'"
                 class="btn btn-outline-primary"
-                @click="startTheTest()"
+                @click="openTask(task)"
               >
                 <i class="pi pi-replay"></i>
                 {{ $t("pages.tasks.try_again") }}

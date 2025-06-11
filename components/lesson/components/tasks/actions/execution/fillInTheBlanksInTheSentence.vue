@@ -670,10 +670,10 @@ const setSentences = () => {
   hiddenWords.value = [];
 
   if (sentences.value.length > 0) {
-    currentSentences.value = sentences.value.slice(
-      0,
-      taskData.value.options.impression_limit
-    );
+    currentSentences.value =
+      taskData.value.options.impression_limit > 0
+        ? sentences.value.slice(0, taskData.value.options.impression_limit)
+        : sentences.value;
 
     currentSentences.value.forEach((sentence) => {
       if (taskData.value.options.find_word_option == "with_options") {

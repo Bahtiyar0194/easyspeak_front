@@ -235,7 +235,7 @@
             {{ $t("choose_your_option") }}
           </option>
           <option v-for="item in impressionLimits" :key="item" :value="item">
-            {{ item }}
+            {{ item === 0 ? $t("pagination.unlimit") : item }}
           </option>
         </select>
         <label :class="{ 'label-error': errors.impression_limit }">
@@ -569,7 +569,11 @@
           :checked="taskOptions.random_order === 1"
           name="random_order"
         />
-        <span>{{ props.showOrderWordsOption === true ? $t("random_order_words") : $t("random_order") }}</span>
+        <span>{{
+          props.showOrderWordsOption === true
+            ? $t("random_order_words")
+            : $t("random_order")
+        }}</span>
       </label>
     </div>
 
@@ -789,7 +793,7 @@ const {
 } = toRefs(props);
 
 const showTaskExample = ref(false);
-const impressionLimits = ref([2, 4]);
+const impressionLimits = ref([2, 3, 4, 5, 6, 7, 8, 9, 10, 0]);
 const optionsNum = ref([2, 3, 4]);
 const maxAttempts = ref([0, 1, 2, 3, 4, 5]);
 const maxAnswerAttempts = ref([0, 1, 2, 3, 4, 5]);

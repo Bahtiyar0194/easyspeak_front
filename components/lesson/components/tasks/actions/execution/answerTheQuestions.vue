@@ -432,10 +432,10 @@ const setQuestions = () => {
   currentReAnswerQuestions.value = [];
 
   if (questions.value.length > 0) {
-    currentQuestions.value = questions.value.slice(
-      0,
-      taskData.value.options.impression_limit
-    );
+    currentQuestions.value =
+      taskData.value.options.impression_limit > 0
+        ? questions.value.slice(0, taskData.value.options.impression_limit)
+        : questions.value;
 
     currentQuestions.value.forEach((question) => {
       question.userInput = "";

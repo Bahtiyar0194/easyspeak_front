@@ -614,10 +614,10 @@ const setWords = () => {
   currentReStudyWords.value = [];
 
   if (words.value.length > 0) {
-    const currentWordsCollection = words.value.slice(
-      0,
-      taskData.value.options.impression_limit
-    );
+    const currentWordsCollection =
+      taskData.value.options.impression_limit > 0
+        ? words.value.slice(0, taskData.value.options.impression_limit)
+        : words.value;
 
     currentWords.value =
       taskData.value.options.random_order === 1

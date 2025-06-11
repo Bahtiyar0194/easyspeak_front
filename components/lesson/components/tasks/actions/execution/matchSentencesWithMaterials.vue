@@ -447,10 +447,10 @@ const setSentences = () => {
   currentReStudySentences.value = [];
 
   if (sentences.value.length > 0) {
-    currentSentences.value = sentences.value.slice(
-      0,
-      taskData.value.options.impression_limit
-    );
+    currentSentences.value =
+      taskData.value.options.impression_limit > 0
+        ? sentences.value.slice(0, taskData.value.options.impression_limit)
+        : sentences.value;
 
     currentSentenceMaterials.value = [...currentSentences.value].sort(
       () => Math.random() - 0.5

@@ -209,7 +209,7 @@
             {{ $t("choose_your_option") }}
           </option>
           <option v-for="item in impressionLimits" :key="item" :value="item">
-            {{ item }}
+            {{ item === 0 ? $t("pagination.unlimit") : item }}
           </option>
         </select>
         <label :class="{ 'label-error': errors.impression_limit }">
@@ -404,14 +404,9 @@
       </div>
     </div>
 
-    <div
-      v-if="props.showMatchPicturesOptions"
-      class="col-span-12"
-    >
+    <div v-if="props.showMatchPicturesOptions" class="col-span-12">
       <div class="flex flex-col gap-y-2.5">
-        <p
-          class="mb-0 text-inactive"
-        >
+        <p class="mb-0 text-inactive">
           {{
             $t(
               "pages.tasks.task_options.choose_one_of_the_methods_for_matching_words_by_pictures"
@@ -425,9 +420,7 @@
             value="match_by_typing"
             name="match_words_by_pictures_option"
           />
-          <span>{{
-            $t("pages.tasks.match_words_by_pictures.option_1")
-          }}</span>
+          <span>{{ $t("pages.tasks.match_words_by_pictures.option_1") }}</span>
         </label>
         <label class="custom-radio">
           <input
@@ -436,9 +429,7 @@
             value="match_by_number"
             name="match_words_by_pictures_option"
           />
-          <span>{{
-            $t("pages.tasks.match_words_by_pictures.option_2")
-          }}</span>
+          <span>{{ $t("pages.tasks.match_words_by_pictures.option_2") }}</span>
         </label>
       </div>
     </div>
@@ -505,7 +496,11 @@
     <div class="col-span-12">
       <label class="custom-radio-checkbox text-nowrap">
         <input type="checkbox" checked="true" name="random_order" />
-        <span>{{ props.showOrderWordsOption === true ? $t("random_order_words") : $t("random_order") }}</span>
+        <span>{{
+          props.showOrderWordsOption === true
+            ? $t("random_order_words")
+            : $t("random_order")
+        }}</span>
       </label>
     </div>
 
@@ -703,7 +698,7 @@ const props = defineProps({
 });
 
 const showTaskExample = ref(false);
-const impressionLimits = ref([2, 4]);
+const impressionLimits = ref([2, 3, 4, 5, 6, 7, 8, 9, 10, 0]);
 const optionsNum = ref([2, 3, 4]);
 const maxAttempts = ref([0, 1, 2, 3, 4, 5]);
 const maxAnswerAttempts = ref([0, 1, 2, 3, 4, 5]);
