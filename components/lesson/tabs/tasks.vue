@@ -306,6 +306,10 @@ const onPending = (state) => {
   pendingModal.value = state;
 };
 
+const onStartTask = () => {
+  console.log("task is started");
+};
+
 const onCompleteTask = () => {
   console.log("task is completed");
 };
@@ -331,6 +335,7 @@ const closeModalByUser = () => {
 };
 
 provide("onPending", onPending);
+provide("onStartTask", onStartTask);
 provide("onCompleteTask", onCompleteTask);
 provide("changeModalSize", changeModalSize);
 provide("closeModal", closeModal);

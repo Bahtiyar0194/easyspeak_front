@@ -378,6 +378,7 @@ const props = defineProps({
 });
 
 const onPending = inject("onPending");
+const onStartTask = inject("onStartTask");
 const onCompleteTask = inject("onCompleteTask");
 const changeModalSize = inject("changeModalSize");
 
@@ -390,6 +391,7 @@ const getTask = async () => {
     );
 
     taskData.value = res.data;
+    onStartTask();
     showMaterialsOption.value = taskData.value.options.show_materials_option;
     materials.value = taskData.value.materials;
     sentences.value = [...taskData.value.sentences];

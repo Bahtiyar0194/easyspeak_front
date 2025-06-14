@@ -1,4 +1,5 @@
 <template>
+  {{ taskInProgress }}
   <div v-if="pendingConference" class="col-span-12">
     <div class="card p-6 flex flex-col justify-center items-center">
       <h4 class="mb-2">{{ pendingConference.message }}</h4>
@@ -169,22 +170,32 @@
                   <div class="flex items-center gap-1">
                     <userAvatar
                       :padding="0.5"
-                      :className="'w-6 h-6 text-sm'"
+                      :className="'w-7 h-7 text-sm'"
                       :user="stream.userInfo"
                     />
-                    <span class="font-medium"
-                      >{{ stream.userInfo.last_name }}
-                      {{ stream.userInfo.first_name }}
-                      <i v-if="!stream.remote">({{ $t("you") }})</i>
-                      <i
-                        class="text-success"
+                    <div class="flex flex-col">
+                      <span class="font-medium"
+                        >{{ stream.userInfo.last_name }}
+                        {{ stream.userInfo.first_name }}
+                        <i v-if="!stream.remote">({{ $t("you") }})</i>
+                        <i
+                          class="text-success"
+                          v-if="
+                            stream.remote &&
+                            stream.user_id === conference.mentor_id
+                          "
+                          >({{ $t("mentor") }})</i
+                        >
+                      </span>
+                      <span
                         v-if="
-                          stream.remote &&
-                          stream.user_id === conference.mentor_id
+                          busyLearners.length > 0 &&
+                          busyLearners.some((l) => l.userId === stream.user_id)
                         "
-                        >({{ $t("mentor") }})</i
+                        class="text-xs text-warning"
+                        >{{ $t("pages.tasks.in_process") }}</span
                       >
-                    </span>
+                    </div>
                   </div>
                   <div class="flex gap-2">
                     <i
@@ -343,7 +354,7 @@
 
     <modal
       :show="materialModalIsVisible"
-      :onClose="() => closeMaterialModal()"
+      :onClose="() => closeMaterialModal(true)"
       :className="
         currentMaterial && currentMaterial.block_material_type_slug
           ? 'modal-4xl'
@@ -360,6 +371,30 @@
           class="custom-grid"
           v-if="currentMaterial && currentMaterial?.lesson_material_id"
         >
+          <div
+            v-if="conference.mentor_id === authUser.user_id"
+            class="col-span-12"
+          >
+            <div class="btn-wrap">
+              <button
+                class="btn btn-outline-success"
+                :class="currentMaterial.is_show === true ? 'disabled' : ''"
+                @click="showMaterialForLearners()"
+                :title="
+                  currentMaterial.is_show === true
+                    ? $t('materials.displayed_title')
+                    : $t('materials.display_title')
+                "
+              >
+                <i class="pi pi-eye"></i>
+                {{
+                  currentMaterial.is_show === true
+                    ? $t("materials.displayed")
+                    : $t("materials.display")
+                }}
+              </button>
+            </div>
+          </div>
           <div class="col-span-12">
             <materialViewer :material="currentMaterial" />
           </div>
@@ -462,7 +497,7 @@
 
     <modal
       :show="taskModalIsVisible"
-      :onClose="() => closeModalByUser()"
+      :onClose="() => closeTaskModal()"
       :className="taskModalClass + ' min-h-0'"
       :showLoader="pendingTaskModal"
       :showPendingText="true"
@@ -557,12 +592,24 @@
                         :class="
                           learner.task_result.completed === true
                             ? 'text-success'
+                            : busyLearners.some(
+                                (t) =>
+                                  t.taskId === task.task_id &&
+                                  t.userId === learner.user_id
+                              )
+                            ? 'text-warning'
                             : 'text-danger'
                         "
                         class="text-xs"
                         >{{
                           learner.task_result.completed === true
                             ? $t("pages.tasks.is_completed")
+                            : busyLearners.some(
+                                (t) =>
+                                  t.taskId === task.task_id &&
+                                  t.userId === learner.user_id
+                              )
+                            ? $t("pages.tasks.in_process_this")
                             : $t("pages.tasks.not_been_completed_yet")
                         }}</span
                       >
@@ -724,12 +771,15 @@ const currentMaterial = ref(null);
 
 const task = ref(null);
 const tasks = ref([]);
+const taskInProgress = ref(false);
 const tasksToComplete = ref(0);
 const taskModalIsVisible = ref(false);
 const tasksModalIsVisible = ref(false);
 const taskResultModalIsVisible = ref(false);
 const learnersTasksModalIsVisible = ref(false);
 const learnerTaskResultModalIsVisible = ref(false);
+
+const busyLearners = ref([]);
 
 const taskModalClass = ref("modal-lg");
 const taskModalProps = ref({});
@@ -751,6 +801,7 @@ definePageMeta({
 });
 
 const openMaterial = (material) => {
+  closeAllModals();
   currentMaterial.value = null;
   setTimeout(() => {
     currentMaterial.value = material;
@@ -759,60 +810,64 @@ const openMaterial = (material) => {
   }, 100);
 };
 
-const closeMaterialModal = () => {
-  currentMaterial.value = null;
-  setTimeout(() => {
-    materialModalIsVisible.value = false;
-    materialsModalIsVisible.value = true;
-  }, 100);
+const closeMaterialModal = (showMaterialsModal) => {
+  if (currentMaterial.value) {
+    currentMaterial.value.is_show = false;
+    currentMaterial.value = null;
+    setTimeout(() => {
+      materialModalIsVisible.value = false;
+      materialsModalIsVisible.value = showMaterialsModal;
+    }, 100);
+  }
+};
+
+const showMaterialForLearners = () => {
+  if (busyLearners.value.length > 0) {
+    toast(t("pages.tasks.warning_1"), {
+      toastClassName: ["custom-toast", "danger"],
+      timeout: 10000,
+    });
+  } else {
+    if (currentMaterial.value.is_show === false) {
+      currentMaterial.value.is_show = true;
+      $socketPlugin.emit("open_material", {
+        materialId: currentMaterial.value.lesson_material_id,
+      });
+    }
+  }
 };
 
 const onPending = (state) => {
   pendingTaskModal.value = state;
 };
 
-const onCompleteTask = () => {
-  $socketPlugin.emit("complete_task", {
-    userInfo: authUserInfo,
-    taskName: task.value.task_slug,
-  });
-};
-
 const changeModalSize = (size) => {
   taskModalClass.value = size;
 };
 
-const closeModal = () => {
-  taskModalIsVisible.value = false;
-  pendingTaskModal.value = false;
-  task.value = null;
-  getConferenceTasks();
+const onStartTask = () => {
+  taskInProgress.value = true;
+
+  $socketPlugin.emit("start_task", {
+    userId: authUser.value.user_id,
+    userInfo: authUserInfo,
+    taskId: task.value.task_id,
+    taskName: task.value.task_slug,
+  });
 };
 
-const closeModalByUser = () => {
-  taskModalIsVisible.value = false;
-  pendingTaskModal.value = false;
-  currentTaskModal.value = null;
-  task.value = null;
-  getConferenceTasks();
+const onCompleteTask = () => {
+  taskInProgress.value = false;
+  $socketPlugin.emit("complete_task", {
+    userId: authUser.value.user_id,
+    userInfo: authUserInfo,
+    taskId: task.value.task_id,
+    taskName: task.value.task_slug,
+  });
 };
-
-provide("onPending", onPending);
-provide("onCompleteTask", onCompleteTask);
-provide("changeModalSize", changeModalSize);
-provide("closeModal", closeModal);
 
 const openTask = (currentTask) => {
-  currentTaskModal.value = null;
-  taskModalProps.value = null;
-  tasksModalIsVisible.value = false;
-  taskResultModalIsVisible.value = false;
-  learnersTasksModalIsVisible.value = false;
-  learnerTaskResultModalIsVisible.value = false;
-
-  participantsModalIsVisible.value = false;
-  drawingBoardModalIsVisible.value = false;
-  messagesModalIsVisible.value = false;
+  closeAllModals();
 
   task.value = currentTask;
   taskModalIsVisible.value = true;
@@ -826,6 +881,40 @@ const openTask = (currentTask) => {
   taskModalProps.value = {
     task: currentTask,
   };
+};
+
+const closeAllModals = () => {
+  closeTaskModal();
+  closeMaterialModal(false);
+
+  tasksModalIsVisible.value = false;
+  taskResultModalIsVisible.value = false;
+
+  learnersTasksModalIsVisible.value = false;
+  learnerTaskResultModalIsVisible.value = false;
+  materialsModalIsVisible.value = false;
+
+  participantsModalIsVisible.value = false;
+  drawingBoardModalIsVisible.value = false;
+  messagesModalIsVisible.value = false;
+};
+
+const closeTaskModal = async () => {
+  if (task.value) {
+    await $socketPlugin.emit("close_task", {
+      userId: authUser.value.user_id,
+      userInfo: authUserInfo,
+      taskId: task.value.task_id,
+      taskName: task.value.task_slug,
+    });
+  }
+
+  taskInProgress.value = false;
+  taskModalIsVisible.value = false;
+  pendingTaskModal.value = false;
+  currentTaskModal.value = null;
+  taskModalProps.value = null;
+  task.value = null;
 };
 
 const openTaskResult = (currentTask) => {
@@ -864,6 +953,11 @@ const closeLearnerTaskResultModal = () => {
   currentLearner.value = null;
 };
 
+provide("onPending", onPending);
+provide("onStartTask", onStartTask);
+provide("onCompleteTask", onCompleteTask);
+provide("changeModalSize", changeModalSize);
+
 const showTaskForLearners = async () => {
   pendingLearnersTasksResult.value = true;
   await $axiosPlugin
@@ -872,7 +966,7 @@ const showTaskForLearners = async () => {
     )
     .then((response) => {
       getConferenceTasks();
-      $socketPlugin.emit("show_task", {
+      $socketPlugin.emit("open_task", {
         taskId: task.value.task_id,
       });
     })
@@ -949,37 +1043,39 @@ const getConferenceTasks = async () => {
   pendingTasks.value = true;
   pendingLearnersTasksResult.value = true;
   tasksToComplete.value = 0;
-  await $axiosPlugin
-    .get("conferences/get_conference_tasks/" + conference.value.uuid)
-    .then((response) => {
-      tasks.value = response.data;
 
-      if (task.value !== null) {
-        task.value = tasks.value.find((t) => t.task_id === task.value.task_id);
-      }
-      pendingTasks.value = false;
-      pendingLearnersTasksResult.value = false;
+  try {
+    const response = await $axiosPlugin.get(
+      "conferences/get_conference_tasks/" + conference.value.uuid
+    );
+    tasks.value = response.data;
 
-      tasks.value.forEach((task) => {
-        if (task.to_complete) {
-          tasksToComplete.value++;
-        }
-      });
-    })
-    .catch((err) => {
-      if (err.response) {
-        router.push({
-          path: "/error",
-          query: {
-            status: err.response.status,
-            message: err.response.data.message,
-            url: err.request.responseURL,
-          },
-        });
-      } else {
-        router.push("/error");
+    if (task.value !== null) {
+      task.value = tasks.value.find((t) => t.task_id === task.value.task_id);
+    }
+
+    tasks.value.forEach((task) => {
+      if (task.to_complete) {
+        tasksToComplete.value++;
       }
     });
+
+    pendingTasks.value = false;
+    pendingLearnersTasksResult.value = false;
+  } catch (err) {
+    if (err.response) {
+      router.push({
+        path: "/error",
+        query: {
+          status: err.response.status,
+          message: err.response.data.message,
+          url: err.request.responseURL,
+        },
+      });
+    } else {
+      router.push("/error");
+    }
+  }
 };
 
 const timeIsUp = () => {
@@ -1133,22 +1229,54 @@ const startStream = async () => {
       }
     });
 
-    $socketPlugin.on("show_task", (data) => {
+    $socketPlugin.on("open_material", (data) => {
       if (authUser.value.user_id !== conference.value.mentor_id) {
-        getConferenceTasks();
+        const selectedMaterial = conference.value.materials.find(
+          (m) => m.lesson_material_id === data.materialId
+        );
+
+        if (selectedMaterial && taskInProgress.value === false) {
+          openMaterial(selectedMaterial);
+        }
+      }
+    });
+
+    $socketPlugin.on("open_task", async (data) => {
+      if (authUser.value.user_id !== conference.value.mentor_id) {
+        await getConferenceTasks(); // теперь это точно будет дожидаться полной загрузки
+
         const selectedTask = tasks.value.find((t) => t.task_id === data.taskId);
 
-        if (!selectedTask.task_result.answers) {
+        if (
+          !selectedTask?.task_result?.answers &&
+          taskInProgress.value === false
+        ) {
           openTask(selectedTask);
-        } else {
-          openTaskResult(selectedTask);
         }
+      }
+    });
+
+    $socketPlugin.on("close_task", (data) => {
+      if (authUser.value.user_id === conference.value.mentor_id) {
+        busyLearners.value = busyLearners.value.filter(
+          (l) => l.userId !== data.userId
+        );
+      }
+    });
+
+    $socketPlugin.on("start_task", (data) => {
+      if (authUser.value.user_id === conference.value.mentor_id) {
+        busyLearners.value.push(data);
       }
     });
 
     $socketPlugin.on("complete_task", (data) => {
       if (authUser.value.user_id === conference.value.mentor_id) {
         getConferenceTasks();
+
+        busyLearners.value = busyLearners.value.filter(
+          (l) => l.userId !== data.userId
+        );
 
         toast(
           t("pages.tasks.completed_the_task", {
@@ -1265,10 +1393,22 @@ const addStream = (
       isStream,
       isMuted,
     });
+
+    if (
+      taskInProgress.value === true &&
+      conference.value.mentor_id === user_id
+    ) {
+      $socketPlugin.emit("start_task", {
+        userId: authUser.value.user_id,
+        userInfo: authUserInfo,
+        taskId: task.value.task_id,
+        taskName: task.value.task_slug,
+      });
+    }
   }
 };
 
-const stopLocalStream = () => {
+const stopLocalStream = async () => {
   $socketPlugin.off("user-connected");
   $socketPlugin.off("user-disconnected");
   $socketPlugin.off("new-message");
@@ -1276,8 +1416,12 @@ const stopLocalStream = () => {
   $socketPlugin.off("toggle-audio");
   $socketPlugin.off("update-volume");
   $socketPlugin.off("connect_error");
-  $socketPlugin.off("show_task");
+  $socketPlugin.off("open_material");
+  $socketPlugin.off("open_task");
+  $socketPlugin.off("close_task");
+  $socketPlugin.off("start_task");
   $socketPlugin.off("complete_task");
+  $socketPlugin.off("show_material");
 
   if (myPeer) {
     myPeer.destroy();
@@ -1302,6 +1446,12 @@ const removeStream = (peerId) => {
 
   if (streamToRemove) {
     streams.value = streams.value.filter((s) => s.peer_id !== peerId);
+
+    if (authUser.value.user_id === conference.value.mentor_id) {
+      busyLearners.value = busyLearners.value.filter(
+        (l) => l.userId !== streamToRemove.user_id
+      );
+    }
 
     if (peers[peerId]) {
       peers[peerId].close();

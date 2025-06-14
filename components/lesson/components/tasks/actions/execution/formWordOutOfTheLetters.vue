@@ -241,6 +241,7 @@ const props = defineProps({
 });
 
 const onPending = inject("onPending");
+const onStartTask = inject("onStartTask");
 const onCompleteTask = inject("onCompleteTask");
 const changeModalSize = inject("changeModalSize");
 
@@ -252,6 +253,7 @@ const getTask = async () => {
       "tasks/get/form_a_word_out_of_the_letters/" + props.task.task_id
     );
     taskData.value = res.data;
+    onStartTask();
     showMaterialsOption.value = taskData.value.options.show_materials_option;
     materials.value = taskData.value.materials;
     time.value = taskData.value.options.seconds_per_word;
