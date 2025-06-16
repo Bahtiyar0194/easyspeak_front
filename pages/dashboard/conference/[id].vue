@@ -1,5 +1,4 @@
 <template>
-  {{ taskInProgress }}
   <div v-if="pendingConference" class="col-span-12">
     <div class="card p-6 flex flex-col justify-center items-center">
       <h4 class="mb-2">{{ pendingConference.message }}</h4>
@@ -159,10 +158,9 @@
       </template>
       <template v-slot:body_content>
         <div class="flex flex-col gap-y-4">
-          <div>
-            <p>
-              {{ $t("pages.conference.participants_count") }}:
-              <b>{{ streams.length }}</b>
+          <div class="flex flex-col gap-y-2">
+            <p class="text-success mb-0">
+              {{ $t("online") }}: <b>{{ streams.length }}</b>
             </p>
             <ul class="list-group nowrap">
               <li v-for="stream in streams" :key="stream.peer_id">
@@ -218,6 +216,35 @@
                 </div>
               </li>
             </ul>
+
+            <template v-if="offlineMembers.length > 0">
+              <p class="text-danger mb-0 text-inactive">{{ $t("offline") }}: <b>{{ offlineMembers.length }}</b></p>
+              <ul class="list-group nowrap">
+                <li v-for="member in offlineMembers" :key="member.user_id">
+                  <div
+                    class="flex flex-wrap items-center justify-between gap-1"
+                  >
+                    <div class="flex items-center gap-1 text-inactive">
+                      <userAvatar
+                        :padding="0.5"
+                        :className="'w-7 h-7 text-sm'"
+                        :user="{
+                          avatar: member.avatar,
+                          first_name: member.first_name,
+                          last_name: member.last_name,
+                        }"
+                      />
+                      <div class="flex flex-col">
+                        <span class="font-medium"
+                          >{{ member.last_name }}
+                          {{ member.first_name }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </template>
           </div>
         </div>
       </template>
@@ -748,6 +775,13 @@ const localStream = ref(null);
 const myStream = ref(null);
 const screenStream = ref(null); // Поток экрана
 const streams = ref([]);
+
+const offlineMembers = computed(() => {
+  if (!conference.value) return []; // пока members не загружен — возвращаем пустой массив
+  const onlineIds = new Set(streams.value.map((s) => s.user_id));
+  return conference.value.members.filter((m) => !onlineIds.has(m.user_id));
+});
+
 const errorMessage = ref(null);
 const pendingConference = ref(null);
 const endedConference = ref(null);
@@ -807,7 +841,7 @@ const openMaterial = (material) => {
     currentMaterial.value = material;
     materialsModalIsVisible.value = false;
     materialModalIsVisible.value = true;
-  }, 100);
+  }, 200);
 };
 
 const closeMaterialModal = (showMaterialsModal) => {
@@ -864,6 +898,7 @@ const onCompleteTask = () => {
     taskId: task.value.task_id,
     taskName: task.value.task_slug,
   });
+  getConferenceTasks();
 };
 
 const openTask = (currentTask) => {
@@ -1247,11 +1282,20 @@ const startStream = async () => {
 
         const selectedTask = tasks.value.find((t) => t.task_id === data.taskId);
 
-        if (
-          !selectedTask?.task_result?.answers &&
-          taskInProgress.value === false
-        ) {
-          openTask(selectedTask);
+        if (selectedTask && !selectedTask?.task_result?.answers) {
+          if (taskInProgress.value === true) {
+            toast(
+              t("pages.tasks.new_task_is_available", {
+                taskName: selectedTask.task_slug,
+              }),
+              {
+                toastClassName: ["custom-toast", "info"],
+                timeout: 10000,
+              }
+            );
+          } else {
+            openTask(selectedTask);
+          }
         }
       }
     });
