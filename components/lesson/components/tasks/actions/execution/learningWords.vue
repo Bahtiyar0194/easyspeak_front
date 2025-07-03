@@ -2,6 +2,7 @@
   <taskLayout
     v-if="taskData"
     :task="props.task"
+    :lessonType="props.lessonType"
     :showTaskTimer="showTaskTimer"
     :showMaterialsOption="showMaterialsOption"
     :showMaterialsBeforeTask="showMaterialsBeforeTask"
@@ -13,6 +14,7 @@
     :taskResult="taskResult"
   >
     <template v-slot:task_content>
+      {{ props.lessonType }}
       <div class="col-span-12">
         <p v-if="timeIsUp" class="font-medium text-center text-danger">
           {{ $t("time_is_up") }}
@@ -235,6 +237,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  lessonType: {
+    type: String,
+    required: true,
+  },
 });
 
 const onPending = inject("onPending");
@@ -342,16 +348,22 @@ const moveToEnd = (answerIndex) => {
     currentWord.value.attempts--;
     words.value.push(currentWord.value);
   } else {
-
-    if(answerIndex !== undefined) {
+    if (answerIndex !== undefined) {
       const userInput = currentWord.value.answer_options[answerIndex].word;
       currentWord.value.userInput = userInput;
     }
 
     taskResultCollection.value.push({
       is_correct: false,
-      user_answer: "<b class='text-danger'>" + currentWord.value.userInput || '______' + "</b>",
-      right_answer: "<b class='text-success'>" + currentWord.value.word + "</b><br><b class='text-inactive text-xs'>" + currentWord.value.word_translate + "</b>",
+      user_answer:
+        "<b class='text-danger'>" + currentWord.value.userInput ||
+        "______" + "</b>",
+      right_answer:
+        "<b class='text-success'>" +
+        currentWord.value.word +
+        "</b><br><b class='text-inactive text-xs'>" +
+        currentWord.value.word_translate +
+        "</b>",
       word_id: currentWord.value.word_id,
     });
 
@@ -372,7 +384,12 @@ const checkAnswer = (answerIndex) => {
 
       taskResultCollection.value.push({
         is_correct: true,
-        right_answer: "<b class='text-success'>" + currentWord.value.word + "</b><br><b class='text-inactive text-xs'>" + currentWord.value.word_translate + "</b>",
+        right_answer:
+          "<b class='text-success'>" +
+          currentWord.value.word +
+          "</b><br><b class='text-inactive text-xs'>" +
+          currentWord.value.word_translate +
+          "</b>",
         word_id: currentWord.value.word_id,
       });
     }

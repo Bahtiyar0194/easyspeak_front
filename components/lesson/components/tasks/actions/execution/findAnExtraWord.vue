@@ -2,6 +2,7 @@
   <taskLayout
     v-if="taskData"
     :task="props.task"
+    :lessonType="props.lessonType"
     :showTaskTimer="showTaskTimer"
     :showMaterialsOption="showMaterialsOption"
     :showMaterialsBeforeTask="showMaterialsBeforeTask"
@@ -204,11 +205,11 @@
                         "
                         @click.stop
                       />
-                      <div class="flex">
+                      <div>
                         <span
                           v-for="(letter, letterIndex) in word.word"
                           :key="letterIndex"
-                          class="select-none"
+                          class="select-none inline-block"
                           :class="
                             word.missingLetters &&
                             word.missingLetters.includes(letterIndex + 1) &&
@@ -367,6 +368,10 @@ const progressPercentage = computed(() => {
 const props = defineProps({
   task: {
     type: Object,
+    required: true,
+  },
+  lessonType: {
+    type: String,
     required: true,
   },
 });

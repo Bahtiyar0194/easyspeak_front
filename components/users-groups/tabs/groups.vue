@@ -226,7 +226,30 @@
                   </div>
                 </td>
                 <td>{{ group.members_count }}</td>
-                <td>{{ new Date(group.created_at).toLocaleString() }}</td>
+                <td>
+                  {{
+                    new Date(group.started_at).toLocaleString(undefined, {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false, // можно убрать или поставить true, если нужен 12-часовой формат
+                    })
+                  }}
+                </td>
+                <td>
+                  {{
+                    new Date(group.created_at).toLocaleString(undefined, {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false, // можно убрать или поставить true, если нужен 12-часовой формат
+                    })
+                  }}
+                </td>
                 <td :class="group.status_color">
                   {{ group.status_type_name }}
                 </td>
@@ -509,6 +532,11 @@ const groupsTableHeads = [
     sortType: "numeric",
   },
   {
+    title: t("pages.schedule.start_date"),
+    keyName: "groups.started_at",
+    sortType: "numeric",
+  },
+  {
     title: t("created_at"),
     keyName: "groups.created_at",
     sortType: "numeric",
@@ -743,8 +771,7 @@ const closeModal = (action) => {
     editModalIsVisible.value = false;
     pendingEdit.value = false;
     editFormRef.value.reset();
-  }
-  else{
+  } else {
     groupModalIsVisible.value = false;
   }
 

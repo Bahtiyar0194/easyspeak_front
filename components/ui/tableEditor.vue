@@ -36,7 +36,7 @@
       </div>
       <div class="col-span-12">
         <div
-          class="table table-responsive"
+          class="table"
           :class="{
             'table-sm': options.tableSmall,
             'table-striped': options.tableStriped,

@@ -12,7 +12,7 @@
                 class="bg-cover bg-no-repeat bg-center rounded-full" :class="props.className ? props.className : ''">
             </div>
 
-            <div v-else class="rounded-full bg-corp flex items-center justify-center text-white overflow-hidden"
+            <div v-else class="rounded-full bg-corp flex items-center justify-center text-white overflow-hidden select-none"
                 :class="props.className ? props.className : ''">
                 {{ props.user.last_name.substring(0, 1) }}{{ props.user.first_name.substring(0, 1) }}
             </div>

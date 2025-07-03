@@ -507,7 +507,7 @@ input[type=number]::-webkit-outer-spin-button {
 }
 
 .table{
-    @apply w-full relative overflow-x-auto rounded-xl shadow-md flex border-inactive;
+    @apply w-full relative overflow-x-auto rounded-xl shadow-md flex border-inactive text-left;
 }
 
 .table table{
@@ -559,7 +559,7 @@ td.th{
 }
 
 .table.table-sm table thead tr th{
-    @apply px-3 py-2 text-sm text-left;
+    @apply px-3 py-2 text-sm;
 }
 
 .table.table-sm table tbody tr td{
@@ -630,7 +630,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .custom-grid{
-    @apply grid grid-cols-12 gap-4 relative w-full;
+    @apply grid grid-cols-12 gap-y-4 gap-x-3 relative w-full;
 }
 
 .custom-grid.cols-10{

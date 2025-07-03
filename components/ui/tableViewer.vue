@@ -3,7 +3,7 @@
     <div class="custom-grid">
       <div class="col-span-12">
         <div
-          class="table table-responsive"
+          class="table"
           :class="{
             'table-sm': props.options.tableSmall,
             'table-striped': props.options.tableStriped,

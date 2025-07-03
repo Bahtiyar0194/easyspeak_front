@@ -5,8 +5,6 @@ export default {
     you: 'Это вы',
     start: 'Начать',
     finish: 'Закончить',
-    start_time: 'Время начала',
-    end_time: 'Время окончания',
     create: 'Создать',
     created: 'Создано',
     add: 'Добавить',
@@ -77,8 +75,8 @@ export default {
     applicant: "Заявитель",
     recipient: "Получатель",
     selected: "Выбрано",
-    not_selected: "Не выбран",
-    not_specified: "Не указан",
+    not_selected: "Не выбрано",
+    not_specified: "Не указано",
     your_answer: "Ваш ответ",
     learner_answer: "Ответ ученика",
     type_your_answer: "Введите ваш ответ",
@@ -122,6 +120,17 @@ export default {
     reset_search_filter: "Сбросить фильтр",
     show_search_filter: 'Показать фильтр поиска',
     hide_search_filter: 'Скрыть фильтр поиска',
+
+    years: 'Годы',
+    year: 'Год',
+    month: 'Месяц',
+    week: 'Неделя',
+    day: 'День',
+
+    start_time: 'Время начала',
+    end_time: 'Время окончания',
+    no_events: 'Нет мероприятии',
+    yet_another: 'Ещё',
 
     theme: {
         switch_to_a_light_theme: "Переключиться на светлую тему",
@@ -411,6 +420,22 @@ export default {
             belongs_to_another_group: "Состоит в другой группе"
         },
 
+        schedule: {
+            title: 'Расписание',
+            search_filter: 'Фильтр поиска по расписанию',
+            start_date: 'Дата начала занятии',
+            start_date_from: 'Дата начала занятии (с)',
+            start_date_to: 'Дата начала занятии (по)',
+            end_date: 'Дата окончания занятии',
+            start_time: 'Время начала занятии',
+            end_time: 'Время окончания занятии',
+        },
+
+        events: {
+            title: 'Мероприятия',
+            no_events: 'Никаких мероприятий на этот день не запланировано.'
+        },
+
         conference: {
             title: 'Видеоконференция',
             create: 'Создать конференцию',
@@ -503,7 +528,9 @@ export default {
             lesson_materials: 'Материалы урока',
             there_are_no_materials: 'Для этого урока пока не добавлены материалы.',
             is_unavailable: 'Урок временно недоступен',
-            is_unavailable_desc: 'Данный урок будет доступен после проведения конференции с куратором.'
+            is_unavailable_desc: 'Данный урок будет доступен после проведения конференции с куратором.',
+            start_date: 'Дата начала урока (конференции)',
+            start_time: 'Время начала урока (конференции)'
         },
 
         "add-lesson": {

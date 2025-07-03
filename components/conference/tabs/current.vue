@@ -30,43 +30,43 @@
 
                 <p class="text-inactive">
                   <i class="pi pi-book"></i> {{ $t("pages.courses.course") }}:
-                  <span class="text-active"
+                  <b class="text-active"
                     >{{ conference.course_name }} -
-                    {{ conference.level_name }}</span
+                    {{ conference.level_name }}</b
                   >
                 </p>
                 <p class="text-inactive">
                   <i class="pi pi-users"></i> {{ $t("pages.groups.group") }}:
-                  <span class="text-active">{{ conference.group_name }}</span>
+                  <b class="text-active">{{ conference.group_name }}</b>
                 </p>
                 <p class="text-inactive">
                   <i class="pi pi-user"></i> {{ $t("mentor") }}:
-                  <span class="text-active"
+                  <b class="text-active"
                     >{{ conference.mentor_last_name }}
-                    {{ conference.mentor_first_name }}</span
+                    {{ conference.mentor_first_name }}</b
                   >
                 </p>
                 <p class="text-inactive">
                   <i class="pi pi-clock"></i> {{ $t("start_time") }}:
-                  <span class="text-active">{{
+                  <b class="text-active">{{
                     conference.start_time_formatted
-                  }}</span>
+                  }}</b>
                 </p>
                 <p class="text-inactive">
                   <i class="pi pi-clock"></i> {{ $t("end_time") }}:
-                  <span class="text-active">{{
+                  <b class="text-active">{{
                     conference.end_time_formatted
-                  }}</span>
+                  }}</b>
                 </p>
 
                 <p class="text-inactive mb-0">
                   <i class="pi pi-clock"></i> {{ $t("remaining_time") }}:
-                  <span class="text-danger">
+                  <b class="text-danger">
                     <countdownTimer
                       :endDate="conference.end_time"
                       :onComplete="() => timeIsUp()"
                     />
-                  </span>
+                  </b>
                 </p>
               </div>
               <div class="col-span-12">

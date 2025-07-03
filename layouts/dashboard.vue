@@ -22,7 +22,7 @@
         >
           <nuxt-link :to="localePath(item.link)">
             <i :class="item.icon"></i>
-            <span>{{ $t(item.title) }}</span>
+            <span class="font-medium">{{ $t(item.title) }}</span>
           </nuxt-link>
         </roleProvider>
       </div>
@@ -75,6 +75,12 @@ const dashboardMenu = [
     icon: "pi pi-users",
     link: "/dashboard/users-groups",
     roles: [1, 2, 3, 4],
+  },
+  {
+    title: "pages.schedule.title",
+    icon: "pi pi-calendar-clock",
+    link: "/dashboard/schedule",
+    roles: [1, 2, 3, 4, 5],
   },
   {
     title: "pages.conference.title",

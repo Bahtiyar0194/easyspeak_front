@@ -2,6 +2,7 @@
   <taskLayout
     v-if="taskData"
     :task="props.task"
+    :lessonType="props.lessonType"
     :showTaskTimer="showTaskTimer"
     :showMaterialsOption="showMaterialsOption"
     :showMaterialsBeforeTask="showMaterialsBeforeTask"
@@ -205,6 +206,10 @@ const isFinished = ref(false);
 const props = defineProps({
   task: {
     type: Object,
+    required: true,
+  },
+  lessonType: {
+    type: String,
     required: true,
   },
 });

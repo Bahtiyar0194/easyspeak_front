@@ -2,6 +2,7 @@
   <taskLayout
     v-if="taskData"
     :task="props.task"
+    :lessonType="props.lessonType"
     :showTaskTimer="showTaskTimer"
     :showMaterialsOption="showMaterialsOption"
     :showMaterialsBeforeTask="showMaterialsBeforeTask"
@@ -569,6 +570,10 @@ const progressPercentage = computed(() => {
 const props = defineProps({
   task: {
     type: Object,
+    required: true,
+  },
+  lessonType: {
+    type: String,
     required: true,
   },
 });

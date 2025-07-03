@@ -1,5 +1,5 @@
 <template>
-  <div class="custom-grid">
+  <div class="custom-grid select-none">
     <slot name="header_content" />
     <div class="col-span-12">
       <div class="flex flex-col gap-y-4">

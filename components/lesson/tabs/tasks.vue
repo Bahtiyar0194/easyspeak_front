@@ -40,9 +40,7 @@
         <div class="col-span-12 lg:col-span-3">
           <stickyBox>
             <div class="card p-4">
-              <div
-                class="flex justify-between items-center gap-x-2 mb-4"
-              >
+              <div class="flex justify-between items-center gap-x-2 mb-4">
                 <h2 class="mb-2">{{ props.lessonData.lesson_name }}</h2>
                 <circleProgressBar
                   :progress="completedTasksPercent / tasks.length"
@@ -175,7 +173,7 @@
   <modal
     :show="modalIsVisible"
     :onClose="() => closeModalByUser()"
-    :className="modalClass + ' min-h-0'"
+    :className="modalClass + ' min-h-0 select-none'"
     :showLoader="pendingModal"
     :showPendingText="true"
     :loaderOpacityFull="true"
@@ -311,7 +309,7 @@ const onStartTask = () => {
 };
 
 const onCompleteTask = () => {
-  console.log("task is completed");
+  getLessonTasks();
 };
 
 const changeModalSize = (size) => {
@@ -331,20 +329,14 @@ const closeModalByUser = () => {
   pendingModal.value = false;
   currentModal.value = null;
   task.value = null;
-  getLessonTasks();
 };
-
-provide("onPending", onPending);
-provide("onStartTask", onStartTask);
-provide("onCompleteTask", onCompleteTask);
-provide("changeModalSize", changeModalSize);
-provide("closeModal", closeModal);
 
 const openTask = (currentTask) => {
   task.value = currentTask;
   taskResultModalIsVisible.value = false;
   openTaskModal(task.value.task_type_component, "execution", {
-    task: currentTask
+    task: currentTask,
+    lessonType: props.lessonData.lesson_type_slug,
   });
 };
 
@@ -357,7 +349,7 @@ const openTaskResult = (currentTask) => {
 const openEditTask = (currentTask) => {
   task.value = currentTask;
   openTaskModal(task.value.task_type_component, "edit", {
-    task: currentTask
+    task: currentTask,
   });
 };
 
@@ -378,6 +370,16 @@ const startTheTest = () => {
     }
   }
 };
+
+provide("onPending", onPending);
+provide("onStartTask", onStartTask);
+provide("onCompleteTask", onCompleteTask);
+provide("changeModalSize", changeModalSize);
+provide("closeModal", closeModal);
+
+provide("tasks", tasks);
+provide("completedTasksCount", completedTasksCount);
+provide("openTask", openTask);
 
 const getLessonTasks = async () => {
   pendingTasks.value = true;

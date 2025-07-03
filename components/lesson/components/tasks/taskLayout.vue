@@ -63,16 +63,50 @@
     <div v-else class="col-span-12">
       <div v-if="showTaskResult && props.taskResult" class="custom-grid">
         <div class="col-span-12">
-          <taskResultChart :taskResult="props.taskResult"/>
+          <taskResultChart :taskResult="props.taskResult">
+            <template
+              v-slot:footer_content
+              v-if="props.taskResult.completed === true"
+            >
+              <div class="col-span-12">
+                <div class="btn-wrap justify-end">
+                  <button
+                    v-if="
+                      props.lessonType === 'file_test' &&
+                      completedTasksCount < tasks.length
+                    "
+                    class="btn btn-outline-primary"
+                    @click="
+                      openTask(tasks[props.task.taskIndex + 1])
+                    "
+                  >
+                    <i class="pi pi-arrow-right"></i>
+                    {{ $t("pages.tasks.next_task") }}
+                  </button>
+                  <button
+                    v-if="props.lessonType !== 'file_test'"
+                    class="btn btn-outline-primary"
+                    @click="openTask(props.task)"
+                  >
+                    <i class="pi pi-replay"></i>
+                    {{ $t("pages.tasks.try_again") }}
+                  </button>
+                </div>
+              </div>
+            </template>
+          </taskResultChart>
         </div>
       </div>
       <div v-else class="custom-grid">
         <slot name="task_result_content" />
         <div class="col-span-12">
           <div class="btn-wrap justify-end">
-            <button class="btn btn-outline-primary" @click="showTaskResult = true">
+            <button
+              class="btn btn-outline-primary"
+              @click="showTaskResult = true"
+            >
               <i class="pi pi-chart-bar"></i>
-              {{ $t('pages.tasks.show_task_result') }}
+              {{ $t("pages.tasks.show_task_result") }}
             </button>
           </div>
         </div>
@@ -95,6 +129,10 @@ const showTaskResult = ref(false);
 const props = defineProps({
   task: {
     type: Object,
+    required: true,
+  },
+  lessonType: {
+    type: String,
     required: true,
   },
   showTaskTimer: {
@@ -132,9 +170,13 @@ const props = defineProps({
 
   taskResult: {
     type: Object,
-    required: false
-  }
+    required: false,
+  },
 });
+
+const tasks = inject('tasks');
+const completedTasksCount = inject('completedTasksCount');
+const openTask = inject('openTask');
 
 const showConfetti = (items) => {
   if (items && items.length === 0) {

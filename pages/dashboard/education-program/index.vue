@@ -5,7 +5,6 @@
 import tabs from '../../../components/ui/tabs.vue';
 import dictionary from '../../../components/education-program/dictionary.vue';
 import sentences from '../../../components/education-program/sentences.vue';
-import tasks from '../../../components/education-program/tasks.vue';
 const { t } = useI18n();
 
 useHead({
@@ -31,12 +30,5 @@ const tabs_data = computed(() => [
         icon: 'pi pi-comment',
         component: sentences
     },
-
-    {
-        name: 'tasks',
-        title: t('pages.tasks.title'),
-        icon: 'pi pi-clock',
-        component: tasks
-    }
 ]);
 </script>
