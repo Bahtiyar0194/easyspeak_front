@@ -435,7 +435,9 @@
       :show="tasksModalIsVisible"
       :showLoader="pendingTasks"
       :onClose="() => (tasksModalIsVisible = false)"
-      :className="'modal-6xl'"
+      :className="
+        conference.mentor_id !== authUser.user_id && conference.is_member ? 'modal-6xl' : 'modal-xl'
+      "
       :closeOnClickSelf="false"
     >
       <template v-slot:header_content>
@@ -443,7 +445,10 @@
       </template>
       <template v-slot:body_content v-if="conference">
         <div class="custom-grid">
-          <div class="col-span-12 lg:col-span-4">
+          <div
+            class="col-span-12 lg:col-span-4"
+            v-if="conference.mentor_id !== authUser.user_id && conference.is_member"
+          >
             <stickyBox>
               <div class="card p-3">
                 <div class="flex justify-between items-center gap-x-2 mb-4">
@@ -482,7 +487,13 @@
               </div>
             </stickyBox>
           </div>
-          <div class="col-span-12 lg:col-span-8">
+
+          <div
+            class="col-span-12"
+            :class="
+              conference.mentor_id !== authUser.user_id && conference.is_member ? 'lg:col-span-8' : ''
+            "
+          >
             <ul class="list-group nowrap lg overflow-hidden">
               <li v-for="taskItem in tasks" :key="taskItem.task_id">
                 <div class="flex items-center justify-between gap-4">
@@ -503,7 +514,8 @@
                         taskItem.task_type_name
                       }}</span>
 
-                      <span v-if="conference.lesson_type_slug !== 'file_test'"
+                      <span
+                        v-if="conference.lesson_type_slug !== 'file_test'"
                         class="italic text-xs"
                         :class="
                           taskItem.launched ||
@@ -514,7 +526,7 @@
                         "
                       >
                         {{
-                           taskItem.launched
+                          taskItem.launched
                             ? conference.mentor_id === authUser.user_id
                               ? $t("pages.tasks.launched")
                               : taskItem.task_result.completed === false
@@ -564,6 +576,36 @@
                 </div>
               </li>
             </ul>
+
+            <div
+              v-if="
+                conference.mentor_id === authUser.user_id &&
+                conference.lesson_type_slug === 'file_test'
+              "
+              class="btn-wrap justify-end"
+            >
+              <button
+                class="btn mt-4"
+                :class="
+                  testIsStarted
+                    ? 'disabled btn-outline-success'
+                    : 'btn-outline-primary'
+                "
+                @click="startTheTest()"
+              >
+                <i
+                  class="pi"
+                  :class="
+                    testIsStarted === true ? 'pi-arrow-right' : 'pi-check'
+                  "
+                ></i>
+                {{
+                  testIsStarted === true
+                    ? $t("pages.tasks.test_is_started")
+                    : $t("pages.tasks.start_the_test")
+                }}
+              </button>
+            </div>
           </div>
         </div>
       </template>
@@ -701,7 +743,10 @@
               </li>
             </ul>
           </div>
-          <div v-if="conference.lesson_type_slug !== 'file_test'" class="col-span-12">
+          <div
+            v-if="conference.lesson_type_slug !== 'file_test'"
+            class="col-span-12"
+          >
             <button
               class="btn btn-outline-success"
               :class="task.launched ? 'disabled' : ''"
@@ -874,6 +919,8 @@ const pendingTaskModal = ref(false);
 const pendingLearnersTasksResult = ref(false);
 const currentLearner = ref(null);
 
+const testIsStarted = ref(false);
+
 useHead({
   title: pageTitle,
   meta: [{ name: "description", content: "My amazing site." }],
@@ -970,11 +1017,21 @@ const openTask = (currentTask) => {
 };
 
 const startTheTest = () => {
-  for (let index = 0; index < tasks.value.length; index++) {
-    const task = tasks.value[index];
-    if (task.task_result && !task.task_result.answers) {
-      openTask(task);
-      break;
+  if (conference.value.mentor_id === authUser.value.user_id) {
+    $socketPlugin.emit("start_test");
+    testIsStarted.value = true;
+
+    toast(t("pages.tasks.test_is_started_for_learners"), {
+      toastClassName: ["custom-toast", "success"],
+      timeout: 10000,
+    });
+  } else {
+    for (let index = 0; index < tasks.value.length; index++) {
+      const task = tasks.value[index];
+      if (task.task_result && !task.task_result.answers) {
+        openTask(task);
+        break;
+      }
     }
   }
 };
@@ -1006,6 +1063,7 @@ const closeTaskModal = async () => {
 
   taskInProgress.value = false;
   taskModalIsVisible.value = false;
+  tasksModalIsVisible.value = true;
   pendingTaskModal.value = false;
   currentTaskModal.value = null;
   taskModalProps.value = null;
@@ -1352,24 +1410,33 @@ const startStream = async () => {
 
     $socketPlugin.on("open_task", async (data) => {
       if (authUser.value.user_id !== conference.value.mentor_id) {
-        await getConferenceTasks(); // теперь это точно будет дожидаться полной загрузки
+        if (conference.value.is_member) {
+          await getConferenceTasks(); // теперь это точно будет дожидаться полной загрузки
 
-        const selectedTask = tasks.value.find((t) => t.task_id === data.taskId);
+          const selectedTask = tasks.value.find(
+            (t) => t.task_id === data.taskId
+          );
 
-        if (selectedTask && !selectedTask?.task_result?.answers) {
-          if (taskInProgress.value === true) {
-            toast(
-              t("pages.tasks.new_task_is_available", {
-                taskName: selectedTask.task_slug,
-              }),
-              {
-                toastClassName: ["custom-toast", "info"],
-                timeout: 10000,
-              }
-            );
-          } else {
-            openTask(selectedTask);
+          if (selectedTask && !selectedTask?.task_result?.answers) {
+            if (taskInProgress.value === true) {
+              toast(
+                t("pages.tasks.new_task_is_available", {
+                  taskName: selectedTask.task_slug,
+                }),
+                {
+                  toastClassName: ["custom-toast", "info"],
+                  timeout: 10000,
+                }
+              );
+            } else {
+              openTask(selectedTask);
+            }
           }
+        } else {
+          toast(t("pages.tasks.allowed_only_participants"), {
+            toastClassName: ["custom-toast", "danger"],
+            timeout: 10000,
+          });
         }
       }
     });
@@ -1402,10 +1469,23 @@ const startStream = async () => {
             taskName: data.taskName,
           }),
           {
-            toastClassName: ["custom-toast", "info"],
+            toastClassName: ["custom-toast", "success"],
             timeout: 10000,
           }
         );
+      }
+    });
+
+    $socketPlugin.on("start_test", () => {
+      if (authUser.value.user_id !== conference.value.mentor_id) {
+        if (conference.value.is_member) {
+          startTheTest();
+        } else {
+          toast(t("pages.tasks.allowed_only_participants"), {
+            toastClassName: ["custom-toast", "danger"],
+            timeout: 10000,
+          });
+        }
       }
     });
   } catch (error) {
@@ -1540,6 +1620,7 @@ const stopLocalStream = async () => {
   $socketPlugin.off("start_task");
   $socketPlugin.off("complete_task");
   $socketPlugin.off("show_material");
+  $socketPlugin.off("start_test");
 
   if (myPeer) {
     myPeer.destroy();

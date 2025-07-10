@@ -688,11 +688,13 @@ const setSentences = () => {
 
         for (let index = 0; index < sentence.missingWords.length; index++) {
           const word = sentence.missingWords[index];
-          if (word.word_position >= 0) {
+
+          if (word.word_position) {
             sentence.missingWordPositionIndex = word.word_position;
-            break;
           }
         }
+
+                sentence.missingWords = shuffle(sentence.missingWords);
       } else {
         sentence.missingWords.forEach((word) => {
           word.userInput = "";
@@ -742,6 +744,11 @@ const onDragOver = (event) => {
   // Остановить поведение по умолчанию, чтобы разрешить drop
   event.preventDefault();
 };
+
+const shuffle = (array) => {
+  return array.slice().sort(() => Math.random() - 0.5);
+}
+
 
 const disableTheHiddenWord = () => {
   const userInputs = [];

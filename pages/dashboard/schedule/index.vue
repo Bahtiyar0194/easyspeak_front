@@ -1,7 +1,7 @@
 <template>
   <div class="col-span-12">
     <div class="custom-grid">
-      <roleProvider :roles="[1, 2, 3]">
+      <roleProvider :roles="[1, 2, 3, 4]">
         <div class="col-span-12">
           <div class="btn-wrap">
             <button @click="showHideScheduleSearchFilter" class="btn btn-light">
@@ -66,19 +66,21 @@
                   />
                 </div>
 
-                <div class="col-span-12">
-                  <multipleSelect
-                    :className="'form-group-border select active label-active'"
-                    :icon="'pi pi-user'"
-                    :label="$t('mentor')"
-                    :items="attributes.group_mentors"
-                    :optionName="'mentors[]'"
-                    :optionValue="'user_id'"
-                    :optionLabel="'full_name'"
-                    :avatar="true"
-                    :onChange="debounceSchedule"
-                  />
-                </div>
+                <roleProvider :roles="[1, 2, 3]">
+                  <div class="col-span-12">
+                    <multipleSelect
+                      :className="'form-group-border select active label-active'"
+                      :icon="'pi pi-user'"
+                      :label="$t('mentor')"
+                      :items="attributes.group_mentors"
+                      :optionName="'mentors[]'"
+                      :optionValue="'user_id'"
+                      :optionLabel="'full_name'"
+                      :avatar="true"
+                      :onChange="debounceSchedule"
+                    />
+                  </div>
+                </roleProvider>
 
                 <div class="col-span-12">
                   <div class="form-group-border active">
@@ -450,7 +452,7 @@
   <modal
     :show="editModalIsVisible"
     :onClose="() => closeEditModal()"
-    :className="'modal-xl'"
+    :className="'modal-2xl'"
     :showLoader="pendingEdit"
     :closeOnClickSelf="true"
   >
@@ -463,14 +465,13 @@
           <div class="col-span-12">
             <div class="form-group-border select active">
               <i class="pi pi-user"></i>
-              <select name="mentor_id">
+              <select name="mentor_id" v-model="currentEvent.mentor_id">
                 <option selected disabled value="">
                   {{ $t("choose_a_mentor") }}
                 </option>
                 <option
                   v-for="mentor in attributes.all_mentors"
                   :key="mentor.user_id"
-                  :selected="currentEvent.mentor_id === mentor.user_id"
                   :value="mentor.user_id"
                 >
                   {{ mentor.last_name }} {{ mentor.first_name }}
@@ -481,6 +482,46 @@
               }}</label>
             </div>
           </div>
+
+          <div class="col-span-12">
+            <div class="flex flex-col gap-y-2">
+              <label class="custom-radio">
+                <input
+                  v-model="mentorOnlyForThisLesson"
+                  type="radio"
+                  :value="1"
+                  name="mentor_only_for_this_lesson"
+                />
+                <span>{{
+                  $t("pages.conference.assign_a_mentor_only_for_this_lesson")
+                }}</span>
+              </label>
+
+              <label class="custom-radio">
+                <input
+                  v-model="mentorOnlyForThisLesson"
+                  type="radio"
+                  :value="0"
+                  name="mentor_only_for_this_lesson"
+                />
+                <span>{{
+                  $t(
+                    "pages.conference.appoint_a_mentor_for_this_and_subsequent_lessons"
+                  )
+                }}</span>
+              </label>
+              <note
+                v-if="mentorOnlyForThisLesson === 0"
+                :message="
+                  $t(
+                    'pages.conference.appoint_a_mentor_for_this_and_subsequent_lessons_note'
+                  )
+                "
+                :className="'outline-danger'"
+              />
+            </div>
+          </div>
+
           <div class="col-span-12">
             <div class="form-group-border active">
               <i class="pi pi-calendar"></i>
@@ -496,6 +537,36 @@
                     : $t("pages.lessons.start_date")
                 }}
               </label>
+            </div>
+          </div>
+
+          <div class="col-span-12">
+            <div class="flex flex-col gap-y-2">
+              <label class="custom-radio">
+                <input
+                  v-model="dateShiftByWeek"
+                  type="radio"
+                  :value="0"
+                  name="date_shift_by_week"
+                />
+                <span>{{ $t("pages.lessons.date_shift_couple") }}</span>
+              </label>
+
+              <label class="custom-radio">
+                <input
+                  v-model="dateShiftByWeek"
+                  type="radio"
+                  :value="1"
+                  name="date_shift_by_week"
+                />
+                <span>{{ $t("pages.lessons.date_shift_by_week") }}</span>
+              </label>
+
+              <note
+                v-if="dateShiftByWeek === 1"
+                :message="$t('pages.lessons.date_shift_by_week_note')"
+                :className="'outline-danger'"
+              />
             </div>
           </div>
 
@@ -584,6 +655,7 @@ import roleProvider from "../../../components/ui/roleProvider.vue";
 import multipleSelect from "../../../components/ui/multipleSelect.vue";
 import userAvatar from "../../../components/ui/userAvatar.vue";
 import userTag from "../../../components/ui/userTag.vue";
+import note from "../../../components/ui/note.vue";
 
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
@@ -607,6 +679,9 @@ const currentEvent = ref(null);
 
 const eventModalIsVisible = ref(false);
 const editModalIsVisible = ref(false);
+
+const mentorOnlyForThisLesson = ref(1);
+const dateShiftByWeek = ref(0);
 
 const { t } = useI18n();
 const { localeProperties } = useI18n();
@@ -815,6 +890,8 @@ const editEventSubmit = async () => {
 const openEventModal = (uuid) => {
   eventModalIsVisible.value = true;
   currentEvent.value = { ...schedule.value.find((e) => e.uuid === uuid) };
+  mentorOnlyForThisLesson.value = 1;
+  dateShiftByWeek.value = 0;
 };
 
 const closeEventModal = () => {

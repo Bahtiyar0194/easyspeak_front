@@ -14,7 +14,6 @@
     :taskResult="taskResult"
   >
     <template v-slot:task_content>
-      {{ props.lessonType }}
       <div class="col-span-12">
         <p v-if="timeIsUp" class="font-medium text-center text-danger">
           {{ $t("time_is_up") }}
