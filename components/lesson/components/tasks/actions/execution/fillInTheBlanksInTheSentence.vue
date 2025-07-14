@@ -67,7 +67,7 @@
                             :class="
                               ((taskData?.options.find_word_option ==
                                 'with_options' &&
-                                sentence.missingWordPositionIndex ==
+                                sentence.missingWordPositionIndex ===
                                   wordIndex) ||
                                 ((taskData?.options.find_word_option ==
                                   'with_hints' ||
@@ -256,7 +256,7 @@
                             v-if="
                               (taskData?.options.find_word_option ==
                                 'with_options' &&
-                                sentence.missingWordPositionIndex ==
+                                sentence.missingWordPositionIndex ===
                                   wordIndex) ||
                               (taskData?.options.find_word_option !=
                                 'with_options' &&
@@ -372,7 +372,7 @@
                     (taskData?.options.find_word_option == 'with_hints' ||
                       taskData?.options.find_word_option == 'without_hints') &&
                     sentence.missingWords.find(
-                      (w) => w.word_position == wordIndex
+                      (w) => w.word_position === wordIndex
                     )
                   "
                 >
@@ -689,12 +689,12 @@ const setSentences = () => {
         for (let index = 0; index < sentence.missingWords.length; index++) {
           const word = sentence.missingWords[index];
 
-          if (word.word_position) {
+          if (word.word_position !== null && word.word_position >= 0) {
             sentence.missingWordPositionIndex = word.word_position;
           }
         }
 
-                sentence.missingWords = shuffle(sentence.missingWords);
+        sentence.missingWords = shuffle(sentence.missingWords);
       } else {
         sentence.missingWords.forEach((word) => {
           word.userInput = "";
@@ -747,8 +747,7 @@ const onDragOver = (event) => {
 
 const shuffle = (array) => {
   return array.slice().sort(() => Math.random() - 0.5);
-}
-
+};
 
 const disableTheHiddenWord = () => {
   const userInputs = [];

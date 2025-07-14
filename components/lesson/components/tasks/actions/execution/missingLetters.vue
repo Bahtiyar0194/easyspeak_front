@@ -229,7 +229,7 @@
                     class="h-10 w-10 bg-cover bg-no-repeat bg-center"
                   ></div>
                   <div class="flex flex-col gap-y-2">
-                    <div class="flex gap-x-0.5">
+                    <div class="flex flex-wrap gap-0.5">
                       <div
                         v-for="(letter, letterIndex) in word.word"
                         :key="letterIndex"
