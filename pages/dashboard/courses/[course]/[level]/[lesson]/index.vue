@@ -68,7 +68,6 @@ const getMaterialTypes = async () => {
     .get("courses/get_material_types")
     .then((response) => {
       materialTypes.value = response.data;
-      pending.value = false;
     })
     .catch((err) => {
       if (err.response) {

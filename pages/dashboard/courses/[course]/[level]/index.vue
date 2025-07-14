@@ -64,26 +64,50 @@
                   v-for="(lesson, lessonIndex) in section.lessons"
                   :key="lessonIndex"
                   class="list-item cursor-pointer"
-                  @click="lesson.is_available ? 
-                    openLesson(
-                      '/dashboard/courses/' +
-                        course_slug +
-                        '/' +
-                        level_slug +
-                        '/' +
-                        lesson.lesson_id
-                    ) : openUnAvailableModal()
+                  @click="
+                    lesson.is_available
+                      ? openLesson(
+                          '/dashboard/courses/' +
+                            course_slug +
+                            '/' +
+                            level_slug +
+                            '/' +
+                            lesson.lesson_id
+                        )
+                      : openUnAvailableModal()
                   "
                 >
                   <div class="flex flex-col">
-                    <div class="font-medium" :class="lesson.is_available === true ? 'text-corp' : 'text-inactive line-through'">{{ lessonIndex + 1 }}. {{ lesson.lesson_name }}</div>
+                    <div
+                      class="font-medium"
+                      :class="
+                        lesson.is_available === true
+                          ? 'text-corp'
+                          : 'text-inactive line-through'
+                      "
+                    >
+                      {{ lessonIndex + 1 }}. {{ lesson.lesson_name }}
+                    </div>
                     <div class="flex gap-2 flex-wrap">
                       <div class="flex gap-2">
-                        <span v-if="lesson.lesson_type_slug !== 'file_test'" class="text-xs" :class="lesson.is_available === true ? 'text-active' : 'text-inactive'"
+                        <span
+                          v-if="lesson.lesson_type_slug !== 'file_test'"
+                          class="text-xs"
+                          :class="
+                            lesson.is_available === true
+                              ? 'text-active'
+                              : 'text-inactive'
+                          "
                           >{{ $t("materials.materials_count") }}:
                           <b>{{ lesson.materials.length }}</b></span
                         >
-                        <span class="text-xs" :class="lesson.is_available === true ? 'text-active' : 'text-inactive'"
+                        <span
+                          class="text-xs"
+                          :class="
+                            lesson.is_available === true
+                              ? 'text-active'
+                              : 'text-inactive'
+                          "
                           >{{ $t("pages.tasks.tasks_count") }}:
                           <b>{{ lesson.tasks.length }}</b></span
                         >
@@ -254,19 +278,19 @@
   </roleProvider>
 
   <modal
-      :show="unAvailableModalIsVisible"
-      :onClose="() => unAvailableModalIsVisible = false"
-      :className="'modal-xl'"
-      :showLoader="false"
-      :closeOnClickSelf="false"
-    >
-      <template v-slot:header_content>
-        <h4>{{ $t("pages.lessons.is_unavailable") }}</h4>
-      </template>
-      <template v-slot:body_content>
-        <p class="mb-0">{{ $t("pages.lessons.is_unavailable_desc") }}</p>
-      </template>
-    </modal>
+    :show="unAvailableModalIsVisible"
+    :onClose="() => (unAvailableModalIsVisible = false)"
+    :className="'modal-xl'"
+    :showLoader="false"
+    :closeOnClickSelf="false"
+  >
+    <template v-slot:header_content>
+      <h4>{{ $t("pages.lessons.is_unavailable") }}</h4>
+    </template>
+    <template v-slot:body_content>
+      <p class="mb-0">{{ $t("pages.lessons.is_unavailable_desc") }}</p>
+    </template>
+  </modal>
 </template>
 
 <script setup>
@@ -455,7 +479,6 @@ const getLessonTypes = async () => {
     .get("courses/get_lesson_types")
     .then((response) => {
       lessonTypes.value = response.data;
-      pending.value = false;
     })
     .catch((err) => {
       if (err.response) {
@@ -493,10 +516,10 @@ const openLesson = (url) => {
 
 const openUnAvailableModal = () => {
   unAvailableModalIsVisible.value = true;
-}
+};
 
 onMounted(() => {
-  getLessons();
   getLessonTypes();
+  getLessons();
 });
 </script>
