@@ -1950,7 +1950,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .carousel__track{
-   @apply mb-0 gap-1.5;
+   @apply mb-0;
 }
 
 .carousel__prev, .carousel__next{

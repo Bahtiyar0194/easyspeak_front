@@ -810,7 +810,8 @@ const answerTheQuestionsOptions = ["text", "video", "audio"];
 watch(
   () => task.value.task_example,
   (newVal) => {
-    showTaskExample.value = task.value.task_example ? true : false;
-  }
+    showTaskExample.value = !!task.value.task_example;
+  },
+  { immediate: true }
 );
 </script>

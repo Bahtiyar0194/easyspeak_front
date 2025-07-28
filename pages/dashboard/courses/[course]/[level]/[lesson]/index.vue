@@ -1,11 +1,20 @@
 <template>
   <loader v-if="pending" :className="'full-overlay'" />
-  <tabs v-if="courseIsAvailable && lessonIsAvailable" :tabs="tabs_data" :activeTabIndex="lessonData.lesson_type_slug === 'file_test' ? 1 : 0" :showTabHeader="lessonData.lesson_type_slug === 'file_test' ? false : true" />
+  <tabs
+    v-if="courseIsAvailable && lessonIsAvailable"
+    :tabs="tabs_data"
+    :activeTabIndex="lessonData.lesson_type_slug === 'file_test' ? 1 : 0"
+    :showTabHeader="lessonData.lesson_type_slug === 'file_test' ? false : true"
+  />
 
   <div v-else class="col-span-12">
     <alert :className="'light'">
-      <p v-if="courseIsAvailable === false" class="mb-0">{{ $t("pages.courses.course_is_not_available") }}</p>
-      <p v-else-if="lessonIsAvailable === false" class="mb-0">{{ $t("pages.lessons.is_unavailable_desc") }}</p>
+      <p v-if="courseIsAvailable === false" class="mb-0">
+        {{ $t("pages.courses.course_is_not_available") }}
+      </p>
+      <p v-else-if="lessonIsAvailable === false" class="mb-0">
+        {{ $t("pages.lessons.is_unavailable_desc") }}
+      </p>
     </alert>
   </div>
 </template>
@@ -16,6 +25,7 @@ import loader from "../../../../../../components/ui/loader.vue";
 import tabs from "../../../../../../components/ui/tabs.vue";
 import materials from "../../../../../../components/lesson/tabs/materials.vue";
 import tasks from "../../../../../../components/lesson/tabs/tasks.vue";
+import dictionary from "../../../../../../components/lesson/tabs/dictionary.vue";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
 const { t } = useI18n();
@@ -58,6 +68,13 @@ const tabs_data = computed(() => [
     icon: "pi pi-clock",
     component: tasks,
     props: { lesson_id: lesson_id, lessonData: lessonData.value },
+  },
+  {
+    name: "dictionary",
+    title: t("pages.dictionary.title"),
+    icon: "bi bi-alphabet",
+    component: dictionary,
+    props: { lesson_id: lesson_id },
   },
 ]);
 
@@ -120,7 +137,10 @@ const getLesson = async () => {
       // Проверить, найден ли элемент
       if (lessonCrumbItem) {
         // Изменить текст внутри элемента
-        lessonCrumbItem.textContent = response.data.lesson.lesson_name;
+        lessonCrumbItem.textContent =
+          response.data.lesson.section_name +
+          " › " +
+          response.data.lesson.lesson_name;
       }
 
       pageTitle.value = response.data.lesson.lesson_name;

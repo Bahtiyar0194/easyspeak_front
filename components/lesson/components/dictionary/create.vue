@@ -1,8 +1,12 @@
 <template>
-  <steps :currentStep="currentStep" :steps="newTaskSteps">
-    <form @submit.prevent="createTaskSubmit" class="mt-2" ref="createFormRef">
+  <steps :currentStep="currentStep" :steps="newDictionarySteps">
+    <form
+      @submit.prevent="createDictionarySubmit"
+      class="mt-2"
+      ref="createFormRef"
+    >
       <div
-        v-for="(step, index) in newTaskSteps"
+        v-for="(step, index) in newDictionarySteps"
         :key="index"
         :class="currentStep === index + 1 ? 'block' : 'hidden'"
       >
@@ -25,7 +29,7 @@
         </button>
 
         <button class="btn btn-primary" type="submit">
-          <template v-if="currentStep !== newTaskSteps.length">
+          <template v-if="currentStep !== newDictionarySteps.length">
             <i class="pi pi-arrow-right"></i>
             {{ $t("continue") }}
           </template>
@@ -41,17 +45,15 @@
 
 <script setup>
 import { useRouter } from "nuxt/app";
-import steps from "../../../../../ui/steps.vue";
-import selectWordsFromDictionary from "../../selectWordsFromDictionary.vue";
-import taskMaterialsForm from "../../taskMaterialsForm.vue";
-import taskOptionsForm from "../../taskOptionsForm.vue";
+import steps from "../../../ui/steps.vue";
+import selectWordsFromDictionary from "../tasks/selectWordsFromDictionary.vue";
+import secondStep from "./secondStep.vue";
 
 const { t } = useI18n();
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
 const createFormRef = ref(null);
 const selectedWords = ref([]);
-const taskMaterials = ref([]);
 const errors = ref([]);
 
 const onPending = inject("onPending");
@@ -64,7 +66,7 @@ const props = defineProps({
   },
 });
 
-const newTaskSteps = [
+const newDictionarySteps = [
   {
     title: t("pages.dictionary.select_words"),
     component: selectWordsFromDictionary,
@@ -72,31 +74,10 @@ const newTaskSteps = [
     modalSize: "full",
   },
   {
-    title: t("pages.tasks.task_options.title"),
-    component: taskOptionsForm,
+    title: t("pages.dictionary.options"),
+    component: secondStep,
     props: {
       errors,
-      showAudioButton: true,
-      showPlayAudioAtTheBegin: true,
-      showPlayAudioWithTheCorrectAnswer: true,
-      showPlayErrorSoundWithTheInCorrectAnswer: true,
-      showImage: true,
-      showTranslate: false,
-      showWord: true,
-      showTranscription: true,
-      showOptionsNum: true,
-      items: selectedWords.value,
-      showSecondsPerWord: true,
-      showSelectMainLang: true,
-    },
-    modalSize: "4xl",
-  },
-  {
-    title: t("pages.tasks.task_materials"),
-    component: taskMaterialsForm,
-    props: {
-      errors,
-      taskMaterials,
     },
     modalSize: "2xl",
   },
@@ -106,26 +87,25 @@ const currentStep = ref(1);
 
 const backToStep = (step) => {
   currentStep.value = step;
-  changeModalSize("modal-" + newTaskSteps[step - 1].modalSize);
+  changeModalSize("modal-" + newDictionarySteps[step - 1].modalSize);
 };
 
-const createTaskSubmit = async () => {
+const createDictionarySubmit = async () => {
   onPending(true);
   const formData = new FormData(createFormRef.value);
   formData.append("words_count", selectedWords.value.length);
   formData.append("words", JSON.stringify(selectedWords.value));
-  formData.append("task_materials", JSON.stringify(taskMaterials.value));
   formData.append("operation_type_id", 13);
   formData.append("step", currentStep.value);
 
   await $axiosPlugin
-    .post("tasks/create/learning_words/" + props.lesson_id, formData)
+    .post("dictionary/add_lesson_dictionary/" + props.lesson_id, formData)
     .then((res) => {
       onPending(false);
       if (res.data.step) {
         currentStep.value = res.data.step + 1;
         changeModalSize(
-          "modal-" + newTaskSteps[currentStep.value - 1].modalSize
+          "modal-" + newDictionarySteps[currentStep.value - 1].modalSize
         );
       } else {
         closeModal();

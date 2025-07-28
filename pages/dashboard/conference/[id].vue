@@ -38,6 +38,26 @@
   <div v-else-if="localStream" class="col-span-12">
     <div class="custom-grid">
       <div class="col-span-12">
+        <div class="btn-wrap justify-end">
+          <button
+            type="button"
+            class="btn btn-square"
+            :class="confMode === 'grid' ? 'btn-outline-primary' : 'btn-light'"
+            @click="confMode = 'grid'"
+          >
+            <i class="bi bi-grid-3x2"></i>
+          </button>
+          <button
+            type="button"
+            class="btn btn-square"
+            :class="confMode === 'slider' ? 'btn-outline-primary' : 'btn-light'"
+            @click="confMode = 'slider'"
+          >
+            <i class="bi bi-diagram-3"></i>
+          </button>
+        </div>
+      </div>
+      <div class="col-span-12">
         <gridMode v-if="confMode === 'grid'" :streams="streams" />
         <sliderMode v-else-if="confMode === 'slider'" :streams="streams" />
       </div>
@@ -436,7 +456,9 @@
       :showLoader="pendingTasks"
       :onClose="() => (tasksModalIsVisible = false)"
       :className="
-        conference.mentor_id !== authUser.user_id && conference.is_member ? 'modal-6xl' : 'modal-xl'
+        conference.mentor_id !== authUser.user_id && conference.is_member
+          ? 'modal-6xl'
+          : 'modal-xl'
       "
       :closeOnClickSelf="false"
     >
@@ -447,7 +469,9 @@
         <div class="custom-grid">
           <div
             class="col-span-12 lg:col-span-4"
-            v-if="conference.mentor_id !== authUser.user_id && conference.is_member"
+            v-if="
+              conference.mentor_id !== authUser.user_id && conference.is_member
+            "
           >
             <stickyBox>
               <div class="card p-3">
@@ -491,9 +515,35 @@
           <div
             class="col-span-12"
             :class="
-              conference.mentor_id !== authUser.user_id && conference.is_member ? 'lg:col-span-8' : ''
+              conference.mentor_id !== authUser.user_id && conference.is_member
+                ? 'lg:col-span-8'
+                : ''
             "
           >
+            <button
+              v-if="
+                conference.mentor_id === authUser.user_id &&
+                conference.lesson_type_slug === 'file_test'
+              "
+              class="btn full mb-4"
+              :class="
+                testIsStarted
+                  ? 'disabled btn-outline-success'
+                  : 'btn-outline-primary'
+              "
+              @click="startTheTest()"
+            >
+              <i
+                class="pi"
+                :class="testIsStarted === true ? 'pi-arrow-right' : 'pi-check'"
+              ></i>
+              {{
+                testIsStarted === true
+                  ? $t("pages.tasks.test_is_started")
+                  : $t("pages.tasks.start_the_test")
+              }}
+            </button>
+
             <ul class="list-group nowrap lg overflow-hidden">
               <li v-for="taskItem in tasks" :key="taskItem.task_id">
                 <div class="flex items-center justify-between gap-4">
@@ -576,36 +626,6 @@
                 </div>
               </li>
             </ul>
-
-            <div
-              v-if="
-                conference.mentor_id === authUser.user_id &&
-                conference.lesson_type_slug === 'file_test'
-              "
-              class="btn-wrap justify-end"
-            >
-              <button
-                class="btn mt-4"
-                :class="
-                  testIsStarted
-                    ? 'disabled btn-outline-success'
-                    : 'btn-outline-primary'
-                "
-                @click="startTheTest()"
-              >
-                <i
-                  class="pi"
-                  :class="
-                    testIsStarted === true ? 'pi-arrow-right' : 'pi-check'
-                  "
-                ></i>
-                {{
-                  testIsStarted === true
-                    ? $t("pages.tasks.test_is_started")
-                    : $t("pages.tasks.start_the_test")
-                }}
-              </button>
-            </div>
           </div>
         </div>
       </template>

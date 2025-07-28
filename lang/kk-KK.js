@@ -551,6 +551,8 @@ export default {
         dictionary: {
             title: 'Сөздік',
             word: 'Cөз',
+            count: 'Сөздер саны',
+            options: 'Сөздіктің баптаулары',
             this_word_is_hidden: 'Мына сөз жасырулы',
             hide_this_word: 'Мына сөзді жасыру',
             this_word_is_extra: 'Мына сөз артық',
@@ -561,6 +563,7 @@ export default {
             added_words_count: 'Қосылған сөздер саны',
             exactly_words_count_error: 'Тізімнен {count} сөз таңдауыңыз қажет',
             min_words_count_error: 'Тізімнен кем дегенде {count} сөз таңдауыңыз қажет',
+            add: 'Сөздік қосу',
             add_section: 'Бөлім қосу',
             add_these_words_to_the_section: 'Осы сөздерді бөлімге қосу',
             words_left: "Қайталауға қалған сөздер саны",
@@ -569,9 +572,12 @@ export default {
             transcription: 'Транскрипциясы',
             seconds_per_word: 'Әр сөзге жауап беруге бөлінетін секунд саны',
             required: 'Сөзді енгізу қажет',
+            category_slug: 'Санаттың негізгі тілдегі атауы',
             translate: {
                 kk: 'Сөздің қазақша тілдегі аудармасы',
-                ru: 'Сөздің орысша тілдегі аудармасы'
+                ru: 'Сөздің орысша тілдегі аудармасы',
+                category_kk: 'Санаттың қазақша тілдегі аудармасы',
+                category_ru: 'Санаттың орысша тілдегі аудармасы',
             },
             search_filter: 'Сөздіктен іздеу сүзгісі'
         },
