@@ -19,7 +19,7 @@
       </div>
     </roleProvider>
     <div class="col-span-12">
-      <ul class="list-group">
+      <ul v-if="categories.length > 0" class="list-group">
         <li
           v-for="(category, categoryIndex) in categories"
           :key="categoryIndex"
@@ -113,6 +113,9 @@
           </div>
         </li>
       </ul>
+      <alert v-else :className="'light'">
+        <p class="mb-0">{{ $t("pages.dictionary.there_are_no_words") }}</p>
+      </alert>
     </div>
   </div>
 
