@@ -178,7 +178,8 @@ export default {
         audio: {
             select: "Аудиофайл таңдаңыз",
             current: "Ағымдағы жүктеліп тұрған аудио",
-            voice: "Дыбыс"
+            voice: "Дауыс",
+            choose_a_voice: "Дауысты таңдаңыз"
         },
         video: {
             select: "Бейнефайл таңдаңыз",

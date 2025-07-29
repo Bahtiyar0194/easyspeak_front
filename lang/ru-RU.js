@@ -179,6 +179,7 @@ export default {
             select: "Выберите аудиофайл",
             current: "Текущий загруженный аудиофайл",
             voice: "Голос",
+            choose_a_voice: "Выберите голос"
         },
         video: {
             select: "Выберите видеофайл",

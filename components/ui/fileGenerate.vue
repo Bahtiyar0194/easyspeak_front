@@ -4,8 +4,15 @@
     <div class="form-group-border select active label-active mb-4">
       <i class="pi pi-microphone"></i>
       <select v-model="currentVoice">
-        <option v-for="(voice, voiceIndex) in voices" :key="voiceIndex">
-          {{ voice }}
+        <option disabled value="">
+          {{ $t("file.audio.choose_a_voice") }}
+        </option>
+        <option
+          v-for="(voice, voiceIndex) in voices"
+          :key="voiceIndex"
+          :value="voice.voice_id"
+        >
+          {{ voice.name }}
         </option>
       </select>
       <label>
@@ -86,18 +93,35 @@ const props = defineProps({
 });
 
 const instructions = ref("");
-const currentVoice = ref("Alloy");
-const voices = [
-  "Alloy",
-  "Ash",
-  "Coral",
-  "Echo",
-  "Fable",
-  "Nova",
-  "Onyx",
-  "Sage",
-  "Shimmer",
-];
+const currentVoice = ref("");
+const voices = ref([]);
+
+const getVoices = async () => {
+  pending.value = true;
+
+  await $axiosPlugin
+    .get("elevenlabs/list_voices")
+    .then((response) => {
+      voices.value = response.data.voices;
+    })
+    .catch((err) => {
+      if (err.response) {
+        router.push({
+          path: "/error",
+          query: {
+            status: err.response.status,
+            message: err.response.data.message,
+            url: err.request.responseURL,
+          },
+        });
+      } else {
+        router.push("/error");
+      }
+    })
+    .finally(() => {
+      pending.value = false;
+    });
+};
 
 const generateFile = async () => {
   error.value = null;
@@ -108,10 +132,10 @@ const generateFile = async () => {
   pending.value = true;
 
   await $axiosPlugin
-    .get("openai/tts", {
+    .get("elevenlabs/tts", {
       params: {
         text: props.generateText,
-        voice: currentVoice.value.toLowerCase(),
+        voice_id: currentVoice.value,
       },
     })
     .then((response) => {
@@ -119,7 +143,7 @@ const generateFile = async () => {
     })
     .catch((err) => {
       if (err.response) {
-        if (err.response.status == 500) {
+        if (err.response.status) {
           error.value = err.response.data;
         } else {
           router.push({
@@ -161,7 +185,7 @@ watch(
 const handleFormReset = () => {
   file.value = null;
   error.value = null;
-  currentVoice.value = "Alloy";
+  currentVoice.value = "";
   instructions.value = "";
   pending.value = false;
 };
@@ -172,6 +196,8 @@ onMounted(() => {
   if (formElement) {
     formElement.addEventListener("reset", handleFormReset); // Слушаем сброс формы
   }
+
+  getVoices();
 });
 
 onBeforeUnmount(() => {
