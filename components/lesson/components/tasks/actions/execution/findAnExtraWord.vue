@@ -209,7 +209,7 @@
                         <span
                           v-for="(letter, letterIndex) in word.word"
                           :key="letterIndex"
-                          class="select-none inline-block"
+                          class="select-none"
                           :class="
                             word.missingLetters &&
                             word.missingLetters.includes(letterIndex + 1) &&

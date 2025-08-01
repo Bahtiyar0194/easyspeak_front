@@ -18,7 +18,7 @@
           "
         >
           <div
-            class="card"
+            class="card relative overflow-hidden group"
             :class="level.is_available === false ? 'grayscale' : ''"
           >
             <img
@@ -31,14 +31,18 @@
             />
 
             <div
-              class="absolute left-0 top-0 w-full h-full flex justify-center items-center p-4 bg-black bg-opacity-60"
+              class="absolute left-0 bottom-0 w-full group-hover:h-full transition-all duration-200 bg-black bg-opacity-60 flex justify-center items-center group-hover:items-center p-4"
+              :class="level.is_available === false ? 'h-full' : 'h-12'"
             >
               <div class="flex flex-col gap-y-1">
-                <h6 class="mb-0 text-center text-white">
+                <h4 class="mb-0 text-white text-center">
                   {{ level.level_name }}
-                </h6>
+                </h4>
 
-                <p v-if="level.is_available === false" class="mb-0 text-white text-center text-sm">
+                <p
+                  v-if="level.is_available === false"
+                  class="mb-0 text-white text-center text-sm"
+                >
                   {{ $t("pages.courses.course_is_not_available") }}
                 </p>
               </div>

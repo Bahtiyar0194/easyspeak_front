@@ -310,6 +310,10 @@
     @apply text-dark-500 dark:text-white;
 }
 
+.text-active-invert {
+    @apply text-white dark:text-dark-500;
+}
+
 .fill-active{
     @apply fill-slate-500 dark:fill-white;
 }

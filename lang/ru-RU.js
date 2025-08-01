@@ -344,6 +344,14 @@ export default {
             to: "На главную страницу",
         },
 
+        "privacy-policy": {
+            title: 'Политика конфиденциальности'
+        },
+
+        "refund-policy": {
+            title: 'Политика возврата денежных средств'
+        },
+
         profile: {
             title: 'Мой профиль',
         },
@@ -529,7 +537,7 @@ export default {
             add_unit: 'Добавить главу',
             add_unit_title: 'Добавление главы',
             unit_name: 'Название главы',
-            lesson_materials: 'Материалы урока',
+            lesson_materials: 'Материалы',
             there_are_no_materials: 'Для этого урока пока не добавлены материалы.',
             is_unavailable: 'Урок временно недоступен',
             is_unavailable_desc: 'Данный урок будет доступен после проведения конференции с куратором.',

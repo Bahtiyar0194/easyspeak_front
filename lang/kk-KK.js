@@ -344,6 +344,14 @@ export default {
             to: "Басты бетке"
         },
 
+        "privacy-policy": {
+            title: 'Құпиялылық саясаты'
+        },
+
+        "refund-policy": {
+            title: 'Ақшаны қайтару саясаты'
+        },
+
         profile: {
             title: 'Менің парақшам',
         },
@@ -530,7 +538,7 @@ export default {
             add_unit: 'Бөлім қосу',
             add_unit_title: 'Бөлім қосу',
             unit_name: 'Бөлімнің атауы',
-            lesson_materials: 'Сабақтың материалдары',
+            lesson_materials: 'Материалдар',
             there_are_no_materials: 'Бұл сабаққа әзірше материалдар қосылмаған.',
             is_unavailable: 'Сабақ әзірше қолжетімсіз',
             is_unavailable_desc: 'Сабақ тәлімгермен конференция өткізілгеннен кейін қолжетімді болады.',

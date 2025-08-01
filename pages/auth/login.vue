@@ -61,12 +61,12 @@
             {{ $t("pages.login.password_recovery") }}
           </nuxt-link>
         </p>
-        <p>
+        <!-- <p>
           {{ $t("pages.login.dont_have_an_account") }}
           <nuxt-link :to="localePath('/auth/register')">
             {{ $t("pages.register.title") }}
           </nuxt-link>
-        </p>
+        </p> -->
 
         <button type="submit" class="btn btn-primary">
           <i class="pi pi-arrow-right"></i>
