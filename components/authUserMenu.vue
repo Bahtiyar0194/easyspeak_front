@@ -87,7 +87,7 @@
   </template>
   <template v-else>
     <nuxt-link
-    class="btn btn-sm btn-outline-primary"
+    class="btn btn-primary !px-3"
       :to="localePath('/auth/login')"
     >
       <i class="pi pi-sign-in"></i>

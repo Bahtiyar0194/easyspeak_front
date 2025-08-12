@@ -4,9 +4,11 @@ export default defineNuxtConfig({
     '@fortawesome/fontawesome-free/css/all.css',
     'primeicons/primeicons.css',
     'bootstrap-icons/font/bootstrap-icons.css',
-    'vue3-carousel/dist/carousel.css',
+    //'vue3-carousel/dist/carousel.css',
+    'keen-slider/keen-slider.min.css',
     'vue-toastification/dist/index.css',
-    '@/assets/css/main.css'
+    '@/assets/css/main.css',
+    '@/assets/css/slider-animate.css'
   ],
 
   app: {
@@ -34,7 +36,7 @@ export default defineNuxtConfig({
     }
   },
 
-  modules: ["@nuxtjs/i18n", 'nuxt-auth-sanctum', '@pinia/nuxt', 'vue3-carousel-nuxt', '@vueuse/motion/nuxt'],
+  modules: ["@nuxtjs/i18n", 'nuxt-auth-sanctum', '@pinia/nuxt', '@vueuse/motion/nuxt'],
 
   postcss: {
     plugins: {

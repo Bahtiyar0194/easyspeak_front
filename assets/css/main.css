@@ -173,7 +173,7 @@
 /*DEFAULT THEME*/
 
 .bg-corp {
-    @apply bg-accent-300;
+    @apply bg-blue-500;
 }
 
 .bg-corp-100{
@@ -181,11 +181,11 @@
 }
 
 .border-corp {
-    @apply border-accent-300;
+    @apply border-blue-500;
 }
 
 .text-corp {
-    @apply text-accent-300;
+    @apply text-blue-500;
 }
 
 /*STYLES*/
@@ -351,7 +351,7 @@
 }
 
 .stroke-corp{
-    @apply stroke-accent-300;
+    @apply stroke-blue-500;
 }
 
 .stroke-success{

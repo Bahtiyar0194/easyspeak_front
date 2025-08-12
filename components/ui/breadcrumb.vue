@@ -1,6 +1,11 @@
 <template>
   <client-only>
     <ul class="breadcrumb">
+      <li v-if="!route.meta.layout">
+        <nuxt-link to="/">
+          <span>{{ $t('pages.home.title') }}</span>
+        </nuxt-link>
+      </li>
       <li v-for="(crumb, index) in crumbs" :key="index">
         <nuxt-link v-if="index < crumbs.length - 1" :to="crumb.to">
           <span :data-crumb="crumb.label">{{ crumb.label }}</span>

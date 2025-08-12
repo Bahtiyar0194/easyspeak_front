@@ -35,7 +35,10 @@
         </div>
       </div>
 
-      <div class="col-span-12 lg:col-span-3" :class="(searchFilter || diskInfo) ? 'block' : 'hidden'">
+      <div
+        class="col-span-12 lg:col-span-3"
+        :class="searchFilter || diskInfo ? 'block' : 'hidden'"
+      >
         <stickyBox>
           <div class="custom-grid">
             <div class="col-span-12" :class="searchFilter ? 'block' : 'hidden'">
@@ -110,19 +113,46 @@
                 </form>
               </div>
             </div>
-            <div v-if="disk" class="col-span-12" :class="diskInfo ? 'block' : 'hidden'">
+            <div
+              v-if="disk"
+              class="col-span-12"
+              :class="diskInfo ? 'block' : 'hidden'"
+            >
               <div class="card p-4">
-                <h5 class="mb-2">{{ $t('file.disk_info') }}</h5>
+                <h5 class="mb-2">{{ $t("file.disk_info") }}</h5>
                 <ul class="list-group nowrap">
                   <li>
-                    <p class="mb-0">{{ $t("file.total_space") }}: <b>{{ disk.total_space.toFixed(2) }} {{ $t('file.gigabyte') }}</b></p>
+                    <p class="mb-0">
+                      {{ $t("file.total_space") }}:
+                      <b
+                        >{{ disk.total_space.toFixed(2) }}
+                        {{ $t("file.gigabyte") }}</b
+                      >
+                    </p>
                   </li>
                   <li>
-                    <p class="mb-0 text-success">{{ $t("file.free_space") }}: <b>{{ (disk.free_space).toFixed(2) }} {{ $t('file.gigabyte') }}</b></p>
+                    <p class="mb-0 text-success">
+                      {{ $t("file.free_space") }}:
+                      <b
+                        >{{ disk.free_space.toFixed(2) }}
+                        {{ $t("file.gigabyte") }}</b
+                      >
+                    </p>
                   </li>
                   <li>
-                    <p class="mb-0 text-danger">{{ $t("file.used_space") }}: <b>{{ disk.used_space.toFixed(2) }} {{ $t('file.gigabyte') }}</b></p>
-                    <progressBar :progressPercentage="(disk.used_space / disk.total_space) * 100" :className="'danger sm'" />
+                    <p class="mb-0 text-danger">
+                      {{ $t("file.used_space") }}:
+                      <b
+                        >{{ disk.used_space.toFixed(2) }}
+                        {{ $t("file.gigabyte") }}</b
+                      >
+                    </p>
+                    <progressBar
+                      :progressPercentage="
+                        (disk.used_space / disk.total_space) * 100
+                      "
+                      :className="'danger sm'"
+                    />
                   </li>
                 </ul>
               </div>
@@ -131,7 +161,10 @@
         </stickyBox>
       </div>
 
-      <div class="col-span-12" :class="(searchFilter || diskInfo) && 'lg:col-span-9'">
+      <div
+        class="col-span-12"
+        :class="(searchFilter || diskInfo) && 'lg:col-span-9'"
+      >
         <template v-if="files.data?.length > 0">
           <div class="table table-striped table-sm selectable">
             <loader v-if="pendingFiles" :className="'overlay'" />
@@ -170,27 +203,29 @@
                   <td>{{ file.size.toFixed(2) }} {{ $t("file.megabyte") }}</td>
                   <td>{{ new Date(file.created_at).toLocaleString() }}</td>
                   <td>
-                    <div
-                      v-if="
-                        file.material_type_slug === 'video' ||
-                        file.material_type_slug === 'audio'
-                      "
-                      class="btn btn-square btn-lg btn-light"
-                    >
-                      <i :class="file.icon"></i>
+                    <div class="btn-wrap">
+                      <div
+                        v-if="
+                          file.material_type_slug === 'video' ||
+                          file.material_type_slug === 'audio'
+                        "
+                        class="btn btn-square btn-lg btn-light"
+                      >
+                        <i :class="file.icon"></i>
+                      </div>
+                      <div
+                        v-if="file.material_type_slug === 'image'"
+                        :style="{
+                          backgroundImage:
+                            'url(' +
+                            config.public.apiBase +
+                            '/media/get/' +
+                            file.target +
+                            ')',
+                        }"
+                        class="h-9 w-9 bg-cover bg-no-repeat bg-center rounded-lg"
+                      ></div>
                     </div>
-                    <div
-                      v-if="file.material_type_slug === 'image'"
-                      :style="{
-                        backgroundImage:
-                          'url(' +
-                          config.public.apiBase +
-                          '/media/get/' +
-                          file.target +
-                          ')',
-                      }"
-                      class="h-9 w-9 bg-cover bg-no-repeat bg-center rounded-lg"
-                    ></div>
                   </td>
                 </tr>
               </tbody>
@@ -321,6 +356,20 @@
               <span class="text-inactive">{{ $t("created_at") }}: </span>
               <b>{{ new Date(currentFile.created_at).toLocaleString() }}</b>
             </p>
+
+            <button
+              v-if="currentFile.material_type_slug === 'audio'"
+              class="btn btn-light"
+              @click="
+                downloadFile(
+                  config.public.apiBase + '/media/get/' + currentFile.target,
+                  currentFile.file_name
+                )
+              "
+            >
+              <i class="pi pi-download"></i>
+              {{ $t("download") }}
+            </button>
           </div>
         </div>
       </div>
@@ -526,6 +575,22 @@ const selectFileType = (event) => {
       (ft) => ft.material_type_id == event.target.value
     );
   }, 100);
+};
+
+const downloadFile = async (filePath, fileName) => {
+  const response = await fetch(filePath);
+  const blob = await response.blob();
+
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName; // имя при сохранении
+  document.body.appendChild(link);
+  link.click();
+
+  // Чистим за собой
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
 };
 
 const showHideFileSearchFilter = () => {
