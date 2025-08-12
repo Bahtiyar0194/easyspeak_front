@@ -349,7 +349,7 @@ export default {
         },
 
         "refund-policy": {
-            title: 'Ақшаны қайтару саясаты'
+            title: 'Қаражатты қайтару саясаты'
         },
 
         profile: {

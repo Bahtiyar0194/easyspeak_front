@@ -584,13 +584,20 @@ const downloadFile = async (filePath, fileName) => {
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = fileName; // имя при сохранении
+  link.download = sanitizeFileName(fileName); // имя при сохранении
   document.body.appendChild(link);
   link.click();
 
   // Чистим за собой
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
+};
+
+const sanitizeFileName = (name) => {
+  return name
+    .replace(/[<>:"/\\|?*]+/g, "") // убираем запрещённые символы
+    .replace(/\s+/g, " ") // нормализуем пробелы
+    .trim();
 };
 
 const showHideFileSearchFilter = () => {
