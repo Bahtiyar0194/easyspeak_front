@@ -8,7 +8,7 @@
         <div>
           <nuxt-link :to="localePath('/')">
             <!-- <img class="w-full" src="~/public/logo.svg"> -->
-            <span class="font-medium text-corp text-3xl">EasySpeak</span>
+            <span class="font-medium text-corp text-3xl">{{ $contacts.name }}</span>
           </nuxt-link>
         </div>
 
@@ -21,7 +21,10 @@
     </stickyBox>
     <div class="w-full flex-1">
       <div class="custom-grid">
-        <div v-if="route && route.path != '/'" class="col-span-12 px-4 lg:px-20 pt-4">
+        <div
+          v-if="route && route.path != '/'"
+          class="col-span-12 px-4 lg:px-20 pt-4"
+        >
           <breadcrumb />
         </div>
         <div
@@ -37,7 +40,7 @@
     >
       <div class="custom-grid">
         <div class="col-span-12 md:col-span-4">
-          <h5 class="mb-2">Документы</h5>
+          <h5 class="mb-2">{{ $t('documents') }}</h5>
           <ul class="list-none px-0">
             <li
               v-for="(item, itemIndex) in footer_menu_left"
@@ -51,7 +54,7 @@
           </ul>
         </div>
         <div class="col-span-12 md:col-span-4">
-          <h5 class="mb-2">Контакты</h5>
+          <h5 class="mb-2">{{ $t('contacts') }}</h5>
           <ul class="list-none px-0">
             <li
               v-for="(item, itemIndex) in footer_menu_contact"
@@ -77,7 +80,7 @@
         <div class="col-span-12">
           <hr />
           <p class="mt-6 mb-0 text-center">
-            © {{ new Date().getFullYear() }} <u>EasySpeak.kz</u> -
+            © {{ new Date().getFullYear() }} <u><nuxt-link to="/" class="text-active">{{ $contacts.site_name }}</nuxt-link></u> -
             {{ $t("all_rights") }}
           </p>
         </div>
@@ -93,28 +96,30 @@ import themeSwitcher from "../components/ui/themeSwitcher.vue";
 import selectLocale from "../components/ui/selectLocale.vue";
 import authUserMenu from "../components/authUserMenu.vue";
 import { onMounted } from "vue";
-const pending = ref(true);
 
 const route = useRoute();
+const { $contacts } = useNuxtApp();
+
+const pending = ref(true);
 
 onMounted(() => {
   pending.value = false;
 });
 
-const footer_menu_left = ["privacy-policy", "refund-policy"];
+const footer_menu_left = ["the-offer-agreement", "privacy-policy", "refund-policy"];
 
 const footer_menu_contact = [
   {
     internal: false,
     icon: "pi pi-mobile",
-    text: "+ 7 (702) 799 2279",
-    link: "tel:+77027992279",
+    text: $contacts.phone_format,
+    link: "tel:" + $contacts.phone,
   },
   {
     internal: false,
     icon: "pi pi-envelope",
-    text: "info@easyspeak.kz",
-    link: "mailto:info@easyspeak.kz",
+    text: $contacts.email,
+    link: "mailto:" + $contacts.email,
   },
 ];
 </script>

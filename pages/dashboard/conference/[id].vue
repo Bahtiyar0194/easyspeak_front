@@ -1290,11 +1290,11 @@ const startStream = async () => {
       secure: process.env.NODE_ENV === "development" ? false : true,
       config: {
         iceServers: [
-          { urls: "stun:stun.l.google.com:19302" },
+          { urls: config.public.stunURL },
           {
-            urls: "turn:turn.easyspeak.kz:3478",
-            username: "webrtcuser",
-            credential: "securepassword",
+            urls: config.public.turnURL,
+            username: config.public.turnUSERNAME,
+            credential: config.public.turnPASSWORD,
           },
         ],
       },

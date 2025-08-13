@@ -132,6 +132,9 @@ export default {
     no_events: 'Іс-шара жоқ',
     yet_another: 'Тағы',
 
+    documents: 'Құжаттар',
+    contacts: 'Байланыс',
+
     theme: {
         switch_to_a_light_theme: "Жарық тақырыпқа ауысу",
         switch_to_a_dark_theme: "Қараңғы тақырыпқа ауысу"
@@ -350,6 +353,10 @@ export default {
 
         "refund-policy": {
             title: 'Қаражатты қайтару саясаты'
+        },
+
+        "the-offer-agreement": {
+            title: 'Ашық ұсыныс шарты'
         },
 
         profile: {

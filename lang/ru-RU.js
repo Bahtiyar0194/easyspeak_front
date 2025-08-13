@@ -132,6 +132,9 @@ export default {
     no_events: 'Нет мероприятии',
     yet_another: 'Ещё',
 
+    documents: 'Документы',
+    contacts: 'Контакты',
+
     theme: {
         switch_to_a_light_theme: "Переключиться на светлую тему",
         switch_to_a_dark_theme: "Переключиться на темную тему"
@@ -350,6 +353,10 @@ export default {
 
         "refund-policy": {
             title: 'Политика возврата денежных средств'
+        },
+
+        "the-offer-agreement": {
+            title: 'Договор публичной оферты'
         },
 
         profile: {
