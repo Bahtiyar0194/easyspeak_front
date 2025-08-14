@@ -15,12 +15,6 @@ export default defineNuxtPlugin((nuxtApp) => {
         axiosPlugin.defaults.headers.common['Accept-Language'] = langCookie.value;
     }
 
-    const subDomainCookie = useCookie('subdomain');
-
-    if(subDomainCookie.value){
-        axiosPlugin.defaults.headers.common['Subdomain'] = subDomainCookie.value;
-    }
-
     const sanctumToken = useCookie('sanctum.token.cookie');
 
     if(sanctumToken.value){

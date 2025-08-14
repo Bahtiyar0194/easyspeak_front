@@ -69,12 +69,12 @@
           </li>
         </template>
         <template v-else>
-            <li>
-          <nuxt-link :to="localePath('/dashboard')">
-            <i class="pi pi-sign-in"></i>
-            {{ $t("pages.dashboard.title") }}
-          </nuxt-link>
-        </li>
+          <li>
+            <nuxt-link :to="localePath('/dashboard')">
+              <i class="pi pi-sign-in"></i>
+              {{ $t("pages.dashboard.title") }}
+            </nuxt-link>
+          </li>
         </template>
         <li>
           <button @click="handleLogout()">
@@ -86,10 +86,7 @@
     </dropdownMenu>
   </template>
   <template v-else>
-    <nuxt-link
-    class="btn btn-primary !px-3"
-      :to="localePath('/auth/login')"
-    >
+    <nuxt-link class="btn btn-primary !px-3" :to="localePath('/auth/login')">
       <i class="pi pi-sign-in"></i>
       {{ $t("pages.login.sign_in") }}
     </nuxt-link>
@@ -104,6 +101,7 @@ const { $axiosPlugin } = useNuxtApp();
 const { logout, refreshIdentity } = useSanctumAuth();
 const authUser = useSanctumUser();
 const router = useRouter();
+const schoolStore = useSchoolStore();
 
 const props = defineProps({
   showAuthMenu: {
@@ -139,8 +137,7 @@ const handleLogout = () => {
   logout().then(() => {
     $axiosPlugin.defaults.headers.common["Authorization"] = null;
 
-    const subDomainCookie = useCookie("subdomain");
-    subDomainCookie.value = null;
+    schoolStore.getSchool();
   });
 };
 </script>

@@ -8,19 +8,43 @@
         <p v-if="errors.auth_failed" class="text-danger mb-6">
           {{ errors.auth_failed[0] }}
         </p>
+        <client-only>
+          <div
+            v-if="schoolStore.schoolData === null"
+            class="form-group-border active mb-5"
+          >
+            <i class="pi pi-graduation-cap"></i>
+            <input type="text" name="school_domain" placeholder=" " />
+            <label :class="{ 'label-error': errors.school_domain }">
+              {{
+                errors.school_domain
+                  ? errors.school_domain[0]
+                  : $t("form.school_domain")
+              }}
+            </label>
+          </div>
 
-        <div class="form-group-border active mb-5">
-          <i class="pi pi-graduation-cap"></i>
-          <input type="text" name="school_domain" placeholder=" " />
-          <label :class="{ 'label-error': errors.school_domain }">
-            {{
-              errors.school_domain
-                ? errors.school_domain[0]
-                : $t("form.school_domain")
-            }}
-          </label>
-        </div>
+          <div v-else class="border-corp border p-4 mb-5 rounded-xl">
+            <p class="mb-1">
+              {{ $t("form.school_name") }}:
+              <b>{{ schoolStore.schoolData.school_name }}</b>
+            </p>
+            <p class="mb-0">
+              {{ $t("form.school_domain") }}:
+              <b>{{ schoolStore.schoolData.school_domain }}</b>
+            </p>
 
+            <div v-if="!isSubdomain()" class="btn-wrap justify-end mt-4">
+              <button
+                type="button"
+                class="btn btn-sm btn-light"
+                @click="resetSchool()"
+              >
+                Сбросить школу
+              </button>
+            </div>
+          </div>
+        </client-only>
         <div class="form-group-border active mb-5">
           <i class="pi pi-at"></i>
           <input
@@ -61,12 +85,12 @@
             {{ $t("pages.login.password_recovery") }}
           </nuxt-link>
         </p>
-        <!-- <p>
+        <p>
           {{ $t("pages.login.dont_have_an_account") }}
           <nuxt-link :to="localePath('/auth/register')">
             {{ $t("pages.register.title") }}
           </nuxt-link>
-        </p> -->
+        </p>
 
         <button type="submit" class="btn btn-primary">
           <i class="pi pi-arrow-right"></i>
@@ -80,9 +104,10 @@
 <script setup>
 import authCard from "../../components/authCard.vue";
 import { useCookie, useRoute, useRouter } from "nuxt/app";
+import { isSubdomain } from "../../utils/isSubdomain";
 
 const { t, localeProperties } = useI18n();
-const { $schoolPlugin, $axiosPlugin } = useNuxtApp();
+const { $axiosPlugin } = useNuxtApp();
 const { login } = useSanctumAuth();
 const route = useRoute();
 const router = useRouter();
@@ -90,9 +115,12 @@ const router = useRouter();
 const pending = ref(true);
 const errors = ref([]);
 const showPassword = ref(false);
-const school = $schoolPlugin;
+
+const schoolStore = useSchoolStore();
 
 const formRef = ref(null);
+
+
 
 useHead({
   title: t("pages.login.title"),
@@ -114,10 +142,13 @@ async function signIn() {
   const formData = new FormData(formRef.value);
   formData.append("lang", localeProperties.value.code);
 
+  if (schoolStore.schoolData) {
+    formData.append("school_domain", schoolStore.schoolData.school_domain);
+  }
+
   try {
     await login(formData).then(() => {
-      const subDomainCookie = useCookie("subdomain");
-      subDomainCookie.value = formRef.value.school_domain.value;
+      localStorage.setItem("subdomain", formRef.value.school_domain.value);
 
       const sanctumToken = useCookie("sanctum.token.cookie");
 
@@ -137,5 +168,9 @@ async function signIn() {
   } finally {
     pending.value = false;
   }
+}
+
+async function resetSchool() {
+  await schoolStore.resetSchool();
 }
 </script>
