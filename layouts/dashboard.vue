@@ -14,7 +14,13 @@
       </div>
     </div>
     <div class="flex">
-      <div class="db__sidebar__menu">
+      <div
+        ref="menuWrapper"
+        class="db__sidebar__menu"
+        @mouseenter="showMenu = true"
+        @mouseleave="showMenu = false"
+        @click="showMenu = true"
+      >
         <roleProvider
           v-for="(item, index) in dashboardMenu"
           :key="index"
@@ -22,7 +28,9 @@
         >
           <nuxt-link :to="localePath(item.link)">
             <i :class="item.icon"></i>
-            <span class="font-medium">{{ $t(item.title) }}</span>
+            <span class="font-medium" :class="{ show: showMenu === true }">{{
+              $t(item.title)
+            }}</span>
           </nuxt-link>
         </roleProvider>
       </div>
@@ -62,6 +70,8 @@ import roleProvider from "../components/ui/roleProvider.vue";
 import { useRoute } from "nuxt/app";
 
 const authUser = useSanctumUser();
+const menuWrapper = ref(null);
+const showMenu = ref(false);
 
 const dashboardMenu = [
   {
@@ -134,5 +144,20 @@ const hasAccess = computed(() => {
     }
   }
   return true;
+});
+
+const handleClickOutside = (event) => {
+  // если есть элемент меню и клик был вне его — скрываем меню
+  if (menuWrapper.value && !menuWrapper.value.contains(event.target)) {
+    showMenu.value = false;
+  }
+};
+
+onMounted(() => {
+  document.addEventListener("click", handleClickOutside);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", handleClickOutside);
 });
 </script>

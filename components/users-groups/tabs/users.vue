@@ -3,17 +3,15 @@
     <div class="custom-grid">
       <div class="col-span-12">
         <div class="btn-wrap">
-          <client-only>
-            <roleProvider :roles="[1, 2, 3]">
-              <button
-                class="btn btn-outline-primary"
-                @click="inviteModalIsVisible = true"
-              >
-                <i class="pi pi-user-plus"></i>
-                {{ $t("invite") }}
-              </button>
-            </roleProvider>
-          </client-only>
+          <roleProvider :roles="[1, 2, 3]">
+            <button
+              class="btn btn-outline-primary"
+              @click="inviteModalIsVisible = true"
+            >
+              <i class="pi pi-user-plus"></i>
+              {{ $t("invite") }}
+            </button>
+          </roleProvider>
 
           <button @click="showHideUserSearchFilter" class="btn btn-light">
             <i class="pi pi-search"></i>
