@@ -166,7 +166,7 @@
     </div>
   </section>
 
-  <!-- <modal
+  <Modal
     :show="demoModalIsVisible"
     :onClose="() => (demoModalIsVisible = false)"
     :className="'modal-lg'"
@@ -230,13 +230,13 @@
         </button>
       </form>
     </template>
-  </modal> -->
+  </Modal>
 </template>
 
 <script setup>
 import Typed from "typed.js";
 import { onMounted, onBeforeUnmount, ref } from "vue";
-//import modal from "../components/ui/modal.vue";
+import Modal from "../components/ui/modal.vue";
 const { t, localeProperties } = useI18n();
 const { $axiosPlugin } = useNuxtApp();
 const demoModalIsVisible = ref(false);
