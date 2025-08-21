@@ -1731,7 +1731,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .db__sidebar__menu span.show{
-    @apply ml-1.5 max-w-[300px] opacity-100
+    @apply ml-1.5 max-w-[400px] opacity-100
 }
 
 .db__content{

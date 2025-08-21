@@ -1,5 +1,7 @@
 <template>
-  <tabs :tabs="tabs_data" />
+  <client-only>
+    <tabs :tabs="tabs_data" />
+  </client-only>
 </template>
 <script setup>
 import tabs from "../../../components/ui/tabs.vue";

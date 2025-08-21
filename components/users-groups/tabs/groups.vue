@@ -1,467 +1,455 @@
 <template>
-  <client-only>
-    <div class="custom-grid">
-      <div class="col-span-12">
-        <div class="btn-wrap">
-          <roleProvider :roles="[1, 2, 3]">
-            <button
-              @click="createModalIsVisible = true"
-              class="btn btn-outline-primary"
-            >
-              <i class="pi pi-plus"></i>
-              {{ $t("pages.groups.create_group") }}
-            </button>
-          </roleProvider>
-          <button @click="showHideGroupSearchFilter" class="btn btn-light">
-            <i class="pi pi-search"></i>
-            {{
-              searchFilter === true
-                ? $t("hide_search_filter")
-                : $t("show_search_filter")
-            }}
+  <div class="custom-grid">
+    <div class="col-span-12">
+      <div class="btn-wrap">
+        <roleProvider :roles="[1, 2, 3]">
+          <button
+            @click="createModalIsVisible = true"
+            class="btn btn-outline-primary"
+          >
+            <i class="pi pi-plus"></i>
+            {{ $t("pages.groups.create_group") }}
           </button>
-        </div>
-      </div>
-
-      <div
-        class="col-span-12 lg:col-span-3"
-        :class="searchFilter ? 'block' : 'hidden'"
-      >
-        <stickyBox>
-          <div class="card p-4">
-            <h5>{{ $t("pages.groups.search_filter") }}</h5>
-            <form @submit.prevent="debounceReset" ref="searchFormRef">
-              <div class="custom-grid">
-                <div class="col-span-12">
-                  <div class="form-group-border active">
-                    <i class="pi pi-users"></i>
-                    <input
-                      type="text"
-                      name="group_name"
-                      placeholder=" "
-                      @input="debounceGroups"
-                    />
-                    <label>{{ $t("pages.groups.group_name") }}</label>
-                  </div>
-                </div>
-
-                <div class="col-span-12">
-                  <div class="form-group-border select active label-active">
-                    <i class="pi pi-book"></i>
-                    <select
-                      name="course_id"
-                      v-model="selectedCourseId"
-                      @change="onCourseChange"
-                    >
-                      <option selected value="">
-                        {{ $t("not_selected") }}
-                      </option>
-                      <option
-                        v-for="(course, courseIndex) in attributes.courses"
-                        :key="courseIndex"
-                        :value="course.course_id"
-                      >
-                        {{ course.course_name }}
-                      </option>
-                    </select>
-                    <label :class="{ 'label-error': errors.course_id }">
-                      {{
-                        errors.course_id
-                          ? errors.course_id[0]
-                          : $t("pages.courses.course")
-                      }}
-                    </label>
-                  </div>
-                </div>
-
-                <div v-if="selectedCourseId" class="col-span-12">
-                  <multipleSelect
-                    :className="'form-group-border select active label-active'"
-                    :icon="'pi pi-users'"
-                    :label="$t('pages.groups.group_category')"
-                    :items="selectedCourse?.levels"
-                    :optionName="'levels[]'"
-                    :optionValue="'level_id'"
-                    :optionLabel="'level_name'"
-                    :onChange="debounceGroups"
-                  />
-                </div>
-
-                <div class="col-span-12">
-                  <multipleSelect
-                    :className="'form-group-border select active label-active'"
-                    :icon="'pi pi-user'"
-                    :label="$t('operator')"
-                    :items="attributes.group_operators"
-                    :optionName="'operators[]'"
-                    :optionValue="'user_id'"
-                    :optionLabel="'full_name'"
-                    :avatar="true"
-                    :onChange="debounceGroups"
-                  />
-                </div>
-
-                <div class="col-span-12">
-                  <multipleSelect
-                    :className="'form-group-border select active label-active'"
-                    :icon="'pi pi-user'"
-                    :label="$t('mentor')"
-                    :items="attributes.group_mentors"
-                    :optionName="'mentors[]'"
-                    :optionValue="'user_id'"
-                    :optionLabel="'full_name'"
-                    :avatar="true"
-                    :onChange="debounceGroups"
-                  />
-                </div>
-
-                <div class="col-span-12">
-                  <multipleSelect
-                    :className="'form-group-border select active label-active'"
-                    :icon="'pi pi-hourglass'"
-                    :label="$t('status')"
-                    :items="attributes.group_statuses"
-                    :optionName="'statuses[]'"
-                    :optionValue="'status_type_id'"
-                    :optionLabel="'status_type_name'"
-                    :onChange="debounceGroups"
-                  />
-                </div>
-
-                <div class="col-span-12">
-                  <div class="form-group-border active">
-                    <i class="pi pi-calendar"></i>
-                    <input
-                      type="date"
-                      name="created_at_from"
-                      @input="debounceGroups"
-                      placeholder=" "
-                    />
-                    <label>{{ $t("created_at_from") }}</label>
-                  </div>
-                </div>
-
-                <div class="col-span-12">
-                  <div class="form-group-border active">
-                    <i class="pi pi-calendar"></i>
-                    <input
-                      type="date"
-                      name="created_at_to"
-                      @input="debounceGroups"
-                      placeholder=" "
-                    />
-                    <label>{{ $t("created_at_to") }}</label>
-                  </div>
-                </div>
-
-                <div class="col-span-12">
-                  <div class="btn-wrap">
-                    <button
-                      type="submit"
-                      class="btn btn-sm btn-outline-primary"
-                    >
-                      <i class="pi pi-undo"></i>
-                      {{ $t("reset_search_filter") }}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </form>
-          </div>
-        </stickyBox>
-      </div>
-
-      <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
-        <template v-if="groups.data?.length > 0">
-          <div class="table table-striped table-sm selectable">
-            <loader v-if="pending" :className="'overlay'" />
-            <table ref="tableRef">
-              <thead>
-                <tr>
-                  <sortTableHead
-                    v-for="(head, index) in groupsTableHeads"
-                    :key="index"
-                    :title="head.title"
-                    :keyName="head.keyName"
-                    :sortKey="sortKey"
-                    :sortDirection="sortDirection"
-                    :sortType="head.sortType"
-                    :sortHandler="debounceGroups"
-                    @update:sortKey="sortKey = $event"
-                    @update:sortDirection="sortDirection = $event"
-                  />
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr
-                  v-for="group in groups.data"
-                  :key="group.group_id"
-                  @click="getGroup(group.group_id)"
-                >
-                  <td>{{ group.group_name }}</td>
-                  <td>{{ group.course_name }}</td>
-                  <td>{{ group.level_name }}</td>
-                  <td>
-                    <div class="flex gap-x-2 items-center">
-                      <userAvatar
-                        :padding="0.5"
-                        :className="'w-6 h-6'"
-                        :user="{
-                          last_name: group.operator_last_name,
-                          first_name: group.operator_first_name,
-                          avatar: group.operator_avatar,
-                        }"
-                      />
-                      {{ group.operator_last_name }}
-                      {{ group.operator_first_name }}
-                    </div>
-                  </td>
-                  <td>
-                    <div class="flex gap-x-2 items-center">
-                      <userAvatar
-                        :padding="0.5"
-                        :className="'w-6 h-6'"
-                        :user="{
-                          last_name: group.mentor_last_name,
-                          first_name: group.mentor_first_name,
-                          avatar: group.mentor_avatar,
-                        }"
-                      />
-                      {{ group.mentor_last_name }} {{ group.mentor_first_name }}
-                    </div>
-                  </td>
-                  <td>{{ group.members_count }}</td>
-                  <td>
-                    {{
-                      new Date(group.started_at).toLocaleString(undefined, {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: false, // можно убрать или поставить true, если нужен 12-часовой формат
-                      })
-                    }}
-                  </td>
-                  <td>
-                    {{
-                      new Date(group.created_at).toLocaleString(undefined, {
-                        year: "numeric",
-                        month: "2-digit",
-                        day: "2-digit",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: false, // можно убрать или поставить true, если нужен 12-часовой формат
-                      })
-                    }}
-                  </td>
-                  <td :class="group.status_color">
-                    {{ group.status_type_name }}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="btn-wrap mt-4">
-            <pagination
-              :items="groups"
-              :setItems="getGroups"
-              :onSelect="(count) => (perPage = count)"
-            />
-          </div>
-        </template>
-        <alert v-else :className="'light'">
-          <loader v-if="pending" :className="'overlay'" />
-          <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
-        </alert>
+        </roleProvider>
+        <button @click="showHideGroupSearchFilter" class="btn btn-light">
+          <i class="pi pi-search"></i>
+          {{
+            searchFilter === true
+              ? $t("hide_search_filter")
+              : $t("show_search_filter")
+          }}
+        </button>
       </div>
     </div>
-    <modal
-      :show="groupModalIsVisible"
-      :onClose="() => closeModal()"
-      :className="'modal-2xl'"
-      :showLoader="pendingGroup"
-      :closeOnClickSelf="true"
+
+    <div
+      class="col-span-12 lg:col-span-3"
+      :class="searchFilter ? 'block' : 'hidden'"
     >
-      <template v-slot:header_content>
-        <h4>{{ currentGroup?.group_name }}</h4>
-      </template>
-      <template v-slot:body_content>
-        <div v-if="currentGroup" class="flex flex-col gap-y-3">
-          <p v-if="currentGroup.group_description" class="mb-0">
-            <span class="text-inactive"
-              >{{ $t("pages.groups.group_description") }}:
-            </span>
-            <b>{{ currentGroup.group_description }}</b>
-          </p>
-          <p class="mb-0">
-            <span class="text-inactive"
-              >{{ $t("pages.groups.group_category") }}:
-            </span>
-            <b>{{ currentGroup.level.level_name }}</b>
-          </p>
+      <stickyBox>
+        <div class="card p-4">
+          <h5>{{ $t("pages.groups.search_filter") }}</h5>
+          <form @submit.prevent="debounceReset" ref="searchFormRef">
+            <div class="custom-grid">
+              <div class="col-span-12">
+                <div class="form-group-border active">
+                  <i class="pi pi-users"></i>
+                  <input
+                    type="text"
+                    name="group_name"
+                    placeholder=" "
+                    @input="debounceGroups"
+                  />
+                  <label>{{ $t("pages.groups.group_name") }}</label>
+                </div>
+              </div>
 
-          <div class="flex gap-x-2 items-center">
-            <p class="mb-0">
-              <span class="text-inactive">{{ $t("mentor") }}: </span>
-            </p>
-            <userTag v-if="currentGroup.mentor" :user="currentGroup.mentor" />
-          </div>
+              <div class="col-span-12">
+                <div class="form-group-border select active label-active">
+                  <i class="pi pi-book"></i>
+                  <select
+                    name="course_id"
+                    v-model="selectedCourseId"
+                    @change="onCourseChange"
+                  >
+                    <option selected value="">
+                      {{ $t("not_selected") }}
+                    </option>
+                    <option
+                      v-for="(course, courseIndex) in attributes.courses"
+                      :key="courseIndex"
+                      :value="course.course_id"
+                    >
+                      {{ course.course_name }}
+                    </option>
+                  </select>
+                  <label :class="{ 'label-error': errors.course_id }">
+                    {{
+                      errors.course_id
+                        ? errors.course_id[0]
+                        : $t("pages.courses.course")
+                    }}
+                  </label>
+                </div>
+              </div>
 
-          <div class="flex gap-x-2 items-center">
-            <p class="mb-0">
-              <span class="text-inactive">{{ $t("operator") }}:</span>
-            </p>
-            <userTag
-              v-if="currentGroup.operator"
-              :user="currentGroup.operator"
-            />
-          </div>
+              <div v-if="selectedCourseId" class="col-span-12">
+                <multipleSelect
+                  :className="'form-group-border select active label-active'"
+                  :icon="'pi pi-users'"
+                  :label="$t('pages.groups.group_category')"
+                  :items="selectedCourse?.levels"
+                  :optionName="'levels[]'"
+                  :optionValue="'level_id'"
+                  :optionLabel="'level_name'"
+                  :onChange="debounceGroups"
+                />
+              </div>
 
-          <p class="mb-0" v-if="currentGroup.group_members">
-            <span class="text-inactive"
-              >{{ $t("pages.groups.members_count") }}:
-            </span>
-            <b>{{ currentGroup.group_members.length }}</b>
-          </p>
-          <p class="mb-0">
-            <span class="text-inactive">{{ $t("pages.groups.members") }}:</span>
-          </p>
+              <div class="col-span-12">
+                <multipleSelect
+                  :className="'form-group-border select active label-active'"
+                  :icon="'pi pi-user'"
+                  :label="$t('operator')"
+                  :items="attributes.group_operators"
+                  :optionName="'operators[]'"
+                  :optionValue="'user_id'"
+                  :optionLabel="'full_name'"
+                  :avatar="true"
+                  :onChange="debounceGroups"
+                />
+              </div>
 
-          <div v-if="currentGroup.group_members" class="btn-wrap">
-            <userTag
-              v-for="(member, index) in currentGroup.group_members"
-              :key="index"
-              :user="member"
-            />
-          </div>
+              <div class="col-span-12">
+                <multipleSelect
+                  :className="'form-group-border select active label-active'"
+                  :icon="'pi pi-user'"
+                  :label="$t('mentor')"
+                  :items="attributes.group_mentors"
+                  :optionName="'mentors[]'"
+                  :optionValue="'user_id'"
+                  :optionLabel="'full_name'"
+                  :avatar="true"
+                  :onChange="debounceGroups"
+                />
+              </div>
 
-          <roleProvider :roles="[1, 2, 3]">
-            <div class="btn-wrap">
-              <button @click="getEditGroup" class="btn btn-outline-primary">
-                <i class="pi pi-pencil"></i>
-                {{ $t("edit") }}
-              </button>
+              <div class="col-span-12">
+                <multipleSelect
+                  :className="'form-group-border select active label-active'"
+                  :icon="'pi pi-hourglass'"
+                  :label="$t('status')"
+                  :items="attributes.group_statuses"
+                  :optionName="'statuses[]'"
+                  :optionValue="'status_type_id'"
+                  :optionLabel="'status_type_name'"
+                  :onChange="debounceGroups"
+                />
+              </div>
+
+              <div class="col-span-12">
+                <div class="form-group-border active">
+                  <i class="pi pi-calendar"></i>
+                  <input
+                    type="date"
+                    name="created_at_from"
+                    @input="debounceGroups"
+                    placeholder=" "
+                  />
+                  <label>{{ $t("created_at_from") }}</label>
+                </div>
+              </div>
+
+              <div class="col-span-12">
+                <div class="form-group-border active">
+                  <i class="pi pi-calendar"></i>
+                  <input
+                    type="date"
+                    name="created_at_to"
+                    @input="debounceGroups"
+                    placeholder=" "
+                  />
+                  <label>{{ $t("created_at_to") }}</label>
+                </div>
+              </div>
+
+              <div class="col-span-12">
+                <div class="btn-wrap">
+                  <button type="submit" class="btn btn-sm btn-outline-primary">
+                    <i class="pi pi-undo"></i>
+                    {{ $t("reset_search_filter") }}
+                  </button>
+                </div>
+              </div>
             </div>
-          </roleProvider>
+          </form>
+        </div>
+      </stickyBox>
+    </div>
+
+    <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
+      <template v-if="groups.data?.length > 0">
+        <div class="table table-striped table-sm selectable">
+          <loader v-if="pending" :className="'overlay'" />
+          <table ref="tableRef">
+            <thead>
+              <tr>
+                <sortTableHead
+                  v-for="(head, index) in groupsTableHeads"
+                  :key="index"
+                  :title="head.title"
+                  :keyName="head.keyName"
+                  :sortKey="sortKey"
+                  :sortDirection="sortDirection"
+                  :sortType="head.sortType"
+                  :sortHandler="debounceGroups"
+                  @update:sortKey="sortKey = $event"
+                  @update:sortDirection="sortDirection = $event"
+                />
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr
+                v-for="group in groups.data"
+                :key="group.group_id"
+                @click="getGroup(group.group_id)"
+              >
+                <td>{{ group.group_name }}</td>
+                <td>{{ group.course_name }}</td>
+                <td>{{ group.level_name }}</td>
+                <td>
+                  <div class="flex gap-x-2 items-center">
+                    <userAvatar
+                      :padding="0.5"
+                      :className="'w-6 h-6'"
+                      :user="{
+                        last_name: group.operator_last_name,
+                        first_name: group.operator_first_name,
+                        avatar: group.operator_avatar,
+                      }"
+                    />
+                    {{ group.operator_last_name }}
+                    {{ group.operator_first_name }}
+                  </div>
+                </td>
+                <td>
+                  <div class="flex gap-x-2 items-center">
+                    <userAvatar
+                      :padding="0.5"
+                      :className="'w-6 h-6'"
+                      :user="{
+                        last_name: group.mentor_last_name,
+                        first_name: group.mentor_first_name,
+                        avatar: group.mentor_avatar,
+                      }"
+                    />
+                    {{ group.mentor_last_name }} {{ group.mentor_first_name }}
+                  </div>
+                </td>
+                <td>{{ group.members_count }}</td>
+                <td>
+                  {{
+                    new Date(group.started_at).toLocaleString(undefined, {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false, // можно убрать или поставить true, если нужен 12-часовой формат
+                    })
+                  }}
+                </td>
+                <td>
+                  {{
+                    new Date(group.created_at).toLocaleString(undefined, {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false, // можно убрать или поставить true, если нужен 12-часовой формат
+                    })
+                  }}
+                </td>
+                <td :class="group.status_color">
+                  {{ group.status_type_name }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="btn-wrap mt-4">
+          <pagination
+            :items="groups"
+            :setItems="getGroups"
+            :onSelect="(count) => (perPage = count)"
+          />
         </div>
       </template>
-    </modal>
+      <alert v-else :className="'light'">
+        <loader v-if="pending" :className="'overlay'" />
+        <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
+      </alert>
+    </div>
+  </div>
+  <modal
+    :show="groupModalIsVisible"
+    :onClose="() => closeModal()"
+    :className="'modal-2xl'"
+    :showLoader="pendingGroup"
+    :closeOnClickSelf="true"
+  >
+    <template v-slot:header_content>
+      <h4>{{ currentGroup?.group_name }}</h4>
+    </template>
+    <template v-slot:body_content>
+      <div v-if="currentGroup" class="flex flex-col gap-y-3">
+        <p v-if="currentGroup.group_description" class="mb-0">
+          <span class="text-inactive"
+            >{{ $t("pages.groups.group_description") }}:
+          </span>
+          <b>{{ currentGroup.group_description }}</b>
+        </p>
+        <p class="mb-0">
+          <span class="text-inactive"
+            >{{ $t("pages.groups.group_category") }}:
+          </span>
+          <b>{{ currentGroup.level.level_name }}</b>
+        </p>
 
-    <modal
-      :show="createModalIsVisible"
-      :onClose="() => closeModal('create')"
-      :className="currentStep != 2 ? 'modal-2xl' : ''"
-      :showLoader="pendingCreate"
-      :closeOnClickSelf="false"
-    >
-      <template v-slot:header_content>
-        <h4>{{ $t("pages.groups.create_group_title") }}</h4>
-      </template>
-      <template v-slot:body_content>
-        <subscription v-if="school?.subscription_expired" />
-        <steps v-else :currentStep="currentStep" :steps="newGroupSteps">
-          <form
-            @submit.prevent="createGroupSubmit"
-            class="mt-2"
-            ref="createFormRef"
+        <div class="flex gap-x-2 items-center">
+          <p class="mb-0">
+            <span class="text-inactive">{{ $t("mentor") }}: </span>
+          </p>
+          <userTag v-if="currentGroup.mentor" :user="currentGroup.mentor" />
+        </div>
+
+        <div class="flex gap-x-2 items-center">
+          <p class="mb-0">
+            <span class="text-inactive">{{ $t("operator") }}:</span>
+          </p>
+          <userTag v-if="currentGroup.operator" :user="currentGroup.operator" />
+        </div>
+
+        <p class="mb-0" v-if="currentGroup.group_members">
+          <span class="text-inactive"
+            >{{ $t("pages.groups.members_count") }}:
+          </span>
+          <b>{{ currentGroup.group_members.length }}</b>
+        </p>
+        <p class="mb-0">
+          <span class="text-inactive">{{ $t("pages.groups.members") }}:</span>
+        </p>
+
+        <div v-if="currentGroup.group_members" class="btn-wrap">
+          <userTag
+            v-for="(member, index) in currentGroup.group_members"
+            :key="index"
+            :user="member"
+          />
+        </div>
+
+        <roleProvider :roles="[1, 2, 3]">
+          <div class="btn-wrap">
+            <button @click="getEditGroup" class="btn btn-outline-primary">
+              <i class="pi pi-pencil"></i>
+              {{ $t("edit") }}
+            </button>
+          </div>
+        </roleProvider>
+      </div>
+    </template>
+  </modal>
+
+  <modal
+    :show="createModalIsVisible"
+    :onClose="() => closeModal('create')"
+    :className="currentStep != 2 ? 'modal-2xl' : ''"
+    :showLoader="pendingCreate"
+    :closeOnClickSelf="false"
+  >
+    <template v-slot:header_content>
+      <h4>{{ $t("pages.groups.create_group_title") }}</h4>
+    </template>
+    <template v-slot:body_content>
+      <subscription v-if="school?.subscription_expired" />
+      <steps v-else :currentStep="currentStep" :steps="newGroupSteps">
+        <form
+          @submit.prevent="createGroupSubmit"
+          class="mt-2"
+          ref="createFormRef"
+        >
+          <div
+            v-for="(step, index) in newGroupSteps"
+            :key="index"
+            :class="currentStep === index + 1 ? 'block' : 'hidden'"
           >
-            <div
-              v-for="(step, index) in newGroupSteps"
-              :key="index"
-              :class="currentStep === index + 1 ? 'block' : 'hidden'"
+            <component
+              v-if="step.component"
+              :is="step.component"
+              v-bind="step.props"
+            ></component>
+          </div>
+
+          <div class="btn-wrap mt-4">
+            <button
+              v-if="currentStep > 1"
+              class="btn btn-light"
+              @click="currentStep = currentStep - 1"
+              type="button"
             >
-              <component
-                v-if="step.component"
-                :is="step.component"
-                v-bind="step.props"
-              ></component>
-            </div>
+              <i class="pi pi-arrow-left"></i>
+              {{ $t("back") }}
+            </button>
 
-            <div class="btn-wrap mt-4">
-              <button
-                v-if="currentStep > 1"
-                class="btn btn-light"
-                @click="currentStep = currentStep - 1"
-                type="button"
-              >
-                <i class="pi pi-arrow-left"></i>
-                {{ $t("back") }}
-              </button>
+            <button class="btn btn-primary" type="submit">
+              <template v-if="currentStep !== newGroupSteps.length">
+                <i class="pi pi-arrow-right"></i>
+                {{ $t("continue") }}
+              </template>
+              <template v-else>
+                <i class="pi pi-check"></i>
+                {{ $t("save") }}
+              </template>
+            </button>
+          </div>
+        </form>
+      </steps>
+    </template>
+  </modal>
 
-              <button class="btn btn-primary" type="submit">
-                <template v-if="currentStep !== newGroupSteps.length">
-                  <i class="pi pi-arrow-right"></i>
-                  {{ $t("continue") }}
-                </template>
-                <template v-else>
-                  <i class="pi pi-check"></i>
-                  {{ $t("save") }}
-                </template>
-              </button>
-            </div>
-          </form>
-        </steps>
-      </template>
-    </modal>
-
-    <modal
-      :show="editModalIsVisible"
-      :onClose="() => closeModal('edit')"
-      :className="currentStep != 2 ? 'modal-2xl' : ''"
-      :showLoader="pendingEdit"
-      :closeOnClickSelf="false"
-    >
-      <template v-slot:header_content>
-        <h4>{{ $t("pages.groups.edit_group_title") }}</h4>
-      </template>
-      <template v-slot:body_content>
-        <steps :currentStep="currentStep" :steps="editGroupSteps">
-          <form
-            @submit.prevent="editGroupSubmit"
-            class="mt-2"
-            ref="editFormRef"
+  <modal
+    :show="editModalIsVisible"
+    :onClose="() => closeModal('edit')"
+    :className="currentStep != 2 ? 'modal-2xl' : ''"
+    :showLoader="pendingEdit"
+    :closeOnClickSelf="false"
+  >
+    <template v-slot:header_content>
+      <h4>{{ $t("pages.groups.edit_group_title") }}</h4>
+    </template>
+    <template v-slot:body_content>
+      <steps :currentStep="currentStep" :steps="editGroupSteps">
+        <form @submit.prevent="editGroupSubmit" class="mt-2" ref="editFormRef">
+          <div
+            v-for="(step, index) in editGroupSteps"
+            :key="index"
+            :class="currentStep === index + 1 ? 'block' : 'hidden'"
           >
-            <div
-              v-for="(step, index) in editGroupSteps"
-              :key="index"
-              :class="currentStep === index + 1 ? 'block' : 'hidden'"
+            <component
+              v-if="step.component"
+              :is="step.component"
+              v-bind="step.props"
+            ></component>
+          </div>
+
+          <div class="btn-wrap mt-4">
+            <button
+              v-if="currentStep > 1"
+              class="btn btn-light"
+              @click="currentStep = currentStep - 1"
+              type="button"
             >
-              <component
-                v-if="step.component"
-                :is="step.component"
-                v-bind="step.props"
-              ></component>
-            </div>
+              <i class="pi pi-arrow-left"></i>
+              {{ $t("back") }}
+            </button>
 
-            <div class="btn-wrap mt-4">
-              <button
-                v-if="currentStep > 1"
-                class="btn btn-light"
-                @click="currentStep = currentStep - 1"
-                type="button"
-              >
-                <i class="pi pi-arrow-left"></i>
-                {{ $t("back") }}
-              </button>
-
-              <button class="btn btn-primary" type="submit">
-                <template v-if="currentStep !== editGroupSteps.length">
-                  <i class="pi pi-arrow-right"></i>
-                  {{ $t("continue") }}
-                </template>
-                <template v-else>
-                  <i class="pi pi-check"></i>
-                  {{ $t("save") }}
-                </template>
-              </button>
-            </div>
-          </form>
-        </steps>
-      </template>
-    </modal>
-  </client-only>
+            <button class="btn btn-primary" type="submit">
+              <template v-if="currentStep !== editGroupSteps.length">
+                <i class="pi pi-arrow-right"></i>
+                {{ $t("continue") }}
+              </template>
+              <template v-else>
+                <i class="pi pi-check"></i>
+                {{ $t("save") }}
+              </template>
+            </button>
+          </div>
+        </form>
+      </steps>
+    </template>
+  </modal>
 </template>
 <script setup>
 import { useRouter } from "nuxt/app";
