@@ -271,184 +271,192 @@
       </alert>
     </div>
   </div>
-
-  <modal
-    :show="groupModalIsVisible"
-    :onClose="() => closeModal()"
-    :className="'modal-2xl'"
-    :showLoader="pendingGroup"
-    :closeOnClickSelf="true"
-  >
-    <template v-slot:header_content>
-      <h4>{{ currentGroup?.group_name }}</h4>
-    </template>
-    <template v-slot:body_content>
-      <div v-if="currentGroup" class="flex flex-col gap-y-3">
-        <p v-if="currentGroup.group_description" class="mb-0">
-          <span class="text-inactive"
-            >{{ $t("pages.groups.group_description") }}:
-          </span>
-          <b>{{ currentGroup.group_description }}</b>
-        </p>
-        <p class="mb-0">
-          <span class="text-inactive"
-            >{{ $t("pages.groups.group_category") }}:
-          </span>
-          <b>{{ currentGroup.level.level_name }}</b>
-        </p>
-
-        <div class="flex gap-x-2 items-center">
-          <p class="mb-0">
-            <span class="text-inactive">{{ $t("mentor") }}: </span>
+  <clinet-only>
+    <modal
+      :show="groupModalIsVisible"
+      :onClose="() => closeModal()"
+      :className="'modal-2xl'"
+      :showLoader="pendingGroup"
+      :closeOnClickSelf="true"
+    >
+      <template v-slot:header_content>
+        <h4>{{ currentGroup?.group_name }}</h4>
+      </template>
+      <template v-slot:body_content>
+        <div v-if="currentGroup" class="flex flex-col gap-y-3">
+          <p v-if="currentGroup.group_description" class="mb-0">
+            <span class="text-inactive"
+              >{{ $t("pages.groups.group_description") }}:
+            </span>
+            <b>{{ currentGroup.group_description }}</b>
           </p>
-          <userTag v-if="currentGroup.mentor" :user="currentGroup.mentor" />
-        </div>
-
-        <div class="flex gap-x-2 items-center">
           <p class="mb-0">
-            <span class="text-inactive">{{ $t("operator") }}:</span>
+            <span class="text-inactive"
+              >{{ $t("pages.groups.group_category") }}:
+            </span>
+            <b>{{ currentGroup.level.level_name }}</b>
           </p>
-          <userTag v-if="currentGroup.operator" :user="currentGroup.operator" />
+
+          <div class="flex gap-x-2 items-center">
+            <p class="mb-0">
+              <span class="text-inactive">{{ $t("mentor") }}: </span>
+            </p>
+            <userTag v-if="currentGroup.mentor" :user="currentGroup.mentor" />
+          </div>
+
+          <div class="flex gap-x-2 items-center">
+            <p class="mb-0">
+              <span class="text-inactive">{{ $t("operator") }}:</span>
+            </p>
+            <userTag
+              v-if="currentGroup.operator"
+              :user="currentGroup.operator"
+            />
+          </div>
+
+          <p class="mb-0" v-if="currentGroup.group_members">
+            <span class="text-inactive"
+              >{{ $t("pages.groups.members_count") }}:
+            </span>
+            <b>{{ currentGroup.group_members.length }}</b>
+          </p>
+          <p class="mb-0">
+            <span class="text-inactive">{{ $t("pages.groups.members") }}:</span>
+          </p>
+
+          <div v-if="currentGroup.group_members" class="btn-wrap">
+            <userTag
+              v-for="(member, index) in currentGroup.group_members"
+              :key="index"
+              :user="member"
+            />
+          </div>
+
+          <roleProvider :roles="[1, 2, 3]">
+            <div class="btn-wrap">
+              <button @click="getEditGroup" class="btn btn-outline-primary">
+                <i class="pi pi-pencil"></i>
+                {{ $t("edit") }}
+              </button>
+            </div>
+          </roleProvider>
         </div>
+      </template>
+    </modal>
 
-        <p class="mb-0" v-if="currentGroup.group_members">
-          <span class="text-inactive"
-            >{{ $t("pages.groups.members_count") }}:
-          </span>
-          <b>{{ currentGroup.group_members.length }}</b>
-        </p>
-        <p class="mb-0">
-          <span class="text-inactive">{{ $t("pages.groups.members") }}:</span>
-        </p>
-
-        <div v-if="currentGroup.group_members" class="btn-wrap">
-          <userTag
-            v-for="(member, index) in currentGroup.group_members"
-            :key="index"
-            :user="member"
-          />
-        </div>
-
-        <roleProvider :roles="[1, 2, 3]">
-          <div class="btn-wrap">
-            <button @click="getEditGroup" class="btn btn-outline-primary">
-              <i class="pi pi-pencil"></i>
-              {{ $t("edit") }}
-            </button>
-          </div>
-        </roleProvider>
-      </div>
-    </template>
-  </modal>
-
-  <modal
-    :show="createModalIsVisible"
-    :onClose="() => closeModal('create')"
-    :className="currentStep != 2 ? 'modal-2xl' : ''"
-    :showLoader="pendingCreate"
-    :closeOnClickSelf="false"
-  >
-    <template v-slot:header_content>
-      <h4>{{ $t("pages.groups.create_group_title") }}</h4>
-    </template>
-    <template v-slot:body_content>
-      <subscription v-if="school?.subscription_expired" />
-      <steps v-else :currentStep="currentStep" :steps="newGroupSteps">
-        <form
-          @submit.prevent="createGroupSubmit"
-          class="mt-2"
-          ref="createFormRef"
-        >
-          <div
-            v-for="(step, index) in newGroupSteps"
-            :key="index"
-            :class="currentStep === index + 1 ? 'block' : 'hidden'"
+    <modal
+      :show="createModalIsVisible"
+      :onClose="() => closeModal('create')"
+      :className="currentStep != 2 ? 'modal-2xl' : ''"
+      :showLoader="pendingCreate"
+      :closeOnClickSelf="false"
+    >
+      <template v-slot:header_content>
+        <h4>{{ $t("pages.groups.create_group_title") }}</h4>
+      </template>
+      <template v-slot:body_content>
+        <subscription v-if="school?.subscription_expired" />
+        <steps v-else :currentStep="currentStep" :steps="newGroupSteps">
+          <form
+            @submit.prevent="createGroupSubmit"
+            class="mt-2"
+            ref="createFormRef"
           >
-            <component
-              v-if="step.component"
-              :is="step.component"
-              v-bind="step.props"
-            ></component>
-          </div>
-
-          <div class="btn-wrap mt-4">
-            <button
-              v-if="currentStep > 1"
-              class="btn btn-light"
-              @click="currentStep = currentStep - 1"
-              type="button"
+            <div
+              v-for="(step, index) in newGroupSteps"
+              :key="index"
+              :class="currentStep === index + 1 ? 'block' : 'hidden'"
             >
-              <i class="pi pi-arrow-left"></i>
-              {{ $t("back") }}
-            </button>
+              <component
+                v-if="step.component"
+                :is="step.component"
+                v-bind="step.props"
+              ></component>
+            </div>
 
-            <button class="btn btn-primary" type="submit">
-              <template v-if="currentStep !== newGroupSteps.length">
-                <i class="pi pi-arrow-right"></i>
-                {{ $t("continue") }}
-              </template>
-              <template v-else>
-                <i class="pi pi-check"></i>
-                {{ $t("save") }}
-              </template>
-            </button>
-          </div>
-        </form>
-      </steps>
-    </template>
-  </modal>
+            <div class="btn-wrap mt-4">
+              <button
+                v-if="currentStep > 1"
+                class="btn btn-light"
+                @click="currentStep = currentStep - 1"
+                type="button"
+              >
+                <i class="pi pi-arrow-left"></i>
+                {{ $t("back") }}
+              </button>
 
-  <modal
-    :show="editModalIsVisible"
-    :onClose="() => closeModal('edit')"
-    :className="currentStep != 2 ? 'modal-2xl' : ''"
-    :showLoader="pendingEdit"
-    :closeOnClickSelf="false"
-  >
-    <template v-slot:header_content>
-      <h4>{{ $t("pages.groups.edit_group_title") }}</h4>
-    </template>
-    <template v-slot:body_content>
-      <steps :currentStep="currentStep" :steps="editGroupSteps">
-        <form @submit.prevent="editGroupSubmit" class="mt-2" ref="editFormRef">
-          <div
-            v-for="(step, index) in editGroupSteps"
-            :key="index"
-            :class="currentStep === index + 1 ? 'block' : 'hidden'"
+              <button class="btn btn-primary" type="submit">
+                <template v-if="currentStep !== newGroupSteps.length">
+                  <i class="pi pi-arrow-right"></i>
+                  {{ $t("continue") }}
+                </template>
+                <template v-else>
+                  <i class="pi pi-check"></i>
+                  {{ $t("save") }}
+                </template>
+              </button>
+            </div>
+          </form>
+        </steps>
+      </template>
+    </modal>
+
+    <modal
+      :show="editModalIsVisible"
+      :onClose="() => closeModal('edit')"
+      :className="currentStep != 2 ? 'modal-2xl' : ''"
+      :showLoader="pendingEdit"
+      :closeOnClickSelf="false"
+    >
+      <template v-slot:header_content>
+        <h4>{{ $t("pages.groups.edit_group_title") }}</h4>
+      </template>
+      <template v-slot:body_content>
+        <steps :currentStep="currentStep" :steps="editGroupSteps">
+          <form
+            @submit.prevent="editGroupSubmit"
+            class="mt-2"
+            ref="editFormRef"
           >
-            <component
-              v-if="step.component"
-              :is="step.component"
-              v-bind="step.props"
-            ></component>
-          </div>
-
-          <div class="btn-wrap mt-4">
-            <button
-              v-if="currentStep > 1"
-              class="btn btn-light"
-              @click="currentStep = currentStep - 1"
-              type="button"
+            <div
+              v-for="(step, index) in editGroupSteps"
+              :key="index"
+              :class="currentStep === index + 1 ? 'block' : 'hidden'"
             >
-              <i class="pi pi-arrow-left"></i>
-              {{ $t("back") }}
-            </button>
+              <component
+                v-if="step.component"
+                :is="step.component"
+                v-bind="step.props"
+              ></component>
+            </div>
 
-            <button class="btn btn-primary" type="submit">
-              <template v-if="currentStep !== editGroupSteps.length">
-                <i class="pi pi-arrow-right"></i>
-                {{ $t("continue") }}
-              </template>
-              <template v-else>
-                <i class="pi pi-check"></i>
-                {{ $t("save") }}
-              </template>
-            </button>
-          </div>
-        </form>
-      </steps>
-    </template>
-  </modal>
+            <div class="btn-wrap mt-4">
+              <button
+                v-if="currentStep > 1"
+                class="btn btn-light"
+                @click="currentStep = currentStep - 1"
+                type="button"
+              >
+                <i class="pi pi-arrow-left"></i>
+                {{ $t("back") }}
+              </button>
+
+              <button class="btn btn-primary" type="submit">
+                <template v-if="currentStep !== editGroupSteps.length">
+                  <i class="pi pi-arrow-right"></i>
+                  {{ $t("continue") }}
+                </template>
+                <template v-else>
+                  <i class="pi pi-check"></i>
+                  {{ $t("save") }}
+                </template>
+              </button>
+            </div>
+          </form>
+        </steps>
+      </template>
+    </modal>
+  </clinet-only>
 </template>
 <script setup>
 import { useRouter } from "nuxt/app";
