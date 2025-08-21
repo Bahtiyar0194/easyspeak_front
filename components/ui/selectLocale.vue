@@ -22,7 +22,7 @@ import { useRouter } from 'nuxt/app';
 const { localeProperties, locales, setLocale, } = useI18n();
 const authUser = useSanctumUser();
 const router = useRouter();
-const { refreshIdentity } = useSanctumAuth();
+//const { refreshIdentity } = useSanctumAuth();
 const { $axiosPlugin } = useNuxtApp();
 
 const changeLocale = async (value) => {
@@ -31,7 +31,8 @@ const changeLocale = async (value) => {
     if (authUser.value) {
         await $axiosPlugin.post('auth/change_language/' + value)
             .then(response => {
-                refreshIdentity();
+                window.location.reload();
+                //refreshIdentity();
             }).catch(err => {
                 if (err.response) {
                     router.push({

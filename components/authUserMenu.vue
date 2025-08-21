@@ -23,23 +23,32 @@
 
       <template v-slot:menu_content>
         <template v-if="props.showAuthMenu === true">
-          <li>
-            <div>
-              <div class="flex items-center gap-x-2">
-                <userAvatar
-                  v-if="authUser"
-                  :user="authUser"
-                  :className="'w-12 h-12 text-2xl'"
-                />
-                <div>
-                  <p class="text-active font-medium text-base mb-0">
-                    {{ authUser.last_name }} {{ authUser.first_name }}
-                  </p>
-                  <p class="text-inactive text-xs mb-0">{{ authUser.email }}</p>
-                </div>
+          <div class="mt-3">
+            <div class="flex items-center gap-x-2">
+              <userAvatar
+                v-if="authUser"
+                :user="authUser"
+                :className="'w-10 h-10 text-xl'"
+              />
+              <div>
+                <p class="text-active font-medium text-base mb-0">
+                  {{ authUser.last_name }} {{ authUser.first_name }}
+                </p>
+                <p class="text-inactive text-xs mb-0">{{ authUser.email }}</p>
               </div>
             </div>
-          </li>
+          </div>
+
+          <roleProvider :roles="[1, 2]">
+            <div
+              v-if="schoolStore.schoolData"
+              class="bg-corp text-white rounded-lg p-2 mt-2"
+            >
+              <p class="mb-0">
+                <b v-html="schoolStore.schoolData.full_school_name"></b>
+              </p>
+            </div>
+          </roleProvider>
           <li v-if="authUser.roles?.length > 1">
             <div>
               <p class="mb-2.5">{{ $t("pages.users.user_mode") }}:</p>
@@ -96,6 +105,7 @@
 import { useRouter } from "nuxt/app";
 import dropdownMenu from "./ui/dropdownMenu.vue";
 import userAvatar from "./ui/userAvatar.vue";
+import roleProvider from "./ui/roleProvider.vue";
 
 const { $axiosPlugin } = useNuxtApp();
 const { logout, refreshIdentity } = useSanctumAuth();

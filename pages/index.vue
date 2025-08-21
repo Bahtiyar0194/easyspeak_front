@@ -28,14 +28,16 @@
         ]"
       >
         <p class="text-lg mb-6">
-          Обучайте учеников по нашей методике. Готовое решение для онлайн-школ.
+          {{ $t("pages.home.hero.description") }}
         </p>
-        <a href="#demo" class="btn btn-primary btn-lg !px-8"
-          >Запросить демонстрацию</a
+        <button
+          @click="demoModalIsVisible = true"
+          class="btn btn-primary btn-lg !px-8"
         >
+          Запросить демонстрацию
+        </button>
       </div>
     </div>
-    
   </section>
 
   <section class="bg-corp py-20 px-4 lg:px-20">
@@ -56,11 +58,10 @@
           <nuxt-link
             :to="localePath('/courses')"
             class="btn btn-lg !px-8 btn-primary mx-auto mt-8"
-            >
+          >
             <i class="pi pi-book"></i>
             Перейти к курсам
-            </nuxt-link
-          >
+          </nuxt-link>
         </div>
       </div>
       <div class="col-span-12 lg:col-span-6">
@@ -156,27 +157,128 @@
       <p class="text-lg mb-6">
         Оставьте заявку, и мы покажем, как легко начать
       </p>
-      <a href="#demo" class="btn btn-light btn-lg !px-8"
-        >Запросить демонстрацию</a
+      <button
+        @click="demoModalIsVisible = true"
+        class="btn btn-light btn-lg !px-8"
       >
+        Запросить демонстрацию
+      </button>
     </div>
   </section>
+
+  <modal
+    :show="demoModalIsVisible"
+    :onClose="() => (demoModalIsVisible = false)"
+    :className="'modal-lg'"
+    :showLoader="pendingSend"
+    :closeOnClickSelf="false"
+  >
+    <template v-slot:header_content>
+      <h4>{{ $t("pages.home.demo_modal.title") }}</h4>
+    </template>
+    <template v-slot:body_content>
+      <p>
+        {{ $t("pages.home.demo_modal.description") }}
+      </p>
+      <form @submit.prevent="sendRequestToDemo" ref="formRef">
+        <div class="form-group-border active mb-5 mt-4">
+          <i class="pi pi-user"></i>
+          <input
+            autoComplete="new-user-name"
+            name="name"
+            type="text"
+            placeholder=" "
+          />
+          <label :class="{ 'label-error': errors.name }">
+            {{ errors.name ? errors.name[0] : $t("form.first_name") }}
+          </label>
+        </div>
+
+        <div class="form-group-border active mb-5">
+          <i class="pi pi-mobile"></i>
+          <input
+            autoComplete="phone"
+            name="phone"
+            v-mask="'+7 (###) ###-####'"
+            placeholder=" "
+          />
+          <label :class="{ 'label-error': errors.phone }">
+            {{ errors.phone ? errors.phone[0] : $t("form.phone") }}
+          </label>
+        </div>
+
+        <label class="custom-radio-checkbox">
+          <input type="checkbox" v-model="accept" />
+          <span
+            ><p>
+              {{ $t("pages.home.demo_modal.consent.text") }}
+              <nuxt-link to="/privacy-policy" target="_blank">{{
+                $t("pages.home.demo_modal.consent.link")
+              }}</nuxt-link
+              >{{ $t("pages.home.demo_modal.consent.text_2") }}
+            </p></span
+          >
+        </label>
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          :class="!accept ? 'disabled' : ''"
+        >
+          <i class="pi pi-arrow-right"></i>
+          {{ $t("continue") }}
+        </button>
+      </form>
+    </template>
+  </modal>
 </template>
 
 <script setup>
 import Typed from "typed.js";
 import { onMounted, onBeforeUnmount, ref } from "vue";
+import modal from "../components/ui/modal.vue";
+const { t, localeProperties } = useI18n();
+const { $axiosPlugin } = useNuxtApp();
+const demoModalIsVisible = ref(false);
+const pendingSend = ref(false);
+const requestIsSend = ref(false);
+const accept = ref(false);
+const errors = ref([]);
+const formRef = ref(null);
 
 const showContent = ref(false);
 const typedElement = ref();
 let typedInstance = null;
 
-onMounted(() => {
+const sendRequestToDemo = async () => {
+  pendingSend.value = true;
+  const formData = new FormData(formRef.value);
+  formData.append("lang", localeProperties.value.name);
+  await $axiosPlugin
+    .post("/demo/request", formData)
+    .then((res) => {
+      requestIsSend.value = true;
+      errors.value = [];
+    })
+    .catch((err) => {
+      errors.value = err.response.data;
+    })
+    .finally(() => {
+      pendingSend.value = false;
+    });
+};
+
+const initTyped = () => {
+  if (typedInstance) {
+    typedInstance.destroy();
+    showContent.value = false;
+  }
+
   typedInstance = new Typed(typedElement.value, {
-    strings: ["Платформа для изучения английского языка"],
-    typeSpeed: 25,
-    backSpeed: 15,
-    backDelay: 1500,
+    strings: [t("pages.home.hero.title")],
+    typeSpeed: 40,
+    backSpeed: 20,
+    backDelay: 1000,
     loop: false,
     smartBackspace: true,
     showCursor: true,
@@ -185,6 +287,10 @@ onMounted(() => {
       showContent.value = true;
     },
   });
+};
+
+onMounted(() => {
+  initTyped();
 });
 
 onBeforeUnmount(() => {

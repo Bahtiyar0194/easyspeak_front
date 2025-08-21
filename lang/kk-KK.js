@@ -14,6 +14,7 @@ export default {
     user_not_added: 'Қосылмаған',
     delete: 'Жойып тастау',
     instructions: 'Нұсқаулықтар',
+    note: 'Ескерту',
     result: 'Нәтиже',
     results: 'Нәтижелер',
     verified: 'Тексерілді',
@@ -296,14 +297,22 @@ export default {
         new_password: 'Жаңа құпиясөз',
         password_confirmation: 'Құпиясөзді растау',
         new_password_confirmation: 'Жаңа құпиясөзді растау',
+        school_data: 'Мектептің деректері',
+        school_owner_data: 'Мектептің иесінің деректері',
         school_name: 'Мектептің аты',
+        full_school_name: 'Мектептің толық атауы (ЖК/ЖШС)',
         school_domain: 'Мектептің домендік атауы',
+        reset_school: 'Мектепті ауыстыру',
         country: 'Ел',
         region: 'Өңір',
         city: 'Қала',
         street: 'Көше',
         house: 'Үй',
-        flat: 'Пәтер'
+        flat: 'Пәтер',
+        bin: 'БСН/ЖСН',
+        fact_address: 'Нақты мекен-жайы',
+        select_a_point: 'Елді мекенді таңдаңыз',
+        select_an_internal_point: 'Ішкі елді мекенді таңдаңыз',
     },
 
     board: {
@@ -344,7 +353,22 @@ export default {
         home: {
             title: 'Басты бет',
             hello: 'Қош келдіңіз!',
-            to: "Басты бетке"
+            to: "Басты бетке",
+
+            hero: {
+                title: 'Ағылшын тілін үйрену платформасы',
+                description: 'Оқушыларды біздің әдістеме бойынша оқытыңыз. Онлайн мектептер үшін дайын шешім.'
+            },
+
+            demo_modal: {
+                title: 'Демонстрацияға сұраным қалдыру',
+                description: 'Байланыс деректеріңізді қалдырыңыз. Жақын арада біздің менеджер платформаны көрсету үшін сізбен байланысады.',
+                consent: {
+                    text: "Менің жеке деректерімді",
+                    link: "құпиялылық саясатымен ",
+                    text_2: "сәйкес өңдеуге келісімімді беремін."
+                }
+            }
         },
 
         "privacy-policy": {

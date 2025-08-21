@@ -67,7 +67,7 @@ export default defineNuxtConfig({
           onLogin: '/dashboard',
           onLogout: '/',
           onAuthOnly: '/auth/login',
-          onGuestOnly: '/',
+          onGuestOnly: '/dashboard',
         },
         // Добавляем хук для передачи языка
         token: {
