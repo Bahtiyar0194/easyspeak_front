@@ -1,209 +1,214 @@
 <template>
-  <div class="custom-grid">
-    <div class="col-span-12">
-      <div class="btn-wrap">
-        <client-only>
-          <roleProvider :roles="[1, 2, 3]">
-            <button
-              class="btn btn-outline-primary"
-              @click="inviteModalIsVisible = true"
-            >
-              <i class="pi pi-user-plus"></i>
-              {{ $t("invite") }}
-            </button>
-          </roleProvider>
-        </client-only>
+  <client-only>
+    <div class="custom-grid">
+      <div class="col-span-12">
+        <div class="btn-wrap">
+          <client-only>
+            <roleProvider :roles="[1, 2, 3]">
+              <button
+                class="btn btn-outline-primary"
+                @click="inviteModalIsVisible = true"
+              >
+                <i class="pi pi-user-plus"></i>
+                {{ $t("invite") }}
+              </button>
+            </roleProvider>
+          </client-only>
 
-        <button @click="showHideUserSearchFilter" class="btn btn-light">
-          <i class="pi pi-search"></i>
-          {{
-            searchFilter === true
-              ? $t("hide_search_filter")
-              : $t("show_search_filter")
-          }}
-        </button>
+          <button @click="showHideUserSearchFilter" class="btn btn-light">
+            <i class="pi pi-search"></i>
+            {{
+              searchFilter === true
+                ? $t("hide_search_filter")
+                : $t("show_search_filter")
+            }}
+          </button>
+        </div>
+      </div>
+
+      <div
+        class="col-span-12 lg:col-span-3"
+        :class="searchFilter ? 'block' : 'hidden'"
+      >
+        <stickyBox>
+          <div class="card p-4">
+            <h5>{{ $t("pages.users.search_filter") }}</h5>
+            <form @submit.prevent="debounceReset" ref="searchFormRef">
+              <div class="custom-grid">
+                <div class="col-span-12">
+                  <div class="form-group-border active">
+                    <i class="pi pi-user"></i>
+                    <input
+                      type="text"
+                      name="user"
+                      placeholder=" "
+                      @input="debounceUsers"
+                    />
+                    <label
+                      >{{ $t("form.last_name") }},
+                      {{ $t("form.first_name") }}</label
+                    >
+                  </div>
+                </div>
+                <div class="col-span-12">
+                  <div class="form-group-border active">
+                    <i class="pi pi-at"></i>
+                    <input
+                      type="text"
+                      name="email"
+                      placeholder=" "
+                      @input="debounceUsers"
+                    />
+                    <label>{{ $t("form.email") }}</label>
+                  </div>
+                </div>
+
+                <div class="col-span-12">
+                  <div class="form-group-border active">
+                    <i class="pi pi-mobile"></i>
+                    <input
+                      v-mask="'+7 (###) ###-####'"
+                      name="phone"
+                      placeholder=" "
+                      @input="debounceUsers"
+                    />
+                    <label>{{ $t("form.phone") }}</label>
+                  </div>
+                </div>
+
+                <div class="col-span-12">
+                  <multipleSelect
+                    :className="'form-group-border select active label-active'"
+                    :icon="'pi pi-hourglass'"
+                    :label="$t('pages.users.user_status')"
+                    :items="attributes.user_statuses"
+                    :optionName="'statuses[]'"
+                    :optionValue="'status_type_id'"
+                    :optionLabel="'status_type_name'"
+                    :onChange="debounceUsers"
+                  />
+                </div>
+
+                <div class="col-span-12">
+                  <multipleSelect
+                    :className="'form-group-border select active label-active'"
+                    :icon="'pi pi-id-card'"
+                    :label="$t('pages.users.user_role')"
+                    :items="attributes.user_roles"
+                    :optionName="'roles[]'"
+                    :optionValue="'role_type_id'"
+                    :optionLabel="'user_role_type_name'"
+                    :onChange="debounceUsers"
+                  />
+                </div>
+
+                <div class="col-span-12">
+                  <div class="form-group-border active">
+                    <i class="pi pi-calendar"></i>
+                    <input
+                      type="date"
+                      name="created_at_from"
+                      @input="debounceUsers"
+                      placeholder=" "
+                    />
+                    <label>{{ $t("registered_at_from") }}</label>
+                  </div>
+                </div>
+
+                <div class="col-span-12">
+                  <div class="form-group-border active">
+                    <i class="pi pi-calendar"></i>
+                    <input
+                      type="date"
+                      name="created_at_to"
+                      @input="debounceUsers"
+                      placeholder=" "
+                    />
+                    <label>{{ $t("registered_at_to") }}</label>
+                  </div>
+                </div>
+
+                <div class="col-span-12">
+                  <div class="btn-wrap">
+                    <button
+                      type="submit"
+                      class="btn btn-sm btn-outline-primary"
+                    >
+                      <i class="pi pi-undo"></i>
+                      {{ $t("reset_search_filter") }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </stickyBox>
+      </div>
+
+      <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
+        <template v-if="users.data?.length > 0">
+          <div class="table table-striped table-sm selectable">
+            <loader v-if="pending" :className="'overlay'" />
+            <table ref="tableRef">
+              <thead>
+                <tr>
+                  <sortTableHead
+                    v-for="(head, index) in userTableHeads"
+                    :key="index"
+                    :title="head.title"
+                    :keyName="head.keyName"
+                    :sortKey="sortKey"
+                    :sortDirection="sortDirection"
+                    :sortType="head.sortType"
+                    :sortHandler="debounceUsers"
+                    @update:sortKey="sortKey = $event"
+                    @update:sortDirection="sortDirection = $event"
+                  />
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr
+                  v-for="user in users.data"
+                  :key="user.user_id"
+                  @click="getUser(user.user_id)"
+                >
+                  <td>
+                    <div class="flex gap-x-2 items-center">
+                      <userAvatar
+                        :padding="0.5"
+                        :className="'w-6 h-6'"
+                        :user="user"
+                      />
+                      {{ user.last_name }} {{ user.first_name }}
+                    </div>
+                  </td>
+                  <td>{{ user.email }}</td>
+                  <td>{{ user.phone }}</td>
+                  <td>{{ new Date(user.created_at).toLocaleString() }}</td>
+                  <td :class="user.status_color">
+                    {{ user.status_type_name }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="btn-wrap mt-4">
+            <pagination
+              :items="users"
+              :setItems="getUsers"
+              :onSelect="(count) => (perPage = count)"
+            />
+          </div>
+        </template>
+
+        <alert v-else :className="'light'">
+          <loader v-if="pending" :className="'overlay'" />
+          <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
+        </alert>
       </div>
     </div>
 
-    <div
-      class="col-span-12 lg:col-span-3"
-      :class="searchFilter ? 'block' : 'hidden'"
-    >
-      <stickyBox>
-        <div class="card p-4">
-          <h5>{{ $t("pages.users.search_filter") }}</h5>
-          <form @submit.prevent="debounceReset" ref="searchFormRef">
-            <div class="custom-grid">
-              <div class="col-span-12">
-                <div class="form-group-border active">
-                  <i class="pi pi-user"></i>
-                  <input
-                    type="text"
-                    name="user"
-                    placeholder=" "
-                    @input="debounceUsers"
-                  />
-                  <label
-                    >{{ $t("form.last_name") }},
-                    {{ $t("form.first_name") }}</label
-                  >
-                </div>
-              </div>
-              <div class="col-span-12">
-                <div class="form-group-border active">
-                  <i class="pi pi-at"></i>
-                  <input
-                    type="text"
-                    name="email"
-                    placeholder=" "
-                    @input="debounceUsers"
-                  />
-                  <label>{{ $t("form.email") }}</label>
-                </div>
-              </div>
-
-              <div class="col-span-12">
-                <div class="form-group-border active">
-                  <i class="pi pi-mobile"></i>
-                  <input
-                    v-mask="'+7 (###) ###-####'"
-                    name="phone"
-                    placeholder=" "
-                    @input="debounceUsers"
-                  />
-                  <label>{{ $t("form.phone") }}</label>
-                </div>
-              </div>
-
-              <div class="col-span-12">
-                <multipleSelect
-                  :className="'form-group-border select active label-active'"
-                  :icon="'pi pi-hourglass'"
-                  :label="$t('pages.users.user_status')"
-                  :items="attributes.user_statuses"
-                  :optionName="'statuses[]'"
-                  :optionValue="'status_type_id'"
-                  :optionLabel="'status_type_name'"
-                  :onChange="debounceUsers"
-                />
-              </div>
-
-              <div class="col-span-12">
-                <multipleSelect
-                  :className="'form-group-border select active label-active'"
-                  :icon="'pi pi-id-card'"
-                  :label="$t('pages.users.user_role')"
-                  :items="attributes.user_roles"
-                  :optionName="'roles[]'"
-                  :optionValue="'role_type_id'"
-                  :optionLabel="'user_role_type_name'"
-                  :onChange="debounceUsers"
-                />
-              </div>
-
-              <div class="col-span-12">
-                <div class="form-group-border active">
-                  <i class="pi pi-calendar"></i>
-                  <input
-                    type="date"
-                    name="created_at_from"
-                    @input="debounceUsers"
-                    placeholder=" "
-                  />
-                  <label>{{ $t("registered_at_from") }}</label>
-                </div>
-              </div>
-
-              <div class="col-span-12">
-                <div class="form-group-border active">
-                  <i class="pi pi-calendar"></i>
-                  <input
-                    type="date"
-                    name="created_at_to"
-                    @input="debounceUsers"
-                    placeholder=" "
-                  />
-                  <label>{{ $t("registered_at_to") }}</label>
-                </div>
-              </div>
-
-              <div class="col-span-12">
-                <div class="btn-wrap">
-                  <button type="submit" class="btn btn-sm btn-outline-primary">
-                    <i class="pi pi-undo"></i>
-                    {{ $t("reset_search_filter") }}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </form>
-        </div>
-      </stickyBox>
-    </div>
-
-    <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
-      <template v-if="users.data?.length > 0">
-        <div class="table table-striped table-sm selectable">
-          <loader v-if="pending" :className="'overlay'" />
-          <table ref="tableRef">
-            <thead>
-              <tr>
-                <sortTableHead
-                  v-for="(head, index) in userTableHeads"
-                  :key="index"
-                  :title="head.title"
-                  :keyName="head.keyName"
-                  :sortKey="sortKey"
-                  :sortDirection="sortDirection"
-                  :sortType="head.sortType"
-                  :sortHandler="debounceUsers"
-                  @update:sortKey="sortKey = $event"
-                  @update:sortDirection="sortDirection = $event"
-                />
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr
-                v-for="user in users.data"
-                :key="user.user_id"
-                @click="getUser(user.user_id)"
-              >
-                <td>
-                  <div class="flex gap-x-2 items-center">
-                    <userAvatar
-                      :padding="0.5"
-                      :className="'w-6 h-6'"
-                      :user="user"
-                    />
-                    {{ user.last_name }} {{ user.first_name }}
-                  </div>
-                </td>
-                <td>{{ user.email }}</td>
-                <td>{{ user.phone }}</td>
-                <td>{{ new Date(user.created_at).toLocaleString() }}</td>
-                <td :class="user.status_color">{{ user.status_type_name }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="btn-wrap mt-4">
-          <pagination
-            :items="users"
-            :setItems="getUsers"
-            :onSelect="(count) => (perPage = count)"
-          />
-        </div>
-      </template>
-
-      <alert v-else :className="'light'">
-        <loader v-if="pending" :className="'overlay'" />
-        <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
-      </alert>
-    </div>
-  </div>
-
-  <client-only>
     <modal
       :show="inviteModalIsVisible"
       :onClose="() => closeInviteModal()"

@@ -1,279 +1,284 @@
 <template>
-  <div class="custom-grid">
-    <div class="col-span-12">
-      <div class="btn-wrap">
-        <client-only>
-          <roleProvider :roles="[1, 2, 3]">
-            <button
-              @click="createModalIsVisible = true"
-              class="btn btn-outline-primary"
-            >
-              <i class="pi pi-plus"></i>
-              {{ $t("pages.groups.create_group") }}
-            </button>
-          </roleProvider>
-        </client-only>
-        <button @click="showHideGroupSearchFilter" class="btn btn-light">
-          <i class="pi pi-search"></i>
-          {{
-            searchFilter === true
-              ? $t("hide_search_filter")
-              : $t("show_search_filter")
-          }}
-        </button>
+  <clinet-only>
+    <div class="custom-grid">
+      <div class="col-span-12">
+        <div class="btn-wrap">
+          <client-only>
+            <roleProvider :roles="[1, 2, 3]">
+              <button
+                @click="createModalIsVisible = true"
+                class="btn btn-outline-primary"
+              >
+                <i class="pi pi-plus"></i>
+                {{ $t("pages.groups.create_group") }}
+              </button>
+            </roleProvider>
+          </client-only>
+          <button @click="showHideGroupSearchFilter" class="btn btn-light">
+            <i class="pi pi-search"></i>
+            {{
+              searchFilter === true
+                ? $t("hide_search_filter")
+                : $t("show_search_filter")
+            }}
+          </button>
+        </div>
+      </div>
+
+      <div
+        class="col-span-12 lg:col-span-3"
+        :class="searchFilter ? 'block' : 'hidden'"
+      >
+        <stickyBox>
+          <div class="card p-4">
+            <h5>{{ $t("pages.groups.search_filter") }}</h5>
+            <form @submit.prevent="debounceReset" ref="searchFormRef">
+              <div class="custom-grid">
+                <div class="col-span-12">
+                  <div class="form-group-border active">
+                    <i class="pi pi-users"></i>
+                    <input
+                      type="text"
+                      name="group_name"
+                      placeholder=" "
+                      @input="debounceGroups"
+                    />
+                    <label>{{ $t("pages.groups.group_name") }}</label>
+                  </div>
+                </div>
+
+                <div class="col-span-12">
+                  <div class="form-group-border select active label-active">
+                    <i class="pi pi-book"></i>
+                    <select
+                      name="course_id"
+                      v-model="selectedCourseId"
+                      @change="onCourseChange"
+                    >
+                      <option selected value="">
+                        {{ $t("not_selected") }}
+                      </option>
+                      <option
+                        v-for="(course, courseIndex) in attributes.courses"
+                        :key="courseIndex"
+                        :value="course.course_id"
+                      >
+                        {{ course.course_name }}
+                      </option>
+                    </select>
+                    <label :class="{ 'label-error': errors.course_id }">
+                      {{
+                        errors.course_id
+                          ? errors.course_id[0]
+                          : $t("pages.courses.course")
+                      }}
+                    </label>
+                  </div>
+                </div>
+
+                <div v-if="selectedCourseId" class="col-span-12">
+                  <multipleSelect
+                    :className="'form-group-border select active label-active'"
+                    :icon="'pi pi-users'"
+                    :label="$t('pages.groups.group_category')"
+                    :items="selectedCourse?.levels"
+                    :optionName="'levels[]'"
+                    :optionValue="'level_id'"
+                    :optionLabel="'level_name'"
+                    :onChange="debounceGroups"
+                  />
+                </div>
+
+                <div class="col-span-12">
+                  <multipleSelect
+                    :className="'form-group-border select active label-active'"
+                    :icon="'pi pi-user'"
+                    :label="$t('operator')"
+                    :items="attributes.group_operators"
+                    :optionName="'operators[]'"
+                    :optionValue="'user_id'"
+                    :optionLabel="'full_name'"
+                    :avatar="true"
+                    :onChange="debounceGroups"
+                  />
+                </div>
+
+                <div class="col-span-12">
+                  <multipleSelect
+                    :className="'form-group-border select active label-active'"
+                    :icon="'pi pi-user'"
+                    :label="$t('mentor')"
+                    :items="attributes.group_mentors"
+                    :optionName="'mentors[]'"
+                    :optionValue="'user_id'"
+                    :optionLabel="'full_name'"
+                    :avatar="true"
+                    :onChange="debounceGroups"
+                  />
+                </div>
+
+                <div class="col-span-12">
+                  <multipleSelect
+                    :className="'form-group-border select active label-active'"
+                    :icon="'pi pi-hourglass'"
+                    :label="$t('status')"
+                    :items="attributes.group_statuses"
+                    :optionName="'statuses[]'"
+                    :optionValue="'status_type_id'"
+                    :optionLabel="'status_type_name'"
+                    :onChange="debounceGroups"
+                  />
+                </div>
+
+                <div class="col-span-12">
+                  <div class="form-group-border active">
+                    <i class="pi pi-calendar"></i>
+                    <input
+                      type="date"
+                      name="created_at_from"
+                      @input="debounceGroups"
+                      placeholder=" "
+                    />
+                    <label>{{ $t("created_at_from") }}</label>
+                  </div>
+                </div>
+
+                <div class="col-span-12">
+                  <div class="form-group-border active">
+                    <i class="pi pi-calendar"></i>
+                    <input
+                      type="date"
+                      name="created_at_to"
+                      @input="debounceGroups"
+                      placeholder=" "
+                    />
+                    <label>{{ $t("created_at_to") }}</label>
+                  </div>
+                </div>
+
+                <div class="col-span-12">
+                  <div class="btn-wrap">
+                    <button
+                      type="submit"
+                      class="btn btn-sm btn-outline-primary"
+                    >
+                      <i class="pi pi-undo"></i>
+                      {{ $t("reset_search_filter") }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+        </stickyBox>
+      </div>
+
+      <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
+        <template v-if="groups.data?.length > 0">
+          <div class="table table-striped table-sm selectable">
+            <loader v-if="pending" :className="'overlay'" />
+            <table ref="tableRef">
+              <thead>
+                <tr>
+                  <sortTableHead
+                    v-for="(head, index) in groupsTableHeads"
+                    :key="index"
+                    :title="head.title"
+                    :keyName="head.keyName"
+                    :sortKey="sortKey"
+                    :sortDirection="sortDirection"
+                    :sortType="head.sortType"
+                    :sortHandler="debounceGroups"
+                    @update:sortKey="sortKey = $event"
+                    @update:sortDirection="sortDirection = $event"
+                  />
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr
+                  v-for="group in groups.data"
+                  :key="group.group_id"
+                  @click="getGroup(group.group_id)"
+                >
+                  <td>{{ group.group_name }}</td>
+                  <td>{{ group.course_name }}</td>
+                  <td>{{ group.level_name }}</td>
+                  <td>
+                    <div class="flex gap-x-2 items-center">
+                      <userAvatar
+                        :padding="0.5"
+                        :className="'w-6 h-6'"
+                        :user="{
+                          last_name: group.operator_last_name,
+                          first_name: group.operator_first_name,
+                          avatar: group.operator_avatar,
+                        }"
+                      />
+                      {{ group.operator_last_name }}
+                      {{ group.operator_first_name }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="flex gap-x-2 items-center">
+                      <userAvatar
+                        :padding="0.5"
+                        :className="'w-6 h-6'"
+                        :user="{
+                          last_name: group.mentor_last_name,
+                          first_name: group.mentor_first_name,
+                          avatar: group.mentor_avatar,
+                        }"
+                      />
+                      {{ group.mentor_last_name }} {{ group.mentor_first_name }}
+                    </div>
+                  </td>
+                  <td>{{ group.members_count }}</td>
+                  <td>
+                    {{
+                      new Date(group.started_at).toLocaleString(undefined, {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false, // можно убрать или поставить true, если нужен 12-часовой формат
+                      })
+                    }}
+                  </td>
+                  <td>
+                    {{
+                      new Date(group.created_at).toLocaleString(undefined, {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false, // можно убрать или поставить true, если нужен 12-часовой формат
+                      })
+                    }}
+                  </td>
+                  <td :class="group.status_color">
+                    {{ group.status_type_name }}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="btn-wrap mt-4">
+            <pagination
+              :items="groups"
+              :setItems="getGroups"
+              :onSelect="(count) => (perPage = count)"
+            />
+          </div>
+        </template>
+        <alert v-else :className="'light'">
+          <loader v-if="pending" :className="'overlay'" />
+          <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
+        </alert>
       </div>
     </div>
-
-    <div
-      class="col-span-12 lg:col-span-3"
-      :class="searchFilter ? 'block' : 'hidden'"
-    >
-      <stickyBox>
-        <div class="card p-4">
-          <h5>{{ $t("pages.groups.search_filter") }}</h5>
-          <form @submit.prevent="debounceReset" ref="searchFormRef">
-            <div class="custom-grid">
-              <div class="col-span-12">
-                <div class="form-group-border active">
-                  <i class="pi pi-users"></i>
-                  <input
-                    type="text"
-                    name="group_name"
-                    placeholder=" "
-                    @input="debounceGroups"
-                  />
-                  <label>{{ $t("pages.groups.group_name") }}</label>
-                </div>
-              </div>
-
-              <div class="col-span-12">
-                <div class="form-group-border select active label-active">
-                  <i class="pi pi-book"></i>
-                  <select
-                    name="course_id"
-                    v-model="selectedCourseId"
-                    @change="onCourseChange"
-                  >
-                    <option selected value="">{{ $t("not_selected") }}</option>
-                    <option
-                      v-for="(course, courseIndex) in attributes.courses"
-                      :key="courseIndex"
-                      :value="course.course_id"
-                    >
-                      {{ course.course_name }}
-                    </option>
-                  </select>
-                  <label :class="{ 'label-error': errors.course_id }">
-                    {{
-                      errors.course_id
-                        ? errors.course_id[0]
-                        : $t("pages.courses.course")
-                    }}
-                  </label>
-                </div>
-              </div>
-
-              <div v-if="selectedCourseId" class="col-span-12">
-                <multipleSelect
-                  :className="'form-group-border select active label-active'"
-                  :icon="'pi pi-users'"
-                  :label="$t('pages.groups.group_category')"
-                  :items="selectedCourse?.levels"
-                  :optionName="'levels[]'"
-                  :optionValue="'level_id'"
-                  :optionLabel="'level_name'"
-                  :onChange="debounceGroups"
-                />
-              </div>
-
-              <div class="col-span-12">
-                <multipleSelect
-                  :className="'form-group-border select active label-active'"
-                  :icon="'pi pi-user'"
-                  :label="$t('operator')"
-                  :items="attributes.group_operators"
-                  :optionName="'operators[]'"
-                  :optionValue="'user_id'"
-                  :optionLabel="'full_name'"
-                  :avatar="true"
-                  :onChange="debounceGroups"
-                />
-              </div>
-
-              <div class="col-span-12">
-                <multipleSelect
-                  :className="'form-group-border select active label-active'"
-                  :icon="'pi pi-user'"
-                  :label="$t('mentor')"
-                  :items="attributes.group_mentors"
-                  :optionName="'mentors[]'"
-                  :optionValue="'user_id'"
-                  :optionLabel="'full_name'"
-                  :avatar="true"
-                  :onChange="debounceGroups"
-                />
-              </div>
-
-              <div class="col-span-12">
-                <multipleSelect
-                  :className="'form-group-border select active label-active'"
-                  :icon="'pi pi-hourglass'"
-                  :label="$t('status')"
-                  :items="attributes.group_statuses"
-                  :optionName="'statuses[]'"
-                  :optionValue="'status_type_id'"
-                  :optionLabel="'status_type_name'"
-                  :onChange="debounceGroups"
-                />
-              </div>
-
-              <div class="col-span-12">
-                <div class="form-group-border active">
-                  <i class="pi pi-calendar"></i>
-                  <input
-                    type="date"
-                    name="created_at_from"
-                    @input="debounceGroups"
-                    placeholder=" "
-                  />
-                  <label>{{ $t("created_at_from") }}</label>
-                </div>
-              </div>
-
-              <div class="col-span-12">
-                <div class="form-group-border active">
-                  <i class="pi pi-calendar"></i>
-                  <input
-                    type="date"
-                    name="created_at_to"
-                    @input="debounceGroups"
-                    placeholder=" "
-                  />
-                  <label>{{ $t("created_at_to") }}</label>
-                </div>
-              </div>
-
-              <div class="col-span-12">
-                <div class="btn-wrap">
-                  <button type="submit" class="btn btn-sm btn-outline-primary">
-                    <i class="pi pi-undo"></i>
-                    {{ $t("reset_search_filter") }}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </form>
-        </div>
-      </stickyBox>
-    </div>
-
-    <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
-      <template v-if="groups.data?.length > 0">
-        <div class="table table-striped table-sm selectable">
-          <loader v-if="pending" :className="'overlay'" />
-          <table ref="tableRef">
-            <thead>
-              <tr>
-                <sortTableHead
-                  v-for="(head, index) in groupsTableHeads"
-                  :key="index"
-                  :title="head.title"
-                  :keyName="head.keyName"
-                  :sortKey="sortKey"
-                  :sortDirection="sortDirection"
-                  :sortType="head.sortType"
-                  :sortHandler="debounceGroups"
-                  @update:sortKey="sortKey = $event"
-                  @update:sortDirection="sortDirection = $event"
-                />
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr
-                v-for="group in groups.data"
-                :key="group.group_id"
-                @click="getGroup(group.group_id)"
-              >
-                <td>{{ group.group_name }}</td>
-                <td>{{ group.course_name }}</td>
-                <td>{{ group.level_name }}</td>
-                <td>
-                  <div class="flex gap-x-2 items-center">
-                    <userAvatar
-                      :padding="0.5"
-                      :className="'w-6 h-6'"
-                      :user="{
-                        last_name: group.operator_last_name,
-                        first_name: group.operator_first_name,
-                        avatar: group.operator_avatar,
-                      }"
-                    />
-                    {{ group.operator_last_name }}
-                    {{ group.operator_first_name }}
-                  </div>
-                </td>
-                <td>
-                  <div class="flex gap-x-2 items-center">
-                    <userAvatar
-                      :padding="0.5"
-                      :className="'w-6 h-6'"
-                      :user="{
-                        last_name: group.mentor_last_name,
-                        first_name: group.mentor_first_name,
-                        avatar: group.mentor_avatar,
-                      }"
-                    />
-                    {{ group.mentor_last_name }} {{ group.mentor_first_name }}
-                  </div>
-                </td>
-                <td>{{ group.members_count }}</td>
-                <td>
-                  {{
-                    new Date(group.started_at).toLocaleString(undefined, {
-                      year: "numeric",
-                      month: "2-digit",
-                      day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: false, // можно убрать или поставить true, если нужен 12-часовой формат
-                    })
-                  }}
-                </td>
-                <td>
-                  {{
-                    new Date(group.created_at).toLocaleString(undefined, {
-                      year: "numeric",
-                      month: "2-digit",
-                      day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: false, // можно убрать или поставить true, если нужен 12-часовой формат
-                    })
-                  }}
-                </td>
-                <td :class="group.status_color">
-                  {{ group.status_type_name }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="btn-wrap mt-4">
-          <pagination
-            :items="groups"
-            :setItems="getGroups"
-            :onSelect="(count) => (perPage = count)"
-          />
-        </div>
-      </template>
-      <alert v-else :className="'light'">
-        <loader v-if="pending" :className="'overlay'" />
-        <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
-      </alert>
-    </div>
-  </div>
-  <clinet-only>
     <modal
       :show="groupModalIsVisible"
       :onClose="() => closeModal()"
