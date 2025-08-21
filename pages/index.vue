@@ -166,77 +166,79 @@
     </div>
   </section>
 
-  <Modal
-    :show="demoModalIsVisible"
-    :onClose="() => (demoModalIsVisible = false)"
-    :className="'modal-lg'"
-    :showLoader="pendingSend"
-    :closeOnClickSelf="false"
-  >
-    <template v-slot:header_content>
-      <h4>{{ $t("pages.home.demo_modal.title") }}</h4>
-    </template>
-    <template v-slot:body_content>
-      <p>
-        {{ $t("pages.home.demo_modal.description") }}
-      </p>
-      <form @submit.prevent="sendRequestToDemo" ref="formRef">
-        <div class="form-group-border active mb-5 mt-4">
-          <i class="pi pi-user"></i>
-          <input
-            autoComplete="new-user-name"
-            name="name"
-            type="text"
-            placeholder=" "
-          />
-          <label :class="{ 'label-error': errors.name }">
-            {{ errors.name ? errors.name[0] : $t("form.first_name") }}
-          </label>
-        </div>
+  <client-only>
+    <modal
+      :show="demoModalIsVisible"
+      :onClose="() => (demoModalIsVisible = false)"
+      :className="'modal-lg'"
+      :showLoader="pendingSend"
+      :closeOnClickSelf="false"
+    >
+      <template v-slot:header_content>
+        <h4>{{ $t("pages.home.demo_modal.title") }}</h4>
+      </template>
+      <template v-slot:body_content>
+        <p>
+          {{ $t("pages.home.demo_modal.description") }}
+        </p>
+        <form @submit.prevent="sendRequestToDemo" ref="formRef">
+          <div class="form-group-border active mb-5 mt-4">
+            <i class="pi pi-user"></i>
+            <input
+              autoComplete="new-user-name"
+              name="name"
+              type="text"
+              placeholder=" "
+            />
+            <label :class="{ 'label-error': errors.name }">
+              {{ errors.name ? errors.name[0] : $t("form.first_name") }}
+            </label>
+          </div>
 
-        <div class="form-group-border active mb-5">
-          <i class="pi pi-mobile"></i>
-          <input
-            autoComplete="phone"
-            name="phone"
-            v-mask="'+7 (###) ###-####'"
-            placeholder=" "
-          />
-          <label :class="{ 'label-error': errors.phone }">
-            {{ errors.phone ? errors.phone[0] : $t("form.phone") }}
-          </label>
-        </div>
+          <div class="form-group-border active mb-5">
+            <i class="pi pi-mobile"></i>
+            <input
+              autoComplete="phone"
+              name="phone"
+              v-mask="'+7 (###) ###-####'"
+              placeholder=" "
+            />
+            <label :class="{ 'label-error': errors.phone }">
+              {{ errors.phone ? errors.phone[0] : $t("form.phone") }}
+            </label>
+          </div>
 
-        <label class="custom-radio-checkbox">
-          <input type="checkbox" v-model="accept" />
-          <span
-            ><p>
-              {{ $t("pages.home.demo_modal.consent.text") }}
-              <nuxt-link to="/privacy-policy" target="_blank">{{
-                $t("pages.home.demo_modal.consent.link")
-              }}</nuxt-link
-              >{{ $t("pages.home.demo_modal.consent.text_2") }}
-            </p></span
+          <label class="custom-radio-checkbox">
+            <input type="checkbox" v-model="accept" />
+            <span
+              ><p>
+                {{ $t("pages.home.demo_modal.consent.text") }}
+                <nuxt-link to="/privacy-policy" target="_blank">{{
+                  $t("pages.home.demo_modal.consent.link")
+                }}</nuxt-link
+                >{{ $t("pages.home.demo_modal.consent.text_2") }}
+              </p></span
+            >
+          </label>
+
+          <button
+            type="submit"
+            class="btn btn-primary"
+            :class="!accept ? 'disabled' : ''"
           >
-        </label>
-
-        <button
-          type="submit"
-          class="btn btn-primary"
-          :class="!accept ? 'disabled' : ''"
-        >
-          <i class="pi pi-arrow-right"></i>
-          {{ $t("continue") }}
-        </button>
-      </form>
-    </template>
-  </Modal>
+            <i class="pi pi-arrow-right"></i>
+            {{ $t("continue") }}
+          </button>
+        </form>
+      </template>
+    </modal>
+  </client-only>
 </template>
 
 <script setup>
 import Typed from "typed.js";
 import { onMounted, onBeforeUnmount, ref } from "vue";
-import Modal from "../components/ui/modal.vue";
+import modal from "../components/ui/modal.vue";
 const { t, localeProperties } = useI18n();
 const { $axiosPlugin } = useNuxtApp();
 const demoModalIsVisible = ref(false);
