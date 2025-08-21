@@ -2,15 +2,17 @@
   <div class="custom-grid">
     <div class="col-span-12">
       <div class="btn-wrap">
-        <roleProvider :roles="[1, 2, 3]">
-          <button
-            @click="createModalIsVisible = true"
-            class="btn btn-outline-primary"
-          >
-            <i class="pi pi-plus"></i>
-            {{ $t("pages.groups.create_group") }}
-          </button>
-        </roleProvider>
+        <client-only>
+          <roleProvider :roles="[1, 2, 3]">
+            <button
+              @click="createModalIsVisible = true"
+              class="btn btn-outline-primary"
+            >
+              <i class="pi pi-plus"></i>
+              {{ $t("pages.groups.create_group") }}
+            </button>
+          </roleProvider>
+        </client-only>
         <button @click="showHideGroupSearchFilter" class="btn btn-light">
           <i class="pi pi-search"></i>
           {{
