@@ -290,7 +290,7 @@ const initTyped = () => {
 };
 
 onMounted(() => {
-  initTyped();
+  //initTyped();
 });
 
 onBeforeUnmount(() => {
