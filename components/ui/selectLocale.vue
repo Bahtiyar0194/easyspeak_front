@@ -32,6 +32,7 @@ const changeLocale = async (value) => {
         await $axiosPlugin.post('auth/change_language/' + value)
             .then(response => {
                 window.location.reload();
+                console.log(123)
                 //refreshIdentity();
             }).catch(err => {
                 if (err.response) {
