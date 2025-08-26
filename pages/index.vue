@@ -42,7 +42,7 @@
 
   <section class="bg-corp py-20 px-4 lg:px-20">
     <div class="custom-grid">
-      <div class="col-span-12 lg:col-span-6">
+      <div class="col-span-12 md:col-span-6">
         <div class="card px-4 lg:px-6 py-12 !rounded-3xl">
           <h2 class="font-bold mb-8 text-center">
             {{ $t("pages.home.section_2.card_1.title") }}
@@ -64,7 +64,7 @@
           </nuxt-link>
         </div>
       </div>
-      <div class="col-span-12 lg:col-span-6">
+      <div class="col-span-12 md:col-span-6">
         <div class="card px-4 lg:px-6 py-12 !rounded-3xl">
           <h2 class="font-bold mb-8 text-center">
             {{ $t("pages.home.section_2.card_2.title") }}
@@ -122,7 +122,7 @@
     </h2>
 
     <div class="custom-grid">
-      <div class="col-span-12 lg:col-span-4">
+      <div class="col-span-12 md:col-span-4">
         <div class="card p-4 text-center">
           <h3 class="mb-2">{{ $t("pages.home.section_3.card_1.title") }}</h3>
           <p>
@@ -131,7 +131,7 @@
         </div>
       </div>
 
-      <div class="col-span-12 lg:col-span-4">
+      <div class="col-span-12 md:col-span-4">
         <div class="card p-4 text-center">
           <h3 class="mb-2">{{ $t("pages.home.section_3.card_2.title") }}</h3>
           <p>
@@ -140,7 +140,7 @@
         </div>
       </div>
 
-      <div class="col-span-12 lg:col-span-4">
+      <div class="col-span-12 md:col-span-4">
         <div class="card p-4 text-center">
           <h3 class="mb-2">{{ $t("pages.home.section_3.card_3.title") }}</h3>
           <p>
@@ -151,11 +151,20 @@
     </div>
   </section>
 
+  <section id="slider" class="py-16 px-4 lg:px-20 bg-active">
+    <h2 class="text-center font-bold mb-8">
+      {{ $t("pages.home.section_4.title") }}
+    </h2>
+    <keenSliderThumbs :images="images" />
+  </section>
+
   <section id="demo" class="py-20 px-4 bg-corp text-white text-center">
     <div class="flex flex-col justify-center items-center text-center">
-      <h2 class="text-3xl font-bold mb-4">{{ $t("pages.home.section_4.title") }}</h2>
+      <h2 class="text-3xl font-bold mb-4">
+        {{ $t("pages.home.section_5.title") }}
+      </h2>
       <p class="text-lg mb-6">
-        {{ $t("pages.home.section_4.description") }}
+        {{ $t("pages.home.section_5.description") }}
       </p>
       <button
         @click="demoModalIsVisible = true"
@@ -241,11 +250,12 @@
 </template>
 
 <script setup>
+import keenSliderThumbs from "../components/ui/keenSliderThumbs.vue";
 import Typed from "typed.js";
 import { onMounted, onBeforeUnmount, ref } from "vue";
 import modal from "../components/ui/modal.vue";
 const { t, localeProperties } = useI18n();
-const { $axiosPlugin } = useNuxtApp();
+const { $axiosPlugin, $contacts } = useNuxtApp();
 const demoModalIsVisible = ref(false);
 const pendingSend = ref(false);
 const requestIsSended = ref(false);
@@ -253,9 +263,23 @@ const accept = ref(false);
 const errors = ref([]);
 const formRef = ref(null);
 
+useHead({
+  title: $contacts.name + " | " + t("pages.home.title"),
+  meta: [{ name: "description", content: t("pages.home.description") }],
+});
+
 const showContent = ref(false);
 const typedElement = ref();
 let typedInstance = null;
+
+const images = [
+  "https://1prof.by/wp-content/uploads/2024/10/swiss.jpg",
+  "https://avatars.mds.yandex.net/i?id=05f52196e390bf9f34f3754ad5a9d4da_l-8710005-images-thumbs&n=13",
+  "https://peterburg2.ru/uploads/24/02/21/o_ray-hennessy-xUUZcpQlqpM-unsplash.jpg",
+  "https://informburo.kz/storage/photos/94/main/Oh38ooVAU32ULU9c7rdUWZU2QoP4ojmlHrabANpL.jpg",
+  "https://i.pinimg.com/originals/fd/b2/47/fdb247ac713dce8dc8ef3d04cf9881ad.jpg",
+  "https://i.pinimg.com/736x/32/22/12/3222126cabf17df67bfded8f5767f8fd.jpg",
+];
 
 const sendRequestToDemo = async () => {
   pendingSend.value = true;

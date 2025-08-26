@@ -16,7 +16,8 @@ export default defineNuxtConfig({
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1',
       meta: [
-        { name: 'mailru-domain', content: 'YjGjpsYdyCkQxXzx' }
+        { name: 'mailru-domain', content: 'YjGjpsYdyCkQxXzx' },
+        { name: "yandex-verification", content: "1cf8ade847a957c4" }
       ],
       script: [
         {
