@@ -40,26 +40,28 @@
           </div>
 
           <client-only>
-            <roleProvider :roles="[1, 2, 3]">
-              <nuxt-link to="/dashboard/school">
-                <div class="bg-corp text-white rounded-lg p-2 mt-2">
-                  <p class="mb-1">
-                    <b v-html="schoolStore.schoolData.full_school_name"></b>
-                  </p>
+            <template v-if="schoolStore.schoolData">
+              <roleProvider :roles="[1, 2, 3]">
+                <nuxt-link to="/dashboard/school">
+                  <div class="bg-corp text-white rounded-lg p-2 mt-2">
+                    <p class="mb-1">
+                      <b v-html="schoolStore.schoolData.full_school_name"></b>
+                    </p>
 
-                  <p class="mb-0 text-xs">
-                    {{ $t("pages.subscription.expired_at") }}:
-                    <b
-                      ><u>{{
-                        new Date(
-                          schoolStore.schoolData.subscription_expiration_at
-                        ).toLocaleDateString()
-                      }}</u></b
-                    >
-                  </p>
-                </div>
-              </nuxt-link>
-            </roleProvider>
+                    <p class="mb-0 text-xs">
+                      {{ $t("pages.subscription.expired_at") }}:
+                      <b
+                        ><u>{{
+                          new Date(
+                            schoolStore.schoolData.subscription_expiration_at
+                          ).toLocaleDateString()
+                        }}</u></b
+                      >
+                    </p>
+                  </div>
+                </nuxt-link>
+              </roleProvider>
+            </template>
           </client-only>
           <li v-if="authUser.roles?.length > 1">
             <div>
