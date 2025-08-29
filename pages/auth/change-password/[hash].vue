@@ -77,7 +77,7 @@
   </div>
 </template>
 <script setup>
-import authCard from "../../components/authCard.vue";
+import authCard from "../../components/auth/authCard.vue";
 import { useRoute, useRouter } from "nuxt/app";
 import note from "../../../components/ui/note.vue";
 
