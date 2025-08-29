@@ -1,5 +1,5 @@
 <template>
-  <div :class="props.className">
+  <div :class="props.className" class="p-4">
     <div class="overlay-loading-circle"></div>
 
     <div
@@ -11,7 +11,7 @@
     </div>
     <div v-if="props.showPendingText === true" class="pt-2 text-center mt-1">
       <p class="font-medium mb-0 dots">
-        {{ $t("loading") }}
+        {{ props.pendingText || $t("loading") }}
         <span class="blink animation-delay:0s">.</span>
         <span class="blink animation-delay:0.3s">.</span>
         <span class="blink animation-delay:0.6s">.</span>
@@ -21,8 +21,6 @@
 </template>
 
 <script setup>
-import { defineProps } from "vue";
-
 const props = defineProps({
   progress: {
     type: Number,
@@ -43,6 +41,11 @@ const props = defineProps({
     type: Boolean,
     required: false,
     default: false,
+  },
+
+  pendingText: {
+    type: String,
+    required: false,
   },
 });
 </script>

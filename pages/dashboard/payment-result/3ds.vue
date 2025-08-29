@@ -4,9 +4,19 @@
     <input type="hidden" name="MD" :value="route.query.MD" />
     <input type="hidden" name="TermUrl" :value="route.query.TermUrl" />
   </form>
+
+  <loader v-if="pending"
+    :className="'full-overlay'"
+    :showPendingText="true"
+    :pendingText="$t('pages.3ds.please_wait')"
+  />
 </template>
 
 <script setup>
+import loader from "../../../components/ui/loader.vue";
+import { onMounted } from "vue";
+
+const pending = ref(true);
 const route = useRoute();
 const form3ds = ref(null);
 
@@ -18,5 +28,10 @@ useHead({
 definePageMeta({
   layout: "dashboard",
   middleware: ["sanctum:auth"],
+});
+
+onMounted(() => {
+  pending.value = false;
+  form3ds.value.submit();
 });
 </script>

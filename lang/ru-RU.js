@@ -557,6 +557,11 @@ export default {
             fail: 'Оплата не прошла'
         },
 
+        '3ds': {
+            title: '3-D Secure аутентификация',
+            please_wait: 'Пожалуйста подождите. Идет 3-D Secure аутентификация'
+        },
+
         schedule: {
             title: 'Расписание',
             search_filter: 'Фильтр поиска по расписанию',

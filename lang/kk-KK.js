@@ -560,6 +560,11 @@ export default {
             fail: 'Төлем өтпей қалды'
         },
 
+        '3ds': {
+            title: '3-D Secure аутентификация',
+            please_wait: 'Күте тұрыңыз. 3-D Secure аутентификациясы жүріп жатыр'
+        },
+
         schedule: {
             title: 'Кесте',
             search_filter: 'Кесте бойынша іздеу сүзгісі',
