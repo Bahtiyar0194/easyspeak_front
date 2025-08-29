@@ -266,6 +266,7 @@ export default {
     },
 
     errors: {
+        error_code: 'Код ошибки',
         page_is_not_available: "Эта страница недоступна для данной роли",
         show_error: "Показать ошибку",
         hide_error: "Скрыть ошибку",
@@ -313,6 +314,35 @@ export default {
         fact_address: 'Фактический адрес',
         select_a_point: 'Выберите населенный пункт',
         select_an_internal_point: 'Выберите внутренний населенный пункт',
+
+        card: {
+            input_bank_data: 'Введите данные банковской карты',
+            card_num: 'Номер карты',
+            expiration_at: 'Срок действия карты',
+            month: 'Месяц',
+            year: 'Год',
+            cvv: '3 цифры с обратной стороны карты',
+            name: 'Владелец карты',
+
+            tiptop: {
+                errors: {
+                    'CardNumber_Empty': 'Введите номер карты',
+                    'CardNumber_Invalid': 'Некорректный номер карты',
+                    'Cvv_Empty': 'Введите CVV',
+                    'Cvv_Invalid': 'Некорректный CVV',
+                    'ExpDateMonthYear_Empty': 'Введите год и месяц',
+                    'ExpDateMonthYear_Invalid': 'Некорректный год и месяц',
+                    'ExpDateMonth_Empty': 'Введите месяц',
+                    'ExpDateMonth_Invalid': 'Некорректный месяц',
+                    'ExpDateYear_Empty': 'Введите год',
+                    'ExpDateYear_Invalid': 'Некорректный год',
+                    'Name_Empty': 'Пустое имя *',
+                    'Name_Invalid': 'Некорректное имя *',
+                    'Name_TooLong': 'Слишком длинное имя *',
+                    'Name_TooShort': 'Слишком короткое имя *',
+                }
+            }
+        }
     },
 
     board: {
@@ -351,7 +381,7 @@ export default {
         },
 
         home: {
-            title: 'Главная',
+            title: 'Цифровая образовательная платформа для изучения английского языка',
             hello: 'Добро пожаловать',
             to: "На главную страницу",
             description: 'Цифровая образовательная платформа для изучения английского языка',
@@ -507,6 +537,24 @@ export default {
             warning_1: "Данный участник уже добавлен в группу",
             not_member: "Не состоит в группе",
             belongs_to_another_group: "Состоит в другой группе"
+        },
+
+        school: {
+            title: 'Школа'
+        },
+
+        subscription: {
+            plan: 'Тарифный план',
+            your_plan: 'Ваш тарифный план',
+            expired_at: 'Дата окончания тарифа',
+            prolongation_title: 'Продление тарифного плана',
+            prolongation: 'Продлить'
+        },
+
+        'payment-result': {
+            title: 'Результат оплаты',
+            success: 'Оплата прошла успешно',
+            fail: 'Оплата не прошла'
         },
 
         schedule: {

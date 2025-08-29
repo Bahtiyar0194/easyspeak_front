@@ -74,7 +74,7 @@
   </div>
 </template>
 <script setup>
-import authCard from "../../components/authCard.vue";
+import authCard from "../../components/auth/authCard.vue";
 import { isSubdomain } from "../../utils/isSubdomain";
 
 const { t, localeProperties } = useI18n();

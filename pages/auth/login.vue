@@ -104,7 +104,7 @@
 </template>
 
 <script setup>
-import authCard from "../../components/authCard.vue";
+import authCard from "../../components/auth/authCard.vue";
 import { useCookie, useRoute, useRouter } from "nuxt/app";
 import { isSubdomain } from "../../utils/isSubdomain";
 

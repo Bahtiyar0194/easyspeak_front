@@ -2,7 +2,7 @@
   <template v-if="authUser">
     <dropdownMenu :dropdown-arrow="true">
       <template v-slot:btn_content>
-        <div class="flex items-center gap-x-1 sm:gap-x-1.5">
+        <div class="flex items-center gap-x-1 sm:gap-x-1.5 select-none">
           <userAvatar
             v-if="authUser"
             :padding="0.5"
@@ -39,16 +39,28 @@
             </div>
           </div>
 
-          <roleProvider :roles="[1, 2]">
-            <div
-              v-if="schoolStore.schoolData"
-              class="bg-corp text-white rounded-lg p-2 mt-2"
-            >
-              <p class="mb-0">
-                <b v-html="schoolStore.schoolData.full_school_name"></b>
-              </p>
-            </div>
-          </roleProvider>
+          <client-only>
+            <roleProvider :roles="[1, 2, 3]">
+              <nuxt-link to="/dashboard/school">
+                <div class="bg-corp text-white rounded-lg p-2 mt-2">
+                  <p class="mb-1">
+                    <b v-html="schoolStore.schoolData.full_school_name"></b>
+                  </p>
+
+                  <p class="mb-0 text-xs">
+                    {{ $t("pages.subscription.expired_at") }}:
+                    <b
+                      ><u>{{
+                        new Date(
+                          schoolStore.schoolData.subscription_expiration_at
+                        ).toLocaleDateString()
+                      }}</u></b
+                    >
+                  </p>
+                </div>
+              </nuxt-link>
+            </roleProvider>
+          </client-only>
           <li v-if="authUser.roles?.length > 1">
             <div>
               <p class="mb-2.5">{{ $t("pages.users.user_mode") }}:</p>
@@ -103,9 +115,9 @@
 </template>
 <script setup>
 import { useRouter } from "nuxt/app";
-import dropdownMenu from "./ui/dropdownMenu.vue";
-import userAvatar from "./ui/userAvatar.vue";
-import roleProvider from "./ui/roleProvider.vue";
+import dropdownMenu from "../ui/dropdownMenu.vue";
+import userAvatar from "../ui/userAvatar.vue";
+import roleProvider from "../ui/roleProvider.vue";
 
 const { $axiosPlugin } = useNuxtApp();
 const { logout, refreshIdentity } = useSanctumAuth();

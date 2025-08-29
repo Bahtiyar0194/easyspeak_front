@@ -65,7 +65,7 @@ import breadcrumb from "../components/ui/breadcrumb.vue";
 import themeSwitcher from "../components/ui/themeSwitcher.vue";
 import selectLocale from "../components/ui/selectLocale.vue";
 import notifications from "../components/ui/notifications.vue";
-import authUserMenu from "../components/authUserMenu.vue";
+import authUserMenu from "../components/auth/authUserMenu.vue";
 import roleProvider from "../components/ui/roleProvider.vue";
 import { useRoute } from "nuxt/app";
 
@@ -127,6 +127,12 @@ const dashboardMenu = [
     icon: "pi pi-file",
     link: "/dashboard/files",
     roles: [1],
+  },
+  {
+    title: "pages.school.title",
+    icon: "pi pi-building-columns",
+    link: "/dashboard/school",
+    roles: [1, 2, 3],
   },
 ];
 

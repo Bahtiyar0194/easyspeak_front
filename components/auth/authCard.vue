@@ -18,9 +18,9 @@
 </template>
 
 <script setup>
-import loader from './ui/loader.vue';
-import themeSwitcher from './ui/themeSwitcher.vue';
-import selectLocale from "./ui/selectLocale.vue";
+import loader from '../ui/loader.vue';
+import themeSwitcher from '../ui/themeSwitcher.vue';
+import selectLocale from "../ui/selectLocale.vue";
 
 defineProps({
     pending: {

@@ -69,7 +69,7 @@
 </template>
 
 <script setup>
-import authCard from "../../components/authCard.vue";
+import authCard from "../../components/auth/authCard.vue";
 import { useRouter } from "vue-router";
 import steps from "../../components/ui/steps.vue";
 import firstStep from "../../components/auth/register/firstStep.vue";

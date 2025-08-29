@@ -266,6 +266,7 @@ export default {
     },
 
     errors: {
+        error_code: 'Қатенің коды',
         page_is_not_available: "Бұл бет осы рөлге қол жетімді емес",
         show_error: "Қатені көрсету",
         hide_error: "Қатені жасыру",
@@ -313,6 +314,35 @@ export default {
         fact_address: 'Нақты мекен-жайы',
         select_a_point: 'Елді мекенді таңдаңыз',
         select_an_internal_point: 'Ішкі елді мекенді таңдаңыз',
+
+        card: {
+            input_bank_data: 'Банк картаңыздың деректерін енгізіңіз',
+            card_num: 'Картаның нөмірі',
+            expiration_at: 'Картаның жарамды мерзімі',
+            month: 'Ай',
+            year: 'Жыл',
+            cvv: 'Картаның артындағы 3 сан',
+            name: 'Картаның иесі',
+
+            tiptop: {
+                errors: {
+                    'CardNumber_Empty': 'Картаның нөмірін енгізіңіз',
+                    'CardNumber_Invalid': 'Картаның нөмірі қате енгізілген',
+                    'Cvv_Empty': 'CVV енгізіңіз',
+                    'Cvv_Invalid': 'CVV қате енгізілген',
+                    'ExpDateMonthYear_Empty': 'Ай және жылды енгізіңіз',
+                    'ExpDateMonthYear_Invalid': 'Ай және жыл қате енгізілген',
+                    'ExpDateMonth_Empty': 'Айды енгізіңіз',
+                    'ExpDateMonth_Invalid': 'Ай қате енгізілген',
+                    'ExpDateYear_Empty': 'Жылды енгізіңіз',
+                    'ExpDateYear_Invalid': 'Жыл қате енгізілген',
+                    'Name_Empty': 'Аты-жөніңізді енгізіңіз *',
+                    'Name_Invalid': 'Аты-жөніңіз қате енгізілген *',
+                    'Name_TooLong': 'Аты-жөніңіз ұзын енгізілген *',
+                    'Name_TooShort': 'Аты-жөніңіз қысқа енгізілген *',
+                }
+            }
+        }
     },
 
     board: {
@@ -351,7 +381,7 @@ export default {
         },
 
         home: {
-            title: 'Басты бет',
+            title: 'Ағылшын тілін үйренуге арналған цифрлық білім беру платформасы',
             hello: 'Қош келдіңіз!',
             to: "Басты бетке",
             description: 'Ағылшын тілін үйренуге арналған цифрлық білім беру платформасы',
@@ -509,6 +539,25 @@ export default {
             warning_1: "Бұл қатысушы топқа қосулы тұр",
             not_member: "Топқа қатысы жоқ",
             belongs_to_another_group: "Басқа топқа қатысты"
+        },
+
+        school: {
+            title: 'Мектеп'
+        },
+
+
+        subscription: {
+            plan: 'Тарифтік жоспар',
+            your_plan: 'Сіздің тарифтік жоспар',
+            expired_at: 'Тарифтің біту уақыты',
+            prolongation_title: 'Тарифтік жоспарды ұзарту',
+            prolongation: 'Ұзарту'
+        },
+
+        'payment-result': {
+            title: 'Төлем нәтижесі',
+            success: 'Төлем сәтті өтті',
+            fail: 'Төлем өтпей қалды'
         },
 
         schedule: {

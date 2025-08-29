@@ -55,6 +55,7 @@ export default defineNuxtConfig({
       turnURL: process.env.TURN_URL,
       turnUSERNAME: process.env.TURN_USERNAME,
       turnPASSWORD: process.env.TURN_PASSWORD,
+
       sanctum: {
         mode: 'token',
         baseUrl: process.env.NODE_ENV === 'development' ? process.env.DEV_API_URL : process.env.PROD_API_URL,

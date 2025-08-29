@@ -177,7 +177,7 @@
 }
 
 .bg-corp-100{
-    @apply bg-accent-100 dark:bg-accent-100;
+    @apply bg-blue-200 dark:bg-blue-200;
 }
 
 .border-corp {
@@ -404,6 +404,7 @@ body {
 
 h1, h2, h3, h4, h5, h6, .title-font {
     font-family: 'Roboto', sans-serif;
+    font-weight: 600;
 }
 
 a {
@@ -432,7 +433,7 @@ h3,
 h4,
 h5,
 h6 {
-    @apply font-medium mb-4;
+    @apply mb-4;
 }
 
 h1 > a,
@@ -1656,7 +1657,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .modal-close-button{
-    @apply absolute right-5 top-6 text-3xl cursor-pointer text-inactive leading-none;
+    @apply absolute right-5 top-6 text-3xl cursor-pointer text-active leading-none;
 }
 
 .full-overlay {

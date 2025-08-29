@@ -16,7 +16,7 @@
       </ul>
     </div>
     <div class="flex flex-col justify-center items-center text-center">
-      <h1 class="mb-4 font-bold"><span ref="typedElement" /></h1>
+      <h1 class="mb-4"><span ref="typedElement" /></h1>
       <div
         ref="fadeTarget"
         class="flex flex-col items-center"
@@ -44,7 +44,7 @@
     <div class="custom-grid">
       <div class="col-span-12 md:col-span-6">
         <div class="card px-4 lg:px-6 py-12 !rounded-3xl">
-          <h2 class="font-bold mb-8 text-center">
+          <h2 class="mb-8 text-center">
             {{ $t("pages.home.section_2.card_1.title") }}
           </h2>
           <ul class="px-0 space-y-4 list-none text-lg mb-4">
@@ -66,7 +66,7 @@
       </div>
       <div class="col-span-12 md:col-span-6">
         <div class="card px-4 lg:px-6 py-12 !rounded-3xl">
-          <h2 class="font-bold mb-8 text-center">
+          <h2 class="mb-8 text-center">
             {{ $t("pages.home.section_2.card_2.title") }}
           </h2>
           <ul class="px-0 space-y-4 list-none text-lg">
@@ -81,7 +81,7 @@
   </section>
 
   <!-- <section class="bg-active py-20 px-4 lg:px-20">
-    <h2 class="text-3xl font-bold mb-12 text-center">
+    <h2 class="text-3xl  mb-12 text-center">
       Как работает платформа?
     </h2>
 
@@ -117,7 +117,7 @@
 
   <!-- Кому подойдёт -->
   <section class="py-16 px-4 lg:px-20 bg-inactive">
-    <h2 class="text-center font-bold mb-12">
+    <h2 class="text-center mb-12">
       {{ $t("pages.home.section_3.title") }}
     </h2>
 
@@ -152,7 +152,7 @@
   </section>
 
   <section id="slider" class="py-16 px-4 lg:px-20 bg-active">
-    <h2 class="text-center font-bold mb-8">
+    <h2 class="text-center mb-8">
       {{ $t("pages.home.section_4.title") }}
     </h2>
     <keenSliderThumbs :images="images" />
@@ -160,7 +160,7 @@
 
   <section id="demo" class="py-20 px-4 bg-corp text-white text-center">
     <div class="flex flex-col justify-center items-center text-center">
-      <h2 class="text-3xl font-bold mb-4">
+      <h2 class="text-3xl mb-4">
         {{ $t("pages.home.section_5.title") }}
       </h2>
       <p class="text-lg mb-6">
@@ -264,7 +264,7 @@ const errors = ref([]);
 const formRef = ref(null);
 
 useHead({
-  title: $contacts.name + " | " + t("pages.home.title"),
+  title: $contacts.name + " - " + t("pages.home.title"),
   meta: [{ name: "description", content: t("pages.home.description") }],
 });
 

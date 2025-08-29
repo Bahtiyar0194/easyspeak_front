@@ -8,7 +8,9 @@
         <div>
           <nuxt-link :to="localePath('/')">
             <!-- <img class="w-full" src="~/public/logo.svg"> -->
-            <span class="font-medium text-corp text-3xl">{{ $contacts.name }}</span>
+            <span class="font-medium text-corp text-3xl">{{
+              $contacts.name
+            }}</span>
           </nuxt-link>
         </div>
 
@@ -40,7 +42,7 @@
     >
       <div class="custom-grid">
         <div class="col-span-12 md:col-span-4">
-          <h5 class="mb-2">{{ $t('documents') }}</h5>
+          <h5 class="mb-2">{{ $t("documents") }}</h5>
           <ul class="list-none px-0">
             <li
               v-for="(item, itemIndex) in footer_menu_left"
@@ -53,26 +55,26 @@
             </li>
           </ul>
         </div>
-        <div class="col-span-12 md:col-span-4">
-          <h5 class="mb-2">{{ $t('contacts') }}</h5>
+        <div class="col-span-12 md:col-span-5">
+          <h5 class="mb-2">{{ $t("contacts") }}</h5>
           <ul class="list-none px-0">
             <li
               v-for="(item, itemIndex) in footer_menu_contact"
               :key="itemIndex"
               :class="
-                footer_menu_contact.length - 1 !== itemIndex ? 'mb-2' : ''
+                footer_menu_contact.length - 1 !== itemIndex ? 'mb-5' : ''
               "
             >
-              <div class="flex gap-x-1 items-center">
+              <div class="flex gap-x-1">
                 <i :class="item.icon" class="text-corp"></i>
                 <nuxt-link
                   v-if="item.internal === true"
                   :to="localePath('/' + item)"
-                  class="text-inactive"
+                  class="text-inactive leading-none"
                 >
                   {{ $t("pages." + item + ".title") }}
                 </nuxt-link>
-                <a v-else :href="item.link">{{ item.text }}</a>
+                <a v-else class="leading-none" :href="item.link" :target="item.blank === true ? '_blank' : '_self'">{{ item.text }}</a>
               </div>
             </li>
           </ul>
@@ -80,7 +82,13 @@
         <div class="col-span-12">
           <hr />
           <p class="mt-6 mb-0 text-center">
-            © {{ new Date().getFullYear() }} <u><nuxt-link to="/" class="text-active">{{ $contacts.site_name }}</nuxt-link></u> -
+            © {{ new Date().getFullYear() }}
+            <u
+              ><nuxt-link to="/" class="text-active">{{
+                $contacts.site_name
+              }}</nuxt-link></u
+            >
+            -
             {{ $t("all_rights") }}
           </p>
         </div>
@@ -94,11 +102,12 @@ import stickyBox from "../components/ui/stickyBox.vue";
 import loader from "../components/ui/loader.vue";
 import themeSwitcher from "../components/ui/themeSwitcher.vue";
 import selectLocale from "../components/ui/selectLocale.vue";
-import authUserMenu from "../components/authUserMenu.vue";
+import authUserMenu from "../components/auth/authUserMenu.vue";
 import { onMounted } from "vue";
 
 const route = useRoute();
 const { $contacts } = useNuxtApp();
+const { t, localeProperties } = useI18n();
 
 const pending = ref(true);
 
@@ -106,7 +115,11 @@ onMounted(() => {
   pending.value = false;
 });
 
-const footer_menu_left = ["the-offer-agreement", "privacy-policy", "refund-policy"];
+const footer_menu_left = [
+  "the-offer-agreement",
+  "privacy-policy",
+  "refund-policy",
+];
 
 const footer_menu_contact = [
   {
@@ -114,12 +127,21 @@ const footer_menu_contact = [
     icon: "pi pi-mobile",
     text: $contacts.phone_format,
     link: "tel:" + $contacts.phone,
+    blank: false
   },
   {
     internal: false,
     icon: "pi pi-envelope",
     text: $contacts.email,
     link: "mailto:" + $contacts.email,
+    blank: false
+  },
+  {
+    internal: false,
+    icon: "pi pi-map-marker",
+    text: $contacts.legal_address[localeProperties.value.code],
+    link: $contacts.legal_address.map_link,
+    blank: true
   },
 ];
 </script>
