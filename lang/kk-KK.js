@@ -551,7 +551,8 @@ export default {
             your_plan: 'Сіздің тарифтік жоспар',
             expired_at: 'Тарифтің біту уақыты',
             prolongation_title: 'Тарифтік жоспарды ұзарту',
-            prolongation: 'Ұзарту'
+            prolongation: 'Ұзарту',
+            choose_a_plan: 'Тарифтік жоспарды таңдаңыз'
         },
 
         'payment-result': {

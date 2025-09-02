@@ -95,6 +95,22 @@
         <h4>{{ $t("pages.subscription.prolongation_title") }}</h4>
       </template>
       <template v-slot:body_content>
+        <div class="custom-grid mt-4">
+          <div class="col-span-12">
+            <div class="form-group-border select active label-active">
+              <i class="pi pi-calendar"></i>
+              <select v-model="selectedPlan">
+                <option selected disabled value="">
+                  {{ $t("pages.subscription.choose_a_plan") }}
+                </option>
+              </select>
+              <label>
+                {{ $t("pages.subscription.plan") }}
+              </label>
+            </div>
+          </div>
+        </div>
+
         <form
           class="mt-2"
           @submit.prevent="createCryptogram()"
@@ -251,7 +267,7 @@ const checkout = ref(null);
 
 const subscriptionModalIsVisible = ref(false);
 const pending = ref(true);
-
+const selectedPlan = ref("");
 const formRef = ref(null);
 const errors = ref([]);
 
@@ -348,7 +364,7 @@ const handlePayment = async (cryptogram) => {
             query: {
               AcsUrl: response.data.Model.AcsUrl,
               PaReq: response.data.Model.PaReq,
-              MD: response.data.Model.TransactionId,
+              TransactionId: response.data.Model.TransactionId,
               TermUrl: config.public.apiBase + "/payment/tiptop/handle3ds",
             },
           });

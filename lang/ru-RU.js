@@ -548,7 +548,8 @@ export default {
             your_plan: 'Ваш тарифный план',
             expired_at: 'Дата окончания тарифа',
             prolongation_title: 'Продление тарифного плана',
-            prolongation: 'Продлить'
+            prolongation: 'Продлить',
+            choose_a_plan: 'Выберите тарифный план'
         },
 
         'payment-result': {
