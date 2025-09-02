@@ -95,7 +95,7 @@
         <h4>{{ $t("pages.subscription.prolongation_title") }}</h4>
       </template>
       <template v-slot:body_content>
-        <div class="custom-grid mt-4">
+        <div class="custom-grid mt-2">
           <div class="col-span-12">
             <div class="form-group-border select active label-active">
               <i class="pi pi-calendar"></i>
@@ -103,153 +103,171 @@
                 <option selected disabled value="">
                   {{ $t("pages.subscription.choose_a_plan") }}
                 </option>
+
+                <option
+                  v-for="plan in plans"
+                  :key="plan.subscription_plan_id"
+                  :value="plan.subscription_plan_id"
+                >
+                  {{ plan.subscription_plan_name }}
+                </option>
               </select>
-              <label>
-                {{ $t("pages.subscription.plan") }}
+              <label :class="{ 'label-error': errors.subscription_plan_id }">
+                {{
+                  errors.subscription_plan_id
+                    ? errors.subscription_plan_id
+                    : $t("pages.subscription.plan")
+                }}
               </label>
             </div>
           </div>
-        </div>
+          <div class="col-span-12">
+            <form
+              @submit.prevent="createCryptogram()"
+              ref="formRef"
+              autocomplete="off"
+            >
+              <div
+                class="border-inactive bg-inactive overflow-hidden rounded-2xl"
+              >
+                <div class="custom-grid">
+                  <div class="col-span-12">
+                    <div class="custom-grid !gap-0">
+                      <div class="col-span-12 md:col-span-8">
+                        <div
+                          class="border-inactive !border-l-0 !border-t-0 md:!border-b-0 !border-r-0 md:!border-r bg-active p-6 rounded-2xl"
+                        >
+                          <div class="custom-grid">
+                            <div class="col-span-12">
+                              <b>{{ $t("form.card.input_bank_data") }}</b>
+                            </div>
+                            <div class="col-span-12">
+                              <div class="form-group-border active">
+                                <i class="pi pi-credit-card"></i>
+                                <input
+                                  data-cp="cardNumber"
+                                  v-mask="'#### #### #### ####'"
+                                  placeholder=" "
+                                />
+                                <label
+                                  :class="{ 'label-error': errors.cardNumber }"
+                                >
+                                  {{
+                                    errors.cardNumber
+                                      ? $t(
+                                          "form.card.tiptop.errors." +
+                                            errors.cardNumber
+                                        )
+                                      : $t("form.card.card_num")
+                                  }}
+                                </label>
+                              </div>
+                            </div>
 
-        <form
-          class="mt-2"
-          @submit.prevent="createCryptogram()"
-          ref="formRef"
-          autocomplete="off"
-        >
-          <div class="border-inactive bg-inactive overflow-hidden rounded-2xl">
-            <div class="custom-grid">
-              <div class="col-span-12">
-                <div class="custom-grid !gap-0">
-                  <div class="col-span-12 md:col-span-8">
-                    <div
-                      class="border-inactive !border-l-0 !border-t-0 md:!border-b-0 !border-r-0 md:!border-r bg-active p-6 rounded-2xl"
-                    >
-                      <div class="custom-grid">
-                        <div class="col-span-12">
-                          <b>{{ $t("form.card.input_bank_data") }}</b>
-                        </div>
-                        <div class="col-span-12">
-                          <div class="form-group-border active">
-                            <i class="pi pi-credit-card"></i>
-                            <input
-                              data-cp="cardNumber"
-                              v-mask="'#### #### #### ####'"
-                              placeholder=" "
-                            />
-                            <label
-                              :class="{ 'label-error': errors.cardNumber }"
-                            >
-                              {{
-                                errors.cardNumber
-                                  ? $t(
-                                      "form.card.tiptop.errors." +
-                                        errors.cardNumber
-                                    )
-                                  : $t("form.card.card_num")
-                              }}
-                            </label>
-                          </div>
-                        </div>
-
-                        <div class="col-span-12">
-                          <p class="mb-0 text-xs text-inactive">
-                            {{ $t("form.card.expiration_at") }}
-                          </p>
-                        </div>
-                        <div class="col-span-6">
-                          <div class="form-group-border active">
-                            <input
-                              class="!px-3"
-                              data-cp="expDateMonth"
-                              v-mask="'##'"
-                              placeholder=" "
-                            />
-                            <label
-                              class="!left-2"
-                              :class="{ 'label-error': errors.expDateMonth }"
-                            >
-                              {{
-                                errors.expDateMonth
-                                  ? $t(
-                                      "form.card.tiptop.errors." +
-                                        errors.expDateMonth
-                                    )
-                                  : $t("form.card.month")
-                              }}
-                            </label>
-                          </div>
-                        </div>
-                        <div class="col-span-6">
-                          <div class="form-group-border active">
-                            <input
-                              class="!px-3"
-                              data-cp="expDateYear"
-                              v-mask="'##'"
-                              placeholder=" "
-                            />
-                            <label
-                              class="!left-2"
-                              :class="{ 'label-error': errors.expDateYear }"
-                            >
-                              {{
-                                errors.expDateYear
-                                  ? $t(
-                                      "form.card.tiptop.errors." +
-                                        errors.expDateYear
-                                    )
-                                  : $t("form.card.year")
-                              }}
-                            </label>
+                            <div class="col-span-12">
+                              <p class="mb-0 text-xs text-inactive">
+                                {{ $t("form.card.expiration_at") }}
+                              </p>
+                            </div>
+                            <div class="col-span-6">
+                              <div class="form-group-border active">
+                                <input
+                                  class="!px-3"
+                                  data-cp="expDateMonth"
+                                  v-mask="'##'"
+                                  placeholder=" "
+                                />
+                                <label
+                                  class="!left-2"
+                                  :class="{
+                                    'label-error': errors.expDateMonth,
+                                  }"
+                                >
+                                  {{
+                                    errors.expDateMonth
+                                      ? $t(
+                                          "form.card.tiptop.errors." +
+                                            errors.expDateMonth
+                                        )
+                                      : $t("form.card.month")
+                                  }}
+                                </label>
+                              </div>
+                            </div>
+                            <div class="col-span-6">
+                              <div class="form-group-border active">
+                                <input
+                                  class="!px-3"
+                                  data-cp="expDateYear"
+                                  v-mask="'##'"
+                                  placeholder=" "
+                                />
+                                <label
+                                  class="!left-2"
+                                  :class="{ 'label-error': errors.expDateYear }"
+                                >
+                                  {{
+                                    errors.expDateYear
+                                      ? $t(
+                                          "form.card.tiptop.errors." +
+                                            errors.expDateYear
+                                        )
+                                      : $t("form.card.year")
+                                  }}
+                                </label>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                  <div class="col-span-12 md:col-span-4">
-                    <div class="py-8">
-                      <div
-                        class="h-10 border-inactive !border-x-0 bg-active w-full mb-4 hidden md:block"
-                      ></div>
+                      <div class="col-span-12 md:col-span-4">
+                        <div class="py-8">
+                          <div
+                            class="h-10 border-inactive !border-x-0 bg-active w-full mb-4 hidden md:block"
+                          ></div>
 
-                      <div class="px-6">
-                        <p class="mb-3 text-xs text-inactive">
-                          {{ $t("form.card.cvv") }}
-                        </p>
+                          <div class="px-6">
+                            <p class="mb-3 text-xs text-inactive">
+                              {{ $t("form.card.cvv") }}
+                            </p>
 
-                        <div
-                          class="form-group-border active label-inactive !max-w-28"
-                        >
-                          <input
-                            class="!px-3"
-                            data-cp="cvv"
-                            v-mask="'###'"
-                            placeholder=" "
-                          />
-                          <label
-                            class="!left-2"
-                            :class="{ 'label-error': errors.cvv }"
-                          >
-                            {{
-                              errors.cvv
-                                ? $t("form.card.tiptop.errors." + errors.cvv)
-                                : "CVV"
-                            }}
-                          </label>
+                            <div
+                              class="form-group-border active label-inactive !max-w-28"
+                            >
+                              <input
+                                class="!px-3"
+                                data-cp="cvv"
+                                v-mask="'###'"
+                                placeholder=" "
+                              />
+                              <label
+                                class="!left-2"
+                                :class="{ 'label-error': errors.cvv }"
+                              >
+                                {{
+                                  errors.cvv
+                                    ? $t(
+                                        "form.card.tiptop.errors." + errors.cvv
+                                      )
+                                    : "CVV"
+                                }}
+                              </label>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <button class="btn btn-primary mt-4" type="submit">
-            <i class="pi pi-check"></i>
-            {{ $t("continue") }}
-          </button>
-        </form>
+              <button class="btn btn-primary mt-4" type="submit">
+                <i class="pi pi-check"></i>
+                {{ $t("continue") }}
+              </button>
+            </form>
+          </div>
+        </div>
       </template>
     </modal>
   </client-only>
@@ -262,12 +280,13 @@ const config = useRuntimeConfig();
 const { $axiosPlugin } = useNuxtApp();
 const schoolStore = useSchoolStore();
 const router = useRouter();
-
+const { t } = useI18n();
 const checkout = ref(null);
 
 const subscriptionModalIsVisible = ref(false);
 const pending = ref(true);
 const selectedPlan = ref("");
+const plans = ref([]);
 const formRef = ref(null);
 const errors = ref([]);
 
@@ -308,6 +327,8 @@ const getPaymentAttributes = async () => {
       publicId: response.data.tiptop.public_id,
       container: formRef.value,
     });
+
+    plans.value = response.data.plans;
   } catch (err) {
     if (err.response) {
       router.push({
@@ -325,24 +346,29 @@ const getPaymentAttributes = async () => {
 };
 
 const createCryptogram = async () => {
-  pending.value = true;
-  await checkout.value
-    .createPaymentCryptogram()
-    .then((cryptogram) => {
-      errors.value = [];
-      handlePayment(cryptogram);
-    })
-    .catch((err) => {
-      errors.value = err;
-      pending.value = false;
-    });
+  errors.value = [];
+  if (selectedPlan.value === "") {
+    errors.value = {
+      subscription_plan_id: t("pages.subscription.choose_a_plan"),
+    };
+  } else {
+    pending.value = true;
+    await checkout.value
+      .createPaymentCryptogram()
+      .then((cryptogram) => {
+        handlePayment(cryptogram);
+      })
+      .catch((err) => {
+        errors.value = err;
+        pending.value = false;
+      });
+  }
 };
 
 const handlePayment = async (cryptogram) => {
   try {
     const response = await $axiosPlugin.post("payment/tiptop/handle", {
-      amount: 100.0,
-      currency: "KZT",
+      selectedPlanId: selectedPlan.value,
       cryptogram: cryptogram,
     });
 
@@ -364,7 +390,7 @@ const handlePayment = async (cryptogram) => {
             query: {
               AcsUrl: response.data.Model.AcsUrl,
               PaReq: response.data.Model.PaReq,
-              TransactionId: response.data.Model.TransactionId,
+              MD: response.data.Model.TransactionId,
               TermUrl: config.public.apiBase + "/payment/tiptop/handle3ds",
             },
           });
