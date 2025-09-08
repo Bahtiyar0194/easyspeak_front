@@ -3,428 +3,428 @@
 @tailwind utilities;
 
 @keyframes spinner-border {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes wobble {
-    0% {
-        transform: translateX(0px);
-    }
+  0% {
+    transform: translateX(0px);
+  }
 
-    25% {
-        transform: translateX(-2px);  
-    }
+  25% {
+    transform: translateX(-2px); 
+  }
 
-    50% {
-        transform: translateX(0px);  
-    }
+  50% {
+    transform: translateX(0px); 
+  }
 
-    75% {
-        transform: translateX(2px);  
-    }
+  75% {
+    transform: translateX(2px); 
+  }
 
-    100% {
-        transform: translateX(0px);
-    }
+  100% {
+    transform: translateX(0px);
+  }
 }
 
 @keyframes pulse {
-    0% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0;
-    }
-    100% {
-        opacity: 1;
-    }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @keyframes blink {
-    0%, 80%, 100% {
-      opacity: 0.2;
-    }
-    40% {
-      opacity: 1;
-    }
+  0%, 80%, 100% {
+   opacity: 0.2;
+  }
+  40% {
+   opacity: 1;
+  }
 }
 
 /*Montserrat*/
 
 @font-face {
-    font-family: 'Montserrat';
-    src: url('../fonts/montserrat/Montserrat-Regular.ttf');
-    font-weight: normal;
-    font-style: normal;
+  font-family: 'Montserrat';
+  src: url('../fonts/montserrat/Montserrat-Regular.ttf');
+  font-weight: normal;
+  font-style: normal;
 }
 
 @font-face {
-    font-family: 'Montserrat';
-    src: url('../fonts/montserrat/Montserrat-Italic.ttf');
-    font-weight: normal;
-    font-style: italic;
+  font-family: 'Montserrat';
+  src: url('../fonts/montserrat/Montserrat-Italic.ttf');
+  font-weight: normal;
+  font-style: italic;
 }
 
 @font-face {
-    font-family: 'Montserrat';
-    src: url('../fonts/montserrat/Montserrat-Medium.ttf');
-    font-weight: 500;
-    font-style: normal;
+  font-family: 'Montserrat';
+  src: url('../fonts/montserrat/Montserrat-Medium.ttf');
+  font-weight: 500;
+  font-style: normal;
 }
 
 @font-face {
-    font-family: 'Montserrat';
-    src: url('../fonts/montserrat/Montserrat-MediumItalic.ttf');
-    font-weight: 500;
-    font-style: italic;
+  font-family: 'Montserrat';
+  src: url('../fonts/montserrat/Montserrat-MediumItalic.ttf');
+  font-weight: 500;
+  font-style: italic;
 }
 
 /*Roboto*/
 
 @font-face {
-    font-family: 'Roboto';
-    src: url('../fonts/roboto/Roboto-Thin.ttf');
-    font-weight: 100;
-    font-style: normal;
+  font-family: 'Roboto';
+  src: url('../fonts/roboto/Roboto-Thin.ttf');
+  font-weight: 100;
+  font-style: normal;
 }
 
 @font-face {
-    font-family: 'Roboto';
-    src: url('../fonts/roboto/Roboto-ThinItalic.ttf');
-    font-weight: 100;
-    font-style: italic;
+  font-family: 'Roboto';
+  src: url('../fonts/roboto/Roboto-ThinItalic.ttf');
+  font-weight: 100;
+  font-style: italic;
 }
 
 @font-face {
-    font-family: 'Roboto';
-    src: url('../fonts/roboto/Roboto-Light.ttf');
-    font-weight: 300;
-    font-style: normal;
+  font-family: 'Roboto';
+  src: url('../fonts/roboto/Roboto-Light.ttf');
+  font-weight: 300;
+  font-style: normal;
 }
 
 @font-face {
-    font-family: 'Roboto';
-    src: url('../fonts/roboto/Roboto-LightItalic.ttf');
-    font-weight: 300;
-    font-style: italic;
+  font-family: 'Roboto';
+  src: url('../fonts/roboto/Roboto-LightItalic.ttf');
+  font-weight: 300;
+  font-style: italic;
 }
 
 @font-face {
-    font-family: 'Roboto';
-    src: url('../fonts/roboto/Roboto-Regular.ttf');
-    font-weight: 400;
-    font-style: normal;
+  font-family: 'Roboto';
+  src: url('../fonts/roboto/Roboto-Regular.ttf');
+  font-weight: 400;
+  font-style: normal;
 }
 
 @font-face {
-    font-family: 'Roboto';
-    src: url('../fonts/roboto/Roboto-Italic.ttf');
-    font-weight: 400;
-    font-style: italic;
+  font-family: 'Roboto';
+  src: url('../fonts/roboto/Roboto-Italic.ttf');
+  font-weight: 400;
+  font-style: italic;
 }
 
 @font-face {
-    font-family: 'Roboto';
-    src: url('../fonts/roboto/Roboto-Medium.ttf');
-    font-weight: 500;
-    font-style: normal;
+  font-family: 'Roboto';
+  src: url('../fonts/roboto/Roboto-Medium.ttf');
+  font-weight: 500;
+  font-style: normal;
 }
 
 @font-face {
-    font-family: 'Roboto';
-    src: url('../fonts/roboto/Roboto-MediumItalic.ttf');
-    font-weight: 500;
-    font-style: italic;
+  font-family: 'Roboto';
+  src: url('../fonts/roboto/Roboto-MediumItalic.ttf');
+  font-weight: 500;
+  font-style: italic;
 }
 
 @font-face {
-    font-family: 'Roboto';
-    src: url('../fonts/roboto/Roboto-Bold.ttf');
-    font-weight: 700;
-    font-style: normal;
+  font-family: 'Roboto';
+  src: url('../fonts/roboto/Roboto-Bold.ttf');
+  font-weight: 700;
+  font-style: normal;
 }
 
 @font-face {
-    font-family: 'Roboto';
-    src: url('../fonts/roboto/Roboto-BoldItalic.ttf');
-    font-weight: 700;
-    font-style: italic;
+  font-family: 'Roboto';
+  src: url('../fonts/roboto/Roboto-BoldItalic.ttf');
+  font-weight: 700;
+  font-style: italic;
 }
 
 @font-face {
-    font-family: 'Roboto';
-    src: url('../fonts/roboto/Roboto-Black.ttf');
-    font-weight: 900;
-    font-style: normal;
+  font-family: 'Roboto';
+  src: url('../fonts/roboto/Roboto-Black.ttf');
+  font-weight: 900;
+  font-style: normal;
 }
 
 @font-face {
-    font-family: 'Roboto';
-    src: url('../fonts/roboto/Roboto-BlackItalic.ttf');
-    font-weight: 900;
-    font-style: italic;
+  font-family: 'Roboto';
+  src: url('../fonts/roboto/Roboto-BlackItalic.ttf');
+  font-weight: 900;
+  font-style: italic;
 }
 
 /*DEFAULT THEME*/
 
 .bg-corp {
-    @apply bg-blue-500;
+  @apply bg-blue-500;
 }
 
 .bg-corp-100{
-    @apply bg-blue-200 dark:bg-blue-200;
+  @apply bg-blue-200 dark:bg-blue-200;
 }
 
 .border-corp {
-    @apply border-blue-500;
+  @apply border-blue-500;
 }
 
 .text-corp {
-    @apply text-blue-500;
+  @apply text-blue-500;
 }
 
 /*STYLES*/
 
 .bg-active {
-    @apply bg-white dark:bg-slate-800;
+  @apply bg-white dark:bg-slate-800;
 }
 
 .bg-active-inverse {
-    @apply bg-slate-800 dark:bg-white;
+  @apply bg-slate-800 dark:bg-white;
 }
 
 .bg-inactive {
-    @apply bg-gray-100 dark:bg-slate-900;
+  @apply bg-gray-100 dark:bg-slate-900;
 }
 
 .bg-inactive-inverse {
-    @apply bg-slate-900 dark:bg-gray-100;
+  @apply bg-slate-900 dark:bg-gray-100;
 }
 
 .bg-success{
-    @apply bg-green-500;
+  @apply bg-green-500;
 }
 
 .bg-success-100{
-    @apply bg-green-200 dark:bg-green-200;
+  @apply bg-green-200 dark:bg-green-200;
 }
 
 .bg-info{
-    @apply bg-corp;
+  @apply bg-corp;
 }
 
 .bg-danger{
-    @apply bg-red-500;
+  @apply bg-red-500;
 }
 
 .bg-danger-100{
-    @apply bg-red-100;
+  @apply bg-red-100;
 }
 
 .bg-warning{
-    @apply bg-yellow-500;
+  @apply bg-yellow-500;
 }
 
 .bg-orange{
-    @apply bg-orange-500;
+  @apply bg-orange-500;
 }
 
 .border-active{
-    @apply border border-slate-800 dark:border-white;
+  @apply border border-slate-800 dark:border-white;
 }
 
 .border-t-active{
-    @apply border-t border-slate-800 dark:border-white;
+  @apply border-t border-slate-800 dark:border-white;
 }
 
 .border-r-active{
-    @apply border-r border-slate-800 dark:border-white;
+  @apply border-r border-slate-800 dark:border-white;
 }
 
 .border-b-active{
-    @apply border-b border-slate-800 dark:border-white;
+  @apply border-b border-slate-800 dark:border-white;
 }
 
 .border-l-active{
-    @apply border-l border-slate-800 dark:border-white;
+  @apply border-l border-slate-800 dark:border-white;
 }
 
 .border-inactive{
-    @apply border border-gray-300 dark:border-slate-700;
+  @apply border border-gray-300 dark:border-slate-700;
 }
 
 .border-t-inactive{
-    @apply border-t border-gray-300 dark:border-slate-700;
+  @apply border-t border-gray-300 dark:border-slate-700;
 }
 
 .border-r-inactive{
-    @apply border-r border-gray-300 dark:border-slate-700;
+  @apply border-r border-gray-300 dark:border-slate-700;
 }
 
 .border-b-inactive{
-    @apply border-b border-gray-300 dark:border-slate-700;
+  @apply border-b border-gray-300 dark:border-slate-700;
 }
 
 .border-l-inactive{
-    @apply border-l border-gray-300 dark:border-slate-700;
+  @apply border-l border-gray-300 dark:border-slate-700;
 }
 
 .border-success{
-    @apply border-green-500;
+  @apply border-green-500;
 }
 
 .border-t-success{
-    @apply border-t-green-500;
+  @apply border-t-green-500;
 }
 
 .border-r-success{
-    @apply border-r-green-500;
+  @apply border-r-green-500;
 }
 
 .border-b-success{
-    @apply border-b-green-500;
+  @apply border-b-green-500;
 }
 
 .border-l-success{
-    @apply border-l-green-500;
+  @apply border-l-green-500;
 }
 
 .border-inset-success{
-    @apply outline-2 outline-green-500 outline;
+  @apply outline-2 outline-green-500 outline;
 }
 
 .border-danger{
-    @apply border-red-500;
+  @apply border-red-500;
 }
 
 .border-warning{
-    @apply border-yellow-500;
+  @apply border-yellow-500;
 }
 
 .text-active {
-    @apply text-dark-500 dark:text-white;
+  @apply text-dark-500 dark:text-white;
 }
 
 .text-active-invert {
-    @apply text-white dark:text-dark-500;
+  @apply text-white dark:text-dark-500;
 }
 
 .fill-active{
-    @apply fill-slate-500 dark:fill-white;
+  @apply fill-slate-500 dark:fill-white;
 }
 
 .text-success{
-    @apply text-green-500;
+  @apply text-green-500;
 }
 
 .text-danger{
-    @apply text-red-500;
+  @apply text-red-500;
 }
 
 .text-warning{
-    @apply text-yellow-500;
+  @apply text-yellow-500;
 }
 
 .text-inactive {
-    @apply text-neutral-500 dark:text-slate-500;
+  @apply text-neutral-500 dark:text-slate-500;
 }
 
 .text-success{
-    @apply text-green-500;
+  @apply text-green-500;
 }
 
 .text-stroke{
-    -webkit-text-stroke: 1px black;
+  -webkit-text-stroke: 1px black;
 }
 
 .dark .text-stroke{
-    -webkit-text-stroke: 1px white;
+  -webkit-text-stroke: 1px white;
 }
 
 .stroke-active{
-    @apply stroke-slate-500 dark:stroke-white;
+  @apply stroke-slate-500 dark:stroke-white;
 }
 
 .stroke-corp{
-    @apply stroke-blue-500;
+  @apply stroke-blue-500;
 }
 
 .stroke-success{
-    @apply stroke-green-500;
+  @apply stroke-green-500;
 }
 
 .stroke-warning{
-    @apply stroke-yellow-500;
+  @apply stroke-yellow-500;
 }
 
 .stroke-danger{
-    @apply stroke-red-500;
+  @apply stroke-red-500;
 }
 
 .stroke-inactive {
-    @apply stroke-gray-100 dark:stroke-slate-900;
+  @apply stroke-gray-100 dark:stroke-slate-900;
 }
 
 ::-webkit-scrollbar {
-    width: 3px;
-    @apply bg-inactive;
-    height: 90%;
+  width: 3px;
+  @apply bg-inactive;
+  height: 90%;
 }
 ::-webkit-scrollbar-thumb {
-    width: 3px;
-    @apply bg-corp;
+  width: 3px;
+  @apply bg-corp;
 }
 ::-webkit-scrollbar:horizontal{
-    height: 3px;
-    @apply bg-inactive;
+  height: 3px;
+  @apply bg-inactive;
 }
 ::-webkit-scrollbar-thumb:horizontal{
-    height: 3px;
-    @apply bg-corp;
+  height: 3px;
+  @apply bg-corp;
 }
 
 [contenteditable]{
-    @apply h-full;
+  @apply h-full;
 }
 
 [contenteditable="true"]:active,
 [contenteditable="true"]:focus{
-    @apply outline-none;
+  @apply outline-none;
 }
 
 body {
-    @apply bg-inactive text-active font-normal duration-200;
-    font-family: 'Roboto', sans-serif;
+  @apply bg-inactive text-active font-normal duration-200;
+  font-family: 'Roboto', sans-serif;
 }
 
 h1, h2, h3, h4, h5, h6, .title-font {
-    font-family: 'Roboto', sans-serif;
-    font-weight: 600;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 600;
 }
 
 a {
-    @apply cursor-pointer duration-200 text-corp;
+  @apply cursor-pointer duration-200 text-corp;
 }
 
 a:hover{
-    @apply text-active;
+  @apply text-active;
 }
 
 .link{
-    @apply cursor-pointer duration-200;
+  @apply cursor-pointer duration-200;
 }
 
 .link:hover{
-    @apply text-corp;
+  @apply text-corp;
 }
 
 p {
-    @apply mb-3;
+  @apply mb-3;
 }
 
 h1,
@@ -433,7 +433,7 @@ h3,
 h4,
 h5,
 h6 {
-    @apply mb-4;
+  @apply mb-4;
 }
 
 h1 > a,
@@ -442,7 +442,7 @@ h3 > a,
 h4 > a,
 h5 > a,
 h6 > a {
-    @apply text-active;
+  @apply text-active;
 }
 
 h1 > a:hover,
@@ -451,217 +451,213 @@ h3 > a:hover,
 h4 > a:hover,
 h5 > a:hover,
 h6 > a:hover {
-    @apply text-corp;
-}
-
-b, strong{
-    @apply font-medium;
+  @apply text-corp;
 }
 
 h1{
-    @apply text-4xl;
+  @apply text-4xl;
 }
 h2{
-    @apply text-3xl;
+  @apply text-3xl;
 }
 h3{
-    @apply text-2xl;
+  @apply text-2xl;
 }
 h4{
-    @apply text-xl;
+  @apply text-xl;
 }
 h5{
-    @apply text-lg;
+  @apply text-lg;
 }
 h6{
-    @apply text-base;
+  @apply text-base;
 }
 
 ol{
-    @apply list-decimal pl-4 mb-2;
+  @apply list-decimal pl-4 mb-2;
 }
 
 ul{
-    @apply list-disc pl-4;
+  @apply list-disc pl-4;
 }
 
 ol > li::marker,
 ul > li::marker
 {
-    @apply text-inactive;
+  @apply text-inactive;
 }
 
 hr{
-    @apply border-inactive !border-t-0 my-1;
+  @apply border-inactive !border-t-0 my-1;
 }
 
 blockquote{
-    @apply pl-4 border-corp border-l-2;
+  @apply pl-4 border-corp border-l-2;
 }
 
 video{
-    @apply border-inactive rounded-xl;
+  @apply border-inactive rounded-xl;
 }
 
 input[type=number]::-webkit-inner-spin-button, 
 input[type=number]::-webkit-outer-spin-button { 
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    margin: 0; 
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  margin: 0; 
 }
 
 .table{
-    @apply w-full relative overflow-x-auto rounded-xl shadow-md flex border-inactive text-left;
+  @apply w-full relative overflow-x-auto rounded-xl shadow-md flex border-inactive text-left;
 }
 
 .table table{
-    @apply w-full overflow-hidden relative;
+  @apply w-full overflow-hidden relative;
 }
 
 .table table thead{
-    @apply border-b-inactive bg-active;
+  @apply border-b-inactive bg-active;
 }
 
 td.th{
-    @apply border-b-inactive bg-active;
+  @apply border-b-inactive bg-active;
 }
 
 .table table tbody tr{
-    @apply bg-active;
+  @apply bg-active;
 }
 
 .table.table-striped table tbody tr:nth-child(even){
-    @apply bg-inactive;
+  @apply bg-inactive;
 }
 
 .table table thead tr th, td.th{
-    @apply px-4 py-3 font-medium tracking-wider;
+  @apply px-4 py-3 tracking-wider;
 }
 
 .table.selectable table tbody tr{
-    @apply cursor-pointer duration-200;
+  @apply cursor-pointer duration-200;
 }
 
 .table.selectable table tbody tr:hover{
-    @apply bg-corp-100;
+  @apply bg-corp-100;
 }
 
 .table.selectable.success table tbody tr:hover{
-    @apply bg-success-100;
+  @apply bg-success-100;
 }
 
 .table.selectable table tbody tr:hover > td{
-    @apply text-dark-500;
+  @apply text-dark-500;
 }
 
 .table table tbody tr td{
-    @apply px-4 py-3;
+  @apply px-4 py-3;
 }
 
 .table.editable table tbody tr td.selected{
-    @apply bg-corp-100;
+  @apply bg-corp-100;
 }
 
 .table.table-sm table thead tr th{
-    @apply px-3 py-2 text-sm;
+  @apply px-3 py-2 text-sm;
 }
 
 .table.table-sm table tbody tr td{
-    @apply px-3 py-2 text-sm;
+  @apply px-3 py-2 text-sm;
 }
 
 .table.bordered{
-    @apply border-inactive;
+  @apply border-inactive;
 }
 
 .table.bordered table tbody tr{
-    @apply border-b-inactive;
+  @apply border-b-inactive;
 }
 
 .table.bordered table tbody tr:last-child{
-    @apply border-none;
+  @apply border-none;
 }
 
 .table.bordered table thead tr th,
 .table.bordered table thead tr td,
 .table.bordered table tbody tr th,
 .table.bordered table tbody tr td{
-    @apply border-r-inactive;
+  @apply border-r-inactive;
 }
 .table.bordered table thead tr th:last-child,
 .table.bordered table thead tr td:last-child,
 .table.bordered table tbody tr th:last-child,
 .table.bordered table tbody tr td:last-child{
-    @apply border-none;
+  @apply border-none;
 }
 
 form code{
-    @apply block max-h-40;
+  @apply block max-h-40;
 }
 
 pre{
-    @apply rounded-xl;
-    padding: 0.75rem !important;
+  @apply rounded-xl;
+  padding: 0.75rem !important;
 }
 
 button,
 input,
 select{
-    @apply bg-transparent appearance-none;
+  @apply bg-transparent appearance-none;
 }
 
 button:focus,
 input:focus,
 select:focus,
 textarea:focus {
-    @apply outline-none;
+  @apply outline-none;
 }
 
 select{
-    @apply hover:cursor-pointer;
+  @apply hover:cursor-pointer;
 }
 
 select option {
-    @apply bg-active;
+  @apply bg-active;
 }
 
 select.error:has(option:checked:disabled) {
-    @apply !text-red-500;
+  @apply !text-red-500;
 }
 
 .custom-container{
-    @apply container mx-auto px-4;
+  @apply container mx-auto px-4;
 }
 
 .custom-grid{
-    @apply grid grid-cols-12 gap-y-4 gap-x-3 relative w-full;
+  @apply grid grid-cols-12 gap-y-4 gap-x-3 relative w-full;
 }
 
 .custom-grid.cols-10{
-    @apply grid-cols-10;
+  @apply grid-cols-10;
 }
 
 .form-group {
-    @apply mb-5 relative border-t-0 border-l-0 border-r-0 border-b border-corp;
+  @apply mb-5 relative border-t-0 border-l-0 border-r-0 border-b border-corp;
 }
 
 .form-group > input, 
 .form-group > select, 
 .form-group > textarea {
-    @apply border-0 bg-transparent w-full text-active py-3 pl-8 pr-2 relative z-10; 
+  @apply border-0 bg-transparent w-full text-active py-3 pl-8 pr-2 relative z-10; 
 }
 
 .form-group.input-group > select{
-    @apply pl-4 border-l-inactive;
+  @apply pl-4 border-l-inactive;
 }
 
 .form-group > label {
-    @apply absolute left-8 top-3 pointer-events-none duration-200 bg-inherit text-inactive;
+  @apply absolute left-8 top-3 pointer-events-none duration-200 bg-inherit text-inactive;
 }
 
 .form-group > label.label-error{
-    @apply text-danger -top-2.5 text-xs left-0;
+  @apply text-danger -top-2.5 text-xs left-0;
 }
 
 .form-group > input:focus ~ label,
@@ -671,7 +667,7 @@ select.error:has(option:checked:disabled) {
 .form-group > textarea:focus ~ label,
 .form-group > textarea:not(:placeholder-shown) ~ label
 {
-    @apply -top-2.5 text-xs left-0 text-inactive;
+  @apply -top-2.5 text-xs left-0 text-inactive;
 }
 
 .form-group > input:focus ~ label.label-error,
@@ -681,56 +677,56 @@ select.error:has(option:checked:disabled) {
 .form-group > textarea:focus ~ label.label-error,
 .form-group > textarea:not(:placeholder-shown) ~ label.label-error
 {
-    @apply text-danger -top-2.5 text-xs left-0;
+  @apply text-danger -top-2.5 text-xs left-0;
 }
 
 .form-group .show-password, .form-group .clear
 {
-    @apply absolute right-0 text-2xl top-3 text-inactive z-20;
+  @apply absolute right-0 text-2xl top-3 text-inactive z-20;
 }
 
 .form-group-border {
-    @apply relative border border-corp rounded-xl;
+  @apply relative border border-corp rounded-xl;
 }
 
 .form-group-border.active{
-    @apply border-inactive;
+  @apply border-inactive;
 }
 
 .form-group-border.danger{
-    @apply border-danger;
+  @apply border-danger;
 }
 
 .form-group-border > input, 
 .form-group-border > select, 
 .form-group-border > textarea {
-    @apply border-0 bg-transparent w-full text-active py-2 pl-8 pr-2.5 relative z-10;
+  @apply border-0 bg-transparent w-full text-active py-2 pl-8 pr-2.5 relative z-10;
 }
 
 .form-group-border.input-group > select{
-    @apply pl-4 border-l-inactive;
+  @apply pl-4 border-l-inactive;
 }
 
 .form-group-border > select{
-    @apply pr-8;
+  @apply pr-8;
 }
 
 .form-group-border.select::after{
-    content: "›";
-    writing-mode: vertical-rl;
-    @apply absolute right-0 text-inactive text-2xl top-4 w-3 h-3;
+  content: "›";
+  writing-mode: vertical-rl;
+  @apply absolute right-0 text-inactive text-2xl top-4 w-3 h-3;
 }
 
 .form-group-border > label {
-    @apply absolute left-9 top-2 pointer-events-none duration-200 bg-inherit text-inactive whitespace-nowrap;
+  @apply absolute left-9 top-2 pointer-events-none duration-200 bg-inherit text-inactive whitespace-nowrap;
 }
 
 .form-group-border > label.label-error{
-    @apply text-danger -top-2.5 text-xs left-2 bg-active px-1 mr-2;
+  @apply text-danger -top-2.5 text-xs left-2 bg-active px-1 mr-2;
 }
 
 .form-group-border.label-inactive > label.label-error{
-    @apply bg-inactive;
+  @apply bg-inactive;
 }
 
 .form-group-border > input:focus ~ label,
@@ -740,7 +736,7 @@ select.error:has(option:checked:disabled) {
 .form-group-border > textarea:focus ~ label,
 .form-group-border > textarea:not(:placeholder-shown) ~ label
 {
-    @apply -top-2.5 text-xs left-2 text-inactive bg-active px-1;
+  @apply -top-2.5 text-xs left-2 text-inactive bg-active px-1;
 }
 
 .form-group-border.label-inactive > input:focus ~ label,
@@ -750,7 +746,7 @@ select.error:has(option:checked:disabled) {
 .form-group-border.label-inactive > textarea:focus ~ label,
 .form-group-border.label-inactive > textarea:not(:placeholder-shown) ~ label
 {
-    @apply bg-inactive;
+  @apply bg-inactive;
 }
 
 .form-group-border > input:focus ~ label.label-error,
@@ -760,179 +756,179 @@ select.error:has(option:checked:disabled) {
 .form-group-border > textarea:focus ~ label.label-error,
 .form-group-border > textarea:not(:placeholder-shown) ~ label.label-error
 {
-    @apply text-danger;
+  @apply text-danger;
 }
 
 .form-group-border .show-password, .form-group-border .clear
 {
-    @apply absolute right-2 text-lg top-2 text-inactive z-20;
+  @apply absolute right-2 text-lg top-2 text-inactive z-20;
 }
 
 .label-focus{
-    @apply text-xs text-inactive;
+  @apply text-xs text-inactive;
 }
 
 .label-focus.danger{
-    @apply text-danger;
+  @apply text-danger;
 }
 
 .form-group > i{
-    @apply absolute top-3 text-inactive z-20;
+  @apply absolute top-3 text-inactive z-20;
 }
 
 .form-group > i.bi{
-    @apply top-1.5 text-lg;
+  @apply top-1.5 text-lg;
 }
 
 .form-group-border > i{
-    @apply absolute top-3 left-2.5 text-inactive z-20;
+  @apply absolute top-3 left-2.5 text-inactive z-20;
 }
 
 .form-group-border > i.bi{
-    @apply top-1.5 text-lg;
+  @apply top-1.5 text-lg;
 }
 
 .form-group-file input{
-    @apply hidden;
+  @apply hidden;
 }
 
 .form-group-file label{
-    @apply block border border-inactive border-dashed p-4 rounded-xl text-center break-all cursor-pointer duration-200;
+  @apply block border border-inactive border-dashed p-4 rounded-xl text-center break-all cursor-pointer duration-200;
 }
 
 .form-group-file label:hover{
-    @apply bg-inactive;
+  @apply bg-inactive;
 }
 
 .form-group-file label.label-error{
-    @apply text-danger;
+  @apply text-danger;
 }
 
 .form-group-file label.label-error:hover{
-    @apply text-active;
+  @apply text-active;
 }
 
 .form-group-file label > i{
-    @apply text-2xl m-auto;
+  @apply text-2xl m-auto;
 }
 
 .custom-radio, 
 .rating-radio,
 .custom-radio-checkbox, 
 .custom-checkbox{
-    @apply inline-flex;
+  @apply inline-flex;
 }
 
 .custom-radio > input, 
 .rating-radio > input,
 .custom-radio-checkbox > input, 
 .custom-checkbox > input, {
-    @apply absolute -z-10 opacity-0;
+  @apply absolute -z-10 opacity-0;
 }
-  
+ 
 .custom-radio > span, 
 .custom-radio-checkbox > span,
 .custom-checkbox > span {
-    @apply inline-flex items-start select-none cursor-pointer;
+  @apply inline-flex items-start select-none cursor-pointer;
 }
-  
+ 
 .custom-radio > span::before,
 .custom-radio-checkbox > span::before
  {
-    content: '';
-    @apply inline-block w-4 h-4 mt-1 flex-shrink-0 flex-grow-0 border border-inactive rounded-full mr-1.5 bg-no-repeat bg-center;
-    background-size: 50% 50%;
+  content: '';
+  @apply inline-block w-4 h-4 mt-1 flex-shrink-0 flex-grow-0 border border-inactive rounded-full mr-1.5 bg-no-repeat bg-center;
+  background-size: 50% 50%;
 }
 
 .custom-radio.avatar > span::before,
 .custom-radio-checkbox.avatar > span::before
 {
-    @apply hidden;
+  @apply hidden;
 }
 
 .custom-checkbox > span::before {
-    content: '';
-    @apply inline-block w-4 h-4 flex-shrink-0 flex-grow-0 border border-inactive rounded-sm mr-2 bg-no-repeat bg-center;
-    background-size: 50% 50%;
+  content: '';
+  @apply inline-block w-4 h-4 flex-shrink-0 flex-grow-0 border border-inactive rounded-sm mr-2 bg-no-repeat bg-center;
+  background-size: 50% 50%;
 }
 
 .custom-radio > input:not(:disabled):not(:checked) + span:hover::before,
 .custom-radio-checkbox > input:not(:disabled):not(:checked) + span:hover::before,
 .custom-checkbox > input:not(:disabled):not(:checked) + span:hover::before {
-    @apply border-corp;
+  @apply border-corp;
 }
 
 .custom-radio > input:not(:disabled):not(:checked) + span.error,
 .custom-radio-checkbox > input:not(:disabled):not(:checked) + span.error,
 .custom-checkbox > input:not(:disabled):not(:checked) + span.error {
-    @apply text-danger;
+  @apply text-danger;
 }
 
 .custom-radio > input:not(:disabled):not(:checked) + span.error::before,
 .custom-radio-checkbox > input:not(:disabled):not(:checked) + span.error::before,
 .custom-checkbox > input:not(:disabled):not(:checked) + span.error::before {
-    @apply border-danger;
+  @apply border-danger;
 }
 
 .custom-radio > input:not(:disabled):active + span::before,
 .custom-radio-checkbox > input:not(:disabled):active + span::before,
 .custom-checkbox > input:not(:disabled):active + span::before {
-    @apply bg-inactive border-inactive;
+  @apply bg-inactive border-inactive;
 }
-  
+ 
 .custom-radio > input:focus:not(:checked) + span::before,
 .custom-radio-checkbox > input:focus:not(:checked) + span::before,
 .custom-checkbox > input:focus:not(:checked) + span::before {
-    @apply border-corp;
+  @apply border-corp;
 }
-  
+ 
 .custom-radio > input:checked + span::before {
-    @apply border-corp bg-corp;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
+  @apply border-corp bg-corp;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23fff'/%3e%3c/svg%3e");
 }
 
 .rating-radio{
-    @apply cursor-pointer;
+  @apply cursor-pointer;
 }
 
 .rating-radio > svg{
-    @apply text-2xl text-yellow-500;
+  @apply text-2xl text-yellow-500;
 }
 
 .dark .custom-radio > input:checked + span::before {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23222'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%23222'/%3e%3c/svg%3e");
 }
 
 .custom-radio > input:checked + span,
 .custom-radio-checkbox > input:checked + span,
 .custom-checkbox > input:checked + span{
-    @apply text-corp cursor-default;
+  @apply text-corp cursor-default;
 }
 
 .custom-radio > input:checked + span.error,
 .custom-radio-checkbox > input:checked + span.error,
 .custom-checkbox > input:checked + span.error{
-    @apply text-danger;
+  @apply text-danger;
 }
 
 .custom-radio-checkbox > input:checked + span::before,
 .custom-checkbox > input:checked + span::before {
-    @apply border-corp bg-corp;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23fff' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26 2.974 7.25 8 2.193z'/%3e%3c/svg%3e");
+  @apply border-corp bg-corp;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23fff' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26 2.974 7.25 8 2.193z'/%3e%3c/svg%3e");
 }
 
 .dark .custom-radio-checkbox > input:checked + span::before,
 .dark .custom-checkbox > input:checked + span::before {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23222' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26 2.974 7.25 8 2.193z'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23222' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26 2.974 7.25 8 2.193z'/%3e%3c/svg%3e");
 }
-  
+ 
 .custom-radio > input:disabled + span::before,
 .custom-checkbox > input:disabled + span::before {
-    @apply bg-gray-400;
+  @apply bg-gray-400;
 }
 
 .title-wrap{
-    @apply flex flex-wrap justify-between gap-4;
+  @apply flex flex-wrap justify-between gap-4;
 }
 
 .title-wrap > h1,
@@ -941,1206 +937,1206 @@ select.error:has(option:checked:disabled) {
 .title-wrap > h4,
 .title-wrap > h5,
 .title-wrap > h6{
-    @apply mb-0;
+  @apply mb-0;
 }
 
 .no-px{
-    @apply px-0;
+  @apply px-0;
 }
 
 .no-py{
-    @apply py-0;
+  @apply py-0;
 }
 
 .btn {
-    @apply rounded-xl px-4 py-2 duration-200 text-center text-base w-fit flex justify-center items-center gap-x-1; 
+  @apply rounded-xl px-4 py-2 duration-200 text-center text-base w-fit flex justify-center items-center gap-x-1; 
 }
 
 .btn.btn-square{
-    @apply min-w-9 h-9 p-0;
+  @apply min-w-9 h-9 p-0;
 }
 
 .btn.btn-circle{
-    @apply min-w-9 h-9 p-0 rounded-full;
+  @apply min-w-9 h-9 p-0 rounded-full;
 }
 
 .btn.btn-xs{
-    @apply px-1.5 py-1 text-[11px] rounded-md;
+  @apply px-1.5 py-1 text-[11px] rounded-md;
 }
 
 .btn.btn-square.btn-xs{
-    @apply min-w-5 h-5 p-0;
+  @apply min-w-5 h-5 p-0;
 }
 
 .btn.btn-circle.btn-xs{
-    @apply min-w-5 h-5 p-0 rounded-full;
+  @apply min-w-5 h-5 p-0 rounded-full;
 }
 
 .btn.btn-sm{
-    @apply px-2 py-1 text-sm rounded-lg;
+  @apply px-2 py-1 text-sm rounded-lg;
 }
 
 .btn.btn-square.btn-sm{
-    @apply min-w-7 h-7 p-0;
+  @apply min-w-7 h-7 p-0;
 }
 
 .btn.btn-circle.btn-sm{
-    @apply min-w-7 h-7 p-0 rounded-full;
+  @apply min-w-7 h-7 p-0 rounded-full;
 }
 
 .btn.btn-lg{
-    @apply rounded-xl px-3 py-3 text-lg;
+  @apply rounded-xl px-3 py-3 text-lg;
 }
 
 .btn.btn-square.btn-lg{
-    @apply min-w-10 h-10 p-0;
+  @apply min-w-10 h-10 p-0;
 }
 
 .btn.btn-circle.btn-lg{
-    @apply min-w-10 h-10 p-0 rounded-full;
+  @apply min-w-10 h-10 p-0 rounded-full;
 }
 
 .btn.full {
-    @apply w-full px-2;
+  @apply w-full px-2;
 }
 
 .btn.long{
-    @apply px-4;
+  @apply px-4;
 }
 
 .btn:disabled, .btn.disabled{
-    @apply pointer-events-none !cursor-not-allowed !select-none opacity-50;
+  @apply pointer-events-none !cursor-not-allowed !select-none opacity-50;
 }
 
 .btn.text-hidden{
-    @apply !text-transparent;
+  @apply !text-transparent;
 }
 
 .btn.wobble, input.wobble{
-    animation: 0.25s linear infinite wobble;
+  animation: 0.25s linear infinite wobble;
 }
 
 .btn-group{
-    @apply flex flex-wrap;
+  @apply flex flex-wrap;
 }
 
 .btn-group .btn {
-    @apply border-r-0 rounded-none;
+  @apply border-r-0 rounded-none;
 }
 
 .btn-group .btn:first-child {
-    @apply rounded-s-xl;
+  @apply rounded-s-xl;
 }
 
 .btn-group .btn.btn-xs:first-child {
-    @apply rounded-s-md;
+  @apply rounded-s-md;
 }
 
 .btn-group .btn.btn-sm:first-child {
-    @apply rounded-s-lg;
+  @apply rounded-s-lg;
 }
 
 .btn-group .btn.btn-lg:first-child {
-    @apply rounded-s-xl;
+  @apply rounded-s-xl;
 }
 
 
-  
+ 
 .btn-group .btn:last-child {
-    @apply border-r rounded-e-xl;
+  @apply border-r rounded-e-xl;
 }
 
 .btn-group .btn.btn-xs:last-child {
-    @apply rounded-e-md;
+  @apply rounded-e-md;
 }
 
 .btn-group .btn.btn-sm:last-child {
-    @apply rounded-e-lg;
+  @apply rounded-e-lg;
 }
 
 .btn-group .btn.btn-lg:last-child {
-    @apply rounded-e-xl;
+  @apply rounded-e-xl;
 }
 
 .btn-wrap{
-    @apply flex gap-2 flex-wrap;
+  @apply flex gap-2 flex-wrap;
 }
 
 .btn-wrap.sm{
-    @apply gap-1;
+  @apply gap-1;
 }
 
 .btn-wrap.lg{
-    @apply gap-4;
+  @apply gap-4;
 }
 
 .btn-wrap.xl{
-    @apply gap-6;
+  @apply gap-6;
 }
 
 .btn-wrap.right{
-    @apply justify-end;
+  @apply justify-end;
 }
 
 .btn-transparent{
-    @apply text-active;
+  @apply text-active;
 }
 
 .btn-active{
-    @apply border-active text-active;
+  @apply border-active text-active;
 }
 
 .btn-inactive{
-    @apply border-inactive bg-inactive text-active;
+  @apply border-inactive bg-inactive text-active;
 }
 
 .btn-primary{
-    @apply bg-corp border-corp border text-white;
+  @apply bg-corp border-corp border text-white;
 }
 
 .btn-outline-primary{
-    @apply bg-transparent border border-corp text-corp;
+  @apply bg-transparent border border-corp text-corp;
 }
 
 .btn-outline-primary:hover{
-    @apply bg-corp border border-corp text-white;
+  @apply bg-corp border border-corp text-white;
 }
 
 .btn-light{
-    @apply bg-active text-active border-inactive border;
+  @apply bg-active text-active border-inactive border;
 }
 
 .btn-light:hover{
-    @apply bg-inactive;
+  @apply bg-inactive;
 }
 
 .btn-light.txt-corp{
-    @apply text-corp;
+  @apply text-corp;
 }
 
 .btn-danger{
-    @apply bg-red-500 text-white border-red-500 border;
+  @apply bg-red-500 text-white border-red-500 border;
 }
 
 .btn-danger:hover{
-    @apply bg-transparent text-red-500;
+  @apply bg-transparent text-red-500;
 }
 
 .btn-outline-danger{
-    @apply !bg-transparent border !border-red-500 !text-red-500;
+  @apply !bg-transparent border !border-red-500 !text-red-500;
 }
 
 .btn-outline-danger:hover{
-    @apply !bg-red-500 border !border-red-500 !text-white;
+  @apply !bg-red-500 border !border-red-500 !text-white;
 }
 
 .btn-success{
-    @apply !bg-green-500 !text-white !border-green-500 border;
+  @apply !bg-green-500 !text-white !border-green-500 border;
 }
 
 .btn-success:hover{
-    @apply !bg-transparent !text-green-500;
+  @apply !bg-transparent !text-green-500;
 }
 
 .btn-outline-success{
-    @apply !bg-transparent border !border-green-500 !text-green-500;
+  @apply !bg-transparent border !border-green-500 !text-green-500;
 }
 
 .btn-outline-success:hover{
-    @apply !bg-green-500 border !border-green-500 !text-white;
+  @apply !bg-green-500 border !border-green-500 !text-white;
 }
 
 .btn-delete:hover{
-    @apply border-danger text-danger;
+  @apply border-danger text-danger;
 }
 
 .btn > span {
-    @apply ml-1;
+  @apply ml-1;
 }
 
 .btn-loading-circle {
-    animation: 0.75s linear infinite spinner-border;
+  animation: 0.75s linear infinite spinner-border;
 }
 
 .pagination-wrap{
-    @apply flex items-center flex-wrap gap-x-2 gap-y-4;
+  @apply flex items-center flex-wrap gap-x-2 gap-y-4;
 }
 
 .pagination{
-    @apply flex flex-wrap gap-2 items-start;
+  @apply flex flex-wrap gap-2 items-start;
 }
 
 .per-page-select{
-    @apply relative w-48;
+  @apply relative w-48;
 }
 
 .per-page-select::after{
-    content: "›";
-    writing-mode: vertical-rl;
-    @apply absolute right-0 text-inactive text-2xl top-3 w-3 h-3;
+  content: "›";
+  writing-mode: vertical-rl;
+  @apply absolute right-0 text-inactive text-2xl top-3 w-3 h-3;
 }
 
 .per-page-select > select {
-    @apply border border-corp rounded-lg bg-transparent w-full text-active px-3 py-0.5;
+  @apply border border-corp rounded-lg bg-transparent w-full text-active px-3 py-0.5;
 }
 
 .per-page-select.active > select {
-    @apply border-inactive;
+  @apply border-inactive;
 }
 
 .per-page-select > label {
-    @apply absolute left-8 top-2 pointer-events-none duration-200 z-0 bg-inherit text-inactive;
+  @apply absolute left-8 top-2 pointer-events-none duration-200 z-0 bg-inherit text-inactive;
 }
 
 .per-page-select > select:focus ~ label,
 .per-page-select > select:not(:placeholder-shown) ~ label
 {
-    @apply -top-2.5 text-xs left-2 text-inactive bg-inactive px-1.5;
+  @apply -top-2.5 text-xs left-2 text-inactive bg-inactive px-1.5;
 }
 
 .per-page-select.bg_active > select:focus ~ label,
 .per-page-select.bg_active > select:not(:placeholder-shown) ~ label
 {
-    @apply bg-active;
+  @apply bg-active;
 }
 
 .badge-wrap{
-    @apply flex flex-wrap gap-2;
+  @apply flex flex-wrap gap-2;
 }
 
 .badge{
-    @apply text-sm px-2 py-1 rounded-xl max-w-full break-all;
+  @apply text-sm px-2 py-1 rounded-xl max-w-full break-all;
 }
 
 .badge.badge-sm{
-    @apply text-xs px-1.5 py-0.5 rounded-sm;
+  @apply text-xs px-1.5 py-0.5 rounded-sm;
 }
 
 .badge.badge-lg{
-    @apply text-base px-2.5 py-1.5 rounded-xl;
+  @apply text-base px-2.5 py-1.5 rounded-xl;
 }
 
 .badge.count{
-    @apply absolute rounded-full flex justify-center items-center px-0 py-0 min-w-4 h-4 text-nowrap;
+  @apply absolute rounded-full flex justify-center items-center px-0 py-0 min-w-4 h-4 text-nowrap;
 }
 
 .badge > i{
-    @apply inline;
+  @apply inline;
 }
 
 .badge-light{
-    @apply border-inactive bg-active text-active;
+  @apply border-inactive bg-active text-active;
 }
 
 .badge-primary{
-    @apply bg-corp text-white;
+  @apply bg-corp text-white;
 }
 
 .badge-outline-primary{
-    @apply border-corp border text-corp;
+  @apply border-corp border text-corp;
 }
 
 .alert{
-    @apply p-6 text-center text-inactive rounded-xl relative overflow-hidden; 
+  @apply p-6 text-center text-inactive rounded-xl relative overflow-hidden; 
 }
 
 .alert.light{
-    @apply border-inactive bg-active text-active;
+  @apply border-inactive bg-active text-active;
 }
 
 .alert.primary{
-    @apply bg-corp-100 text-corp;
+  @apply bg-corp-100 text-corp;
 }
 
 .alert.outline-primary{
-    @apply border border-corp text-corp;
+  @apply border border-corp text-corp;
 }
 
 .alert.danger{
-    @apply bg-red-100 text-danger;
+  @apply bg-red-100 text-danger;
 }
 
 .alert.outline-danger{
-    @apply border border-danger text-danger;
+  @apply border border-danger text-danger;
 }
 
 .note{
-    @apply pl-3 py-3 px-9 border-inactive bg-active rounded-xl relative;
+  @apply pl-3 py-3 px-9 border-inactive bg-active rounded-xl relative;
 }
 
 .note button {
-    @apply absolute top-3 right-3
+  @apply absolute top-3 right-3
 }
 
 .note.danger{
-    @apply bg-danger border-danger text-white;
+  @apply bg-danger border-danger text-white;
 }
 
 .note.outline-danger{
-    @apply border-danger text-danger;
+  @apply border-danger text-danger;
 }
 
 .note.warning{
-    @apply bg-warning border-warning text-white;
+  @apply bg-warning border-warning text-white;
 }
 
 .note.outline-warning{
-    @apply border-warning text-warning;
+  @apply border-warning text-warning;
 }
 
 .note.success{
-    @apply bg-success border-success text-white;
+  @apply bg-success border-success text-white;
 }
 
 .note.outline-success{
-    @apply border-success text-success;
+  @apply border-success text-success;
 }
 
 .note.primary{
-    @apply bg-corp border-corp text-white;
+  @apply bg-corp border-corp text-white;
 }
 
 .note.outline-primary{
-    @apply border-corp text-corp;
+  @apply border-corp text-corp;
 }
 
 .custom-toast{
-    @apply flex items-center gap-5 min-h-max px-4 py-3;
+  @apply flex items-center gap-5 min-h-max px-4 py-3;
 }
 
 .custom-toast i{
-    @apply text-3xl m-0;
+  @apply text-3xl m-0;
 }
 
 .custom-toast .close-button{
-    @apply font-medium opacity-50 text-2xl;
+  @apply opacity-50 text-2xl;
 }
 
 .custom-toast.info{
-    @apply bg-corp;
+  @apply bg-corp;
 }
 
 .custom-toast.warning{
-    @apply bg-warning;
+  @apply bg-warning;
 }
 
 .custom-toast.danger{
-    @apply bg-danger;
+  @apply bg-danger;
 }
 
 .custom-toast.success{
-    @apply bg-success;
+  @apply bg-success;
 }
 
 .card {
-    @apply bg-active rounded-xl max-w-full relative border-inactive overflow-hidden shadow-lg;
+  @apply bg-active rounded-xl max-w-full relative border-inactive overflow-hidden shadow-lg;
 }
 
 .card.card-sm{
-    @apply rounded;
+  @apply rounded;
 }
 
 .card.card-lg{
-    @apply rounded-2xl;
+  @apply rounded-2xl;
 }
 
 .card.card-xl{
-    @apply rounded-3xl;
+  @apply rounded-3xl;
 }
 
 .card.card-inactive{
-    @apply bg-inactive;
+  @apply bg-inactive;
 }
 
 .card-header{
-    @apply px-6 pt-6;
+  @apply px-6 pt-6;
 }
 
 .card-body{
-    @apply p-6 overflow-y-auto overflow-x-hidden;
-    max-height: 90vh;
+  @apply p-6 overflow-y-auto overflow-x-hidden;
+  max-height: 90vh;
 }
 
 .card-bg{
-    @apply bg-cover bg-center bg-no-repeat;
+  @apply bg-cover bg-center bg-no-repeat;
 }
 
 .tag-wrap{
-    @apply bg-active rounded-xl border-inactive flex flex-wrap gap-2;
+  @apply bg-active rounded-xl border-inactive flex flex-wrap gap-2;
 }
 
 .tag-wrap.tag-wrap-full{
-    @apply block;
+  @apply block;
 }
 
 .tag-wrap.inactive{
-    @apply bg-inactive;
+  @apply bg-inactive;
 }
 
 .tag-wrap ~ label{
-    @apply absolute -top-2.5 text-xs left-2 text-inactive bg-active px-1;
+  @apply absolute -top-2.5 text-xs left-2 text-inactive bg-active px-1;
 }
 
 .tag-wrap.inactive ~ label{
-    @apply bg-inactive;
+  @apply bg-inactive;
 }
 
 .tag-wrap ~ label.label-error{
-    @apply text-danger;
+  @apply text-danger;
 }
 
 .tag{
-    @apply text-sm pr-1.5 pl-2 py-1 rounded-xl flex items-center max-w-full break-all;
+  @apply text-sm pr-1.5 pl-2 py-1 rounded-xl flex items-center max-w-full break-all;
 }
 
 .tag-wrap.tag-wrap-full .tag{
-    @apply block p-3 break-normal mb-3;
+  @apply block p-3 break-normal mb-3;
 }
 
 .tag.tag-sm{
-    @apply text-xs pr-1 pl-1.5 py-0.5 rounded-sm;
+  @apply text-xs pr-1 pl-1.5 py-0.5 rounded-sm;
 }
 
 .tag.tag-lg{
-    @apply text-base pr-2 pl-2.5 py-1.5 rounded-xl;
+  @apply text-base pr-2 pl-2.5 py-1.5 rounded-xl;
 }
 
 .tag > i{
-    @apply inline text-lg;
+  @apply inline text-lg;
 }
 
 .tag-light{
-    @apply border-inactive bg-active text-active;
+  @apply border-inactive bg-active text-active;
 }
 
 .tag-primary{
-    @apply bg-corp text-white;
+  @apply bg-corp text-white;
 }
 
 .tag-outline-primary{
-    @apply border-corp border text-corp;
+  @apply border-corp border text-corp;
 }
 
 .list-data p > span{
-    @apply text-inactive
+  @apply text-inactive
 }
 
 .list-wrap{
-    @apply bg-active rounded-xl border-inactive max-h-44 overflow-y-scroll;
+  @apply bg-active rounded-xl border-inactive max-h-44 overflow-y-scroll;
 }
 
 .list-wrap.inactive{
-    @apply bg-inactive;
+  @apply bg-inactive;
 }
 
 .list-wrap ~ label{
-    @apply absolute -top-2.5 text-xs left-2 text-inactive bg-active px-1;
+  @apply absolute -top-2.5 text-xs left-2 text-inactive bg-active px-1;
 }
 
 .list-wrap.inactive ~ label{
-    @apply bg-inactive;
+  @apply bg-inactive;
 }
 
 .list-wrap ~ label.label-error{
-    @apply text-danger;
+  @apply text-danger;
 }
 
 .list-wrap > div{
-    @apply border-b-inactive py-3 flex flex-wrap gap-2 justify-between items-center;
+  @apply border-b-inactive py-3 flex flex-wrap gap-2 justify-between items-center;
 }
 
 .list-wrap > div:first-child{
-    @apply pt-0;
+  @apply pt-0;
 }
 
 .list-wrap > div:last-child{
-    @apply border-none pb-0;
+  @apply border-none pb-0;
 }
 
 .list-group{
-    @apply bg-active rounded-xl border-inactive px-4;
+  @apply bg-active rounded-xl border-inactive px-4;
 }
 
 .list-group.sm{
-    @apply px-3;
+  @apply px-3;
 }
 
 .list-group.nowrap{
-    @apply px-0 border-0;
+  @apply px-0 border-0;
 }
 
 .list-group > li{
-    @apply py-4 border-b-inactive list-none transition-transform duration-300 ease-in-out;
+  @apply py-4 border-b-inactive list-none transition-transform duration-300 ease-in-out;
 }
 
 .list-group.sm > li{
-    @apply py-3;
+  @apply py-3;
 }
 
 .list-group.nowrap > li{
-    @apply py-2;
+  @apply py-2;
 }
 
 .list-group.nowrap.lg > li{
-    @apply py-3;
+  @apply py-3;
 }
 
 .list-group > li.section{
-    @apply border-dashed border-b-2;
+  @apply border-dashed border-b-2;
 }
 
 .list-group.nowrap > li:first-child{
-    @apply pt-0;
+  @apply pt-0;
 }
 
 .list-group.nowrap > li:last-child{
-    @apply pb-0;
+  @apply pb-0;
 }
 
 .list-group > li:last-child{
-    @apply border-none;
+  @apply border-none;
 }
 
 .list-group > li:first-child .btn-up{
-    @apply hidden;
+  @apply hidden;
 }
 
 .list-group > li:last-child .btn-down{
-    @apply hidden;
+  @apply hidden;
 }
 
 .list-group > li a{
-    @apply text-corp;
+  @apply text-corp;
 }
 
 .steps{
-    @apply relative;
+  @apply relative;
 }
 
 .steps > .progress{
-    @apply absolute my-0 top-5 border-0
+  @apply absolute my-0 top-5 border-0
 }
 
 .steps-wrap{
-    @apply flex justify-between items-baseline w-full mb-4;
+  @apply flex justify-between items-baseline w-full mb-4;
 }
 
 .step-item{
-    @apply flex items-center justify-center flex-col gap-y-2 text-center font-medium text-xs md:text-base w-min md:w-auto z-10 bg-active text-inactive px-2;
+  @apply flex items-center justify-center flex-col gap-y-2 text-center text-xs md:text-base w-min md:w-auto z-10 bg-active text-inactive px-2;
 }
 
 .step-item.xs{
-    @apply text-[10px] md:text-xs 
+  @apply text-[10px] md:text-xs 
 }
 
 .step-item:first-child{
-    @apply pl-0;
+  @apply pl-0;
 }
 
 .step-item:last-child{
-    @apply pr-0;
+  @apply pr-0;
 }
 
 .step-icon{
-    @apply rounded-full bg-active border-inactive text-inactive w-10 h-10 flex justify-center items-center text-xl text-center;
+  @apply rounded-full bg-active border-inactive text-inactive w-10 h-10 flex justify-center items-center text-xl text-center;
 }
 
 .step-item.xs .step-icon{
-    @apply w-9 h-9 text-lg;
+  @apply w-9 h-9 text-lg;
 }
 
 .step-item.current, .step-item.completed{
-    @apply text-active;
+  @apply text-active;
 }
 
 .step-item.current .step-icon{
-    @apply bg-inactive text-active;
+  @apply bg-inactive text-active;
 }
 
 .step-item.completed .step-icon{
-    @apply bg-success border-success text-white;
+  @apply bg-success border-success text-white;
 }
 
 .step-item.failed .step-icon{
-    @apply bg-danger border-danger text-white;
+  @apply bg-danger border-danger text-white;
 }
 
 .step-item.warning .step-icon{
-    @apply bg-warning border-warning text-white;
+  @apply bg-warning border-warning text-white;
 }
 
 .tasks-list-group{
-    @apply px-0 mb-0;
+  @apply px-0 mb-0;
 }
 
 .tasks-list-group > li{
-    @apply border-b-inactive list-none py-3;
+  @apply border-b-inactive list-none py-3;
 }
 
 .tasks-list-group > li:last-child{
-    @apply border-none pb-0;
+  @apply border-none pb-0;
 }
 
 .modal-backdrop{
-    @apply fixed w-full h-full top-0 bottom-0 left-0 right-0 z-50 duration-200 flex justify-center items-center p-4 opacity-0 pointer-events-none;
-    background-color: rgb(0 0 0 / 50%);
+  @apply fixed w-full h-full top-0 bottom-0 left-0 right-0 z-50 duration-200 flex justify-center items-center p-4 opacity-0 pointer-events-none;
+  background-color: rgb(0 0 0 / 50%);
 }
 
 .dark .modal-backdrop{
-    background-color: rgb(0 0 0 / 85%);
+  background-color: rgb(0 0 0 / 85%);
 }
 
 .modal-backdrop.show{
-    @apply opacity-100 pointer-events-auto;
+  @apply opacity-100 pointer-events-auto;
 }
 
 .modal{
-    @apply bg-active p-6 shadow-md rounded-xl duration-200 w-full relative overflow-hidden;
-    transform: translateY(-2rem)
+  @apply bg-active p-6 shadow-md rounded-xl duration-200 w-full relative overflow-hidden;
+  transform: translateY(-2rem)
 }
 
 .modal.modal-sm{
-    @apply max-w-sm;
+  @apply max-w-sm;
 }
 
 .modal.modal-md{
-    @apply max-w-md;
+  @apply max-w-md;
 }
 
 .modal.modal-lg{
-    @apply max-w-lg;
+  @apply max-w-lg;
 }
 
 .modal.modal-xl{
-    @apply max-w-xl;
+  @apply max-w-xl;
 }
 
 .modal.modal-2xl{
-    @apply max-w-2xl;
+  @apply max-w-2xl;
 }
 
 .modal.modal-3xl{
-    @apply max-w-3xl;
+  @apply max-w-3xl;
 }
 
 .modal.modal-4xl{
-    @apply max-w-4xl;
+  @apply max-w-4xl;
 }
 
 .modal.modal-5xl{
-    @apply max-w-5xl;
+  @apply max-w-5xl;
 }
 
 .modal.modal-6xl{
-    @apply max-w-6xl;
+  @apply max-w-6xl;
 }
 
 .modal.modal-full{
-    @apply w-full;
+  @apply w-full;
 }
 
 .modal-backdrop.show > .modal{
-    transform: translateY(0rem)
+  transform: translateY(0rem)
 }
 
 .modal-header{
-    @apply pr-6;
+  @apply pr-6;
 }
 
 .modal-body{
-    @apply overflow-y-auto overflow-x-hidden;
-    max-height: 80vh;
+  @apply overflow-y-auto overflow-x-hidden;
+  max-height: 80vh;
 }
 
 .modal-footer{
-    @apply pt-4;
+  @apply pt-4;
 }
 
 .modal-close-button{
-    @apply absolute right-5 top-6 text-3xl cursor-pointer text-active leading-none;
+  @apply absolute right-5 top-6 text-3xl cursor-pointer text-active leading-none;
 }
 
 .full-overlay {
-    @apply fixed w-full h-full left-0 top-0 bg-inactive z-50 flex flex-col justify-center items-center duration-200;
+  @apply fixed w-full h-full left-0 top-0 bg-inactive z-50 flex flex-col justify-center items-center duration-200;
 }
 
 .overlay {
-    @apply absolute w-full h-full left-0 top-0 bg-active opacity-90 z-40 flex flex-col justify-center items-center duration-200;
-    border-radius: inherit;
+  @apply absolute w-full h-full left-0 top-0 bg-active opacity-90 z-40 flex flex-col justify-center items-center duration-200;
+  border-radius: inherit;
 }
 
 .overlay.opacity-full{
-    @apply opacity-100;
+  @apply opacity-100;
 }
 
 .overlay-loading-circle {
-    @apply w-10 h-10 border-4 border-corp rounded-full block;
-    border-bottom-color: transparent !important;
-    animation: 0.75s linear infinite spinner-border;
+  @apply w-10 h-10 border-4 border-corp rounded-full block;
+  border-bottom-color: transparent !important;
+  animation: 0.75s linear infinite spinner-border;
 }
 
 .overlay-loading-circle.sm {
-    @apply w-6 h-6 border-2;
+  @apply w-6 h-6 border-2;
 }
 
 .breadcrumb{
-    @apply text-inactive flex flex-wrap list-none px-0;
+  @apply text-inactive flex flex-wrap list-none px-0;
 }
 
 .breadcrumb a{
-    @apply inline-block mr-6 relative text-corp;
+  @apply inline-block mr-6 relative text-corp;
 }
 
 .breadcrumb a:after{
-    content: "\203A";
-    @apply absolute -right-3.5 text-inactive pointer-events-none;
+  content: "\203A";
+  @apply absolute -right-3.5 text-inactive pointer-events-none;
 }
 
 .db__header{
-    @apply fixed top-0 left-0 w-full bg-active flex justify-between items-center px-3 border-b-inactive z-20;
-    height: 65px;
+  @apply fixed top-0 left-0 w-full bg-active flex justify-between items-center px-3 border-b-inactive z-20;
+  height: 65px;
 }
 
 .db__sidebar__menu{
-    @apply bg-active px-3.5 fixed z-50 border-r-inactive;
-    height: calc(100vh - 64px);
-    top: 64px;
+  @apply bg-active px-3.5 fixed z-50 border-r-inactive;
+  height: calc(100vh - 64px);
+  top: 64px;
 }
 
 .db__sidebar__menu a{
-    @apply py-3 duration-200 text-active border-b-inactive flex items-center;
+  @apply py-3 duration-200 text-active border-b-inactive flex items-center;
 }
 
 .db__sidebar__menu a.router-link-exact-active{
-    @apply text-corp;
+  @apply text-corp;
 }
 
 .db__sidebar__menu a:hover{
-    @apply text-corp;
+  @apply text-corp;
 }
 
 .db__sidebar__menu a:last-child{
-    @apply pb-0 border-none;
+  @apply pb-0 border-none;
 }
 
 .db__sidebar__menu i{
-    @apply text-xl;
+  @apply text-xl;
 }
 
 .db__sidebar__menu span{
-    @apply whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out inline-block max-w-0 opacity-0;
+  @apply whitespace-nowrap overflow-hidden transition-all duration-300 ease-in-out inline-block max-w-0 opacity-0;
 }
 
 .db__sidebar__menu span.show{
-    @apply ml-1.5 max-w-[400px] opacity-100
+  @apply ml-1.5 max-w-[400px] opacity-100
 }
 
 .db__content{
-    @apply pb-3 pr-3 pl-16 w-full relative overflow-auto h-screen;
-    padding-top: 85px;
+  @apply pb-3 pr-3 pl-16 w-full relative overflow-auto h-screen;
+  padding-top: 85px;
 }
 
 .db__footer__menu{
-    @apply py-3 pr-3 pl-14 bg-active fixed bottom-0 left-0 right-0 border-t-inactive flex gap-x-0.5 md:gap-x-3 justify-between md:justify-center;
+  @apply py-3 pr-3 pl-14 bg-active fixed bottom-0 left-0 right-0 border-t-inactive flex gap-x-0.5 md:gap-x-3 justify-between md:justify-center;
 }
 
 .db__footer__menu button{
-    @apply duration-200 text-active flex items-center flex-col md:min-w-14 relative;
+  @apply duration-200 text-active flex items-center flex-col md:min-w-14 relative;
 }
 
 .db__footer__menu button:hover{
-    @apply text-corp;
+  @apply text-corp;
 }
 
 .db__footer__menu button span{
-    @apply text-[8px] sm:text-xs;
+  @apply text-[8px] sm:text-xs;
 }
 
 .db__footer__menu i{
-    @apply md:text-2xl;
+  @apply md:text-2xl;
 }
 
 .content-center{
-    @apply flex justify-center items-center flex-col;
-    height: calc(100vh - 100px);
+  @apply flex justify-center items-center flex-col;
+  height: calc(100vh - 100px);
 }
 
 .dropdown{
-    @apply relative;
+  @apply relative;
 }
 
 .dropdown-menu, .multiple-select-menu-wrap{
-    @apply hidden absolute z-30 rounded-xl shadow-xl bg-active text-sm border-inactive px-4 my-2 w-max;
+  @apply hidden absolute z-30 rounded-xl shadow-xl bg-active text-sm border-inactive px-4 my-2 w-max;
 }
 
 .dropdown-menu.no-absolute{
-    @apply relative;
+  @apply relative;
 }
 
 .multiple-select-menu-wrap{
-    @apply w-full;
+  @apply w-full;
 }
 
 .dropdown-menu.right, .multiple-select-menu-wrap.right{
-    @apply !right-0;
+  @apply !right-0;
 }
 
 .dropdown-menu.show, .multiple-select-menu-wrap.show{
-    @apply block;
+  @apply block;
 }
 
 .multiple-select-menu{
-    @apply max-h-28 mt-3 overflow-x-hidden overflow-y-auto w-full p-0;
+  @apply max-h-28 mt-3 overflow-x-hidden overflow-y-auto w-full p-0;
 }
 
 .dropdown-menu li, .multiple-select-menu li{
-    @apply border-b-inactive py-2 list-none flex gap-1.5 items-center;
+  @apply border-b-inactive py-2 list-none flex gap-1.5 items-center;
 }
 
 .dropdown-menu li:empty, .multiple-select-menu li:empty{
-    @apply hidden;
+  @apply hidden;
 }
 
 .dropdown-menu li:first-child {
-    @apply pt-3;
+  @apply pt-3;
 }
 
 .multiple-select-menu li:first-child{
-    @apply pt-0;
+  @apply pt-0;
 }
 
 .dropdown-menu li:last-child, .multiple-select-menu li:last-child{
-    @apply border-b-0 pb-3;
+  @apply border-b-0 pb-3;
 }
 
 .dropdown-menu li > a, .multiple-select-menu li > a,
 .dropdown-menu li > button, .multiple-select-menu li > button{
-    @apply flex items-center gap-1.5 text-active duration-200 w-full;
+  @apply flex items-center gap-1.5 text-active duration-200 w-full;
 }
 
 .dropdown-menu li > a:hover, .multiple-select-menu li > a:hover,
 .dropdown-menu li > button:hover, .multiple-select-menu li > button:hover{
-    @apply text-corp;
+  @apply text-corp;
 }
 
 .tab-header{
-    @apply flex gap-2 mb-6;
+  @apply flex gap-2 mb-6;
 }
 
 .tab-header-item{
-    @apply px-3 py-2 border-inactive bg-active rounded-xl hover:cursor-pointer text-inactive flex items-center relative;
+  @apply px-3 py-2 border-inactive bg-active rounded-xl hover:cursor-pointer text-inactive flex items-center relative;
 }
 
 .tab-header-item.active{
-    @apply border-active text-active cursor-default; 
+  @apply border-active text-active cursor-default; 
 }
 
 .tab-header-item.active.success{
-    @apply border-success text-success; 
+  @apply border-success text-success; 
 }
 
 .tab-header-item > span{
-    @apply ml-1;
+  @apply ml-1;
 }
 
 .tab-header-item > i{
-    @apply text-lg;
+  @apply text-lg;
 }
 
 .tab-header-item > span.count-badge{
-    @apply text-corp font-medium;
+  @apply text-corp ;
 }
 
 .tab-body-item{
-    @apply hidden;
+  @apply hidden;
 }
 
 .tab-body-item.active{
-    @apply block;
+  @apply block;
 }
 
 .progress{
-    @apply w-full bg-inactive rounded-xl my-2 overflow-hidden;
+  @apply w-full bg-inactive rounded-xl my-2 overflow-hidden;
 }
 
 .progress.active{
-    @apply bg-active;
+  @apply bg-active;
 }
 
 .progress.success{
-    @apply bg-success border-0;
+  @apply bg-success border-0;
 }
 
 .progress-bar{
-    @apply h-full bg-corp py-1 duration-200 text-center font-medium overflow-hidden text-white rounded-lg;
+  @apply h-full bg-corp py-1 duration-200 text-center overflow-hidden text-white rounded-lg;
 }
 
 .progress-bar.sm{
-    @apply py-0.5 text-xs;
+  @apply py-0.5 text-xs;
 }
 
 .progress-bar.danger{
-    @apply bg-danger;
+  @apply bg-danger;
 }
 
 .progress-bar.success{
-    @apply bg-success;
+  @apply bg-success;
 }
 
 .progress-bar.warning{
-    @apply bg-warning;
+  @apply bg-warning;
 }
 
 .progress-bar.orange{
-    @apply bg-orange;
+  @apply bg-orange;
 }
 
 .logo > img{
-    height: 56px;
-    max-width: 180px
+  height: 56px;
+  max-width: 180px
 }
 
 .logo-dark{
-    @apply hidden;
+  @apply hidden;
 }
 
 .dark .logo-light{
-    @apply hidden;
+  @apply hidden;
 }
 
 .dark .logo-dark{
-    @apply block;
+  @apply block;
 }
 
 .theme-switcher{
-    @apply flex items-center text-xl text-active;
+  @apply flex items-center text-xl text-active;
 }
 
 .theme-dark-button{
-    @apply hidden;
+  @apply hidden;
 }
 
 .dark .theme-light-button{
-    @apply hidden;
+  @apply hidden;
 }
 
 .dark .theme-dark-button{
-    @apply block;
+  @apply block;
 }
 
 .main-fade-slider{
-    @apply relative;
+  @apply relative;
 }
 
 .main-fade-slider .indicators{
-    @apply pl-0;
-    margin-top: 8px !important;
-    margin-bottom: 0px !important;
+  @apply pl-0;
+  margin-top: 8px !important;
+  margin-bottom: 0px !important;
 }
 
 .main-fade-slider .indicators > li{
-    padding: 6px !important;
+  padding: 6px !important;
 }
 
 .main-fade-slider-dark{
-    @apply hidden;
+  @apply hidden;
 }
 
 .dark .main-fade-slider-light{
-    @apply hidden;
+  @apply hidden;
 }
 
 .dark .main-fade-slider-dark{
-    @apply block;
+  @apply block;
 }
 
 .carousel__track{
-   @apply mb-0;
+  @apply mb-0;
 }
 
 .carousel__prev, .carousel__next{
-    @apply rounded-full bg-black bg-opacity-50;
+  @apply rounded-full bg-black bg-opacity-50;
 }
 
 .carousel__icon{
-    @apply fill-white;
+  @apply fill-white;
 }
 
 .hamburger {
-    @apply cursor-pointer relative w-8 h-6;
+  @apply cursor-pointer relative w-8 h-6;
 }
 
 .hamburger .ham {
-    @apply h-0.5 w-full bg-active-inverse absolute left-0 duration-200;
+  @apply h-0.5 w-full bg-active-inverse absolute left-0 duration-200;
 }
 
 .hamburger .top {
-    @apply mt-0.5 top-0 origin-top-right;
+  @apply mt-0.5 top-0 origin-top-right;
 }
 
 .hamburger.active .top{
-    @apply mt-0;
-    transform: rotate(-45deg);
+  @apply mt-0;
+  transform: rotate(-45deg);
 }
 
 .hamburger .middle {
-    @apply mt-0 origin-center;
+  @apply mt-0 origin-center;
 }
 
 .hamburger.active .middle {
-    @apply scale-0;
+  @apply scale-0;
 }
 
 .hamburger .bottom {
-    @apply bottom-0 origin-bottom-right;
+  @apply bottom-0 origin-bottom-right;
 }
 
 .hamburger.active .bottom{
-    transform: rotate(45deg);
+  transform: rotate(45deg);
 }
 
 .horizontal-accordion{
-    @apply lg:pr-4;
+  @apply lg:pr-4;
 }
 
 .horizontal-accordion-item{
-    @apply card px-4 py-2 mb-4 cursor-pointer;
+  @apply card px-4 py-2 mb-4 cursor-pointer;
 }
 
 .horizontal-accordion-item.active{
-    @apply border-corp;
+  @apply border-corp;
 }
 
 .horizontal-accordion-item > .horizontal-accordion-title{
-    @apply text-lg font-medium;
+  @apply text-lg ;
 }
 
 .horizontal-accordion-item.active > .horizontal-accordion-title{
-    @apply text-corp;
+  @apply text-corp;
 }
 
 .horizontal-accordion-item > .horizontal-accordion-description{
-    @apply hidden mt-2 mb-2;
+  @apply hidden mt-2 mb-2;
 }
 
 .horizontal-accordion-item.active > .horizontal-accordion-description{
-    @apply block;
+  @apply block;
 }
 
 .accordion-img{
-    @apply opacity-0 absolute left-0 top-0 duration-200;
+  @apply opacity-0 absolute left-0 top-0 duration-200;
 }
 
 .accordion-img:first-child{
-    @apply relative;
+  @apply relative;
 }
 
 .accordion-img.active{
-    @apply opacity-100;
+  @apply opacity-100;
 }
 
 .review-item{
-    @apply py-4 border-t-inactive;
+  @apply py-4 border-t-inactive;
 }
 
 .review-item:last-child{
-    @apply pb-0;
+  @apply pb-0;
 }
 
 .chat{
-    @apply px-2 py-1 rounded-lg min-w-32 relative;
+  @apply px-2 py-1 rounded-lg min-w-32 relative;
 }
 
 .chat.my_mess{
-    @apply bg-success text-white mr-3;
+  @apply bg-success text-white mr-3;
 }
 
 .chat.my_mess::after{
-    content: "";
-    @apply absolute right-0 top-3 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-l-8 border-l-success -mr-2;
+  content: "";
+  @apply absolute right-0 top-3 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-l-8 border-l-success -mr-2;
 }
 
 .chat.user_mess{
-    @apply bg-inactive ml-2;
+  @apply bg-inactive ml-2;
 }
 
 .chat.user_mess::before{
-    content: "";
-    @apply absolute left-0 top-3 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-8 border-r-gray-100 dark:border-r-slate-900 -ml-2;
+  content: "";
+  @apply absolute left-0 top-3 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-8 border-r-gray-100 dark:border-r-slate-900 -ml-2;
 }
 
 .canvas-container {
-    @apply relative overflow-scroll w-full border-inactive;
-    height: 80vh;
+  @apply relative overflow-scroll w-full border-inactive;
+  height: 80vh;
 }
 
 .canvas-container::-webkit-scrollbar {
-    width: 0px;
+  width: 0px;
 }
 .canvas-container::-webkit-scrollbar-thumb {
-    width: 0px;
+  width: 0px;
 }
 .canvas-container::-webkit-scrollbar:horizontal{
-    height: 0px;
+  height: 0px;
 }
 .canvas-container::-webkit-scrollbar-thumb:horizontal{
-    height: 0px;
+  height: 0px;
 }
 
 .canvas-container canvas {
-    position: absolute;
-    top: -1px;
-    left: -1px;
-    display: block;
-    width: 2000px;
-    height: 2000px;
-    background-image: linear-gradient(90deg, #e8ebee 1px, transparent 1px),
-        linear-gradient(180deg, #e8ebee 1px, transparent 1px);
-    background-size: 20px 20px;
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  display: block;
+  width: 2000px;
+  height: 2000px;
+  background-image: linear-gradient(90deg, #e8ebee 1px, transparent 1px),
+    linear-gradient(180deg, #e8ebee 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 .dark .canvas-container canvas {
-    background-image: linear-gradient(90deg, #334155 1px, transparent 1px),
-    linear-gradient(180deg, #334155 1px, transparent 1px);
+  background-image: linear-gradient(90deg, #334155 1px, transparent 1px),
+  linear-gradient(180deg, #334155 1px, transparent 1px);
 }
 
 .pulse{
-    animation: 0.5s linear infinite pulse;
+  animation: 0.5s linear infinite pulse;
 }
 
 .dots span {
-    opacity: 0.1;
-    animation: blink 1.5s infinite;
-  }
-  
+  opacity: 0.1;
+  animation: blink 1.5s infinite;
+ }
+ 
 .dots span:nth-child(2) {
-    animation-delay: 0.3s;
+  animation-delay: 0.3s;
 }
 
 .dots span:nth-child(3) {
-    animation-delay: 0.6s;
+  animation-delay: 0.6s;
 }
 
 .draggable {
-    @apply cursor-grab select-none touch-none;
+  @apply cursor-grab select-none touch-none;
 }
-  
+ 
 .draggable.dragging {
-    @apply opacity-50;
+  @apply opacity-50;
 }
 
 .vjs-default-skin {
-    @apply overflow-hidden rounded-xl border-inactive;
+  @apply overflow-hidden rounded-xl border-inactive;
 }
 
 .text-editor-content {
-    @apply h-48 overflow-y-auto border-inactive rounded-xl p-4;
+  @apply h-48 overflow-y-auto border-inactive rounded-xl p-4;
 }
 
 .text-viewer > *:last-child {
-    @apply mb-0
+  @apply mb-0
 }
 
 #confetti-canvas {
-    @apply absolute top-0 left-0 w-full h-full pointer-events-none;
+  @apply absolute top-0 left-0 w-full h-full pointer-events-none;
 }

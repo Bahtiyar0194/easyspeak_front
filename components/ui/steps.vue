@@ -17,9 +17,9 @@
       >
         <div class="step-icon">
           <i v-if="props.currentStep > index + 1" class="pi pi-check"></i>
-          <span v-else>{{ index + 1 }}</span>
+          <span v-else><b>{{ index + 1 }}</b></span>
         </div>
-        <div class="step-label">{{ step.title }}</div>
+        <div class="step-label"><b>{{ step.title }}</b></div>
       </div>
     </div>
   </div>

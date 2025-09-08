@@ -37,7 +37,7 @@ export default defineNuxtConfig({
     }
   },
 
-  modules: ["@nuxtjs/i18n", 'nuxt-auth-sanctum', '@pinia/nuxt', '@vueuse/motion/nuxt'],
+  modules: ["@nuxtjs/i18n", 'nuxt-auth-sanctum', '@pinia/nuxt', '@vueuse/motion/nuxt', "nuxt-pdfmake"],
 
   postcss: {
     plugins: {

@@ -1244,12 +1244,12 @@
         </p>
 
         <p>
-          Заңды мекенжайы:
+          Заңды мекен-жайы:
           <b>{{ $contacts.legal_address[localeProperties.code] }}</b>
         </p>
 
         <p>
-          Нақты мекенжайы:
+          Нақты мекен-жайы:
           <b>{{ $contacts.fact_address[localeProperties.code] }}</b>
         </p>
 

@@ -34,6 +34,25 @@
       </div>
     </div>
 
+    <div class="col-span-12 lg:col-span-6">
+      <div class="form-group-border active">
+        <i class="pi pi-at"></i>
+        <input
+          autoComplete="new-school-email"
+          name="school_email"
+          type="text"
+          placeholder=" "
+        />
+        <label :class="{ 'label-error': errors.school_email }">
+          {{
+            errors.school_email
+              ? errors.school_email[0]
+              : $t("form.school_email")
+          }}
+        </label>
+      </div>
+    </div>
+
     <div
       v-for="(level, index) in selections"
       :key="index"
@@ -73,19 +92,38 @@
         </label>
       </div>
     </div>
-    <div class="col-span-12 lg:col-span-6">
-      <div class="form-group-border active">
-        <i class="pi pi-map-marker"></i>
-        <input type="text" name="fact_address" placeholder=" " />
-        <label :class="{ 'label-error': errors.fact_address }">
-          {{
-            errors.fact_address
-              ? errors.fact_address[0]
-              : $t("form.fact_address")
-          }}
-        </label>
+
+    <div class="col-span-12">
+      <div class="custom-grid">
+        <div class="col-span-12 lg:col-span-8">
+          <div class="form-group-border active">
+            <i class="pi pi-map-marker"></i>
+            <input type="text" name="street" placeholder=" " />
+            <label :class="{ 'label-error': errors.street }">
+              {{
+                errors.street
+                  ? errors.street[0]
+                  : $t("form.street")
+              }}
+            </label>
+          </div>
+        </div>
+        <div class="col-span-12 lg:col-span-4">
+          <div class="form-group-border active">
+            <i class="pi pi-building"></i>
+            <input type="text" name="house" placeholder=" " />
+            <label :class="{ 'label-error': errors.house }">
+              {{
+                errors.house
+                  ? errors.house[0]
+                  : $t("form.house")
+              }}
+            </label>
+          </div>
+        </div>
       </div>
     </div>
+
     <div class="col-span-12">
       <div class="flex items-center">
         <div
