@@ -66,11 +66,13 @@ export default {
     sort_desc: 'Сортировка по убыванию',
 
     status: "Статус",
+    choose_a_status: "Выберите статус",
     invite: "Пригласить",
     search: "Искать",
     accept: "Принять",
 
     operator: "Оператор",
+    iniciator: "Инициатор",
     executor: "Исполнитель",
     mentor: "Куратор",
     learner: "Ученик",
@@ -563,6 +565,7 @@ export default {
 
         payment: {
             choose_a_payment_method: 'Выбор метода оплаты',
+            payment_method: 'Метод оплаты',
             accept_payment: 'Подтверждение оплаты',
             to_pay: 'Оплатить',
             to: 'Всего к оплате',
@@ -601,6 +604,11 @@ export default {
                         vat: 'НДС',
                         vat_text: 'В том числе НДС ({vat}%)',
                         download_pdf: 'Скачать счет в PDF формате'
+                    },
+
+                    accept: {
+                        title: 'Принять оплату',
+                        confirm: 'Вы действительно хотите принять данную оплату?'
                     }
                 },
                 card: {
@@ -612,12 +620,20 @@ export default {
         'payment-result': {
             title: 'Результат оплаты',
             success: 'Оплата прошла успешно',
-            fail: 'Оплата не прошла'
+            success_alt: 'Оплачено',
+            fail: 'Оплата не прошла',
+            fail_alt: 'Не оплачено'
         },
 
         '3ds': {
             title: '3-D Secure аутентификация',
             please_wait: 'Пожалуйста подождите. Идет 3-D Secure аутентификация'
+        },
+
+        invoices: {
+            title: 'Счета на оплату',
+            search_filter: 'Фильтр поиска счетов',
+            num: 'Счет №'
         },
 
         schedule: {

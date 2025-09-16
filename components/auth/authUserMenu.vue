@@ -63,7 +63,7 @@
               </roleProvider>
             </template>
           </client-only>
-          <li v-if="authUser.roles?.length > 1">
+          <li v-if="authUser && authUser.roles?.length > 1">
             <div>
               <p class="mb-2.5">{{ $t("pages.users.user_mode") }}:</p>
 

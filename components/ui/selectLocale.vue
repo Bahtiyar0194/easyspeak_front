@@ -24,32 +24,34 @@ const router = useRouter();
 //const { refreshIdentity } = useSanctumAuth();
 const { $axiosPlugin } = useNuxtApp();
 
-const changeLocale = async (value) => {
+const changeLocale = (value) => {
   setLocale(value);
 
-  if (authUser.value) {
-    await $axiosPlugin
-      .post("auth/change_language/" + value)
-      .then((response) => {
-        window.location.reload();
-        //refreshIdentity();
-      })
-      .catch((err) => {
-        if (err.response) {
-          router.push({
-            path: "/error",
-            query: {
-              status: err.response.status,
-              message: err.response.data.message,
-              url: err.request.responseURL,
-            },
-          });
-        } else {
-          router.push("/error");
-        }
-      });
-  } else {
-    window.location.reload();
-  }
+  setTimeout(async () => {
+    if (authUser.value) {
+      await $axiosPlugin
+        .post("auth/change_language/" + value)
+        .then((response) => {
+          window.location.reload();
+          //refreshIdentity();
+        })
+        .catch((err) => {
+          if (err.response) {
+            router.push({
+              path: "/error",
+              query: {
+                status: err.response.status,
+                message: err.response.data.message,
+                url: err.request.responseURL,
+              },
+            });
+          } else {
+            router.push("/error");
+          }
+        });
+    } else {
+      window.location.reload();
+    }
+  }, 200);
 };
 </script>

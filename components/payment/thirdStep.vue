@@ -189,7 +189,7 @@
         >
       </p>
 
-      <p class="text-right mb-0">
+      <!-- <p class="text-right mb-0">
         {{
           $t("pages.payment.methods.invoice.document.vat_text", {
             vat: $contacts.vat_percent,
@@ -206,7 +206,7 @@
           }}
           {{ $contacts.bank.currency.symbol }}</b
         >
-      </p>
+      </p> -->
     </div>
   </div>
 </template>

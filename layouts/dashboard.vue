@@ -134,6 +134,13 @@ const dashboardMenu = [
     link: "/dashboard/school",
     roles: [1, 2, 3],
   },
+
+  {
+    title: "pages.invoices.title",
+    icon: "pi pi-receipt",
+    link: "/dashboard/invoices",
+    roles: [1]
+  }
 ];
 
 const route = useRoute();

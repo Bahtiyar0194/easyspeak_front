@@ -31,7 +31,8 @@
                 {{ $t("form.fact_address") }}:
                 <b
                   >{{ schoolStore.schoolData.location_full }},
-                  {{ schoolStore.schoolData.street }}, {{ schoolStore.schoolData.house }}</b
+                  {{ schoolStore.schoolData.street }},
+                  {{ schoolStore.schoolData.house }}</b
                 >
               </p>
               <p class="mb-3">
@@ -124,9 +125,7 @@
               <p class="mb-1">
                 {{ $t("description") }}:
 
-                <b
-                  >{{ schoolStore.schoolData.invoice.description }}
-                </b>
+                <b>{{ schoolStore.schoolData.invoice.description }} </b>
               </p>
 
               <p class="mb-4">
@@ -134,16 +133,23 @@
 
                 <b
                   >{{
-                    schoolStore.schoolData.invoice.sum.toLocaleString("ru-RU")
+                    schoolStore.schoolData.invoice.sum.toLocaleString("ru-RU", {
+                      minimumFractionDigits: 2,
+                    })
                   }}
                   {{ $contacts.bank.currency.iso }}</b
                 >
               </p>
 
               <div class="btn-wrap justify-end">
-                <button class="btn btn-outline-danger btn-sm" @click="generateInvoice(schoolStore.schoolData.invoice)">
-                    <i class="pi pi-file-pdf"></i>
-                    {{ $t("pages.payment.methods.invoice.document.download_pdf") }}
+                <button
+                  class="btn btn-outline-danger btn-sm"
+                  @click="generateInvoice(schoolStore.schoolData.invoice)"
+                >
+                  <i class="pi pi-file-pdf"></i>
+                  {{
+                    $t("pages.payment.methods.invoice.document.download_pdf")
+                  }}
                 </button>
               </div>
             </div>
@@ -740,12 +746,16 @@ const generateInvoice = async (data) => {
               ],
               [
                 {
-                  text: data.sum.toLocaleString("ru-RU"),
+                  text: data.sum.toLocaleString("ru-RU", {
+                    minimumFractionDigits: 2,
+                  }),
                 },
               ],
               [
                 {
-                  text: data.sum.toLocaleString("ru-RU"),
+                  text: data.sum.toLocaleString("ru-RU", {
+                    minimumFractionDigits: 2,
+                  }),
                 },
               ],
             ],
@@ -757,29 +767,34 @@ const generateInvoice = async (data) => {
       {
         text: [
           { text: `${t("pages.payment.methods.invoice.document.total")}: ` },
-          { text: data.sum.toLocaleString("ru-RU"), bold: true },
-        ],
-        alignment: "right",
-        margin: [0, 0, 0, 5],
-      },
-      {
-        text: [
           {
-            text: `${t("pages.payment.methods.invoice.document.vat_text", {
-              vat: $contacts.vat_percent,
-            })}: `,
-          },
-          {
-            text: (
-              (data.sum * $contacts.vat_percent) /
-              (100 + $contacts.vat_percent)
-            ).toFixed(2),
+            text: data.sum.toLocaleString("ru-RU", {
+              minimumFractionDigits: 2,
+            }),
             bold: true,
           },
         ],
         alignment: "right",
-        margin: [0, 0, 0, 15],
+        margin: [0, 0, 0, 5],
       },
+      // {
+      //   text: [
+      //     {
+      //       text: `${t("pages.payment.methods.invoice.document.vat_text", {
+      //         vat: $contacts.vat_percent,
+      //       })}: `,
+      //     },
+      //     {
+      //       text: (
+      //         (data.sum * $contacts.vat_percent) /
+      //         (100 + $contacts.vat_percent)
+      //       ).toFixed(2),
+      //       bold: true,
+      //     },
+      //   ],
+      //   alignment: "right",
+      //   margin: [0, 0, 0, 15],
+      // },
 
       {
         text: [
@@ -793,9 +808,9 @@ const generateInvoice = async (data) => {
             text: `${t("pages.payment.methods.invoice.document.summ_alt")}: `,
           },
           {
-            text: `${data.sum.toLocaleString("ru-RU")} ${
-              $contacts.bank.currency.iso
-            }`,
+            text: `${data.sum.toLocaleString("ru-RU", {
+              minimumFractionDigits: 2,
+            })} ${$contacts.bank.currency.iso}`,
           },
         ],
         margin: [0, 0, 0, 5],
@@ -836,7 +851,16 @@ const generateInvoice = async (data) => {
             margin: [10, 60, 0, 0],
           },
         ],
+        margin: [0, 0, 0, 30],
       },
+
+      // {
+      //   qr: "text in QR",
+      //   foreground: "blue",
+      //   background: "white",
+      //   fit: 50,
+      //   eccLevel: "H",
+      // },
     ],
     defaultStyle: {
       font: "Roboto",

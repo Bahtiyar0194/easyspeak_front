@@ -66,11 +66,13 @@ export default {
     sort_desc: 'Кему бойынша сұрыптау',
 
     status: "Мәртебе",
+    choose_a_status: "Мәртебені таңдаңыз",
     invite: "Шақыру",
     search: "Іздеу",
     accept: "Қабылдау",
 
     operator: "Оператор",
+    iniciator: "Бастамашы",
     executor: "Орындаушы",
     mentor: "Тәлімгер",
     learner: "Оқушы",
@@ -566,6 +568,7 @@ export default {
 
         payment: {
             choose_a_payment_method: 'Төлем түрін таңдау',
+            payment_method: 'Төлем түрі',
             accept_payment: 'Төлемді растау',
             to_pay: 'Төлеу',
             to: 'Жалпы төлеуге',
@@ -604,6 +607,10 @@ export default {
                         vat: 'ҚҚС',
                         vat_text: 'Оның ішінде ҚҚС ({vat}%)',
                         download_pdf: 'Шотты PDF форматында жүктеп алу'
+                    },
+                    accept: {
+                        title: 'Төлемді қабылдау',
+                        confirm: 'Сіз расымен де осы төлемді қабылдағыңыз келеді ме?'
                     }
                 },
                 card: {
@@ -615,12 +622,20 @@ export default {
         'payment-result': {
             title: 'Төлем нәтижесі',
             success: 'Төлем сәтті өтті',
-            fail: 'Төлем өтпей қалды'
+            success_alt: 'Төленді',
+            fail: 'Төлем өтпей қалды',
+            fail_alt: 'Төлем өткен жоқ'
         },
 
         '3ds': {
             title: '3-D Secure аутентификация',
             please_wait: 'Күте тұрыңыз. 3-D Secure аутентификациясы жүріп жатыр'
+        },
+
+        invoices: {
+            title: 'Төлем шоттары',
+            search_filter: 'Шоттарды іздеу сүзбесі',
+            num: 'Шот №'
         },
 
         schedule: {

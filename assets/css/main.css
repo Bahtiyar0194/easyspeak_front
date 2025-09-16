@@ -1660,6 +1660,10 @@ select.error:has(option:checked:disabled) {
   @apply fixed w-full h-full left-0 top-0 bg-inactive z-50 flex flex-col justify-center items-center duration-200;
 }
 
+.full-overlay.opacity-full{
+  @apply opacity-100;
+}
+
 .overlay {
   @apply absolute w-full h-full left-0 top-0 bg-active opacity-90 z-40 flex flex-col justify-center items-center duration-200;
   border-radius: inherit;
