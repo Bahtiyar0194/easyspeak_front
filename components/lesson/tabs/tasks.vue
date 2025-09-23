@@ -173,7 +173,7 @@
   <modal
     :show="modalIsVisible"
     :onClose="() => closeModalByUser()"
-    :className="modalClass + ' min-h-0 select-none'"
+    :className="modalClass + ' min-h-60 select-none'"
     :showLoader="pendingModal"
     :showPendingText="true"
     :loaderOpacityFull="true"

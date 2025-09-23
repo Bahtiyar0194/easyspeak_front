@@ -323,6 +323,43 @@
   </modal>
 
   <modal
+    :show="replaceModalIsVisible"
+    :onClose="() => closeReplaceModal()"
+    :className="'modal-lg'"
+    :showLoader="pendingReplace"
+    :closeOnClickSelf="false"
+  >
+    <template v-slot:header_content>
+      <h4>{{ $t("file.replace.title") }}</h4>
+    </template>
+    <template v-if="currentFile" v-slot:body_content>
+      <form
+        class="mt-2"
+        @submit.prevent="replaceFileSubmit(currentFile.file_id)"
+        ref="replaceFormRef"
+      >
+        <div class="custom-grid">
+          <div class="col-span-12">
+            <fileUploadButton
+              :id="'upload_file'"
+              :name="'upload_file'"
+              :accept="currentFile.material_type_slug + '/*'"
+              :error="errors.upload_file"
+              :icon="currentFile.icon"
+              :label="$t('file.' + currentFile.material_type_slug + '.select')"
+            />
+          </div>
+        </div>
+
+        <button class="btn btn-primary mt-4" type="submit">
+          <i class="pi pi-check"></i>
+          {{ $t("file.upload") }}
+        </button>
+      </form>
+    </template>
+  </modal>
+
+  <modal
     :show="fileModalIsVisible"
     :onClose="() => closeFileModal()"
     :className="'modal-lg'"
@@ -357,19 +394,28 @@
               <b>{{ new Date(currentFile.created_at).toLocaleString() }}</b>
             </p>
 
-            <button
-              v-if="currentFile.material_type_slug === 'audio'"
-              class="btn btn-light"
-              @click="
-                downloadFile(
-                  config.public.apiBase + '/media/get/' + currentFile.target,
-                  currentFile.file_name
-                )
-              "
-            >
-              <i class="pi pi-download"></i>
-              {{ $t("download") }}
-            </button>
+            <div class="btn-wrap">
+              <button
+                class="btn btn-light"
+                @click="
+                  downloadFile(
+                    config.public.apiBase + '/media/get/' + currentFile.target,
+                    currentFile.file_name
+                  )
+                "
+              >
+                <i class="pi pi-download"></i>
+                {{ $t("download") }}
+              </button>
+
+              <button
+                class="btn btn-light"
+                @click="replaceFile(currentFile.file_id)"
+              >
+                <i class="pi pi-replay"></i>
+                {{ $t("file.replace.replace") }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -400,10 +446,12 @@ const errors = ref([]);
 const { $axiosPlugin } = useNuxtApp();
 const pending = ref(true);
 const pendingAdd = ref(false);
+const pendingReplace = ref(false);
 const pendingFiles = ref(false);
 const tableRef = ref(null);
 const searchFormRef = ref(null);
 const addFormRef = ref(null);
+const replaceFormRef = ref(null);
 const searchFilter = ref(false);
 const diskInfo = ref(false);
 
@@ -418,6 +466,7 @@ const sortKey = ref("files.file_name"); // Ключ сортировки
 const sortDirection = ref("asc"); // Направление сортировки: asc или desc
 
 const addModalIsVisible = ref(false);
+const replaceModalIsVisible = ref(false);
 const fileModalIsVisible = ref(false);
 
 const filesTableHeads = [
@@ -550,6 +599,43 @@ const addFileSubmit = async () => {
     });
 };
 
+const replaceFileSubmit = async (fileId) => {
+  pendingReplace.value = true;
+  const formData = new FormData(replaceFormRef.value);
+  formData.append("operation_type_id", 17);
+
+  await $axiosPlugin
+    .post("media/replace/" + fileId, formData)
+    .then((response) => {
+      getFiles();
+      currentFile.value = null;
+      closeReplaceModal();
+      setTimeout(() => {
+        currentFile.value = files.value.data.find((f) => f.file_id === fileId);
+        fileModalIsVisible.value = true;
+      }, 1000);
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          pendingReplace.value = false;
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
 const getFileExtension = (filename) => {
   const match = filename.match(/\.([0-9a-z]+)$/i);
   return match ? match[1] : "";
@@ -560,6 +646,13 @@ const closeAddModal = () => {
   pendingAdd.value = false;
   addFormRef.value.reset();
   currentFileType.value = null;
+  errors.value = [];
+};
+
+const closeReplaceModal = () => {
+  replaceModalIsVisible.value = false;
+  pendingReplace.value = false;
+  replaceFormRef.value.reset();
   errors.value = [];
 };
 
@@ -591,6 +684,11 @@ const downloadFile = async (filePath, fileName) => {
   // Чистим за собой
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
+};
+
+const replaceFile = (fileId) => {
+  fileModalIsVisible.value = false;
+  replaceModalIsVisible.value = true;
 };
 
 const sanitizeFileName = (name) => {

@@ -7,7 +7,7 @@
         <span
           v-if="current > 0"
           :key="current"
-          class="relative text-9xl text-center text-corp"
+          class="relative text-9xl text-center text-corp font-bold"
           >{{ current }}</span
         >
       </transition>

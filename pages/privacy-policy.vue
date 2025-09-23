@@ -1,10 +1,28 @@
 <template>
   <div class="custom-grid">
-    <div class="col-span-12 text-justify hyphens-auto">
+    <div class="col-span-12 md:col-span-4">
+      <stickyBox :offsetTop="100">
+        <div class="card p-4">
+          <h4 class="mb-2">{{ $t("content") }}</h4>
+
+          <ul class="list-none px-0">
+            <li v-for="item in headings" :key="item.id">
+              <button
+                class="text-left"
+                @click="scrollTo(item.id, headerOffset)"
+              >
+                {{ item.text }}
+              </button>
+            </li>
+          </ul>
+        </div>
+      </stickyBox>
+    </div>
+    <div class="col-span-12 md:col-span-8 text-justify hyphens-auto">
       <h2>{{ $t("pages.privacy-policy.title") }}</h2>
 
       <div v-if="localeProperties.code === 'ru'">
-        <p class="font-medium text-center mt-6">1. Определения</p>
+        <p class="title text-center font-bold mt-6">1. Определения</p>
         <p>
           Интернет проект
           <b
@@ -24,7 +42,7 @@
           (например: статистика посещаемости сайта).
         </p>
 
-        <p class="font-medium text-center mt-6">2. Использование информации</p>
+        <p class="title text-center font-bold mt-6">2. Использование информации</p>
 
         <p>
           Мы используем персонифицированную информацию конкретного посетителя
@@ -43,7 +61,7 @@
           услуг URL
         </p>
 
-        <p class="font-medium text-center mt-6">3. Ссылки</p>
+        <p class="title text-center font-bold mt-6">3. Ссылки</p>
 
         <p>
           Сайт
@@ -57,7 +75,9 @@
           конфиденциальности информации, оставленной вами на таких сайтах.
         </p>
 
-        <p class="font-medium text-center mt-6">4. Ограничение ответственности</p>
+        <p class="title text-center font-bold mt-6">
+          4. Ограничение ответственности
+        </p>
 
         <p>
           Мы делаем все возможное для соблюдения настоящей политики
@@ -73,7 +93,7 @@
           сайта и использования размещенной на нем информации.
         </p>
 
-        <p class="font-medium text-center mt-6">5. Контакты</p>
+        <p class="title text-center font-bold mt-6">5. Контакты</p>
 
         <p>
           По вопросам, касающимся настоящей политики, просьба обращаться по
@@ -85,7 +105,7 @@
       </div>
 
       <div v-else-if="localeProperties.code === 'kk'">
-        <p class="font-medium text-center mt-6">1. Анықтамалар</p>
+        <p class="title text-center font-bold mt-6">1. Анықтамалар</p>
 
         <p>
           Интернет жобасы
@@ -102,7 +122,7 @@
           (мысалы: сайтқа келушілер статистикасы) атаймыз.
         </p>
 
-        <p class="font-medium text-center mt-6">2. Ақпаратты пайдалану</p>
+        <p class="title text-center font-bold mt-6">2. Ақпаратты пайдалану</p>
 
         <p>
           Біз сайт келушісінің жеке ақпаратын тек сапалы қызмет көрсету және оны
@@ -117,7 +137,7 @@
           болмайды.Сондай-ақ, біз анонимді деректерді URL өнімдері мен
           қызметтерін дамыту мақсатындағы ішкі талдау үшін пайдаланамыз.
         </p>
-        <p class="font-medium text-center mt-6">3. Сілтемелер</p>
+        <p class="title text-center font-bold mt-6">3. Сілтемелер</p>
 
         <p>
           <b
@@ -130,7 +150,7 @@
           алмаймыз.
         </p>
 
-        <p class="font-medium text-center mt-6">4. Жауапкершіліктің шектелуі</p>
+        <p class="title text-center font-bold mt-6">4. Жауапкершіліктің шектелуі</p>
 
         <p>
           Біз осы құпиялылық саясатын сақтау үшін бар күшімізді саламыз, алайда
@@ -145,7 +165,7 @@
           мен залалдар үшін жауап бермейміз.
         </p>
 
-        <p class="font-medium text-center mt-6">5. Байланыс</p>
+        <p class="title text-center font-bold mt-6">5. Байланыс</p>
 
         <p>
           Осы құпиялылық саясатына қатысты сұрақтар бойынша келесі мекенжайға
@@ -159,9 +179,27 @@
   </div>
 </template>
 <script setup>
+import stickyBox from "../components/ui/stickyBox.vue";
+import { scrollTo } from "../utils/scrollTo";
 const { t, localeProperties } = useI18n();
+const headings = ref([]);
+const headerOffset = 110;
+
 useHead({
   title: t("pages.privacy-policy.title"),
   meta: [{ name: "description", content: "My amazing site." }],
+});
+
+onMounted(() => {
+  const elements = document.querySelectorAll("p.title");
+
+  headings.value = Array.from(elements).map((el, index) => {
+    const id = `title-${index}`;
+    el.setAttribute("id", id);
+    return {
+      id,
+      text: el.textContent.trim(),
+    };
+  });
 });
 </script>

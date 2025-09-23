@@ -264,7 +264,7 @@ const errors = ref([]);
 const formRef = ref(null);
 
 useHead({
-  title: $contacts.name + " - " + t("pages.home.title"),
+  title: $contacts.name + " - " + t("pages.home.header-title"),
   meta: [{ name: "description", content: t("pages.home.description") }],
 });
 

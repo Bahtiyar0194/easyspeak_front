@@ -3,8 +3,8 @@
     class="sticky"
     :class="props.className"
     :style="{
-      top: '-' + (props.offsetTop >= 0 ? props.offsetTop : 10) + 'px',
-      bottom: (props.offsetBottom >= 0 ? props.offsetBottom : 10) + 'px',
+      top: (props.offsetTop >= 0 ? props.offsetTop : -10) + 'px',
+      bottom: (props.offsetBottom >= 0 ? props.offsetBottom : -10) + 'px',
     }"
   >
     <slot />
