@@ -204,10 +204,6 @@ const onSelectLocation = (levelIndex) => {
   }
 };
 
-const resetSchool = async () => {
-  await schoolStore.resetSchool();
-};
-
 onMounted(() => {
   const host = window.location.host; // без http/https и порта
   // убираем www.

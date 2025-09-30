@@ -284,7 +284,7 @@ const images = [
 const sendRequestToDemo = async () => {
   pendingSend.value = true;
   const formData = new FormData(formRef.value);
-  formData.append("lang", localeProperties.value.name);
+  formData.append("lang", localeProperties.value.code);
   await $axiosPlugin
     .post("/demo/request", formData)
     .then((res) => {

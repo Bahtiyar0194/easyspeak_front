@@ -17,7 +17,10 @@
           </div>
         </roleProvider>
       </div>
-      <div class="col-span-12">
+      <div
+        v-if="lessonsData && lessonsData.sections.length"
+        class="col-span-12"
+      >
         <ul class="list-group">
           <li
             v-for="(section, sectionIndex) in lessonsData.sections"
@@ -134,6 +137,12 @@
             </div>
           </li>
         </ul>
+      </div>
+
+      <div v-else class="col-span-12">
+        <alert :className="'light'">
+          <p class="mb-0">{{ $t("pages.courses.not_sections") }}</p>
+        </alert>
       </div>
     </div>
   </div>
