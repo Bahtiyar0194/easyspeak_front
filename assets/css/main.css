@@ -1860,7 +1860,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .progress{
-  @apply w-full bg-inactive rounded-xl my-2 overflow-hidden;
+  @apply w-full bg-inactive rounded-lg my-2 overflow-hidden;
 }
 
 .progress.active{

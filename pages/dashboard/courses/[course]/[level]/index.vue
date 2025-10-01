@@ -6,16 +6,36 @@
   >
     <div class="custom-grid">
       <div class="col-span-12">
-        <roleProvider :roles="[1]" :redirect="false">
-          <div class="btn-wrap justify-end">
-            <button
-              @click="addSectionModalIsVisible = true"
-              class="btn btn-primary"
-            >
-              <i class="pi pi-plus"></i> {{ $t("pages.lessons.add_unit") }}
-            </button>
-          </div>
-        </roleProvider>
+        <div
+          class="flex flex-wrap gap-x-2 gap-y-4 items-center justify-between"
+        >
+          <h2 class="mb-0">{{ lessonsData.level.level_name }}</h2>
+          <roleProvider :roles="[1]" :redirect="false">
+            <div class="btn-wrap justify-end">
+              <button
+                @click="addSectionModalIsVisible = true"
+                class="btn btn-primary"
+              >
+                <i class="pi pi-plus"></i> {{ $t("pages.lessons.add_unit") }}
+              </button>
+            </div>
+          </roleProvider>
+        </div>
+      </div>
+
+      <div
+        v-if="lessonsData && lessonsData.level.completed_percent > 0"
+        class="col-span-12"
+      >
+        <div class="card p-4">
+          <p class="mb-2">{{ $t("pages.courses.level_overall_progress") }}:</p>
+          <progressBar
+            :progressPercentage="lessonsData.level.completed_percent"
+            :wrapClass="'!my-0'"
+            :showPercentage="true"
+            :className="'sm success'"
+          />
+        </div>
       </div>
       <div
         v-if="lessonsData && lessonsData.sections.length"
@@ -32,7 +52,7 @@
                 @click="toggleAccordion(sectionIndex)"
                 class="flex justify-between items-center gap-4 hover:cursor-pointer"
               >
-                <div class="flex flex-col">
+                <div class="flex flex-col w-full">
                   <h5
                     class="mb-0"
                     :class="activeSectionIndex === sectionIndex && 'text-corp'"
@@ -48,6 +68,13 @@
                   <span v-else class="text-inactive text-sm">{{
                     $t("pages.lessons.there_is_no_lessons")
                   }}</span>
+                  <progressBar
+                    v-if="section.completed_percent > 0"
+                    :progressPercentage="section.completed_percent"
+                    :wrapClass="'!mb-0'"
+                    :showPercentage="true"
+                    :className="'sm'"
+                  />
                 </div>
                 <div class="btn btn-circle btn-light">
                   <i
@@ -80,45 +107,51 @@
                       : openUnAvailableModal()
                   "
                 >
-                  <div class="flex flex-col">
-                    <div
-                      class="font-medium"
-                      :class="
-                        lesson.is_available === true
-                          ? 'text-corp'
-                          : 'text-inactive line-through'
-                      "
-                    >
-                      {{ lessonIndex + 1 }}. {{ lesson.lesson_name }}
-                    </div>
-                    <div class="flex gap-2 flex-wrap">
-                      <div class="flex gap-2">
-                        <span
-                          v-if="lesson.lesson_type_slug !== 'file_test'"
-                          class="text-xs"
-                          :class="
-                            lesson.is_available === true
-                              ? 'text-active'
-                              : 'text-inactive'
-                          "
-                          >{{ $t("materials.materials_count") }}:
-                          <b>{{ lesson.materials.length }}</b></span
-                        >
-                        <span
-                          class="text-xs"
-                          :class="
-                            lesson.is_available === true
-                              ? 'text-active'
-                              : 'text-inactive'
-                          "
-                          >{{ $t("pages.tasks.tasks_count") }}:
-                          <b>{{ lesson.tasks.length }}</b></span
+                  <div class="flex justify-between items-center gap-x-2">
+                    <div class="flex flex-col">
+                      <div
+                        class="font-medium"
+                        :class="
+                          lesson.is_available === true
+                            ? 'text-corp'
+                            : 'text-inactive line-through'
+                        "
+                      >
+                        {{ lessonIndex + 1 }}. {{ lesson.lesson_name }}
+                      </div>
+                      <div class="flex gap-x-2 gap-y-0.5 flex-wrap">
+                        <div class="flex gap-2">
+                          <span
+                            v-if="lesson.lesson_type_slug !== 'file_test'"
+                            class="text-xs"
+                            :class="
+                              lesson.is_available === true
+                                ? 'text-active'
+                                : 'text-inactive'
+                            "
+                            >{{ $t("materials.materials_count") }}:
+                            <b>{{ lesson.materials.length }}</b></span
+                          >
+                          <span
+                            class="text-xs"
+                            :class="
+                              lesson.is_available === true
+                                ? 'text-active'
+                                : 'text-inactive'
+                            "
+                            >{{ $t("pages.tasks.tasks_count") }}:
+                            <b>{{ lesson.tasks.length }}</b></span
+                          >
+                        </div>
+                        <span class="text-xs text-inactive"
+                          >({{ lesson.lesson_type_name }})</span
                         >
                       </div>
-                      <span class="text-xs text-inactive"
-                        >({{ lesson.lesson_type_name }})</span
-                      >
                     </div>
+
+                    <circleProgressBar
+                      :progress="lesson.completed_tasks_percent"
+                    />
                   </div>
                 </li>
                 <roleProvider :roles="[1]" :redirect="false">
@@ -307,6 +340,8 @@ import roleProvider from "../../../../../components/ui/roleProvider.vue";
 import loader from "../../../../../components/ui/loader.vue";
 import modal from "../../../../../components/ui/modal.vue";
 import alert from "../../../../../components/ui/alert.vue";
+import progressBar from "../../../../../components/ui/progressBar.vue";
+import circleProgressBar from "../../../../../components/ui/circleProgressBar.vue";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
 
@@ -386,6 +421,13 @@ const getLessons = async () => {
       pageTitle.value = response.data.level.level_name;
 
       lessonsData.value = response.data;
+
+      if (
+        lessonsData.value.sections.length > 0 &&
+        lessonsData.value.sections.length === 1
+      ) {
+        activeSectionIndex.value = 0;
+      }
       pending.value = false;
     })
     .catch((err) => {

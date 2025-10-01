@@ -734,6 +734,7 @@ export default {
             choose_a_course: 'Курсты таңдаңыз',
             course_level: 'Курстың санаты',
             choose_a_course_level: 'Курстың санатын таңдаңыз',
+            level_overall_progress: 'Деңгей бойынша жалпы прогресс',
             course_section: 'Тарау',
             choose_a_course_section: 'Тарауды таңдаңыз',
             course_is_not_available: 'Курс қолжетімсіз. Курс қолжетімді болу үшін әкімшілікпен хабарласуыңызды өтінеміз.',

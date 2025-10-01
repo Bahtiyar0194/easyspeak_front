@@ -732,6 +732,7 @@ export default {
             choose_a_course: 'Выберите курс',
             course_level: 'Категория курса',
             choose_a_course_level: 'Выберите категорию курса',
+            level_overall_progress: 'Общий прогресс по уровню:',
             course_section: 'Глава',
             choose_a_course_section: 'Выберите главу',
             course_is_not_available: 'Курс недоступен. Пожалуйста, свяжитесь с администратором для получения доступа к курсу.',
