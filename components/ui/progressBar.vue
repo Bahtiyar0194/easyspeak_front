@@ -3,7 +3,7 @@
     <div
       class="progress-bar relative z-10"
       :class="props.className"
-      :style="{ width: props.progressPercentage + 5 + '%' }"
+      :style="{ width: props.progressPercentage + '%' }"
     >
       <!-- Белый текст поверх полоски -->
       <b
