@@ -498,6 +498,7 @@
     :onClose="() => closeGradeModal()"
     :className="gradeModalClass"
     :showLoader="pendingGrade"
+    :showPendingText="true"
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
@@ -607,6 +608,7 @@
                     >
                       <button
                         class="w-full"
+                        :class="taskItem.task_result.completed === false ? 'cursor-auto' : 'cursor-pointer'"
                         @click="
                           taskItem.task_result.completed === true
                             ? selectTask(taskItem)
@@ -745,8 +747,20 @@
                   :key="levelIndex"
                   class="col-span-12 md:col-span-4"
                 >
-                  <button @click="level.is_available === true ? selectLevel(level) : null" :class="level.is_available === true ? 'cursor-pointer' : 'cursor-not-allowed'">
-                    <levelCard :level="level" :message="'pages.courses.course_is_not_available_for_learner'" />
+                  <button
+                    @click="
+                      level.is_available === true ? selectLevel(level) : null
+                    "
+                    :class="
+                      level.is_available === true
+                        ? 'cursor-pointer'
+                        : 'cursor-not-allowed'
+                    "
+                  >
+                    <levelCard
+                      :level="level"
+                      :message="'pages.courses.course_is_not_available_for_learner'"
+                    />
                   </button>
                 </div>
               </template>
