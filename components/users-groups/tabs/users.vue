@@ -933,7 +933,6 @@ const getGrade = async () => {
   await $axiosPlugin
     .get("courses/get_grade/" + user.value.user_id)
     .then((response) => {
-      console.log(response.data);
       userGrade.value = response.data;
       pendingGrade.value = false;
     })
