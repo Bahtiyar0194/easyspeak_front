@@ -738,6 +738,7 @@ export default {
             course_section: 'Тарау',
             choose_a_course_section: 'Тарауды таңдаңыз',
             course_is_not_available: 'Курс қолжетімсіз. Курс қолжетімді болу үшін әкімшілікпен хабарласуыңызды өтінеміз.',
+            course_is_not_available_for_learner: 'Курс қолжетімді болу үшін оқушыны топқа қосу керек.',
             not_sections: 'Курсқа секциялар қосылмаған.',
             modal: {
                 description: 'Байланыс деректеріңізді қалдырыңыз. Жақын арада біздің менеджер сізді курсқа тіркеу үшін сізбен байланысады.',
@@ -776,7 +777,9 @@ export default {
         },
 
         "education-program": {
-            title: 'Оқу бағдарламасы'
+            title: 'Оқу бағдарламасы',
+            grade: 'Оқушының үлгерімі',
+            get_grade: 'Үлгерімді тексеру'
         },
 
         dictionary: {
@@ -835,6 +838,7 @@ export default {
         },
 
         sections: {
+            sections_count: 'Бөлімдер саны',
             added_sections_count: 'Қосылған бөлімдер саны',
             sections_left: "Қайталауға қалған бөлімдер саны",
             studied_sections: "Зерттелген бөлімдер",
@@ -887,6 +891,7 @@ export default {
             is_completed: 'Тапсырма орындалды',
             in_process: 'Тапсырма орындап жатыр',
             in_process_this: 'Осы тапсырманы орындап жатыр',
+            is_being_reviewed: 'Тапсырма тексерілуде',
             not_been_completed_yet: 'Тапсырма әзірше орындалған жоқ',
             show_task_result: 'Нәтижесін көру',
             show_learner_task_result: 'Оқушы тапсырмасының нәтижесін көру',

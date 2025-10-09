@@ -736,6 +736,7 @@ export default {
             course_section: 'Глава',
             choose_a_course_section: 'Выберите главу',
             course_is_not_available: 'Курс недоступен. Пожалуйста, свяжитесь с администратором для получения доступа к курсу.',
+            course_is_not_available_for_learner: 'Для получения доступа к курсу нужно добавить ученика в группу.',
             not_sections: 'Нету секции для курсов.',
             modal: {
                 description: 'Оставьте ваши контактные данные. В ближайшее время наш менеджер свяжется с вами для регистрации вас к курсу.',
@@ -774,7 +775,9 @@ export default {
         },
 
         "education-program": {
-            title: 'Учебная программа'
+            title: 'Учебная программа',
+            grade: 'Успеваемость ученика',
+            get_grade: 'Проверить успеваемость'
         },
 
         dictionary: {
@@ -833,6 +836,7 @@ export default {
         },
 
         sections: {
+            sections_count: 'Секции',
             added_sections_count: 'Количество добавленных секций',
             sections_left: "Осталось секций на повторение",
             studied_sections: "Изученные секции",
@@ -885,6 +889,7 @@ export default {
             is_completed: 'Задание выполнено',
             in_process: 'Выполняет задание',
             in_process_this: 'Выполняет данное задание',
+            is_being_reviewed: 'Задание на проверке',
             not_been_completed_yet: 'Задание еще не выполнено',
             show_task_result: 'Показать результат',
             show_learner_task_result: 'Просмотреть результат задания ученика',

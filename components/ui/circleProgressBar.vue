@@ -22,7 +22,7 @@
         :style="circleStyle"
       />
     </svg>
-    <div class="font-medium" :class="props.textClass">
+    <div class="font-bold text-active" :class="props.textClass">
         {{ parseInt(displayedProgress) }}%
     </div>
   </div>

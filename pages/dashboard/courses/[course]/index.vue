@@ -17,37 +17,7 @@
                 )
           "
         >
-          <div
-            class="card relative overflow-hidden group"
-            :class="level.is_available === false ? 'grayscale' : ''"
-          >
-            <img
-              :src="
-                config.public.apiBase +
-                '/media/get/' +
-                level.course_name_slug +
-                '.png'
-              "
-            />
-
-            <div
-              class="absolute left-0 bottom-0 w-full group-hover:h-full transition-all duration-200 bg-black bg-opacity-60 flex justify-center items-center group-hover:items-center p-4"
-              :class="level.is_available === false ? 'h-full' : 'h-12'"
-            >
-              <div class="flex flex-col gap-y-1">
-                <h4 class="mb-0 text-white text-center">
-                  {{ level.level_name }}
-                </h4>
-
-                <p
-                  v-if="level.is_available === false"
-                  class="mb-0 text-white text-center text-sm"
-                >
-                  {{ $t("pages.courses.course_is_not_available") }}
-                </p>
-              </div>
-            </div>
-          </div>
+          <levelCard :level="level" />
         </nuxt-link>
       </div>
     </div>
@@ -56,10 +26,10 @@
 
 <script setup>
 import loader from "../../../../components/ui/loader.vue";
+import levelCard from "../../../../components/levels/levelCard.vue";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
 
-const config = useRuntimeConfig();
 const router = useRouter();
 const route = useRoute();
 const course_slug = route.params.course;

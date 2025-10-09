@@ -7,10 +7,9 @@
         </nuxt-link>
       </li>
       <li v-for="(crumb, index) in crumbs" :key="index">
-        <nuxt-link v-if="index < crumbs.length - 1" :to="crumb.to">
+        <nuxt-link :class="index < crumbs.length - 1 ? '' : 'inactive'" :to="crumb.to">
           <span :data-crumb="crumb.label">{{ crumb.label }}</span>
         </nuxt-link>
-        <span v-else :data-crumb="crumb.label">{{ crumb.label }}</span>
       </li>
     </ul>
   </client-only>

@@ -330,7 +330,7 @@
       <h4>{{ $t("pages.users.user_info") }}</h4>
     </template>
     <template v-if="user" v-slot:body_content>
-      <div class="flex flex-wrap gap-x-6 gap-y-4 whitespace-nowrap">
+      <div class="flex flex-wrap gap-x-4 gap-y-4 whitespace-nowrap">
         <userAvatar :user="user" :className="'w-12 h-12 text-2xl'" />
         <div class="flex flex-col gap-y-4">
           <h4 class="mb-0">{{ user.last_name }} {{ user.first_name }}</h4>
@@ -358,12 +358,18 @@
             </div>
           </div>
 
-          <roleProvider :roles="[1, 2, 3]">
-            <button @click="getEditUser" class="btn btn-outline-primary">
-              <i class="pi pi-user-edit"></i>
-              {{ $t("edit") }}
+          <div class="btn-wrap">
+            <button @click="getGrade" class="btn btn-primary">
+              <i class="pi pi-chart-bar"></i>
+              {{ $t("pages.education-program.get_grade") }}
             </button>
-          </roleProvider>
+            <roleProvider :roles="[1, 2, 3]">
+              <button @click="getEditUser" class="btn btn-outline-primary">
+                <i class="pi pi-user-edit"></i>
+                {{ $t("edit") }}
+              </button>
+            </roleProvider>
+          </div>
         </div>
       </div>
     </template>
@@ -486,6 +492,281 @@
       </form>
     </template>
   </modal>
+
+  <modal
+    :show="gradeModalIsVisible"
+    :onClose="() => closeGradeModal()"
+    :className="gradeModalClass"
+    :showLoader="pendingGrade"
+    :closeOnClickSelf="false"
+  >
+    <template v-slot:header_content>
+      <h4>{{ $t("pages.education-program.grade") }}</h4>
+    </template>
+    <template v-if="user" v-slot:body_content>
+      <h2>{{ user.last_name }} {{ user.first_name }}</h2>
+
+      <template v-if="userGrade">
+        <div class="custom-grid">
+          <div class="col-span-12">
+            <ul class="breadcrumb">
+              <li>
+                <button
+                  @click="goToCourses()"
+                  :class="!activeCourse ? 'inactive' : ''"
+                >
+                  <span>
+                    {{ $t("pages.courses.title") }}
+                  </span>
+                </button>
+              </li>
+              <li v-if="activeCourse">
+                <button
+                  @click="goToLevels()"
+                  :class="!activeLevel ? 'inactive' : ''"
+                >
+                  <span>{{ activeCourse.course_name }}</span>
+                </button>
+              </li>
+              <li v-if="activeLevel">
+                <button
+                  @click="goToSections()"
+                  :class="!activeSection ? 'inactive' : ''"
+                >
+                  <span>{{ activeLevel.level_name }}</span>
+                </button>
+              </li>
+              <li v-if="activeSection">
+                <button
+                  @click="goToLessons()"
+                  :class="!activeLesson ? 'inactive' : ''"
+                >
+                  <span>{{ activeSection.section_name }}</span>
+                </button>
+              </li>
+              <li v-if="activeLesson">
+                <button
+                  @click="goToTasks()"
+                  :class="!activeTask ? 'inactive' : ''"
+                >
+                  <span>{{ activeLesson.lesson_name }}</span>
+                </button>
+              </li>
+              <li v-if="activeTask">
+                <span>{{ activeTask.task_slug }}</span>
+              </li>
+            </ul>
+          </div>
+          <div class="col-span-12">
+            <div class="custom-grid">
+              <template v-if="activeTask">
+                <div class="col-span-12">
+                  <button class="btn btn-light" @click="goToTasks()">
+                    <i class="pi pi-arrow-left"></i>
+                    {{ $t("back") }}
+                  </button>
+                </div>
+
+                <div class="col-span-12">
+                  <taskResultChart :taskResult="activeTask.task_result" />
+                </div>
+              </template>
+              <template v-else-if="activeLesson">
+                <div class="col-span-12">
+                  <button class="btn btn-light" @click="goToLessons()">
+                    <i class="pi pi-arrow-left"></i>
+                    {{ $t("back") }}
+                  </button>
+                </div>
+
+                <div class="col-span-12">
+                  <h3 class="mb-2">{{ activeLesson.lesson_name }}</h3>
+                  <div class="flex flex-wrap gap-1 mb-1">
+                    <span> {{ $t("pages.tasks.count") }}: </span>
+                    <b>{{ activeLesson.tasks.length }}</b>
+                  </div>
+
+                  <div class="flex flex-wrap gap-1 mb-1">
+                    <span> {{ $t("passed") }}: </span>
+                    <b>{{ activeLesson.completed_tasks_count }}</b>
+                  </div>
+
+                  <progressBar
+                    :progressPercentage="activeLesson.completed_tasks_percent"
+                    :wrapClass="'!my-0'"
+                    :showPercentage="true"
+                    :className="'sm success'"
+                  />
+                </div>
+
+                <div class="col-span-12">
+                  <ul class="list-group nowrap">
+                    <li
+                      v-for="taskItem in activeLesson.tasks"
+                      :key="taskItem.task_id"
+                    >
+                      <button
+                        class="w-full"
+                        @click="
+                          taskItem.task_result.completed === true
+                            ? selectTask(taskItem)
+                            : null
+                        "
+                      >
+                        <div class="flex items-center justify-between gap-4">
+                          <div class="flex gap-2 items-center w-full">
+                            <i class="text-4xl" :class="taskItem.icon"></i>
+                            <div class="flex flex-col gap-y-0.5">
+                              <span class="font-medium text-left">{{
+                                taskItem.task_slug
+                              }}</span>
+                              <span class="text-inactive text-xs text-left">{{
+                                taskItem.task_type_name
+                              }}</span>
+                              <span
+                                v-if="
+                                  taskItem.task_result &&
+                                  taskItem.task_result.completed === true
+                                "
+                                class="text-xs text-success text-left"
+                                >{{ $t("pages.tasks.is_completed") }}</span
+                              >
+                              <span
+                                v-else-if="
+                                  taskItem.task_result &&
+                                  taskItem.task_result.answers &&
+                                  taskItem.task_result.completed === false
+                                "
+                                class="text-xs text-warning text-left"
+                                >{{ $t("pages.tasks.is_being_reviewed") }}</span
+                              >
+
+                              <span
+                                v-else
+                                class="text-xs text-danger text-left"
+                                >{{
+                                  $t("pages.tasks.not_been_completed_yet")
+                                }}</span
+                              >
+                            </div>
+                          </div>
+
+                          <circleProgressBar
+                            v-if="
+                              taskItem.task_result &&
+                              taskItem.task_result.completed === true
+                            "
+                            :progress="taskItem.task_result.percentage"
+                          />
+                        </div>
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </template>
+              <template v-else-if="activeSection">
+                <div class="col-span-12">
+                  <button class="btn btn-light" @click="goToSections()">
+                    <i class="pi pi-arrow-left"></i>
+                    {{ $t("back") }}
+                  </button>
+                </div>
+                <div class="col-span-12">
+                  <ul class="list-group nowrap">
+                    <li
+                      v-for="(lesson, lessonIndex) in activeSection.lessons"
+                      :key="lessonIndex"
+                    >
+                      <button class="w-full" @click="selectLesson(lesson)">
+                        <div class="flex gap-2 justify-between items-center">
+                          <div class="flex flex-col gap-y-1.5">
+                            <p class="mb-0 leading-none font-bold text-left">
+                              {{ lessonIndex + 1 }}. {{ lesson.lesson_name }}
+                              <span class="text-inactive font-normal"
+                                >({{ lesson.lesson_type_name }})</span
+                              >
+                            </p>
+                            <span class="text-xs text-left"
+                              >{{ $t("pages.tasks.count") }}:
+                              <b>{{ lesson.tasks.length }}</b></span
+                            >
+                          </div>
+                          <circleProgressBar
+                            :progress="lesson.completed_tasks_percent"
+                          />
+                        </div>
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </template>
+              <template v-else-if="activeLevel">
+                <div class="col-span-12">
+                  <button class="btn btn-light" @click="goToLevels()">
+                    <i class="pi pi-arrow-left"></i>
+                    {{ $t("back") }}
+                  </button>
+                </div>
+                <div class="col-span-12">
+                  <ul class="list-group nowrap">
+                    <li
+                      v-for="(section, sectionIndex) in activeLevel.sections"
+                      :key="sectionIndex"
+                    >
+                      <button class="w-full" @click="selectSection(section)">
+                        <div class="flex gap-2 justify-between items-center">
+                          <div class="flex flex-col gap-y-1.5">
+                            <p class="mb-0 leading-none font-bold text-left">
+                              {{ section.section_name }}
+                            </p>
+                            <span class="text-xs"
+                              >{{ $t("pages.lessons.lessons_count") }}:
+                              <b>{{ section.lessons.length }}</b></span
+                            >
+                          </div>
+                          <circleProgressBar
+                            :progress="section.completed_percent"
+                          />
+                        </div>
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </template>
+              <template v-else-if="activeCourse">
+                <div class="col-span-12">
+                  <button class="btn btn-light" @click="goToCourses()">
+                    <i class="pi pi-arrow-left"></i>
+                    {{ $t("back") }}
+                  </button>
+                </div>
+                <div
+                  v-for="(level, levelIndex) in activeCourse.levels"
+                  :key="levelIndex"
+                  class="col-span-12 md:col-span-4"
+                >
+                  <button @click="level.is_available === true ? selectLevel(level) : null" :class="level.is_available === true ? 'cursor-pointer' : 'cursor-not-allowed'">
+                    <levelCard :level="level" :message="'pages.courses.course_is_not_available_for_learner'" />
+                  </button>
+                </div>
+              </template>
+              <template v-else>
+                <div
+                  v-for="(course, courseIndex) in userGrade.courses"
+                  :key="courseIndex"
+                  class="col-span-12"
+                >
+                  <button @click="selectCourse(course)">
+                    <courseCard :course="course" />
+                  </button>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </template>
+    </template>
+  </modal>
 </template>
 
 <script setup>
@@ -501,7 +782,11 @@ import { debounceHandler } from "../../../utils/debounceHandler";
 import roleProvider from "../../ui/roleProvider.vue";
 import multipleSelect from "../../ui/multipleSelect.vue";
 import sortTableHead from "../../ui/sortTableHead.vue";
-
+import courseCard from "../../courses/courseCard.vue";
+import levelCard from "../../levels/levelCard.vue";
+import progressBar from "../../ui/progressBar.vue";
+import circleProgressBar from "../../ui/circleProgressBar.vue";
+import taskResultChart from "../../lesson/components/tasks/taskResultChart.vue";
 const router = useRouter();
 const errors = ref([]);
 const { $axiosPlugin, $schoolPlugin } = useNuxtApp();
@@ -510,6 +795,7 @@ const pending = ref(true);
 const pendingInvite = ref(false);
 const pendingUser = ref(false);
 const pendingEdit = ref(false);
+const pendingGrade = ref(false);
 const tableRef = ref(null);
 const searchFormRef = ref(null);
 const inviteFormRef = ref(null);
@@ -520,12 +806,23 @@ const authUser = useSanctumUser();
 const { refreshIdentity } = useSanctumAuth();
 const users = ref([]);
 const user = ref(null);
+const userGrade = ref(null);
 const school = $schoolPlugin;
 const attributes = ref([]);
 
 const inviteModalIsVisible = ref(false);
 const userModalIsVisible = ref(false);
 const editModalIsVisible = ref(false);
+const gradeModalIsVisible = ref(false);
+
+const gradeModalDefaultClass = "modal-lg";
+const gradeModalClass = ref(gradeModalDefaultClass);
+
+const activeCourse = ref(null);
+const activeLevel = ref(null);
+const activeSection = ref(null);
+const activeLesson = ref(null);
+const activeTask = ref(null);
 
 const sortKey = ref("users.created_at"); // Ключ сортировки
 const sortDirection = ref("asc"); // Направление сортировки: asc или desc
@@ -625,6 +922,35 @@ const getUser = async (user_id) => {
 const getEditUser = async () => {
   userModalIsVisible.value = false;
   editModalIsVisible.value = true;
+};
+
+const getGrade = async () => {
+  userModalIsVisible.value = false;
+  gradeModalIsVisible.value = true;
+  pendingGrade.value = true;
+  gradeModalClass.value = gradeModalDefaultClass;
+
+  await $axiosPlugin
+    .get("courses/get_grade/" + user.value.user_id)
+    .then((response) => {
+      console.log(response.data);
+      userGrade.value = response.data;
+      pendingGrade.value = false;
+    })
+    .catch((err) => {
+      if (err.response) {
+        router.push({
+          path: "/error",
+          query: {
+            status: err.response.status,
+            message: err.response.data.message,
+            url: err.request.responseURL,
+          },
+        });
+      } else {
+        router.push("/error");
+      }
+    });
 };
 
 const getUserAttributes = async () => {
@@ -741,6 +1067,19 @@ const closeInviteModal = () => {
   errors.value = [];
 };
 
+const closeGradeModal = () => {
+  gradeModalIsVisible.value = false;
+  pendingGrade.value = false;
+  userGrade.value = null;
+  userModalIsVisible.value = true;
+
+  activeCourse.value = null;
+  activeLevel.value = null;
+  activeSection.value = null;
+  activeLesson.value = null;
+  activeTask.value = null;
+};
+
 const showHideUserSearchFilter = () => {
   if (searchFilter.value === true) {
     searchFilter.value = false;
@@ -757,6 +1096,91 @@ const resetUserSearchFilter = () => {
 
 const debounceUsers = debounceHandler(() => getUsers(), 1000);
 const debounceReset = debounceHandler(() => resetUserSearchFilter(), 500);
+
+const selectCourse = (course) => {
+  pendingGrade.value = true;
+
+  setTimeout(() => {
+    gradeModalClass.value = "modal-4xl";
+    activeCourse.value = course;
+    pendingGrade.value = false;
+  }, 500);
+};
+
+const goToCourses = () => {
+  gradeModalClass.value = gradeModalDefaultClass;
+  activeCourse.value = null;
+  activeLevel.value = null;
+  activeSection.value = null;
+  activeLesson.value = null;
+  activeTask.value = null;
+};
+
+const selectLevel = (level) => {
+  pendingGrade.value = true;
+
+  setTimeout(() => {
+    gradeModalClass.value = gradeModalDefaultClass;
+    activeLevel.value = level;
+    pendingGrade.value = false;
+  }, 500);
+};
+
+const goToLevels = () => {
+  gradeModalClass.value = "modal-4xl";
+  activeLevel.value = null;
+  activeSection.value = null;
+  activeLesson.value = null;
+  activeTask.value = null;
+};
+
+const selectSection = (section) => {
+  pendingGrade.value = true;
+
+  setTimeout(() => {
+    gradeModalClass.value = "modal-2xl";
+    activeSection.value = section;
+    pendingGrade.value = false;
+  }, 500);
+};
+
+const goToSections = () => {
+  gradeModalClass.value = gradeModalDefaultClass;
+  activeSection.value = null;
+  activeLesson.value = null;
+  activeTask.value = null;
+};
+
+const selectLesson = (lesson) => {
+  pendingGrade.value = true;
+
+  setTimeout(() => {
+    gradeModalClass.value = "modal-2xl";
+    activeLesson.value = lesson;
+    pendingGrade.value = false;
+  }, 500);
+};
+
+const goToLessons = () => {
+  gradeModalClass.value = gradeModalDefaultClass;
+  activeLesson.value = null;
+  activeTask.value = null;
+};
+
+const selectTask = (task) => {
+  pendingGrade.value = true;
+
+  setTimeout(() => {
+    gradeModalClass.value = "modal-2xl";
+    activeTask.value = task;
+    pendingGrade.value = false;
+  }, 500);
+};
+
+const goToTasks = () => {
+  gradeModalClass.value = "modal-2xl";
+  activeTask.value = null;
+};
 
 onMounted(() => {
   getUserAttributes();

@@ -1474,7 +1474,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .list-group.nowrap > li{
-  @apply py-2;
+  @apply py-2.5;
 }
 
 .list-group.nowrap.lg > li{
@@ -1687,13 +1687,21 @@ select.error:has(option:checked:disabled) {
   @apply text-inactive flex flex-wrap list-none px-0;
 }
 
-.breadcrumb a{
+.breadcrumb a, .breadcrumb button{
   @apply inline-block mr-6 relative text-corp;
 }
 
-.breadcrumb a:after{
+.breadcrumb a.inactive, .breadcrumb button.inactive{
+  @apply text-inactive pointer-events-none;
+}
+
+.breadcrumb a:after, .breadcrumb button:after{
   content: "\203A";
   @apply absolute -right-3.5 text-inactive pointer-events-none;
+}
+
+.breadcrumb a.inactive:after, .breadcrumb button.inactive:after{
+  content: "";
 }
 
 .db__header{
