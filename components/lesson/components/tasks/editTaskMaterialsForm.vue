@@ -1,6 +1,6 @@
 <template>
   <div class="custom-grid">
-    <loader v-if="pending" :className="'full-overlay'" />
+    <loader v-if="pending" :className="'full-overlay'" :showPendingText="true"/>
     <div v-if="taskMaterials.length > 0" class="col-span-12">
       <TransitionGroup
         tag="ul"

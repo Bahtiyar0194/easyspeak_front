@@ -1,6 +1,6 @@
 <template>
   <div class="custom-grid">
-    <loader v-if="pending" :className="'full-overlay'" />
+    <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
     <div class="col-span-12">
       <h1 class="text-4xl">{{ $t("pages.courses.title") }}</h1>
     </div>

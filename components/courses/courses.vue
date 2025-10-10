@@ -1,4 +1,5 @@
 <template>
+  <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
   <div class="custom-grid">
     <div
       v-for="(course, courseIndex) in courses"
@@ -16,8 +17,8 @@
 
 <script setup>
 import { useRouter } from "nuxt/app";
+import loader from "../ui/loader.vue";
 import courseCard from "./courseCard.vue";
-const config = useRuntimeConfig();
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
 const pending = ref(true);

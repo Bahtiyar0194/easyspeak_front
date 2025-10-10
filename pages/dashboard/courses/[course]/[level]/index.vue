@@ -1,5 +1,5 @@
 <template>
-  <loader v-if="pending" :className="'full-overlay'" />
+  <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
   <div
     v-if="lessonsData && lessonsData?.level?.is_available"
     class="col-span-12"

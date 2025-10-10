@@ -1,5 +1,5 @@
 <template>
-  <loader v-if="pending" :className="'full-overlay'" />
+  <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
   <div class="custom-grid">
     <div class="col-span-12">
       <h1>{{ pageTitle }}</h1>

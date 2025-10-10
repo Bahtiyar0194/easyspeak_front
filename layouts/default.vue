@@ -1,5 +1,5 @@
 <template>
-  <loader v-if="pending" :className="'full-overlay'" />
+  <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
   <div class="relative flex flex-col min-h-screen">
     <stickyBox :offsetTop="0" :className="'z-10 shrink-0'">
       <div

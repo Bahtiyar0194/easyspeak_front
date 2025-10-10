@@ -27,6 +27,7 @@
           <p
             v-if="level.is_available === true"
             class="mb-0 text-white leading-none text-lg"
+            :class="level.completed_percent > 0 ? 'text-success' : ''"
           >
             {{ level.completed_percent.toFixed(2) }}%
           </p>

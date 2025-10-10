@@ -1,5 +1,5 @@
 <template>
-  <loader v-if="pending" :className="'full-overlay'" />
+  <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
   <tabs
     v-if="courseIsAvailable && lessonIsAvailable"
     :tabs="tabs_data"
