@@ -348,7 +348,7 @@ const onSelectLocation = (levelIndex) => {
   }
 };
 
-const sendRequest = async (course_id) => {
+const sendRequest = async () => {
   pendingSend.value = true;
   const formData = new FormData(formRef.value);
   formData.append("lang", localeProperties.value.code);
@@ -366,9 +366,23 @@ const sendRequest = async (course_id) => {
       errors.value = [];
     })
     .catch((err) => {
-      errors.value = err.response.data;
-      pendingSend.value = false;
-      return;
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          pendingSend.value = false;
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
     });
 };
 

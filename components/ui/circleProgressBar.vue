@@ -23,7 +23,7 @@
       />
     </svg>
     <div class="font-bold text-active" :class="props.textClass">
-        {{ parseInt(displayedProgress) }}%
+        {{ displayedProgress < 100 ? displayedProgress.toFixed(1) : parseInt(displayedProgress) }}%
     </div>
   </div>
 </template>
