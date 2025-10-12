@@ -353,7 +353,7 @@ const sendRequest = async () => {
   const formData = new FormData(formRef.value);
   formData.append("lang", localeProperties.value.code);
 
-  if (isSubdomain) {
+  if (!isSubdomain) {
     formData.append("school_domain", schoolStore.schoolData.school_domain);
     formData.append("school_id", schoolStore.schoolData.school_id);
   }
