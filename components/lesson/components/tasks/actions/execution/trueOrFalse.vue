@@ -1,126 +1,135 @@
 <template>
-  <taskLayout
-    v-if="taskData"
-    :task="props.task"
-    :lessonType="props.lessonType"
-    :showTaskTimer="showTaskTimer"
-    :showMaterialsOption="showMaterialsOption"
-    :showMaterialsBeforeTask="showMaterialsBeforeTask"
-    :materials="materials"
-    :startTask="startTask"
-    :isFinished="isFinished"
-    :progressPercentage="progressPercentage"
-    :reStudyItems="reStudySentences"
-    :taskResult="taskResult"
-  >
-    <template v-slot:task_content>
-      <div class="col-span-12">
-        <p v-if="timeIsUp" class="font-medium text-center text-danger">
-          {{ $t("time_is_up") }}
-        </p>
-        <p v-else-if="isComplete" class="font-medium text-center text-success">
-          {{ $t("right") }}
-        </p>
-        <p v-else-if="isWrong" class="font-medium text-center text-danger">
-          {{ $t("wrong") }}
-        </p>
-        <p v-else-if="sentencesLeft > 0" class="text-center">
-          {{ $t("pages.sentences.sentences_left") }}:
-          <b>{{ sentencesLeft }}</b>
-        </p>
-      </div>
-
-      <div class="col-span-12">
-        <div class="flex justify-center items-center">
-          <countdownCircleTimer
-            :totalSeconds="time"
-            :startCommand="isStarted"
-            :isWrong="isWrong"
-            @timeIsUp="timerIsUp()"
-          />
+  <alert v-if="errors.length > 0" :className="'light'">
+    <p class="mb-0">{{ errors[0] }}</p>
+  </alert>
+  <div v-else-if="taskData && errors.length === 0">
+    <taskLayout
+      v-if="taskData"
+      :task="props.task"
+      :lessonType="props.lessonType"
+      :showTaskTimer="showTaskTimer"
+      :showMaterialsOption="showMaterialsOption"
+      :showMaterialsBeforeTask="showMaterialsBeforeTask"
+      :materials="materials"
+      :startTask="startTask"
+      :isFinished="isFinished"
+      :progressPercentage="progressPercentage"
+      :reStudyItems="reStudySentences"
+      :taskResult="taskResult"
+    >
+      <template v-slot:task_content>
+        <div class="col-span-12">
+          <p v-if="timeIsUp" class="font-medium text-center text-danger">
+            {{ $t("time_is_up") }}
+          </p>
+          <p
+            v-else-if="isComplete"
+            class="font-medium text-center text-success"
+          >
+            {{ $t("right") }}
+          </p>
+          <p v-else-if="isWrong" class="font-medium text-center text-danger">
+            {{ $t("wrong") }}
+          </p>
+          <p v-else-if="sentencesLeft > 0" class="text-center">
+            {{ $t("pages.sentences.sentences_left") }}:
+            <b>{{ sentencesLeft }}</b>
+          </p>
         </div>
-      </div>
 
-      <div class="col-span-12">
-        <div
-          class="bg-inactive p-4 rounded-xl text-center"
-          :class="isComplete && 'text-success'"
-        >
+        <div class="col-span-12">
+          <div class="flex justify-center items-center">
+            <countdownCircleTimer
+              :totalSeconds="time"
+              :startCommand="isStarted"
+              :isWrong="isWrong"
+              @timeIsUp="timerIsUp()"
+            />
+          </div>
+        </div>
+
+        <div class="col-span-12">
+          <div
+            class="bg-inactive p-4 rounded-xl text-center"
+            :class="isComplete && 'text-success'"
+          >
+            <div class="custom-grid">
+              <div class="col-span-12">
+                <p class="text-xl font-medium mb-0">
+                  {{ currentSentence?.sentence }}
+                </p>
+              </div>
+              <div v-if="taskData.options.show_translate" class="col-span-12">
+                <p class="mb-0">{{ currentSentence?.sentence_translate }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="isWrong === true" class="col-span-12">
+          <div class="custom-grid">
+            <div class="col-span-12 lg:col-span-6">
+              <div class="card p-4 text-center">
+                <p class="text-inactive text-xs font-medium mb-0">
+                  {{ $t("your_answer") }}
+                </p>
+                <p class="text-danger font-medium mb-0">
+                  {{ currentSentence?.userAnswer || $t("no_answer") }}
+                </p>
+              </div>
+            </div>
+            <div class="col-span-12 lg:col-span-6">
+              <div class="card p-4 text-center">
+                <p class="text-inactive text-xs font-medium mb-0">
+                  {{ $t("right_answer") }}
+                </p>
+                <p class="text-success font-medium mb-0">
+                  {{ currentSentence?.answer }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="isStarted" class="col-span-12">
           <div class="custom-grid">
             <div class="col-span-12">
-              <p class="text-xl font-medium mb-0">
-                {{ currentSentence?.sentence }}
-              </p>
-            </div>
-            <div v-if="taskData.options.show_translate" class="col-span-12">
-              <p class="mb-0">{{ currentSentence?.sentence_translate }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="isWrong === true" class="col-span-12">
-        <div class="custom-grid">
-          <div class="col-span-12 lg:col-span-6">
-            <div class="card p-4 text-center">
-              <p class="text-inactive text-xs font-medium mb-0">
-                {{ $t("your_answer") }}
-              </p>
-              <p class="text-danger font-medium mb-0">
-                {{ currentSentence?.userAnswer || $t("no_answer") }}
-              </p>
-            </div>
-          </div>
-          <div class="col-span-12 lg:col-span-6">
-            <div class="card p-4 text-center">
-              <p class="text-inactive text-xs font-medium mb-0">
-                {{ $t("right_answer") }}
-              </p>
-              <p class="text-success font-medium mb-0">
-                {{ currentSentence?.answer }}
-              </p>
+              <div class="btn-wrap items-center justify-center">
+                <button
+                  v-for="button in answerButtons"
+                  :key="button"
+                  type="button"
+                  class="btn btn-light btn-sm"
+                  @click="checkSentence(button)"
+                >
+                  {{ button }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div v-if="isStarted" class="col-span-12">
-        <div class="custom-grid">
-          <div class="col-span-12">
-            <div class="btn-wrap items-center justify-center">
-              <button
-                v-for="button in answerButtons"
-                :key="button"
-                type="button"
-                class="btn btn-light btn-sm"
-                @click="checkSentence(button)"
-              >
-                {{ button }}
-              </button>
-            </div>
+        <div v-if="timeIsUp || isWrong || isComplete" class="col-span-12">
+          <div class="flex justify-end">
+            <button class="btn btn-primary" @click="setSentence()">
+              <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
+            </button>
           </div>
         </div>
-      </div>
+      </template>
 
-      <div v-if="timeIsUp || isWrong || isComplete" class="col-span-12">
-        <div class="flex justify-end">
-          <button class="btn btn-primary" @click="setSentence()">
-            <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
-          </button>
-        </div>
-      </div>
-    </template>
-
-    <template v-slot:task_result_content>
-      <result
-        :studiedSentences="studiedSentences"
-        :reStudySentences="reStudySentences"
-      />
-    </template>
-  </taskLayout>
+      <template v-slot:task_result_content>
+        <result
+          :studiedSentences="studiedSentences"
+          :reStudySentences="reStudySentences"
+        />
+      </template>
+    </taskLayout>
+  </div>
 </template>
 
 <script setup>
+import alert from "../../../../../ui/alert.vue";
 import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
 import taskLayout from "../../taskLayout.vue";
@@ -136,6 +145,7 @@ import result from "../../results/sentences/result.vue";
 const router = useRouter();
 const config = useRuntimeConfig();
 const { $axiosPlugin } = useNuxtApp();
+const errors = ref([]);
 
 const showTaskTimer = ref(false);
 const taskData = ref(null);

@@ -1,60 +1,269 @@
 <template>
-  <taskLayout
-    v-if="taskData"
-    :task="props.task"
-    :lessonType="props.lessonType"
-    :showTaskTimer="showTaskTimer"
-    :showMaterialsOption="showMaterialsOption"
-    :showMaterialsBeforeTask="showMaterialsBeforeTask"
-    :materials="materials"
-    :startTask="startTask"
-    :isFinished="isFinished"
-    :progressPercentage="progressPercentage"
-    :reStudyItems="reStudySections"
-    :taskResult="taskResult"
-  >
-    <template v-slot:task_content>
-      <div class="col-span-12">
-        <p v-if="timeIsUp" class="font-medium text-center text-danger">
-          {{ $t("time_is_up") }}
-        </p>
-        <p v-else-if="sections.length > 0" class="text-center">
-          {{ $t("pages.sections.sections_left") }}:
-          <b>{{ sections.length }}</b>
-        </p>
-      </div>
-
-      <div class="col-span-12">
-        <div class="flex justify-center items-center">
-          <countdownCircleTimer
-            :totalSeconds="time"
-            :startCommand="isStarted"
-            @timeIsUp="timerIsUp()"
-          />
+  <alert v-if="errors.length > 0" :className="'light'">
+    <p class="mb-0">{{ errors[0] }}</p>
+  </alert>
+  <div v-else-if="taskData && errors.length === 0">
+    <taskLayout
+      v-if="taskData"
+      :task="props.task"
+      :lessonType="props.lessonType"
+      :showTaskTimer="showTaskTimer"
+      :showMaterialsOption="showMaterialsOption"
+      :showMaterialsBeforeTask="showMaterialsBeforeTask"
+      :materials="materials"
+      :startTask="startTask"
+      :isFinished="isFinished"
+      :progressPercentage="progressPercentage"
+      :reStudyItems="reStudySections"
+      :taskResult="taskResult"
+    >
+      <template v-slot:task_content>
+        <div class="col-span-12">
+          <p v-if="timeIsUp" class="font-medium text-center text-danger">
+            {{ $t("time_is_up") }}
+          </p>
+          <p v-else-if="sections.length > 0" class="text-center">
+            {{ $t("pages.sections.sections_left") }}:
+            <b>{{ sections.length }}</b>
+          </p>
         </div>
-      </div>
 
-      <div v-if="timeIsUp || isComplete" class="col-span-12">
-        <div class="flex flex-col gap-y-4">
-          <div
-            class="flex flex-col gap-y-2"
-            v-if="currentStudiedSections.length > 0"
-          >
-            <p class="text-xl font-medium mb-0 text-success">
-              {{
-                currentReStudySections.length > 0
-                  ? $t("right_answers")
-                  : $t("right")
-              }}
-            </p>
+        <div class="col-span-12">
+          <div class="flex justify-center items-center">
+            <countdownCircleTimer
+              :totalSeconds="time"
+              :startCommand="isStarted"
+              @timeIsUp="timerIsUp()"
+            />
+          </div>
+        </div>
 
-            <ul class="list-group nowrap" ref="rightAnswers">
-              <li
-                v-for="(section, sIndex) in currentStudiedSections"
-                :key="sIndex"
-                class="flex justify-between items-center gap-x-2"
+        <div v-if="timeIsUp || isComplete" class="col-span-12">
+          <div class="flex flex-col gap-y-4">
+            <div
+              class="flex flex-col gap-y-2"
+              v-if="currentStudiedSections.length > 0"
+            >
+              <p class="text-xl font-medium mb-0 text-success">
+                {{
+                  currentReStudySections.length > 0
+                    ? $t("right_answers")
+                    : $t("right")
+                }}
+              </p>
+
+              <ul class="list-group nowrap" ref="rightAnswers">
+                <li
+                  v-for="(section, sIndex) in currentStudiedSections"
+                  :key="sIndex"
+                  class="flex justify-between items-center gap-x-2"
+                >
+                  <div :id="'right_answer_' + section.word_section_id">
+                    <div class="btn-wrap items-center">
+                      <div
+                        v-for="(word, wordIndex) in section.words"
+                        :key="wordIndex"
+                        class="btn btn-sm pointer-events-none"
+                        :class="
+                          word.target == 1 ? 'btn-outline-success' : 'btn-light'
+                        "
+                      >
+                        {{ word.word }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="step-item xs completed">
+                    <div class="step-icon">
+                      <i class="pi pi-check"></i>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div
+              class="flex flex-col gap-y-2"
+              v-if="currentReStudySections.length > 0"
+            >
+              <p class="text-xl font-medium mb-0 text-danger">
+                {{ $t("for_re_examination") }}
+              </p>
+
+              <ul class="list-group nowrap" ref="wrongAnswers">
+                <li
+                  v-for="(section, rIndex) in currentReStudySections"
+                  :key="rIndex"
+                  class="flex justify-between items-center gap-x-2"
+                >
+                  <div class="flex flex-col gap-2">
+                    <div>
+                      <p class="mb-1 text-inactive font-normal text-xs">
+                        {{ $t("your_answer") }}:
+                      </p>
+                      <div :id="'user_answer_' + section.word_section_id">
+                        <div class="btn-wrap items-center">
+                          <div
+                            v-for="(word, wordIndex) in section.words"
+                            :key="wordIndex"
+                            class="btn btn-sm pointer-events-none"
+                            :class="
+                              section.userInput === wordIndex
+                                ? 'btn-outline-danger'
+                                : 'btn-light'
+                            "
+                          >
+                            {{ word.word }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p class="mb-1 text-inactive font-normal text-xs">
+                        {{ $t("right_answer") }}:
+                      </p>
+                      <div :id="'right_answer_' + section.word_section_id">
+                        <div class="btn-wrap items-center">
+                          <div
+                            v-for="(word, wordIndex) in section.words"
+                            :key="wordIndex"
+                            class="btn btn-sm pointer-events-none"
+                            :class="
+                              word.target == 1
+                                ? 'btn-outline-success'
+                                : 'btn-light'
+                            "
+                          >
+                            {{ word.word }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="step-item xs failed">
+                    <div class="step-icon">
+                      <i class="pi pi-replay"></i>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="btn-wrap right">
+              <button
+                v-if="sections.length > 0"
+                class="btn btn-outline-primary"
+                @click="setSections()"
               >
-                <div :id="'right_answer_' + section.word_section_id">
+                <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
+              </button>
+              <button v-else class="btn btn-light" @click="isFinished = true">
+                <i class="pi pi-check"></i>
+                {{ $t("pages.tasks.complete_the_task") }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="col-span-12">
+          <div class="custom-grid">
+            <div class="col-span-12">
+              <ul class="list-group nowrap">
+                <li
+                  class="list-item"
+                  v-for="(section, sectionIndex) in currentSections"
+                  :key="sectionIndex"
+                >
+                  <div class="flex gap-x-2 items-center">
+                    <b>{{ sectionIndex + 1 }}.</b>
+                    <div class="btn-wrap">
+                      <button
+                        type="button"
+                        v-for="(word, wordIndex) in section.words"
+                        :key="wordIndex"
+                        @click="selectWordInSection(wordIndex, sectionIndex)"
+                        class="btn"
+                        :class="
+                          checkingStatus && section.userInput == null
+                            ? 'pulse btn-danger'
+                            : section.userInput === wordIndex
+                            ? 'btn-outline-danger pointer-events-none'
+                            : 'btn-active'
+                        "
+                        :title="
+                          section.userInput === wordIndex
+                            ? $t('pages.dictionary.this_word_is_extra')
+                            : $t('pages.dictionary.make_this_word_extra')
+                        "
+                      >
+                        <audioButtonMini
+                          v-if="
+                            word.audio_file &&
+                            taskData.options.show_audio_button
+                          "
+                          :src="
+                            config.public.apiBase +
+                            '/media/get/' +
+                            word.audio_file
+                          "
+                          @click.stop
+                        />
+                        <div>
+                          <span
+                            v-for="(letter, letterIndex) in word.word"
+                            :key="letterIndex"
+                            class="select-none"
+                            :class="
+                              word.missingLetters &&
+                              word.missingLetters.includes(letterIndex + 1) &&
+                              'font-medium'
+                            "
+                            >{{ letter }}</span
+                          >
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="col-span-12">
+              <div class="btn-wrap right">
+                <button
+                  class="btn btn-outline-primary"
+                  :class="checkingStatus && 'disabled'"
+                  @click="acceptAnswers()"
+                >
+                  <i class="pi pi-check"></i>
+                  {{ $t("check") }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <template v-slot:task_result_content>
+        <div class="col-span-12">
+          <canvas id="confetti-canvas"></canvas>
+          <div class="flex flex-col gap-y-4">
+            <div
+              class="flex flex-col gap-y-2"
+              v-if="studiedSections.length > 0"
+            >
+              <p class="text-xl font-medium mb-0 text-success">
+                {{ $t("pages.sections.studied_sections") }}
+              </p>
+
+              <ul class="list-group nowrap">
+                <li
+                  v-for="(section, sIndex) in studiedSections"
+                  :key="sIndex"
+                  class="flex justify-between items-center gap-x-2"
+                >
                   <div class="btn-wrap items-center">
                     <div
                       v-for="(word, wordIndex) in section.words"
@@ -67,256 +276,60 @@
                       {{ word.word }}
                     </div>
                   </div>
-                </div>
 
-                <div class="step-item xs completed">
-                  <div class="step-icon">
-                    <i class="pi pi-check"></i>
-                  </div>
-                </div>
-              </li>
-            </ul>
-          </div>
-
-          <div
-            class="flex flex-col gap-y-2"
-            v-if="currentReStudySections.length > 0"
-          >
-            <p class="text-xl font-medium mb-0 text-danger">
-              {{ $t("for_re_examination") }}
-            </p>
-
-            <ul class="list-group nowrap" ref="wrongAnswers">
-              <li
-                v-for="(section, rIndex) in currentReStudySections"
-                :key="rIndex"
-                class="flex justify-between items-center gap-x-2"
-              >
-                <div class="flex flex-col gap-2">
-                  <div>
-                    <p class="mb-1 text-inactive font-normal text-xs">
-                      {{ $t("your_answer") }}:
-                    </p>
-                    <div :id="'user_answer_' + section.word_section_id">
-                      <div class="btn-wrap items-center">
-                        <div
-                          v-for="(word, wordIndex) in section.words"
-                          :key="wordIndex"
-                          class="btn btn-sm pointer-events-none"
-                          :class="
-                            section.userInput === wordIndex
-                              ? 'btn-outline-danger'
-                              : 'btn-light'
-                          "
-                        >
-                          {{ word.word }}
-                        </div>
-                      </div>
+                  <div class="step-item xs completed">
+                    <div class="step-icon">
+                      <i class="pi pi-check"></i>
                     </div>
                   </div>
+                </li>
+              </ul>
+            </div>
 
-                  <div>
-                    <p class="mb-1 text-inactive font-normal text-xs">
-                      {{ $t("right_answer") }}:
-                    </p>
-                    <div :id="'right_answer_' + section.word_section_id">
-                      <div class="btn-wrap items-center">
-                        <div
-                          v-for="(word, wordIndex) in section.words"
-                          :key="wordIndex"
-                          class="btn btn-sm pointer-events-none"
-                          :class="
-                            word.target == 1
-                              ? 'btn-outline-success'
-                              : 'btn-light'
-                          "
-                        >
-                          {{ word.word }}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="step-item xs failed">
-                  <div class="step-icon">
-                    <i class="pi pi-replay"></i>
-                  </div>
-                </div>
-              </li>
-            </ul>
-          </div>
-
-          <div class="btn-wrap right">
-            <button
-              v-if="sections.length > 0"
-              class="btn btn-outline-primary"
-              @click="setSections()"
+            <div
+              class="flex flex-col gap-y-2"
+              v-if="reStudySections.length > 0"
             >
-              <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
-            </button>
-            <button v-else class="btn btn-light" @click="isFinished = true">
-              <i class="pi pi-check"></i>
-              {{ $t("pages.tasks.complete_the_task") }}
-            </button>
-          </div>
-        </div>
-      </div>
+              <p class="text-xl font-medium mb-0 text-danger">
+                {{ $t("pages.sections.unstudied_sections") }}
+              </p>
 
-      <div v-else class="col-span-12">
-        <div class="custom-grid">
-          <div class="col-span-12">
-            <ul class="list-group nowrap">
-              <li
-                class="list-item"
-                v-for="(section, sectionIndex) in currentSections"
-                :key="sectionIndex"
-              >
-                <div class="flex gap-x-2 items-center">
-                  <b>{{ sectionIndex + 1 }}.</b>
-                  <div class="btn-wrap">
-                    <button
-                      type="button"
+              <ul class="list-group nowrap">
+                <li
+                  v-for="(section, rIndex) in reStudySections"
+                  :key="rIndex"
+                  class="flex justify-between items-center gap-x-2"
+                >
+                  <div class="btn-wrap items-center">
+                    <div
                       v-for="(word, wordIndex) in section.words"
                       :key="wordIndex"
-                      @click="selectWordInSection(wordIndex, sectionIndex)"
-                      class="btn"
+                      class="btn btn-sm pointer-events-none"
                       :class="
-                        checkingStatus && section.userInput == null
-                          ? 'pulse btn-danger'
-                          : section.userInput === wordIndex
-                          ? 'btn-outline-danger pointer-events-none'
-                          : 'btn-active'
-                      "
-                      :title="
-                        section.userInput === wordIndex
-                          ? $t('pages.dictionary.this_word_is_extra')
-                          : $t('pages.dictionary.make_this_word_extra')
+                        word.target == 1 ? 'btn-outline-danger' : 'btn-light'
                       "
                     >
-                      <audioButtonMini
-                        v-if="
-                          word.audio_file && taskData.options.show_audio_button
-                        "
-                        :src="
-                          config.public.apiBase +
-                          '/media/get/' +
-                          word.audio_file
-                        "
-                        @click.stop
-                      />
-                      <div>
-                        <span
-                          v-for="(letter, letterIndex) in word.word"
-                          :key="letterIndex"
-                          class="select-none"
-                          :class="
-                            word.missingLetters &&
-                            word.missingLetters.includes(letterIndex + 1) &&
-                            'font-medium'
-                          "
-                          >{{ letter }}</span
-                        >
-                      </div>
-                    </button>
+                      {{ word.word }}
+                    </div>
                   </div>
-                </div>
-              </li>
-            </ul>
-          </div>
 
-          <div class="col-span-12">
-            <div class="btn-wrap right">
-              <button
-                class="btn btn-outline-primary"
-                :class="checkingStatus && 'disabled'"
-                @click="acceptAnswers()"
-              >
-                <i class="pi pi-check"></i>
-                {{ $t("check") }}
-              </button>
+                  <div class="step-item xs failed">
+                    <div class="step-icon">
+                      <i class="pi pi-replay"></i>
+                    </div>
+                  </div>
+                </li>
+              </ul>
             </div>
           </div>
         </div>
-      </div>
-    </template>
-
-    <template v-slot:task_result_content>
-      <div class="col-span-12">
-        <canvas id="confetti-canvas"></canvas>
-        <div class="flex flex-col gap-y-4">
-          <div class="flex flex-col gap-y-2" v-if="studiedSections.length > 0">
-            <p class="text-xl font-medium mb-0 text-success">
-              {{ $t("pages.sections.studied_sections") }}
-            </p>
-
-            <ul class="list-group nowrap">
-              <li
-                v-for="(section, sIndex) in studiedSections"
-                :key="sIndex"
-                class="flex justify-between items-center gap-x-2"
-              >
-                <div class="btn-wrap items-center">
-                  <div
-                    v-for="(word, wordIndex) in section.words"
-                    :key="wordIndex"
-                    class="btn btn-sm pointer-events-none"
-                    :class="
-                      word.target == 1 ? 'btn-outline-success' : 'btn-light'
-                    "
-                  >
-                    {{ word.word }}
-                  </div>
-                </div>
-
-                <div class="step-item xs completed">
-                  <div class="step-icon">
-                    <i class="pi pi-check"></i>
-                  </div>
-                </div>
-              </li>
-            </ul>
-          </div>
-
-          <div class="flex flex-col gap-y-2" v-if="reStudySections.length > 0">
-            <p class="text-xl font-medium mb-0 text-danger">
-              {{ $t("pages.sections.unstudied_sections") }}
-            </p>
-
-            <ul class="list-group nowrap">
-              <li
-                v-for="(section, rIndex) in reStudySections"
-                :key="rIndex"
-                class="flex justify-between items-center gap-x-2"
-              >
-                <div class="btn-wrap items-center">
-                  <div
-                    v-for="(word, wordIndex) in section.words"
-                    :key="wordIndex"
-                    class="btn btn-sm pointer-events-none"
-                    :class="
-                      word.target == 1 ? 'btn-outline-danger' : 'btn-light'
-                    "
-                  >
-                    {{ word.word }}
-                  </div>
-                </div>
-
-                <div class="step-item xs failed">
-                  <div class="step-icon">
-                    <i class="pi pi-replay"></i>
-                  </div>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    </template>
-  </taskLayout>
+      </template>
+    </taskLayout>
+  </div>
 </template>
 
 <script setup>
+import alert from "../../../../../ui/alert.vue";
 import { ref, onMounted, inject, nextTick } from "vue";
 import { useRouter } from "nuxt/app";
 import taskLayout from "../../taskLayout.vue";
@@ -326,6 +339,7 @@ import audioButtonMini from "../../../../../ui/audioButtonMini.vue";
 const config = useRuntimeConfig();
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
+const errors = ref([]);
 
 const showTaskTimer = ref(false);
 const taskData = ref(null);

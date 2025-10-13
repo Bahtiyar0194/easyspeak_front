@@ -1,175 +1,191 @@
 <template>
-  <taskLayout
-    v-if="taskData"
-    :task="props.task"
-    :lessonType="props.lessonType"
-    :showTaskTimer="showTaskTimer"
-    :showMaterialsOption="showMaterialsOption"
-    :showMaterialsBeforeTask="showMaterialsBeforeTask"
-    :materials="materials"
-    :startTask="startTask"
-    :isFinished="isFinished"
-    :progressPercentage="progressPercentage"
-    :reStudyItems="reStudyWords"
-    :taskResult="taskResult"
-  >
-    <template v-slot:task_content>
-      <div class="col-span-12">
-        <p v-if="timeIsUp" class="font-medium text-center text-danger">
-          {{ $t("time_is_up") }}
-        </p>
-        <p v-else-if="isComplete" class="font-medium text-center text-success">
-          {{ $t("right") }}
-        </p>
-        <p v-else-if="isWrong" class="font-medium text-center text-danger">
-          {{ $t("wrong") }}
-        </p>
-        <p v-else-if="wordsLeft > 0" class="text-center">
-          {{ $t("pages.dictionary.words_left") }}: <b>{{ wordsLeft }}</b>
-        </p>
-      </div>
+  <alert v-if="errors.length > 0" :className="'light'">
+    <p class="mb-0">{{ errors[0] }}</p>
+  </alert>
+  <div v-else-if="taskData && errors.length === 0">
+    <taskLayout
+      v-if="taskData"
+      :task="props.task"
+      :lessonType="props.lessonType"
+      :showTaskTimer="showTaskTimer"
+      :showMaterialsOption="showMaterialsOption"
+      :showMaterialsBeforeTask="showMaterialsBeforeTask"
+      :materials="materials"
+      :startTask="startTask"
+      :isFinished="isFinished"
+      :progressPercentage="progressPercentage"
+      :reStudyItems="reStudyWords"
+      :taskResult="taskResult"
+    >
+      <template v-slot:task_content>
+        <div class="col-span-12">
+          <p v-if="timeIsUp" class="font-medium text-center text-danger">
+            {{ $t("time_is_up") }}
+          </p>
+          <p
+            v-else-if="isComplete"
+            class="font-medium text-center text-success"
+          >
+            {{ $t("right") }}
+          </p>
+          <p v-else-if="isWrong" class="font-medium text-center text-danger">
+            {{ $t("wrong") }}
+          </p>
+          <p v-else-if="wordsLeft > 0" class="text-center">
+            {{ $t("pages.dictionary.words_left") }}: <b>{{ wordsLeft }}</b>
+          </p>
+        </div>
 
-      <div class="col-span-12">
-        <div class="flex justify-center">
-          <countdownCircleTimer
-            :totalSeconds="time"
-            :startCommand="isStarted"
-            :isWrong="isWrong"
-            @timeIsUp="timerIsUp()"
+        <div class="col-span-12">
+          <div class="flex justify-center">
+            <countdownCircleTimer
+              :totalSeconds="time"
+              :startCommand="isStarted"
+              :isWrong="isWrong"
+              @timeIsUp="timerIsUp()"
+            />
+          </div>
+        </div>
+
+        <div
+          v-if="currentWord?.image_file && taskData?.options.show_image"
+          class="col-span-12"
+        >
+          <img
+            v-if="currentWord?.image_file && taskData?.options.show_image"
+            class="w-36 lg:w-40 h-auto mx-auto rounded-xl"
+            :src="
+              config.public.apiBase + '/media/get/' + currentWord?.image_file
+            "
           />
         </div>
-      </div>
 
-      <div
-        v-if="currentWord?.image_file && taskData?.options.show_image"
-        class="col-span-12"
-      >
-        <img
-          v-if="currentWord?.image_file && taskData?.options.show_image"
-          class="w-36 lg:w-40 h-auto mx-auto rounded-xl"
-          :src="config.public.apiBase + '/media/get/' + currentWord?.image_file"
-        />
-      </div>
-
-      <div class="col-span-12">
-        <div class="flex flex-wrap justify-center items-center gap-2">
-          <audioButton
-            v-if="
-              currentWord?.audio_file &&
-              taskData?.options.show_image &&
-              taskData?.options.show_audio_button
-            "
-            :key="currentWord?.audio_file"
-            :src="
-              config.public.apiBase + '/media/get/' + currentWord?.audio_file
-            "
-          />
-          <div
-            v-else-if="
-              currentWord?.audio_file && taskData?.options.show_audio_button
-            "
-            class="w-full"
-          >
-            <audioPlayerWithWave
+        <div class="col-span-12">
+          <div class="flex flex-wrap justify-center items-center gap-2">
+            <audioButton
+              v-if="
+                currentWord?.audio_file &&
+                taskData?.options.show_image &&
+                taskData?.options.show_audio_button
+              "
               :key="currentWord?.audio_file"
               :src="
                 config.public.apiBase + '/media/get/' + currentWord?.audio_file
               "
             />
+            <div
+              v-else-if="
+                currentWord?.audio_file && taskData?.options.show_audio_button
+              "
+              class="w-full"
+            >
+              <audioPlayerWithWave
+                :key="currentWord?.audio_file"
+                :src="
+                  config.public.apiBase +
+                  '/media/get/' +
+                  currentWord?.audio_file
+                "
+              />
+            </div>
           </div>
         </div>
-      </div>
 
-      <div v-if="timeIsUp || isWrong" class="col-span-12">
-        <div class="bg-inactive p-6 rounded-xl text-center">
-          <p class="text-inactive mb-2">{{ $t("right_answer") }}</p>
-          <p class="text-2xl mb-0 font-medium">{{ currentWord?.word }}</p>
+        <div v-if="timeIsUp || isWrong" class="col-span-12">
+          <div class="bg-inactive p-6 rounded-xl text-center">
+            <p class="text-inactive mb-2">{{ $t("right_answer") }}</p>
+            <p class="text-2xl mb-0 font-medium">{{ currentWord?.word }}</p>
+          </div>
         </div>
-      </div>
 
-      <div v-else class="col-span-12">
-        <div class="custom-grid">
-          <div class="col-span-12">
-            <div class="flex justify-center flex-wrap gap-x-1 mb-2">
-              <div
-                v-for="(letter, letterIndex) in currentWord?.word"
-                :key="letterIndex"
-                class="text-3xl font-medium"
-                :class="isComplete && 'text-success'"
-              >
-                <div v-if="letter === ' ' || letter === ''" class="mx-1"></div>
+        <div v-else class="col-span-12">
+          <div class="custom-grid">
+            <div class="col-span-12">
+              <div class="flex justify-center flex-wrap gap-x-1 mb-2">
                 <div
-                  class="text-inactive"
-                  v-else-if="missingLetters.includes(letterIndex + 1)"
+                  v-for="(letter, letterIndex) in currentWord?.word"
+                  :key="letterIndex"
+                  class="text-3xl font-medium"
+                  :class="isComplete && 'text-success'"
                 >
-                  _
+                  <div
+                    v-if="letter === ' ' || letter === ''"
+                    class="mx-1"
+                  ></div>
+                  <div
+                    class="text-inactive"
+                    v-else-if="missingLetters.includes(letterIndex + 1)"
+                  >
+                    _
+                  </div>
+                  <div v-else>
+                    {{ letter }}
+                  </div>
                 </div>
-                <div v-else>
+              </div>
+
+              <p class="text-center text-lg text-inactive mb-1">
+                {{ currentWord?.word_translate }}
+              </p>
+              <p
+                v-if="taskData?.options.show_transcription"
+                class="text-center text-sm text-inactive"
+              >
+                [{{ currentWord?.transcription }}]
+              </p>
+            </div>
+
+            <div v-if="currentWord" class="col-span-12">
+              <div class="flex flex-wrap justify-center gap-1">
+                <button
+                  v-for="(letter, lIndex) in displayedLetters"
+                  :key="`${currentWord?.word}-${lIndex}-${currentWord?.task_word_id}`"
+                  @click="checkWord(letter.toLowerCase(), $event)"
+                  class="letter-btn btn btn-square btn-lg btn-light font-medium lowercase"
+                  :class="isComplete && 'disabled text-hidden'"
+                  v-motion="{
+                    initial: { opacity: 0 },
+                    enter: {
+                      opacity: 1,
+                      transition: {
+                        delay: lIndex * 50,
+                        type: 'spring',
+                        stiffness: 500,
+                        damping: 20,
+                      },
+                    },
+                  }"
+                >
                   {{ letter }}
-                </div>
+                </button>
               </div>
             </div>
 
-            <p class="text-center text-lg text-inactive mb-1">
-              {{ currentWord?.word_translate }}
-            </p>
-            <p
-              v-if="taskData?.options.show_transcription"
-              class="text-center text-sm text-inactive"
-            >
-              [{{ currentWord?.transcription }}]
-            </p>
-          </div>
-
-          <div v-if="currentWord" class="col-span-12">
-            <div class="flex flex-wrap justify-center gap-1">
-              <button
-                v-for="(letter, lIndex) in displayedLetters"
-                :key="`${currentWord?.word}-${lIndex}-${currentWord?.task_word_id}`"
-                @click="checkWord(letter.toLowerCase(), $event)"
-                class="letter-btn btn btn-square btn-lg btn-light font-medium lowercase"
-                :class="isComplete && 'disabled text-hidden'"
-                v-motion="{
-                  initial: { opacity: 0 },
-                  enter: {
-                    opacity: 1,
-                    transition: {
-                      delay: lIndex * 50,
-                      type: 'spring',
-                      stiffness: 500,
-                      damping: 20,
-                    },
-                  },
-                }"
-              >
-                {{ letter }}
-              </button>
+            <div class="col-span-12">
+              <p class="text-inactive text-center hidden lg:block mb-0">
+                {{ $t("pages.training.keyboard.title") }}
+              </p>
             </div>
           </div>
+        </div>
 
-          <div class="col-span-12">
-            <p class="text-inactive text-center hidden lg:block mb-0">
-              {{ $t("pages.training.keyboard.title") }}
-            </p>
+        <div v-if="timeIsUp || isWrong" class="col-span-12">
+          <div class="flex justify-center">
+            <button class="btn btn-primary btn-lg" @click="setWord()">
+              <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
+            </button>
           </div>
         </div>
-      </div>
+      </template>
 
-      <div v-if="timeIsUp || isWrong" class="col-span-12">
-        <div class="flex justify-center">
-          <button class="btn btn-primary btn-lg" @click="setWord()">
-            <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
-          </button>
-        </div>
-      </div>
-    </template>
-
-    <template v-slot:task_result_content>
-      <result :studiedWords="studiedWords" :reStudyWords="reStudyWords" />
-    </template>
-  </taskLayout>
+      <template v-slot:task_result_content>
+        <result :studiedWords="studiedWords" :reStudyWords="reStudyWords" />
+      </template>
+    </taskLayout>
+  </div>
 </template>
 <script setup>
+import alert from "../../../../../ui/alert.vue";
 import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
 import { useToast } from "vue-toastification";
@@ -191,6 +207,7 @@ const config = useRuntimeConfig();
 const toast = useToast();
 const { t } = useI18n();
 const { $axiosPlugin } = useNuxtApp();
+const errors = ref([]);
 
 const showTaskTimer = ref(false);
 const taskData = ref(null);

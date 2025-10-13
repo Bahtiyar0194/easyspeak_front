@@ -1,82 +1,162 @@
 <template>
-  <taskLayout
-    v-if="taskData"
-    :task="props.task"
-    :lessonType="props.lessonType"
-    :showTaskTimer="showTaskTimer"
-    :showMaterialsOption="showMaterialsOption"
-    :showMaterialsBeforeTask="showMaterialsBeforeTask"
-    :materials="materials"
-    :startTask="startTask"
-    :isFinished="isFinished"
-    :progressPercentage="progressPercentage"
-    :reStudyItems="reStudySentences"
-    :taskResult="taskResult"
-  >
-    <template v-slot:task_content>
-      <div class="col-span-12">
-        <p v-if="timeIsUp" class="font-medium text-center text-danger">
-          {{ $t("time_is_up") }}
-        </p>
-        <p v-else-if="sentences.length > 0" class="text-center">
-          {{ $t("pages.sentences.sentences_left") }}:
-          <b>{{ sentences.length }}</b>
-        </p>
-      </div>
-
-      <div class="col-span-12">
-        <div class="flex justify-center items-center">
-          <countdownCircleTimer
-            :totalSeconds="time"
-            :startCommand="isStarted"
-            @timeIsUp="timerIsUp()"
-          />
+  <alert v-if="errors.length > 0" :className="'light'">
+    <p class="mb-0">{{ errors[0] }}</p>
+  </alert>
+  <div v-else-if="taskData && errors.length === 0">
+    <taskLayout
+      v-if="taskData"
+      :task="props.task"
+      :lessonType="props.lessonType"
+      :showTaskTimer="showTaskTimer"
+      :showMaterialsOption="showMaterialsOption"
+      :showMaterialsBeforeTask="showMaterialsBeforeTask"
+      :materials="materials"
+      :startTask="startTask"
+      :isFinished="isFinished"
+      :progressPercentage="progressPercentage"
+      :reStudyItems="reStudySentences"
+      :taskResult="taskResult"
+    >
+      <template v-slot:task_content>
+        <div class="col-span-12">
+          <p v-if="timeIsUp" class="font-medium text-center text-danger">
+            {{ $t("time_is_up") }}
+          </p>
+          <p v-else-if="sentences.length > 0" class="text-center">
+            {{ $t("pages.sentences.sentences_left") }}:
+            <b>{{ sentences.length }}</b>
+          </p>
         </div>
-      </div>
 
-      <div v-if="timeIsUp || isComplete" class="col-span-12">
-        <div class="flex flex-col gap-y-4">
-          <div
-            class="flex flex-col gap-y-2"
-            v-if="currentStudiedSentences.length > 0"
-          >
-            <p class="text-xl font-medium mb-0 text-success">
-              {{
-                currentReStudySentences.length > 0
-                  ? $t("right_answers")
-                  : $t("right")
-              }}
-            </p>
+        <div class="col-span-12">
+          <div class="flex justify-center items-center">
+            <countdownCircleTimer
+              :totalSeconds="time"
+              :startCommand="isStarted"
+              @timeIsUp="timerIsUp()"
+            />
+          </div>
+        </div>
 
-            <ul class="list-group nowrap" ref="rightAnswers">
-              <li
-                v-for="(sentence, sIndex) in currentStudiedSentences"
-                :key="sIndex"
-                class="flex justify-between items-center gap-x-2"
-              >
-                <div class="flex flex-col">
-                  <div class="flex items-center gap-x-2 mb-1">
-                    <div
-                      v-if="sentence.image_file"
-                      :style="{
-                        backgroundImage:
-                          'url(' +
-                          config.public.apiBase +
-                          '/media/get/' +
-                          sentence.image_file +
-                          ')',
-                      }"
-                      class="w-10 h-10 bg-cover bg-no-repeat bg-center"
-                    ></div>
-                    <div :id="'right_answer_' + sentence.task_sentence_id">
-                      <div class="flex gap-x-2 items-center">
-                        <div
-                          class="btn btn-square btn-outline-success pointer-events-none font-medium"
-                        >
-                          {{ sentence.userInput }}
+        <div v-if="timeIsUp || isComplete" class="col-span-12">
+          <div class="flex flex-col gap-y-4">
+            <div
+              class="flex flex-col gap-y-2"
+              v-if="currentStudiedSentences.length > 0"
+            >
+              <p class="text-xl font-medium mb-0 text-success">
+                {{
+                  currentReStudySentences.length > 0
+                    ? $t("right_answers")
+                    : $t("right")
+                }}
+              </p>
+
+              <ul class="list-group nowrap" ref="rightAnswers">
+                <li
+                  v-for="(sentence, sIndex) in currentStudiedSentences"
+                  :key="sIndex"
+                  class="flex justify-between items-center gap-x-2"
+                >
+                  <div class="flex flex-col">
+                    <div class="flex items-center gap-x-2 mb-1">
+                      <div
+                        v-if="sentence.image_file"
+                        :style="{
+                          backgroundImage:
+                            'url(' +
+                            config.public.apiBase +
+                            '/media/get/' +
+                            sentence.image_file +
+                            ')',
+                        }"
+                        class="w-10 h-10 bg-cover bg-no-repeat bg-center"
+                      ></div>
+                      <div :id="'right_answer_' + sentence.task_sentence_id">
+                        <div class="flex gap-x-2 items-center">
+                          <div
+                            class="btn btn-square btn-outline-success pointer-events-none font-medium"
+                          >
+                            {{ sentence.userInput }}
+                          </div>
+
+                          <div class="flex flex-col">
+                            <div class="font-medium">
+                              {{ sentence.sentence }}
+                            </div>
+                          </div>
                         </div>
+                      </div>
+                    </div>
 
-                        <div class="flex flex-col">
+                    <span class="text-xs text-inactive">{{
+                      sentence.sentence_translate
+                    }}</span>
+                  </div>
+
+                  <div class="step-item xs completed">
+                    <div class="step-icon">
+                      <i class="pi pi-check"></i>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div
+              class="flex flex-col gap-y-2"
+              v-if="currentReStudySentences.length > 0"
+            >
+              <p class="text-xl font-medium mb-0 text-danger">
+                {{ $t("for_re_examination") }}
+              </p>
+
+              <ul class="list-group nowrap" ref="wrongAnswers">
+                <li
+                  v-for="(sentence, rIndex) in currentReStudySentences"
+                  :key="rIndex"
+                  class="flex justify-between items-center gap-x-2"
+                >
+                  <div class="flex flex-col gap-2">
+                    <div>
+                      <p class="mb-1 text-inactive font-normal">
+                        {{ $t("your_answer") }}:
+                      </p>
+
+                      <div :id="'user_answer_' + sentence.task_sentence_id">
+                        <div class="flex items-center gap-x-2">
+                          <div
+                            class="btn btn-square btn-outline-danger pointer-events-none font-medium"
+                          >
+                            {{ sentence.userInput }}
+                          </div>
+
+                          <div class="font-medium">
+                            {{ sentence.sentence }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p class="mb-1 text-inactive font-normal">
+                        {{ $t("right_answer") }}:
+                      </p>
+
+                      <div :id="'right_answer_' + sentence.task_sentence_id">
+                        <div class="flex items-center gap-x-2">
+                          <div
+                            class="btn btn-square btn-outline-success pointer-events-none font-medium"
+                          >
+                            {{
+                              currentSentences.findIndex(
+                                (p) =>
+                                  p.task_sentence_id ===
+                                  sentence.task_sentence_id
+                              ) + 1
+                            }}
+                          </div>
+
                           <div class="font-medium">
                             {{ sentence.sentence }}
                           </div>
@@ -85,156 +165,46 @@
                     </div>
                   </div>
 
-                  <span class="text-xs text-inactive">{{
-                    sentence.sentence_translate
-                  }}</span>
-                </div>
-
-                <div class="step-item xs completed">
-                  <div class="step-icon">
-                    <i class="pi pi-check"></i>
+                  <div class="step-item xs failed">
+                    <div class="step-icon">
+                      <i class="pi pi-replay"></i>
+                    </div>
                   </div>
-                </div>
-              </li>
-            </ul>
-          </div>
+                </li>
+              </ul>
+            </div>
 
-          <div
-            class="flex flex-col gap-y-2"
-            v-if="currentReStudySentences.length > 0"
-          >
-            <p class="text-xl font-medium mb-0 text-danger">
-              {{ $t("for_re_examination") }}
-            </p>
-
-            <ul class="list-group nowrap" ref="wrongAnswers">
-              <li
-                v-for="(sentence, rIndex) in currentReStudySentences"
-                :key="rIndex"
-                class="flex justify-between items-center gap-x-2"
+            <div class="btn-wrap right">
+              <button
+                v-if="sentences.length > 0"
+                class="btn btn-outline-primary"
+                @click="setSentences()"
               >
-                <div class="flex flex-col gap-2">
-                  <div>
-                    <p class="mb-1 text-inactive font-normal">
-                      {{ $t("your_answer") }}:
-                    </p>
-
-                    <div :id="'user_answer_' + sentence.task_sentence_id">
-                      <div class="flex items-center gap-x-2">
-                        <div
-                          class="btn btn-square btn-outline-danger pointer-events-none font-medium"
-                        >
-                          {{ sentence.userInput }}
-                        </div>
-
-                        <div class="font-medium">
-                          {{ sentence.sentence }}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p class="mb-1 text-inactive font-normal">
-                      {{ $t("right_answer") }}:
-                    </p>
-
-                    <div :id="'right_answer_' + sentence.task_sentence_id">
-                      <div class="flex items-center gap-x-2">
-                        <div
-                          class="btn btn-square btn-outline-success pointer-events-none font-medium"
-                        >
-                          {{
-                            currentSentences.findIndex(
-                              (p) =>
-                                p.task_sentence_id === sentence.task_sentence_id
-                            ) + 1
-                          }}
-                        </div>
-
-                        <div class="font-medium">
-                          {{ sentence.sentence }}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="step-item xs failed">
-                  <div class="step-icon">
-                    <i class="pi pi-replay"></i>
-                  </div>
-                </div>
-              </li>
-            </ul>
-          </div>
-
-          <div class="btn-wrap right">
-            <button
-              v-if="sentences.length > 0"
-              class="btn btn-outline-primary"
-              @click="setSentences()"
-            >
-              <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
-            </button>
-            <button v-else class="btn btn-light" @click="isFinished = true">
-              <i class="pi pi-check"></i>
-              {{ $t("pages.tasks.complete_the_task") }}
-            </button>
+                <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
+              </button>
+              <button v-else class="btn btn-light" @click="isFinished = true">
+                <i class="pi pi-check"></i>
+                {{ $t("pages.tasks.complete_the_task") }}
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div v-else class="col-span-12">
-        <div class="custom-grid">
-          <div
-            :class="
-              taskData.options.sentence_material_type_slug == 'audio'
-                ? 'col-span-12'
-                : 'col-span-12 lg:col-span-6'
-            "
-            v-for="(sentence, sentenceIndex) in currentSentenceMaterials"
-            :key="sentenceIndex"
-          >
+        <div v-else class="col-span-12">
+          <div class="custom-grid">
             <div
-              v-if="taskData.options.sentence_material_type_slug == 'audio'"
-              class="flex gap-3 items-center text-lg"
+              :class="
+                taskData.options.sentence_material_type_slug == 'audio'
+                  ? 'col-span-12'
+                  : 'col-span-12 lg:col-span-6'
+              "
+              v-for="(sentence, sentenceIndex) in currentSentenceMaterials"
+              :key="sentenceIndex"
             >
               <div
-                @click="focusInput($event)"
-                class="btn btn-square btn-lg flex justify-center items-center ml-1"
-                :class="
-                  checkingStatus === true &&
-                  (sentence.userInput === '' || sentence.userInput === ' ')
-                    ? 'pulse btn-danger'
-                    : 'btn-outline-primary'
-                "
+                v-if="taskData.options.sentence_material_type_slug == 'audio'"
+                class="flex gap-3 items-center text-lg"
               >
-                <input
-                  v-model="sentence.userInput"
-                  @input="changeFocus($event)"
-                  type="text"
-                  class="user_input"
-                  :style="{
-                    width:
-                      currentSentences.length.toString().length + 0.5 + 'ch',
-                    textAlign: 'center',
-                  }"
-                  :maxlength="currentSentences.length.toString().length"
-                />
-              </div>
-              <div class="w-full">
-                <audioPlayerWithWave
-                  :src="
-                    config.public.apiBase +
-                    '/media/get/' +
-                    sentence.material.target
-                  "
-                />
-              </div>
-            </div>
-            <div v-else class="relative">
-              <div class="absolute left-2 top-2 z-10">
                 <div
                   @click="focusInput($event)"
                   class="btn btn-square btn-lg flex justify-center items-center ml-1"
@@ -242,7 +212,7 @@
                     checkingStatus === true &&
                     (sentence.userInput === '' || sentence.userInput === ' ')
                       ? 'pulse btn-danger'
-                      : 'btn-active bg-active'
+                      : 'btn-outline-primary'
                   "
                 >
                   <input
@@ -258,70 +228,111 @@
                     :maxlength="currentSentences.length.toString().length"
                   />
                 </div>
+                <div class="w-full">
+                  <audioPlayerWithWave
+                    :src="
+                      config.public.apiBase +
+                      '/media/get/' +
+                      sentence.material.target
+                    "
+                  />
+                </div>
               </div>
-              <videoPlayer
-                v-if="taskData.options.sentence_material_type_slug === 'video'"
-                :src="
-                  config.public.apiBase +
-                  '/media/get/' +
-                  sentence.material.target
-                "
-              />
-              <img
-                v-else-if="
-                  taskData.options.sentence_material_type_slug === 'image'
-                "
-                :src="
-                  config.public.apiBase +
-                  '/media/get/' +
-                  sentence.material.target
-                "
-                class="w-full h-auto"
-              />
+              <div v-else class="relative">
+                <div class="absolute left-2 top-2 z-10">
+                  <div
+                    @click="focusInput($event)"
+                    class="btn btn-square btn-lg flex justify-center items-center ml-1"
+                    :class="
+                      checkingStatus === true &&
+                      (sentence.userInput === '' || sentence.userInput === ' ')
+                        ? 'pulse btn-danger'
+                        : 'btn-active bg-active'
+                    "
+                  >
+                    <input
+                      v-model="sentence.userInput"
+                      @input="changeFocus($event)"
+                      type="text"
+                      class="user_input"
+                      :style="{
+                        width:
+                          currentSentences.length.toString().length +
+                          0.5 +
+                          'ch',
+                        textAlign: 'center',
+                      }"
+                      :maxlength="currentSentences.length.toString().length"
+                    />
+                  </div>
+                </div>
+                <videoPlayer
+                  v-if="
+                    taskData.options.sentence_material_type_slug === 'video'
+                  "
+                  :src="
+                    config.public.apiBase +
+                    '/media/get/' +
+                    sentence.material.target
+                  "
+                />
+                <img
+                  v-else-if="
+                    taskData.options.sentence_material_type_slug === 'image'
+                  "
+                  :src="
+                    config.public.apiBase +
+                    '/media/get/' +
+                    sentence.material.target
+                  "
+                  class="w-full h-auto"
+                />
+              </div>
             </div>
-          </div>
 
-          <div class="col-span-12">
-            <ul class="list-group nowrap">
-              <li
-                v-for="(sentence, sentenceIndex) in currentSentences"
-                :key="sentenceIndex"
-                class="list-item"
-              >
-                <span class="font-medium text-lg"
-                  ><span class="text-corp">{{ sentenceIndex + 1 }}. </span
-                  >{{ sentence.sentence }}</span
+            <div class="col-span-12">
+              <ul class="list-group nowrap">
+                <li
+                  v-for="(sentence, sentenceIndex) in currentSentences"
+                  :key="sentenceIndex"
+                  class="list-item"
                 >
-              </li>
-            </ul>
-          </div>
+                  <span class="font-medium text-lg"
+                    ><span class="text-corp">{{ sentenceIndex + 1 }}. </span
+                    >{{ sentence.sentence }}</span
+                  >
+                </li>
+              </ul>
+            </div>
 
-          <div class="col-span-12">
-            <div class="btn-wrap right">
-              <button
-                class="btn btn-outline-primary"
-                :class="checkingStatus && 'disabled'"
-                @click="acceptAnswers()"
-              >
-                <i class="pi pi-check"></i>
-                {{ $t("check") }}
-              </button>
+            <div class="col-span-12">
+              <div class="btn-wrap right">
+                <button
+                  class="btn btn-outline-primary"
+                  :class="checkingStatus && 'disabled'"
+                  @click="acceptAnswers()"
+                >
+                  <i class="pi pi-check"></i>
+                  {{ $t("check") }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    </template>
+      </template>
 
-    <template v-slot:task_result_content>
-      <result
-        :studiedSentences="studiedSentences"
-        :reStudySentences="reStudySentences"
-      />
-    </template>
-  </taskLayout>
+      <template v-slot:task_result_content>
+        <result
+          :studiedSentences="studiedSentences"
+          :reStudySentences="reStudySentences"
+        />
+      </template>
+    </taskLayout>
+  </div>
 </template>
 
 <script setup>
+import alert from "../../../../../ui/alert.vue";
 import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
 import taskLayout from "../../taskLayout.vue";
@@ -333,6 +344,7 @@ import result from "../../results/sentences/result.vue";
 const router = useRouter();
 const config = useRuntimeConfig();
 const { $axiosPlugin } = useNuxtApp();
+const errors = ref([]);
 
 const showTaskTimer = ref(false);
 const taskData = ref(null);
