@@ -416,11 +416,7 @@ a:hover{
 }
 
 .link{
-  @apply cursor-pointer duration-200;
-}
-
-.link:hover{
-  @apply text-corp;
+  @apply cursor-pointer text-corp duration-200;
 }
 
 p {
@@ -902,7 +898,7 @@ select.error:has(option:checked:disabled) {
 .custom-radio > input:checked + span,
 .custom-radio-checkbox > input:checked + span,
 .custom-checkbox > input:checked + span{
-  @apply text-corp cursor-default;
+  @apply cursor-default;
 }
 
 .custom-radio > input:checked + span.error,

@@ -184,8 +184,6 @@ const domainName = ref("");
 const selections = ref([]);
 const { errors, locations } = toRefs(props);
 
-const schoolStore = useSchoolStore();
-
 const onSelectLocation = (levelIndex) => {
   const selectedLevel = selections.value[levelIndex];
   const selectedOption = selectedLevel.options.find(

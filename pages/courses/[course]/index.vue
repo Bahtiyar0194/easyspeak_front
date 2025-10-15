@@ -46,156 +46,100 @@
         <h4 v-if="currentLevel">{{ currentLevel.level_name }}</h4>
       </template>
       <template v-slot:body_content>
-        <p class="mb-0" v-if="requestIsSended === true">
-          {{ $t("pages.courses.modal.sended") }}
-        </p>
-        <template v-else>
-          <p>
-            {{ $t("pages.courses.modal.description") }}
-          </p>
-          <form @submit.prevent="sendRequest" ref="formRef">
-            <div class="custom-grid">
-              <template v-if="!isSubdomain()">
-                <div
-                  v-for="(level, index) in selections"
-                  :key="index"
-                  class="col-span-12"
-                >
-                  <div class="form-group-border select active label-active">
-                    <i class="pi pi-map-marker"></i>
-                    <select
-                      v-model="level.selectedId"
-                      @change="onSelectLocation(index)"
-                      :name="
-                        index === selections.length - 1 ? 'location_id' : null
-                      "
-                    >
-                      <option disabled value="">
-                        {{ $t("form.select_a_point") }}
-                      </option>
-                      <option
-                        v-for="option in level.options"
-                        :key="option.location_id"
-                        :value="option.location_id"
-                      >
-                        {{ option.location_name }}
-                      </option>
-                    </select>
-                    <label
-                      :class="{
-                        'label-error':
-                          errors.location_id && index === selections.length - 1,
-                      }"
-                    >
-                      {{
-                        $t(
-                          index > 0
-                            ? "form.select_an_internal_point"
-                            : "form.select_a_point"
-                        )
-                      }}
-                    </label>
-                  </div>
-                </div>
-
-                <div class="col-span-12" v-if="schools.length > 0">
-                  <div class="form-group-border select active label-active">
-                    <i class="pi pi-building-columns"></i>
-                    <select name="school_id">
-                      <option disabled selected value="">
-                        {{ $t("form.select_a_school") }}
-                      </option>
-                      <option
-                        v-for="school in schools"
-                        :key="school.school_id"
-                        :value="school.school_id"
-                        v-html="
-                          `${school.school_name} (${school.full_school_name})`
-                        "
-                      />
-                    </select>
-                    <label
-                      :class="{
-                        'label-error': errors.school_id,
-                      }"
-                    >
-                      {{ $t("form.select_a_school") }}
-                    </label>
-                  </div>
-                </div>
-              </template>
-
-              <div
-                v-if="
-                  errors.school_id && schools.length === 0 && selectedLocationId
-                "
-                class="col-span-12"
-              >
-                <p class="text-danger mb-0">
-                  {{ $t("form.schools_not_found") }}
+        <form @submit.prevent="sendRequest" ref="formRef">
+          <div class="custom-grid">
+            <div class="col-span-12">
+              <div class="bg-corp text-white p-4 rounded-xl">
+                <p class="mb-1">
+                  <b>
+                    {{ $t("pages.courses.modal.description") }}
+                  </b>
                 </p>
               </div>
-
-              <div class="col-span-12">
-                <div class="form-group-border active">
-                  <i class="pi pi-user"></i>
-                  <input
-                    autoComplete="new-user-name"
-                    name="first_name"
-                    type="text"
-                    placeholder=" "
-                  />
-                  <label :class="{ 'label-error': errors.first_name }">
-                    {{
-                      errors.first_name
-                        ? errors.first_name[0]
-                        : $t("form.first_name")
-                    }}
-                  </label>
-                </div>
-              </div>
-
-              <div class="col-span-12">
-                <div class="form-group-border active">
-                  <i class="pi pi-mobile"></i>
-                  <input
-                    autoComplete="phone"
-                    name="phone"
-                    v-mask="'+7 (###) ###-####'"
-                    placeholder=" "
-                  />
-                  <label :class="{ 'label-error': errors.phone }">
-                    {{ errors.phone ? errors.phone[0] : $t("form.phone") }}
-                  </label>
-                </div>
-              </div>
-
-              <div class="col-span-12">
-                <label class="custom-radio-checkbox">
-                  <input type="checkbox" v-model="accept" />
-                  <span
-                    ><p>
-                      {{ $t("pages.home.demo_modal.consent.text") }}
-                      <nuxt-link to="/privacy-policy" target="_blank">{{
-                        $t("pages.home.demo_modal.consent.link")
-                      }}</nuxt-link
-                      >{{ $t("pages.home.demo_modal.consent.text_2") }}
-                    </p></span
+            </div>
+            <div
+              v-for="(level, index) in selections"
+              :key="index"
+              class="col-span-12"
+            >
+              <div class="form-group-border select active label-active">
+                <i class="pi pi-map-marker"></i>
+                <select
+                  v-model="level.selectedId"
+                  @change="onSelectLocation(index)"
+                  :name="index === selections.length - 1 ? 'location_id' : null"
+                >
+                  <option disabled value="">
+                    {{ $t("form.select_a_point") }}
+                  </option>
+                  <option
+                    v-for="option in level.options"
+                    :key="option.location_id"
+                    :value="option.location_id"
                   >
+                    {{ option.location_name }}
+                  </option>
+                </select>
+                <label
+                  :class="{
+                    'label-error':
+                      errors.location_id && index === selections.length - 1,
+                  }"
+                >
+                  {{
+                    $t(
+                      index > 0
+                        ? "form.select_an_internal_point"
+                        : "form.select_a_point"
+                    )
+                  }}
                 </label>
               </div>
-
-              <button
-                type="submit"
-                class="btn btn-primary"
-                :class="!accept ? 'disabled' : ''"
-              >
-                <i class="pi pi-arrow-right"></i>
-                {{ $t("continue") }}
-              </button>
             </div>
-          </form>
-        </template>
+
+            <div class="col-span-12" v-if="schools.length > 0">
+              <div class="form-group-border select active label-active">
+                <i class="pi pi-building-columns"></i>
+                <select name="school_id">
+                  <option disabled selected value="">
+                    {{ $t("form.select_a_school") }}
+                  </option>
+                  <option
+                    v-for="school in schools"
+                    :key="school.school_id"
+                    :value="school.school_id"
+                    v-html="
+                      `${school.school_name} (${school.full_school_name})`
+                    "
+                  />
+                </select>
+                <label
+                  :class="{
+                    'label-error': errors.school_id,
+                  }"
+                >
+                  {{ $t("form.select_a_school") }}
+                </label>
+              </div>
+            </div>
+
+            <div
+              v-if="
+                errors.school_id && schools.length === 0 && selectedLocationId
+              "
+              class="col-span-12"
+            >
+              <p class="text-danger mb-0">
+                {{ $t("form.schools_not_found") }}
+              </p>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+              <i class="pi pi-arrow-right"></i>
+              {{ $t("continue") }}
+            </button>
+          </div>
+        </form>
       </template>
     </modal>
   </client-only>
@@ -207,6 +151,7 @@ import loader from "../../../../components/ui/loader.vue";
 import { isSubdomain } from "../../../utils/isSubdomain";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
+const authUser = useSanctumUser();
 const { localeProperties } = useI18n();
 const config = useRuntimeConfig();
 const router = useRouter();
@@ -219,15 +164,12 @@ const levels = ref([]);
 const currentLevel = ref(null);
 const levelModalIsVisible = ref(false);
 const pendingSend = ref(false);
-const requestIsSended = ref(false);
-const accept = ref(false);
 const errors = ref([]);
 const formRef = ref(null);
 
 const locations = ref([]);
 const selectedLocationId = ref(null);
 const selections = ref([]);
-const schoolStore = useSchoolStore();
 const schools = ref([]);
 
 const pageTitle = ref("");
@@ -323,7 +265,22 @@ const getSchools = async (location_id) => {
 
 const selectLevel = (levelIndex) => {
   currentLevel.value = levels.value[levelIndex];
-  levelModalIsVisible.value = true;
+  if (!isSubdomain()) {
+    levelModalIsVisible.value = true;
+  } else {
+    if (authUser.value) {
+      router.push(
+        "/dashboard/courses/" +
+          currentLevel.value.course_name_slug +
+          "/" +
+          currentLevel.value.level_slug
+      );
+    } else {
+      router.push(
+        "/auth/register?course=" + currentLevel.value.course_name_slug
+      );
+    }
+  }
 };
 
 const onSelectLocation = (levelIndex) => {
@@ -353,17 +310,18 @@ const sendRequest = async () => {
   const formData = new FormData(formRef.value);
   formData.append("lang", localeProperties.value.code);
 
-  if (!isSubdomain) {
-    formData.append("school_domain", schoolStore.schoolData.school_domain);
-    formData.append("school_id", schoolStore.schoolData.school_id);
-  }
-
   await $axiosPlugin
-    .post("/courses/send_request/" + currentLevel.value.level_id, formData)
+    .post("/courses/send_request", formData)
     .then((res) => {
-      requestIsSended.value = true;
-      pendingSend.value = false;
-      errors.value = [];
+      const url =
+        window.location.protocol +
+        "//" +
+        res.data +
+        "." +
+        window.location.host +
+        "/auth/register?course=" +
+        currentLevel.value.course_name_slug;
+      window.location.href = url;
     })
     .catch((err) => {
       if (err.response) {

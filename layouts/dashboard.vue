@@ -72,6 +72,7 @@ import { useRoute } from "nuxt/app";
 const authUser = useSanctumUser();
 const menuWrapper = ref(null);
 const showMenu = ref(false);
+const route = useRoute();
 
 const dashboardMenu = [
   {
@@ -142,8 +143,6 @@ const dashboardMenu = [
     roles: [1]
   }
 ];
-
-const route = useRoute();
 
 const hasAccess = computed(() => {
   const currentMenuItem = dashboardMenu.find(
