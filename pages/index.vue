@@ -151,12 +151,12 @@
     </div>
   </section>
 
-  <section id="slider" class="py-16 px-4 lg:px-20 bg-active">
+  <!-- <section id="slider" class="py-16 px-4 lg:px-20 bg-active">
     <h2 class="text-center mb-8">
       {{ $t("pages.home.section_4.title") }}
     </h2>
     <keenSliderThumbs :images="images" />
-  </section>
+  </section> -->
 
   <section id="demo" class="py-20 px-4 bg-corp text-white text-center">
     <div class="flex flex-col justify-center items-center text-center">

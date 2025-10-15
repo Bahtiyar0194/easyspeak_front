@@ -11,7 +11,7 @@
     </div>
 
     <div class="col-span-12" v-if="schoolStore.schoolData">
-      <div class="border p-4 rounded-xl">
+      <div class="border-inactive p-4 rounded-xl">
         <p class="mb-1">
           {{ $t("form.school_name") }}:
           <b>{{ schoolStore.schoolData.school_name }}</b>

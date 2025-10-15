@@ -29,7 +29,7 @@
               </label>
             </div>
 
-            <div v-else class="border-corp border p-4 mb-5 rounded-xl">
+            <div v-else class="border-inactive p-4 mb-5 rounded-xl">
               <p class="mb-1">
                 {{ $t("form.school_name") }}:
                 <b>{{ schoolStore.schoolData.school_name }}</b>
