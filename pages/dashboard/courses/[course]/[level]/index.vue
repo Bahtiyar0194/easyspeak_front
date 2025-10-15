@@ -23,6 +23,16 @@
         </div>
       </div>
 
+      <div v-if="lessonsData.level.is_available_always === 1" class="col-span-12">
+        <div class="bg-corp text-white p-4 rounded-xl">
+          <p class="mb-1">
+            <b>
+              {{ $t("pages.courses.modal.description_alt") }}
+            </b>
+          </p>
+        </div>
+      </div>
+
       <div
         v-if="lessonsData && lessonsData.level.completed_percent > 0"
         class="col-span-12"
