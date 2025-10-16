@@ -1,6 +1,6 @@
 <template>
   <!-- Hero -->
-  <section class="py-20 px-4 relative">
+  <section class="py-32 px-4 relative">
     <div class="slider-area">
       <ul class="slider-circles">
         <li></li>
@@ -30,12 +30,20 @@
         <p class="text-lg mb-6">
           {{ $t("pages.home.hero.description") }}
         </p>
-        <button
-          @click="demoModalIsVisible = true"
-          class="btn btn-primary btn-lg !px-8"
-        >
-          {{ $t("pages.home.demo.request_button") }}
-        </button>
+        <div class="btn-wrap justify-center">
+          <button
+            @click="demoModalIsVisible = true"
+            class="btn btn-primary btn-lg !px-8"
+          >
+            {{ $t("pages.home.demo.request_button") }}
+          </button>
+          <nuxt-link
+            :to="localePath('/courses')"
+            class="btn btn-lg !px-8 btn-light mx-auto"
+          >
+            {{ $t("pages.courses.go_to_courses") }}
+          </nuxt-link>
+        </div>
       </div>
     </div>
   </section>
@@ -59,7 +67,6 @@
             :to="localePath('/courses')"
             class="btn btn-lg !px-8 btn-primary mx-auto mt-6"
           >
-            <i class="pi pi-book"></i>
             {{ $t("pages.courses.go_to_courses") }}
           </nuxt-link>
         </div>
@@ -75,6 +82,13 @@
             <li>✅ {{ $t("pages.home.section_2.card_1.item_3") }}</li>
             <li>✅ {{ $t("pages.home.section_2.card_1.item_4") }}</li>
           </ul>
+
+          <button
+            @click="demoModalIsVisible = true"
+            class="btn btn-primary mx-auto btn-lg !px-8 mt-6"
+          >
+            {{ $t("pages.home.demo.request_button") }}
+          </button>
         </div>
       </div>
     </div>
