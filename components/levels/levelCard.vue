@@ -3,11 +3,7 @@
     class="card relative overflow-hidden group"
     :class="level.is_available === false ? 'grayscale' : ''"
   >
-    <img
-      :src="
-        config.public.apiBase + '/media/get/' + level.course_name_slug + '.png'
-      "
-    />
+    <img :src="`/images/courses/${level.course_name_slug}.png`" />
 
     <div
       class="absolute left-0 bottom-0 w-full group-hover:h-full transition-all duration-200 bg-black bg-opacity-80 flex justify-center items-center group-hover:items-center px-4"

@@ -1,12 +1,7 @@
 <template>
   <div class="card relative overflow-hidden group">
     <img
-      :src="
-        config.public.apiBase +
-        '/media/get/' +
-        props.course.course_name_slug +
-        '.png'
-      "
+      :src="`/images/courses/${props.course.course_name_slug}.png`"
     />
 
     <div
