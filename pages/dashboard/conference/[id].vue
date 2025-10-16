@@ -1,7 +1,7 @@
 <template>
   <div v-if="pendingConference" class="col-span-12">
     <div class="card p-6 flex flex-col justify-center items-center">
-      <h4 class="mb-2">{{ pendingConference.message }}</h4>
+      <h5 class="mb-2">{{ pendingConference.message }}</h5>
       <p class="mb-0">
         {{ $t("pages.conference.until_the_start_of_the_conference") }}
         <b class="text-danger">
@@ -15,7 +15,7 @@
   </div>
   <div v-else-if="endedConference" class="col-span-12">
     <div class="card p-6 flex flex-col justify-center items-center">
-      <h4 class="mb-3">{{ endedConference.message }}</h4>
+      <h5 class="mb-3">{{ endedConference.message }}</h5>
       <nuxt-link
         class="btn btn-sm btn-outline-primary"
         :to="localePath('/dashboard')"
@@ -62,7 +62,7 @@
         <sliderMode v-else-if="confMode === 'slider'" :streams="streams" />
       </div>
 
-      <div class="db__footer__menu">
+      <div v-if="authUser" class="db__footer__menu">
         <button
           @click="toggleMute"
           :title="
@@ -174,7 +174,7 @@
       :closeOnClickSelf="true"
     >
       <template v-slot:header_content>
-        <h4>{{ $t("pages.conference.participants") }}</h4>
+        <h5>{{ $t("pages.conference.participants") }}</h5>
       </template>
       <template v-slot:body_content>
         <div class="flex flex-col gap-y-4">
@@ -278,7 +278,7 @@
       :closeOnClickSelf="false"
     >
       <template v-slot:header_content>
-        <h4>{{ $t("pages.conference.board") }}</h4>
+        <h5>{{ $t("pages.conference.board") }}</h5>
       </template>
       <template v-slot:body_content>
         <drawingBoard :streams_length="streams.length" />
@@ -292,7 +292,7 @@
       :closeOnClickSelf="true"
     >
       <template v-slot:header_content>
-        <h4>{{ $t("pages.conference.chat") }}</h4>
+        <h5>{{ $t("pages.conference.chat") }}</h5>
       </template>
       <template v-slot:body_content>
         <div v-if="messages.length > 0" class="max-h-[300px] overflow-y-scroll">
@@ -365,7 +365,7 @@
       :closeOnClickSelf="false"
     >
       <template v-slot:header_content>
-        <h4>{{ $t("materials.title") }}</h4>
+        <h5>{{ $t("materials.title") }}</h5>
       </template>
       <template
         v-slot:body_content
@@ -413,7 +413,7 @@
       :closeOnClickSelf="false"
     >
       <template v-if="currentMaterial" v-slot:header_content>
-        <h4>{{ currentMaterial?.annotation }}</h4>
+        <h5>{{ currentMaterial?.annotation }}</h5>
       </template>
       <template v-if="currentMaterial" v-slot:body_content>
         <div
@@ -463,7 +463,7 @@
       :closeOnClickSelf="false"
     >
       <template v-slot:header_content>
-        <h4>{{ $t("pages.tasks.title") }}</h4>
+        <h5>{{ $t("pages.tasks.title") }}</h5>
       </template>
       <template v-slot:body_content v-if="conference">
         <div class="custom-grid">
@@ -642,7 +642,7 @@
       :closeOnClickSelf="false"
     >
       <template v-slot:header_content>
-        <h3>{{ task ? task.task_slug : $t("pages.tasks.adding_a_task") }}</h3>
+        <h5>{{ task ? task.task_slug : $t("pages.tasks.adding_a_task") }}</h5>
       </template>
       <template v-slot:body_content>
         <component :is="currentTaskModal" v-bind="taskModalProps" />
@@ -657,7 +657,7 @@
       :closeOnClickSelf="false"
     >
       <template v-slot:header_content v-if="task">
-        <h4>{{ task.task_slug }}</h4>
+        <h5>{{ task.task_slug }}</h5>
       </template>
       <template
         v-slot:body_content
@@ -675,7 +675,7 @@
       :closeOnClickSelf="false"
     >
       <template v-slot:header_content v-if="task">
-        <h4>{{ task.task_slug }}</h4>
+        <h5>{{ task.task_slug }}</h5>
       </template>
       <template v-slot:body_content v-if="task">
         <div class="custom-grid">
@@ -793,7 +793,7 @@
       :closeOnClickSelf="false"
     >
       <template v-slot:header_content v-if="currentLearner && task">
-        <h4>{{ task.task_slug }}</h4>
+        <h5>{{ task.task_slug }}</h5>
       </template>
       <template
         v-slot:body_content

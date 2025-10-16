@@ -180,7 +180,7 @@
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
-      <h3>{{ task ? task.task_slug : $t("pages.tasks.adding_a_task") }}</h3>
+      <h5>{{ task ? task.task_slug : $t("pages.tasks.adding_a_task") }}</h5>
     </template>
     <template v-slot:body_content>
       <component :is="currentModal" v-bind="modalProps" />
@@ -195,7 +195,7 @@
     :closeOnClickSelf="true"
   >
     <template v-slot:header_content>
-      <h4>{{ $t("pages.tasks.delete_task") }}</h4>
+      <h5>{{ $t("pages.tasks.delete_task") }}</h5>
     </template>
     <template v-slot:body_content>
       <p>{{ $t("pages.tasks.delete_confirm") }}</p>
@@ -220,7 +220,7 @@
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content v-if="task">
-      <h4>{{ task.task_slug }}</h4>
+      <h5>{{ task.task_slug }}</h5>
     </template>
     <template v-slot:body_content v-if="task && task.task_result.answers">
       <taskResultChart :taskResult="task.task_result">

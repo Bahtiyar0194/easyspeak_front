@@ -134,7 +134,7 @@
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
-      <h4>{{ currentMaterial?.annotation }}</h4>
+      <h5>{{ currentMaterial?.annotation }}</h5>
     </template>
     <template v-slot:body_content>
       <div class="custom-grid">
@@ -161,7 +161,7 @@
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
-      <h4>{{ $t("materials.add_material") }}</h4>
+      <h5>{{ $t("materials.add_material") }}</h5>
     </template>
     <template v-slot:body_content>
       <form @submit.prevent="addMaterialSubmit" ref="addFormRef">
@@ -222,7 +222,7 @@
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
-      <h4>{{ $t("materials.edit_material") }}</h4>
+      <h5>{{ $t("materials.edit_material") }}</h5>
     </template>
     <template v-if="currentMaterial" v-slot:body_content>
       <form @submit.prevent="editMaterialSubmit" ref="editFormRef">
@@ -313,7 +313,7 @@
     :closeOnClickSelf="true"
   >
     <template v-slot:header_content>
-      <h4>{{ $t("materials.delete_material") }}</h4>
+      <h5>{{ $t("materials.delete_material") }}</h5>
     </template>
     <template v-slot:body_content>
       <p>{{ $t("materials.delete_confirm") }}</p>
