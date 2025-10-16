@@ -1,6 +1,6 @@
 <template>
   <!-- Hero -->
-  <section class="py-32 px-4 relative">
+  <section class="py-20 px-4 relative">
     <div class="slider-area">
       <ul class="slider-circles">
         <li></li>
@@ -43,11 +43,11 @@
   <section class="bg-corp py-20 px-4 lg:px-20">
     <div class="custom-grid">
       <div class="col-span-12 md:col-span-6">
-        <div class="card px-4 lg:px-6 py-12 !rounded-3xl">
+        <div class="card px-4 lg:px-8 py-8 !rounded-3xl">
           <h2 class="mb-8 text-center">
             {{ $t("pages.home.section_2.card_1.title") }}
           </h2>
-          <ul class="px-0 space-y-4 list-none text-lg mb-4">
+          <ul class="px-0 space-y-2 list-none text-lg mb-4">
             <li>🎓 {{ $t("pages.home.section_2.card_1.item_1") }}</li>
             <li>📱 {{ $t("pages.home.section_2.card_1.item_2") }}</li>
             <li>💬 {{ $t("pages.home.section_2.card_1.item_3") }}</li>
@@ -57,7 +57,7 @@
 
           <nuxt-link
             :to="localePath('/courses')"
-            class="btn btn-lg !px-8 btn-primary mx-auto mt-8"
+            class="btn btn-lg !px-8 btn-primary mx-auto mt-6"
           >
             <i class="pi pi-book"></i>
             {{ $t("pages.courses.go_to_courses") }}
@@ -65,11 +65,11 @@
         </div>
       </div>
       <div class="col-span-12 md:col-span-6">
-        <div class="card px-4 lg:px-6 py-12 !rounded-3xl">
+        <div class="card px-4 lg:px-8 py-8 !rounded-3xl">
           <h2 class="mb-8 text-center">
             {{ $t("pages.home.section_2.card_2.title") }}
           </h2>
-          <ul class="px-0 space-y-4 list-none text-lg">
+          <ul class="px-0 space-y-2 list-none text-lg">
             <li>✅ {{ $t("pages.home.section_2.card_1.item_1") }}</li>
             <li>✅ {{ $t("pages.home.section_2.card_1.item_2") }}</li>
             <li>✅ {{ $t("pages.home.section_2.card_1.item_3") }}</li>
