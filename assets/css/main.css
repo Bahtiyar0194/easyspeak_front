@@ -411,10 +411,6 @@ a {
   @apply cursor-pointer duration-200 text-corp;
 }
 
-a:hover{
-  @apply text-active;
-}
-
 .link{
   @apply cursor-pointer text-corp duration-200;
 }

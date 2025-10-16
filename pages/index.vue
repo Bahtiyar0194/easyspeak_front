@@ -31,18 +31,18 @@
           {{ $t("pages.home.hero.description") }}
         </p>
         <div class="btn-wrap justify-center">
+          <nuxt-link
+            :to="localePath('/courses')"
+            class="btn btn-lg !px-8 btn-primary mx-auto"
+          >
+            {{ $t("pages.courses.go_to_courses") }}
+          </nuxt-link>
           <button
             @click="demoModalIsVisible = true"
             class="btn btn-primary btn-lg !px-8"
           >
             {{ $t("pages.home.demo.request_button") }}
           </button>
-          <nuxt-link
-            :to="localePath('/courses')"
-            class="btn btn-lg !px-8 btn-light mx-auto"
-          >
-            {{ $t("pages.courses.go_to_courses") }}
-          </nuxt-link>
         </div>
       </div>
     </div>
