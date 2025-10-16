@@ -1641,7 +1641,7 @@ select.error:has(option:checked:disabled) {
 
 .modal-body{
   @apply overflow-y-auto overflow-x-hidden;
-  max-height: 80vh;
+  max-height: 70vh;
 }
 
 .modal-footer{
@@ -2147,4 +2147,10 @@ select.error:has(option:checked:disabled) {
 
 #confetti-canvas {
   @apply absolute top-0 left-0 w-full h-full pointer-events-none;
+}
+
+@media (max-height: 700px) {
+  .modal-body {
+    max-height: 64vh;
+  }
 }
