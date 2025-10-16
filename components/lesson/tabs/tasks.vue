@@ -104,9 +104,9 @@
                       : openTask(taskItem)
                   "
                 >
-                  <i class="text-3xl" :class="taskItem.icon"></i>
+                  <i class="text-3xl text-active" :class="taskItem.icon"></i>
                   <div class="flex flex-col gap-y-0.5">
-                    <span class="font-medium">{{ taskItem.task_slug }}</span>
+                    <span class="font-medium text-active">{{ taskItem.task_slug }}</span>
                     <span class="text-inactive text-xs">{{
                       taskItem.task_type_name
                     }}</span>

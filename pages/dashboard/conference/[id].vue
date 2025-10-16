@@ -384,11 +384,11 @@
                 @click="openMaterial(material)"
               >
                 <i
-                  class="text-3xl"
+                  class="text-3xl text-active"
                   :class="material.file_icon || material.block_icon"
                 ></i>
                 <div class="flex flex-col gap-y-0.5">
-                  <span>{{ material.annotation }}</span>
+                  <span class="font-bold text-active">{{ material.annotation }}</span>
                   <span class="text-inactive text-xs">{{
                     material.file_material_type_name ||
                     material.block_material_type_name
@@ -548,7 +548,8 @@
               <li v-for="taskItem in tasks" :key="taskItem.task_id">
                 <div class="flex items-center justify-between gap-4">
                   <div
-                    class="flex gap-2 items-center cursor-pointer w-full"
+                    class="flex gap-2 items-center w-full"
+                    :class="(!taskItem.launched && conference.mentor_id !== authUser.user_id) ? 'cursor-not-allowed' : 'cursor-pointer'"
                     @click="
                       conference.mentor_id === authUser.user_id
                         ? openLearnersTasksModal(taskItem)

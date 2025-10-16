@@ -66,11 +66,11 @@
               @click="openMaterial(material)"
             >
               <i
-                class="text-3xl"
+                class="text-3xl text-active"
                 :class="material.file_icon || material.block_icon"
               ></i>
               <div class="flex flex-col gap-y-0.5">
-                <span>{{ material.annotation }}</span>
+                <span class="font-bold text-active">{{ material.annotation }}</span>
                 <span class="text-inactive text-xs">{{
                   material.file_material_type_name ||
                   material.block_material_type_name
