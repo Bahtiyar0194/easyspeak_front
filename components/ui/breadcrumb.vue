@@ -20,26 +20,26 @@ const { t } = useI18n();
 const route = useRoute();
 
 const crumbs = computed(() => {
-  // Разбиваем путь на отдельные части
-  let fullPath = route.path.split("/").filter((path) => path);
+  const fullPath = route.path.split("/").filter((path) => path);
+  const paramKeys = Object.keys(route.params);
 
   const getTitle = (index) => {
-    // Проход по ключам объекта
-    const key = Object.keys(route.params).find(
-      (k) => route.params[k] === fullPath[index]
-    );
+    const pathPart = fullPath[index];
 
-    if (key) {
-      return "[" + key + "]";
-    } else {
-      return t("pages." + fullPath[index] + ".title");
+    // Определяем параметр по порядку
+    const paramKey = paramKeys[index - (fullPath.length - paramKeys.length)];
+
+    if (paramKey && route.params[paramKey] === pathPart) {
+      return `[${paramKey}]`;
     }
+
+    return t("pages." + pathPart + ".title");
   };
 
-  // Формируем хлебные крошки
-  return fullPath.map((path, index) => ({
+  return fullPath.map((_, index) => ({
     to: "/" + fullPath.slice(0, index + 1).join("/"),
     label: getTitle(index),
   }));
 });
+
 </script>

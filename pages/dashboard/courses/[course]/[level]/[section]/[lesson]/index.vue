@@ -3,8 +3,8 @@
   <tabs
     v-if="courseIsAvailable && lessonIsAvailable"
     :tabs="tabs_data"
-    :activeTabIndex="lessonData.lesson_type_slug === 'file_test' ? 1 : 0"
-    :showTabHeader="lessonData.lesson_type_slug === 'file_test' ? false : true"
+    :activeTabIndex="1"
+    :showTabHeader="true"
   />
 
   <div v-else class="col-span-12">
@@ -20,12 +20,12 @@
 </template>
 
 <script setup>
-import alert from "../../../../../../components/ui/alert.vue";
-import loader from "../../../../../../components/ui/loader.vue";
-import tabs from "../../../../../../components/ui/tabs.vue";
-import materials from "../../../../../../components/lesson/tabs/materials.vue";
-import tasks from "../../../../../../components/lesson/tabs/tasks.vue";
-import dictionary from "../../../../../../components/lesson/tabs/dictionary.vue";
+import alert from "../../../../../../../components/ui/alert.vue";
+import loader from "../../../../../../../components/ui/loader.vue";
+import tabs from "../../../../../../../components/ui/tabs.vue";
+import materials from "../../../../../../../components/lesson/tabs/materials.vue";
+import tasks from "../../../../../../../components/lesson/tabs/tasks.vue";
+import dictionary from "../../../../../../../components/lesson/tabs/dictionary.vue";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
 const { t } = useI18n();
@@ -34,6 +34,7 @@ const router = useRouter();
 const route = useRoute();
 const course_slug = route.params.course;
 const level_slug = route.params.level;
+const section_id = route.params.section;
 const lesson_id = route.params.lesson;
 
 const { $axiosPlugin } = useNuxtApp();
@@ -107,7 +108,7 @@ const getLesson = async () => {
 
   await $axiosPlugin
     .get(
-      "courses/" + course_slug + "/" + level_slug + "/get_lesson/" + lesson_id
+      "courses/" + course_slug + "/" + level_slug + "/" + section_id + "/get_lesson/" + lesson_id
     )
     .then((response) => {
       const courseCrumbItem = document.querySelector(
@@ -130,6 +131,16 @@ const getLesson = async () => {
         levelCrumbItem.textContent = response.data.level.level_name;
       }
 
+      const sectionCrumbItem = document.querySelector(
+        'span[data-crumb="[section]"]'
+      );
+
+      // Проверить, найден ли элемент
+      if (sectionCrumbItem) {
+        // Изменить текст внутри элемента
+        sectionCrumbItem.textContent = response.data.section.section_name;
+      }
+
       const lessonCrumbItem = document.querySelector(
         'span[data-crumb="[lesson]"]'
       );
@@ -137,10 +148,7 @@ const getLesson = async () => {
       // Проверить, найден ли элемент
       if (lessonCrumbItem) {
         // Изменить текст внутри элемента
-        lessonCrumbItem.textContent =
-          response.data.lesson.section_name +
-          " › " +
-          response.data.lesson.lesson_name;
+        lessonCrumbItem.textContent = response.data.lesson.lesson_name;
       }
 
       pageTitle.value = response.data.lesson.lesson_name;

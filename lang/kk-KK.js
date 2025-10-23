@@ -568,6 +568,7 @@ export default {
         subscription: {
             plan: 'Тарифтік жоспар',
             your_plan: 'Сіздің тарифтік жоспар',
+            expired: 'Платформада жұмысты жалғастыру үшін сізге тарифтік жоспардың мерзімін ұзарту қажет',
             expired_at: 'Тарифтің біту уақыты',
             prolongation_title: 'Тарифтік жоспарды ұзарту',
             prolongation: 'Ұзарту',
@@ -736,6 +737,7 @@ export default {
             course_level: 'Курстың санаты',
             choose_a_course_level: 'Курстың санатын таңдаңыз',
             level_overall_progress: 'Деңгей бойынша жалпы прогресс',
+            section_overall_progress: 'Бөлім бойынша жалпы прогресс',
             course_section: 'Тарау',
             choose_a_course_section: 'Тарауды таңдаңыз',
             course_is_not_available: 'Курс қолжетімсіз. Курс қолжетімді болу үшін әкімшілікпен хабарласуыңызды өтінеміз.',

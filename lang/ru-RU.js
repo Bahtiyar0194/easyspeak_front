@@ -565,6 +565,7 @@ export default {
         subscription: {
             plan: 'Тарифный план',
             your_plan: 'Ваш тарифный план',
+            expired: 'Для продолжения работы на платформе вам нужно продлить срок тарифного плана',
             expired_at: 'Дата окончания тарифа',
             prolongation_title: 'Продление тарифного плана',
             prolongation: 'Продлить',
@@ -734,6 +735,7 @@ export default {
             course_level: 'Категория курса',
             choose_a_course_level: 'Выберите категорию курса',
             level_overall_progress: 'Общий прогресс по уровню',
+            section_overall_progress: 'Общий прогресс по главе',
             course_section: 'Глава',
             choose_a_course_section: 'Выберите главу',
             course_is_not_available: 'Курс недоступен. Пожалуйста, свяжитесь с администратором для получения доступа к курсу.',

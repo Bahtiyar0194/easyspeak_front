@@ -353,7 +353,7 @@
       <h4>{{ $t("pages.groups.create_group_title") }}</h4>
     </template>
     <template v-slot:body_content>
-      <subscription v-if="school?.subscription_expired" />
+      <subscription v-if="schoolStore.schoolData && schoolStore.schoolData.subscription_expired" />
       <steps v-else :currentStep="currentStep" :steps="newGroupSteps">
         <form
           @submit.prevent="createGroupSubmit"
@@ -472,7 +472,8 @@ import multipleSelect from "../../ui/multipleSelect.vue";
 import sortTableHead from "../../ui/sortTableHead.vue";
 
 const router = useRouter();
-const { $axiosPlugin, $schoolPlugin } = useNuxtApp();
+const { $axiosPlugin } = useNuxtApp();
+const schoolStore = useSchoolStore();
 const { t } = useI18n();
 const pending = ref(true);
 const pendingGroup = ref(false);
@@ -488,7 +489,6 @@ const perPage = ref(10);
 const groups = ref([]);
 const currentGroup = ref(null);
 const groupMembers = ref([]);
-const school = $schoolPlugin;
 const attributes = ref([]);
 const errors = ref([]);
 
@@ -767,11 +767,15 @@ const closeModal = (action) => {
   if (action === "create") {
     createModalIsVisible.value = false;
     pendingCreate.value = false;
-    createFormRef.value.reset();
+    if (createFormRef.value) {
+      createFormRef.value.reset();
+    }
   } else if (action === "edit") {
     editModalIsVisible.value = false;
     pendingEdit.value = false;
-    editFormRef.value.reset();
+    if (editFormRef.value) {
+      editFormRef.value.reset();
+    }
   } else {
     groupModalIsVisible.value = false;
   }

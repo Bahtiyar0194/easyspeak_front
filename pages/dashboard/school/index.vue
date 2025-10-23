@@ -154,6 +154,16 @@
               </div>
             </div>
           </div>
+
+          <!-- <div class="col-span-12 md:col-span-6">
+            <div class="bg-inactive px-3 py-2 rounded-xl">
+              <h4 class="mb-0">
+                {{ $t("pages.courses.title") }}
+              </h4>
+            </div>
+
+
+          </div> -->
         </div>
       </div>
     </div>
@@ -231,7 +241,7 @@
 </template>
 
 <script setup>
-import { useRouter } from "nuxt/app";
+import { useRoute, useRouter } from "nuxt/app";
 import steps from "../../../components/ui/steps.vue";
 import { formatAmountToWords } from "../../../utils/amountToWords";
 import { formatToInvoiceNumber } from "../../../utils/formatToInvoiceNumber";
@@ -242,6 +252,7 @@ import modal from "../../../components/ui/modal.vue";
 const config = useRuntimeConfig();
 const { $axiosPlugin, $pdfMake, $contacts } = useNuxtApp();
 const schoolStore = useSchoolStore();
+const route = useRoute();
 const router = useRouter();
 const { t, localeProperties } = useI18n();
 
@@ -891,5 +902,9 @@ async function getSchool() {
 
 onMounted(() => {
   getPaymentAttributes();
+
+  if (route.query.prolongation) {
+    subscriptionModalIsVisible.value = true;
+  }
 });
 </script>

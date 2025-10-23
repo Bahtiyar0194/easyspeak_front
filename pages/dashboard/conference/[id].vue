@@ -167,669 +167,697 @@
       </div>
     </div>
 
-    <modal
-      :show="participantsModalIsVisible"
-      :onClose="() => (participantsModalIsVisible = false)"
-      :className="'modal-lg'"
-      :closeOnClickSelf="true"
-    >
-      <template v-slot:header_content>
-        <h5>{{ $t("pages.conference.participants") }}</h5>
-      </template>
-      <template v-slot:body_content>
-        <div class="flex flex-col gap-y-4">
-          <div class="flex flex-col gap-y-2">
-            <p class="text-success mb-0">
-              {{ $t("online") }}: <b>{{ streams.length }}</b>
-            </p>
-            <ul class="list-group nowrap">
-              <li v-for="stream in streams" :key="stream.peer_id">
-                <div class="flex flex-wrap items-center justify-between gap-1">
-                  <div class="flex items-center gap-1">
-                    <userAvatar
-                      :padding="0.5"
-                      :className="'w-7 h-7 text-sm'"
-                      :user="stream.userInfo"
-                    />
-                    <div class="flex flex-col">
-                      <span class="font-medium"
-                        >{{ stream.userInfo.last_name }}
-                        {{ stream.userInfo.first_name }}
-                        <i v-if="!stream.remote">({{ $t("you") }})</i>
-                        <i
-                          class="text-success"
-                          v-if="
-                            stream.remote &&
-                            stream.user_id === conference.mentor_id
-                          "
-                          >({{ $t("mentor") }})</i
-                        >
-                      </span>
-                      <span
-                        v-if="
-                          busyLearners.length > 0 &&
-                          busyLearners.some((l) => l.userId === stream.user_id)
-                        "
-                        class="text-xs text-warning"
-                        >{{ $t("pages.tasks.in_process") }}</span
-                      >
-                    </div>
-                  </div>
-                  <div class="flex gap-2">
-                    <i
-                      class="bi"
-                      :class="
-                        !stream.isMuted
-                          ? 'bi-mic text-success'
-                          : 'bi-mic-mute text-danger'
-                      "
-                    ></i>
-                    <i
-                      class="bi"
-                      :class="
-                        stream.isStream
-                          ? 'bi-camera-video text-success'
-                          : 'bi-camera-video-off text-danger'
-                      "
-                    ></i>
-                  </div>
-                </div>
-              </li>
-            </ul>
-
-            <template v-if="offlineMembers.length > 0">
-              <p class="text-danger mb-0 text-inactive">
-                {{ $t("offline") }}: <b>{{ offlineMembers.length }}</b>
+    <template v-if="authUser">
+      <modal
+        :show="participantsModalIsVisible"
+        :onClose="() => (participantsModalIsVisible = false)"
+        :className="'modal-lg'"
+        :closeOnClickSelf="true"
+      >
+        <template v-slot:header_content>
+          <h5>{{ $t("pages.conference.participants") }}</h5>
+        </template>
+        <template v-slot:body_content>
+          <div class="flex flex-col gap-y-4">
+            <div class="flex flex-col gap-y-2">
+              <p class="text-success mb-0">
+                {{ $t("online") }}: <b>{{ streams.length }}</b>
               </p>
               <ul class="list-group nowrap">
-                <li v-for="member in offlineMembers" :key="member.user_id">
+                <li v-for="stream in streams" :key="stream.peer_id">
                   <div
                     class="flex flex-wrap items-center justify-between gap-1"
                   >
-                    <div class="flex items-center gap-1 text-inactive">
+                    <div class="flex items-center gap-1">
                       <userAvatar
                         :padding="0.5"
                         :className="'w-7 h-7 text-sm'"
-                        :user="{
-                          avatar: member.avatar,
-                          first_name: member.first_name,
-                          last_name: member.last_name,
-                        }"
+                        :user="stream.userInfo"
                       />
                       <div class="flex flex-col">
                         <span class="font-medium"
-                          >{{ member.last_name }}
-                          {{ member.first_name }}
+                          >{{ stream.userInfo.last_name }}
+                          {{ stream.userInfo.first_name }}
+                          <i v-if="!stream.remote">({{ $t("you") }})</i>
+                          <i
+                            class="text-success"
+                            v-if="
+                              stream.remote &&
+                              stream.user_id === conference.mentor_id
+                            "
+                            >({{ $t("mentor") }})</i
+                          >
                         </span>
+                        <span
+                          v-if="
+                            busyLearners.length > 0 &&
+                            busyLearners.some(
+                              (l) => l.userId === stream.user_id
+                            )
+                          "
+                          class="text-xs text-warning"
+                          >{{ $t("pages.tasks.in_process") }}</span
+                        >
                       </div>
+                    </div>
+                    <div class="flex gap-2">
+                      <i
+                        class="bi"
+                        :class="
+                          !stream.isMuted
+                            ? 'bi-mic text-success'
+                            : 'bi-mic-mute text-danger'
+                        "
+                      ></i>
+                      <i
+                        class="bi"
+                        :class="
+                          stream.isStream
+                            ? 'bi-camera-video text-success'
+                            : 'bi-camera-video-off text-danger'
+                        "
+                      ></i>
                     </div>
                   </div>
                 </li>
               </ul>
-            </template>
-          </div>
-        </div>
-      </template>
-    </modal>
 
-    <modal
-      :show="drawingBoardModalIsVisible"
-      :onClose="() => (drawingBoardModalIsVisible = false)"
-      :closeOnClickSelf="false"
-    >
-      <template v-slot:header_content>
-        <h5>{{ $t("pages.conference.board") }}</h5>
-      </template>
-      <template v-slot:body_content>
-        <drawingBoard :streams_length="streams.length" />
-      </template>
-    </modal>
-
-    <modal
-      :show="messagesModalIsVisible"
-      :onClose="() => (messagesModalIsVisible = false)"
-      :className="'modal-2xl'"
-      :closeOnClickSelf="true"
-    >
-      <template v-slot:header_content>
-        <h5>{{ $t("pages.conference.chat") }}</h5>
-      </template>
-      <template v-slot:body_content>
-        <div v-if="messages.length > 0" class="max-h-[300px] overflow-y-scroll">
-          <div class="flex flex-col gap-y-1.5">
-            <div
-              v-for="(item, index) in messages"
-              :key="index"
-              class="flex"
-              :class="
-                item.user_id === authUser.user_id
-                  ? 'justify-end'
-                  : 'justify-start'
-              "
-            >
-              <div class="flex gap-x-2">
-                <userAvatar
-                  v-if="item.user_id !== authUser.user_id"
-                  :padding="0.5"
-                  :className="'w-8 h-8'"
-                  :user="{
-                    last_name: item.userInfo.last_name,
-                    first_name: item.userInfo.first_name,
-                    avatar: item.userInfo.avatar,
-                  }"
-                />
-                <div
-                  class="chat"
-                  :class="
-                    item.user_id === authUser.user_id ? 'my_mess' : 'user_mess'
-                  "
-                >
-                  <p
-                    v-if="item.user_id !== authUser.user_id"
-                    class="font-medium mb-0.5 text-corp"
-                  >
-                    {{ item.userInfo.first_name }}
-                  </p>
-                  <p class="mb-0.5">{{ item.message }}</p>
-                  <div class="flex justify-end">
-                    <span class="mb-0 text-xs">{{ item.time }}</span>
-                  </div>
-                </div>
-              </div>
+              <template v-if="offlineMembers.length > 0">
+                <p class="text-danger mb-0 text-inactive">
+                  {{ $t("offline") }}: <b>{{ offlineMembers.length }}</b>
+                </p>
+                <ul class="list-group nowrap">
+                  <li v-for="member in offlineMembers" :key="member.user_id">
+                    <div
+                      class="flex flex-wrap items-center justify-between gap-1"
+                    >
+                      <div class="flex items-center gap-1 text-inactive">
+                        <userAvatar
+                          :padding="0.5"
+                          :className="'w-7 h-7 text-sm'"
+                          :user="{
+                            avatar: member.avatar,
+                            first_name: member.first_name,
+                            last_name: member.last_name,
+                          }"
+                        />
+                        <div class="flex flex-col">
+                          <span class="font-medium"
+                            >{{ member.last_name }}
+                            {{ member.first_name }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </li>
+                </ul>
+              </template>
             </div>
           </div>
-        </div>
-        <div class="flex mt-5">
-          <div
-            class="form-group-border active w-full !border-r-0 !rounded-tr-none !rounded-br-none"
-          >
-            <i class="pi pi-envelope"></i>
-            <input v-model="message" type="text" placeholder=" " />
-            <label>{{ $t("message") }}</label>
-          </div>
-          <button
-            @click="sendMessage"
-            class="btn btn-square btn-success !h-auto !w-12 !rounded-tl-none !rounded-bl-none"
-          >
-            <i class="pi pi-send"></i>
-          </button>
-        </div>
-      </template>
-    </modal>
+        </template>
+      </modal>
 
-    <modal
-      :show="materialsModalIsVisible"
-      :showLoader="false"
-      :onClose="() => (materialsModalIsVisible = false)"
-      :className="'modal-2xl'"
-      :closeOnClickSelf="false"
-    >
-      <template v-slot:header_content>
-        <h5>{{ $t("materials.title") }}</h5>
-      </template>
-      <template
-        v-slot:body_content
-        v-if="
-          conference && conference.materials && conference.materials.length > 0
-        "
+      <modal
+        :show="drawingBoardModalIsVisible"
+        :onClose="() => (drawingBoardModalIsVisible = false)"
+        :closeOnClickSelf="false"
       >
-        <ul class="list-group nowrap lg overflow-hidden">
-          <li
-            v-for="material in conference.materials"
-            :key="material.lesson_material_id"
-          >
-            <div class="flex items-center justify-between gap-4">
-              <div
-                class="flex gap-2 items-center link w-full"
-                @click="openMaterial(material)"
-              >
-                <i
-                  class="text-3xl text-active"
-                  :class="material.file_icon || material.block_icon"
-                ></i>
-                <div class="flex flex-col gap-y-0.5">
-                  <span class="font-bold text-active">{{ material.annotation }}</span>
-                  <span class="text-inactive text-xs">{{
-                    material.file_material_type_name ||
-                    material.block_material_type_name
-                  }}</span>
-                </div>
-              </div>
-            </div>
-          </li>
-        </ul>
-      </template>
-    </modal>
+        <template v-slot:header_content>
+          <h5>{{ $t("pages.conference.board") }}</h5>
+        </template>
+        <template v-slot:body_content>
+          <drawingBoard :streams_length="streams.length" />
+        </template>
+      </modal>
 
-    <modal
-      :show="materialModalIsVisible"
-      :onClose="() => closeMaterialModal(true)"
-      :className="
-        currentMaterial && currentMaterial.block_material_type_slug
-          ? 'modal-4xl'
-          : 'modal-lg'
-      "
-      :showLoader="false"
-      :closeOnClickSelf="false"
-    >
-      <template v-if="currentMaterial" v-slot:header_content>
-        <h5>{{ currentMaterial?.annotation }}</h5>
-      </template>
-      <template v-if="currentMaterial" v-slot:body_content>
-        <div
-          class="custom-grid"
-          v-if="currentMaterial && currentMaterial?.lesson_material_id"
-        >
+      <modal
+        :show="messagesModalIsVisible"
+        :onClose="() => (messagesModalIsVisible = false)"
+        :className="'modal-2xl'"
+        :closeOnClickSelf="true"
+      >
+        <template v-slot:header_content>
+          <h5>{{ $t("pages.conference.chat") }}</h5>
+        </template>
+        <template v-slot:body_content>
           <div
-            v-if="conference.mentor_id === authUser.user_id"
-            class="col-span-12"
+            v-if="messages.length > 0"
+            class="max-h-[300px] overflow-y-scroll"
           >
-            <div class="btn-wrap">
-              <button
-                class="btn btn-outline-success"
-                :class="currentMaterial.is_show === true ? 'disabled' : ''"
-                @click="showMaterialForLearners()"
-                :title="
-                  currentMaterial.is_show === true
-                    ? $t('materials.displayed_title')
-                    : $t('materials.display_title')
+            <div class="flex flex-col gap-y-1.5">
+              <div
+                v-for="(item, index) in messages"
+                :key="index"
+                class="flex"
+                :class="
+                  item.user_id === authUser.user_id
+                    ? 'justify-end'
+                    : 'justify-start'
                 "
               >
-                <i class="pi pi-eye"></i>
-                {{
-                  currentMaterial.is_show === true
-                    ? $t("materials.displayed")
-                    : $t("materials.display")
-                }}
-              </button>
-            </div>
-          </div>
-          <div class="col-span-12">
-            <materialViewer :material="currentMaterial" />
-          </div>
-        </div>
-      </template>
-    </modal>
-
-    <modal
-      :show="tasksModalIsVisible"
-      :showLoader="pendingTasks"
-      :onClose="() => (tasksModalIsVisible = false)"
-      :className="
-        conference.mentor_id !== authUser.user_id && conference.is_member
-          ? 'modal-6xl'
-          : 'modal-xl'
-      "
-      :closeOnClickSelf="false"
-    >
-      <template v-slot:header_content>
-        <h5>{{ $t("pages.tasks.title") }}</h5>
-      </template>
-      <template v-slot:body_content v-if="conference">
-        <div class="custom-grid">
-          <div
-            class="col-span-12 lg:col-span-4"
-            v-if="
-              conference.mentor_id !== authUser.user_id && conference.is_member
-            "
-          >
-            <stickyBox>
-              <div class="card p-3">
-                <div class="flex justify-between items-center gap-x-2 mb-4">
-                  <h2 class="mb-2">{{ conference.lesson_name }}</h2>
-                  <circleProgressBar
-                    :progress="completedTasksPercent / tasks.length"
+                <div class="flex gap-x-2">
+                  <userAvatar
+                    v-if="item.user_id !== authUser.user_id"
+                    :padding="0.5"
+                    :className="'w-8 h-8'"
+                    :user="{
+                      last_name: item.userInfo.last_name,
+                      first_name: item.userInfo.first_name,
+                      avatar: item.userInfo.avatar,
+                    }"
                   />
-                </div>
-                <div class="flex flex-wrap justify-between mb-1">
-                  <span> {{ $t("pages.tasks.count") }}: </span>
-                  <b>{{ tasks.length }}</b>
-                </div>
-
-                <div class="flex flex-wrap justify-between">
-                  <span> {{ $t("passed") }}: </span>
-                  <b>{{ completedTasksCount }}</b>
-                </div>
-
-                <div class="btn-wrap justify-end">
-                  <button
-                    v-if="
-                      conference.lesson_type_slug === 'file_test' &&
-                      completedTasksCount < tasks.length
-                    "
-                    class="btn btn-outline-primary mt-4"
-                    @click="startTheTest()"
-                  >
-                    <i class="pi pi-arrow-right"></i>
-                    {{
-                      completedTasksCount > 0
-                        ? $t("pages.tasks.continue_the_test")
-                        : $t("pages.tasks.start_the_test")
-                    }}
-                  </button>
-                </div>
-              </div>
-            </stickyBox>
-          </div>
-
-          <div
-            class="col-span-12"
-            :class="
-              conference.mentor_id !== authUser.user_id && conference.is_member
-                ? 'lg:col-span-8'
-                : ''
-            "
-          >
-            <button
-              v-if="
-                conference.mentor_id === authUser.user_id &&
-                conference.lesson_type_slug === 'file_test'
-              "
-              class="btn full mb-4"
-              :class="
-                testIsStarted
-                  ? 'disabled btn-outline-success'
-                  : 'btn-outline-primary'
-              "
-              @click="startTheTest()"
-            >
-              <i
-                class="pi"
-                :class="testIsStarted === true ? 'pi-arrow-right' : 'pi-check'"
-              ></i>
-              {{
-                testIsStarted === true
-                  ? $t("pages.tasks.test_is_started")
-                  : $t("pages.tasks.start_the_test")
-              }}
-            </button>
-
-            <ul class="list-group nowrap lg overflow-hidden">
-              <li v-for="taskItem in tasks" :key="taskItem.task_id">
-                <div class="flex items-center justify-between gap-4">
                   <div
-                    class="flex gap-2 items-center w-full"
-                    :class="(!taskItem.launched && conference.mentor_id !== authUser.user_id) ? 'cursor-not-allowed' : 'cursor-pointer'"
-                    @click="
-                      conference.mentor_id === authUser.user_id
-                        ? openLearnersTasksModal(taskItem)
-                        : taskItem.task_result.answers
-                        ? openTaskResult(taskItem)
-                        : taskItem.launched && openTask(taskItem)
+                    class="chat"
+                    :class="
+                      item.user_id === authUser.user_id
+                        ? 'my_mess'
+                        : 'user_mess'
                     "
                   >
-                    <i class="text-4xl" :class="taskItem.icon"></i>
-                    <div class="flex flex-col gap-y-0.5">
-                      <span class="font-medium">{{ taskItem.task_slug }}</span>
-                      <span class="text-inactive text-xs">{{
-                        taskItem.task_type_name
-                      }}</span>
-
-                      <span
-                        v-if="conference.lesson_type_slug !== 'file_test'"
-                        class="italic text-xs"
-                        :class="
-                          taskItem.launched ||
-                          (taskItem.task_result &&
-                            taskItem.task_result.completed)
-                            ? 'text-success'
-                            : 'text-danger'
-                        "
-                      >
-                        {{
-                          taskItem.launched
-                            ? conference.mentor_id === authUser.user_id
-                              ? $t("pages.tasks.launched")
-                              : taskItem.task_result.completed === false
-                              ? $t("pages.tasks.is_available")
-                              : $t("pages.tasks.is_completed")
-                            : conference.mentor_id === authUser.user_id
-                            ? $t("pages.tasks.not_launched")
-                            : taskItem.task_result.completed === false
-                            ? $t("pages.tasks.is_unavailable")
-                            : $t("pages.tasks.is_completed")
-                        }}</span
-                      >
+                    <p
+                      v-if="item.user_id !== authUser.user_id"
+                      class="font-medium mb-0.5 text-corp"
+                    >
+                      {{ item.userInfo.first_name }}
+                    </p>
+                    <p class="mb-0.5">{{ item.message }}</p>
+                    <div class="flex justify-end">
+                      <span class="mb-0 text-xs">{{ item.time }}</span>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="flex mt-5">
+            <div
+              class="form-group-border active w-full !border-r-0 !rounded-tr-none !rounded-br-none"
+            >
+              <i class="pi pi-envelope"></i>
+              <input v-model="message" type="text" placeholder=" " />
+              <label>{{ $t("message") }}</label>
+            </div>
+            <button
+              @click="sendMessage"
+              class="btn btn-square btn-success !h-auto !w-12 !rounded-tl-none !rounded-bl-none"
+            >
+              <i class="pi pi-send"></i>
+            </button>
+          </div>
+        </template>
+      </modal>
 
-                  <circleProgressBar
-                    v-if="
-                      conference.mentor_id !== authUser.user_id &&
-                      taskItem.task_result &&
-                      taskItem.task_result.completed === true
-                    "
-                    :progress="taskItem.task_result.percentage"
-                  />
-                  <div
-                    class="pr-2"
-                    v-if="conference.mentor_id === authUser.user_id"
-                  >
-                    <span
-                      class="text-nowrap font-medium"
-                      :class="
-                        taskItem.completed_learners_tasks ===
-                        taskItem.learners.length
-                          ? 'text-success'
-                          : ''
-                      "
-                    >
-                      <span
-                        :class="
-                          taskItem.completed_learners_tasks > 0 &&
-                          'text-success'
-                        "
-                        >{{ taskItem.completed_learners_tasks }}</span
-                      >
-                      / {{ taskItem.learners.length }}</span
-                    >
+      <modal
+        :show="materialsModalIsVisible"
+        :showLoader="false"
+        :onClose="() => (materialsModalIsVisible = false)"
+        :className="'modal-2xl'"
+        :closeOnClickSelf="false"
+      >
+        <template v-slot:header_content>
+          <h5>{{ $t("materials.title") }}</h5>
+        </template>
+        <template
+          v-slot:body_content
+          v-if="
+            conference &&
+            conference.materials &&
+            conference.materials.length > 0
+          "
+        >
+          <ul class="list-group nowrap lg overflow-hidden">
+            <li
+              v-for="material in conference.materials"
+              :key="material.lesson_material_id"
+            >
+              <div class="flex items-center justify-between gap-4">
+                <div
+                  class="flex gap-2 items-center link w-full"
+                  @click="openMaterial(material)"
+                >
+                  <i
+                    class="text-3xl text-active"
+                    :class="material.file_icon || material.block_icon"
+                  ></i>
+                  <div class="flex flex-col gap-y-0.5">
+                    <span class="font-bold text-active">{{
+                      material.annotation
+                    }}</span>
+                    <span class="text-inactive text-xs">{{
+                      material.file_material_type_name ||
+                      material.block_material_type_name
+                    }}</span>
                   </div>
                 </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </template>
-    </modal>
+              </div>
+            </li>
+          </ul>
+        </template>
+      </modal>
 
-    <modal
-      :show="taskModalIsVisible"
-      :onClose="() => closeTaskModal()"
-      :className="taskModalClass + ' min-h-0'"
-      :showLoader="pendingTaskModal"
-      :showPendingText="true"
-      :loaderOpacityFull="true"
-      :closeOnClickSelf="false"
-    >
-      <template v-slot:header_content>
-        <h5>{{ task ? task.task_slug : $t("pages.tasks.adding_a_task") }}</h5>
-      </template>
-      <template v-slot:body_content>
-        <component :is="currentTaskModal" v-bind="taskModalProps" />
-      </template>
-    </modal>
-
-    <modal
-      :show="taskResultModalIsVisible"
-      :onClose="() => closeTaskResultModal()"
-      :className="'modal-xl'"
-      :showLoader="false"
-      :closeOnClickSelf="false"
-    >
-      <template v-slot:header_content v-if="task">
-        <h5>{{ task.task_slug }}</h5>
-      </template>
-      <template
-        v-slot:body_content
-        v-if="task && task.task_result && task.task_result.answers"
+      <modal
+        :show="materialModalIsVisible"
+        :onClose="() => closeMaterialModal(true)"
+        :className="
+          currentMaterial && currentMaterial.block_material_type_slug
+            ? 'modal-4xl'
+            : 'modal-lg'
+        "
+        :showLoader="false"
+        :closeOnClickSelf="false"
       >
-        <taskResultChart :taskResult="task.task_result" />
-      </template>
-    </modal>
-
-    <modal
-      :show="learnersTasksModalIsVisible"
-      :onClose="() => closeLearnersTasksModal()"
-      :className="'modal-xl'"
-      :showLoader="pendingLearnersTasksResult"
-      :closeOnClickSelf="false"
-    >
-      <template v-slot:header_content v-if="task">
-        <h5>{{ task.task_slug }}</h5>
-      </template>
-      <template v-slot:body_content v-if="task">
-        <div class="custom-grid">
-          <div class="col-span-12">
-            <ul class="list-group nowrap">
-              <li v-for="learner in task.learners" :key="learner.user_id">
-                <div
-                  class="flex items-center justify-between gap-4"
-                  :class="
-                    learner.task_result.completed === true
-                      ? 'cursor-pointer'
-                      : ''
-                  "
-                  @click="
-                    learner.task_result.completed === true &&
-                      openLearnerTaskResultModal(learner)
-                  "
+        <template v-if="currentMaterial" v-slot:header_content>
+          <h5>{{ currentMaterial?.annotation }}</h5>
+        </template>
+        <template v-if="currentMaterial" v-slot:body_content>
+          <div
+            class="custom-grid"
+            v-if="currentMaterial && currentMaterial?.lesson_material_id"
+          >
+            <div
+              v-if="conference.mentor_id === authUser.user_id"
+              class="col-span-12"
+            >
+              <div class="btn-wrap">
+                <button
+                  class="btn btn-outline-success"
+                  :class="currentMaterial.is_show === true ? 'disabled' : ''"
+                  @click="showMaterialForLearners()"
                   :title="
-                    learner.task_result.completed === true
-                      ? $t('pages.tasks.show_learner_task_result')
-                      : $t('pages.tasks.you_can_see_the_result')
+                    currentMaterial.is_show === true
+                      ? $t('materials.displayed_title')
+                      : $t('materials.display_title')
                   "
                 >
-                  <div class="flex items-center gap-1.5">
-                    <userAvatar
-                      :padding="0.5"
-                      :className="'w-9 h-9 text-sm'"
-                      :user="learner"
+                  <i class="pi pi-eye"></i>
+                  {{
+                    currentMaterial.is_show === true
+                      ? $t("materials.displayed")
+                      : $t("materials.display")
+                  }}
+                </button>
+              </div>
+            </div>
+            <div class="col-span-12">
+              <materialViewer :material="currentMaterial" />
+            </div>
+          </div>
+        </template>
+      </modal>
+
+      <modal
+        :show="tasksModalIsVisible"
+        :showLoader="pendingTasks"
+        :onClose="() => (tasksModalIsVisible = false)"
+        :className="
+          conference.mentor_id !== authUser.user_id && conference.is_member
+            ? 'modal-6xl'
+            : 'modal-xl'
+        "
+        :closeOnClickSelf="false"
+      >
+        <template v-slot:header_content>
+          <h5>{{ $t("pages.tasks.title") }}</h5>
+        </template>
+        <template v-slot:body_content v-if="conference">
+          <div class="custom-grid">
+            <div
+              class="col-span-12 lg:col-span-4"
+              v-if="
+                conference.mentor_id !== authUser.user_id &&
+                conference.is_member
+              "
+            >
+              <stickyBox>
+                <div class="card p-3">
+                  <div class="flex justify-between items-center gap-x-2 mb-4">
+                    <h2 class="mb-2">{{ conference.lesson_name }}</h2>
+                    <circleProgressBar
+                      :progress="completedTasksPercent / tasks.length"
                     />
-                    <div class="flex flex-col">
-                      <div>
-                        <span class="font-medium"
-                          >{{ learner.last_name }}
-                          {{ learner.first_name }}
-                        </span>
+                  </div>
+                  <div class="flex flex-wrap justify-between mb-1">
+                    <span> {{ $t("pages.tasks.count") }}: </span>
+                    <b>{{ tasks.length }}</b>
+                  </div>
+
+                  <div class="flex flex-wrap justify-between">
+                    <span> {{ $t("passed") }}: </span>
+                    <b>{{ completedTasksCount }}</b>
+                  </div>
+
+                  <div class="btn-wrap justify-end">
+                    <button
+                      v-if="
+                        conference.lesson_type_slug === 'file_test' &&
+                        completedTasksCount < tasks.length
+                      "
+                      class="btn btn-outline-primary mt-4"
+                      @click="startTheTest()"
+                    >
+                      <i class="pi pi-arrow-right"></i>
+                      {{
+                        completedTasksCount > 0
+                          ? $t("pages.tasks.continue_the_test")
+                          : $t("pages.tasks.start_the_test")
+                      }}
+                    </button>
+                  </div>
+                </div>
+              </stickyBox>
+            </div>
+
+            <div
+              class="col-span-12"
+              :class="
+                conference.mentor_id !== authUser.user_id &&
+                conference.is_member
+                  ? 'lg:col-span-8'
+                  : ''
+              "
+            >
+              <button
+                v-if="
+                  conference.mentor_id === authUser.user_id &&
+                  conference.lesson_type_slug === 'file_test'
+                "
+                class="btn full mb-4"
+                :class="
+                  testIsStarted
+                    ? 'disabled btn-outline-success'
+                    : 'btn-outline-primary'
+                "
+                @click="startTheTest()"
+              >
+                <i
+                  class="pi"
+                  :class="
+                    testIsStarted === true ? 'pi-arrow-right' : 'pi-check'
+                  "
+                ></i>
+                {{
+                  testIsStarted === true
+                    ? $t("pages.tasks.test_is_started")
+                    : $t("pages.tasks.start_the_test")
+                }}
+              </button>
+
+              <ul class="list-group nowrap lg overflow-hidden">
+                <li v-for="taskItem in tasks" :key="taskItem.task_id">
+                  <div class="flex items-center justify-between gap-4">
+                    <div
+                      class="flex gap-2 items-center w-full"
+                      :class="
+                        !taskItem.launched &&
+                        conference.mentor_id !== authUser.user_id
+                          ? 'cursor-not-allowed'
+                          : 'cursor-pointer'
+                      "
+                      @click="
+                        conference.mentor_id === authUser.user_id
+                          ? openLearnersTasksModal(taskItem)
+                          : taskItem.task_result.answers
+                          ? openTaskResult(taskItem)
+                          : taskItem.launched && openTask(taskItem)
+                      "
+                    >
+                      <i class="text-4xl" :class="taskItem.icon"></i>
+                      <div class="flex flex-col gap-y-0.5">
+                        <span class="font-medium">{{
+                          taskItem.task_slug
+                        }}</span>
+                        <span class="text-inactive text-xs">{{
+                          taskItem.task_type_name
+                        }}</span>
+
                         <span
+                          v-if="conference.lesson_type_slug !== 'file_test'"
+                          class="italic text-xs"
                           :class="
-                            streams.find((u) => u.user_id === learner.user_id)
+                            taskItem.launched ||
+                            (taskItem.task_result &&
+                              taskItem.task_result.completed)
                               ? 'text-success'
                               : 'text-danger'
                           "
                         >
-                          ({{
-                            streams.find((u) => u.user_id === learner.user_id)
-                              ? $t("online")
-                              : $t("offline")
-                          }})
-                        </span>
+                          {{
+                            taskItem.launched
+                              ? conference.mentor_id === authUser.user_id
+                                ? $t("pages.tasks.launched")
+                                : taskItem.task_result.completed === false
+                                ? $t("pages.tasks.is_available")
+                                : $t("pages.tasks.is_completed")
+                              : conference.mentor_id === authUser.user_id
+                              ? $t("pages.tasks.not_launched")
+                              : taskItem.task_result.completed === false
+                              ? $t("pages.tasks.is_unavailable")
+                              : $t("pages.tasks.is_completed")
+                          }}</span
+                        >
                       </div>
+                    </div>
+
+                    <circleProgressBar
+                      v-if="
+                        conference.mentor_id !== authUser.user_id &&
+                        taskItem.task_result &&
+                        taskItem.task_result.completed === true
+                      "
+                      :progress="taskItem.task_result.percentage"
+                    />
+                    <div
+                      class="pr-2"
+                      v-if="conference.mentor_id === authUser.user_id"
+                    >
                       <span
+                        class="text-nowrap font-medium"
                         :class="
-                          learner.task_result.completed === true
+                          taskItem.completed_learners_tasks ===
+                          taskItem.learners.length
                             ? 'text-success'
-                            : busyLearners.some(
-                                (t) =>
-                                  t.taskId === task.task_id &&
-                                  t.userId === learner.user_id
-                              )
-                            ? 'text-warning'
-                            : 'text-danger'
+                            : ''
                         "
-                        class="text-xs"
-                        >{{
-                          learner.task_result.completed === true
-                            ? $t("pages.tasks.is_completed")
-                            : busyLearners.some(
-                                (t) =>
-                                  t.taskId === task.task_id &&
-                                  t.userId === learner.user_id
-                              )
-                            ? $t("pages.tasks.in_process_this")
-                            : $t("pages.tasks.not_been_completed_yet")
-                        }}</span
+                      >
+                        <span
+                          :class="
+                            taskItem.completed_learners_tasks > 0 &&
+                            'text-success'
+                          "
+                          >{{ taskItem.completed_learners_tasks }}</span
+                        >
+                        / {{ taskItem.learners.length }}</span
                       >
                     </div>
                   </div>
-
-                  <circleProgressBar
-                    v-if="
-                      learner.task_result &&
-                      learner.task_result.completed === true
-                    "
-                    :progress="learner.task_result.percentage"
-                  />
-                </div>
-              </li>
-            </ul>
-          </div>
-          <div
-            v-if="conference.lesson_type_slug !== 'file_test'"
-            class="col-span-12"
-          >
-            <button
-              class="btn btn-outline-success"
-              :class="task.launched ? 'disabled' : ''"
-              @click="showTaskForLearners()"
-            >
-              <i class="pi pi-play"></i>
-              {{
-                task.launched
-                  ? $t("pages.tasks.launched")
-                  : $t("pages.tasks.run")
-              }}
-            </button>
-          </div>
-        </div>
-      </template>
-    </modal>
-
-    <modal
-      :show="learnerTaskResultModalIsVisible"
-      :onClose="() => closeLearnerTaskResultModal()"
-      :className="'modal-xl'"
-      :showLoader="false"
-      :closeOnClickSelf="false"
-    >
-      <template v-slot:header_content v-if="currentLearner && task">
-        <h5>{{ task.task_slug }}</h5>
-      </template>
-      <template
-        v-slot:body_content
-        v-if="
-          currentLearner &&
-          currentLearner.task_result &&
-          currentLearner.task_result.answers
-        "
-      >
-        <taskResultChart :taskResult="currentLearner.task_result">
-          <template v-slot:header_content>
-            <div class="col-span-12">
-              <div class="flex gap-x-2 items-center mb-3">
-                <userAvatar
-                  :padding="0.5"
-                  :className="'w-9 h-9'"
-                  :user="{
-                    last_name: currentLearner.last_name,
-                    first_name: currentLearner.first_name,
-                    avatar: currentLearner.avatar,
-                  }"
-                />
-                <div>
-                  <p class="text-inactive text-xs mb-0">{{ $t("learner") }}:</p>
-                  <p class="font-medium mb-0">
-                    {{ currentLearner.last_name }}
-                    {{ currentLearner.first_name }}
-                  </p>
-                </div>
-              </div>
-              <hr />
+                </li>
+              </ul>
             </div>
-          </template>
-        </taskResultChart>
-      </template>
-    </modal>
+          </div>
+        </template>
+      </modal>
+
+      <modal
+        :show="taskModalIsVisible"
+        :onClose="() => closeTaskModal()"
+        :className="taskModalClass + ' min-h-0'"
+        :showLoader="pendingTaskModal"
+        :showPendingText="true"
+        :loaderOpacityFull="true"
+        :closeOnClickSelf="false"
+      >
+        <template v-slot:header_content>
+          <h5>{{ task ? task.task_slug : $t("pages.tasks.adding_a_task") }}</h5>
+        </template>
+        <template v-slot:body_content>
+          <component :is="currentTaskModal" v-bind="taskModalProps" />
+        </template>
+      </modal>
+
+      <modal
+        :show="taskResultModalIsVisible"
+        :onClose="() => closeTaskResultModal()"
+        :className="'modal-xl'"
+        :showLoader="false"
+        :closeOnClickSelf="false"
+      >
+        <template v-slot:header_content v-if="task">
+          <h5>{{ task.task_slug }}</h5>
+        </template>
+        <template
+          v-slot:body_content
+          v-if="task && task.task_result && task.task_result.answers"
+        >
+          <taskResultChart :taskResult="task.task_result" />
+        </template>
+      </modal>
+
+      <modal
+        :show="learnersTasksModalIsVisible"
+        :onClose="() => closeLearnersTasksModal()"
+        :className="'modal-xl'"
+        :showLoader="pendingLearnersTasksResult"
+        :closeOnClickSelf="false"
+      >
+        <template v-slot:header_content v-if="task">
+          <h5>{{ task.task_slug }}</h5>
+        </template>
+        <template v-slot:body_content v-if="task">
+          <div class="custom-grid">
+            <div class="col-span-12">
+              <ul class="list-group nowrap">
+                <li v-for="learner in task.learners" :key="learner.user_id">
+                  <div
+                    class="flex items-center justify-between gap-4"
+                    :class="
+                      learner.task_result.completed === true
+                        ? 'cursor-pointer'
+                        : ''
+                    "
+                    @click="
+                      learner.task_result.completed === true &&
+                        openLearnerTaskResultModal(learner)
+                    "
+                    :title="
+                      learner.task_result.completed === true
+                        ? $t('pages.tasks.show_learner_task_result')
+                        : $t('pages.tasks.you_can_see_the_result')
+                    "
+                  >
+                    <div class="flex items-center gap-1.5">
+                      <userAvatar
+                        :padding="0.5"
+                        :className="'w-9 h-9 text-sm'"
+                        :user="learner"
+                      />
+                      <div class="flex flex-col">
+                        <div>
+                          <span class="font-medium"
+                            >{{ learner.last_name }}
+                            {{ learner.first_name }}
+                          </span>
+                          <span
+                            :class="
+                              streams.find((u) => u.user_id === learner.user_id)
+                                ? 'text-success'
+                                : 'text-danger'
+                            "
+                          >
+                            ({{
+                              streams.find((u) => u.user_id === learner.user_id)
+                                ? $t("online")
+                                : $t("offline")
+                            }})
+                          </span>
+                        </div>
+                        <span
+                          :class="
+                            learner.task_result.completed === true
+                              ? 'text-success'
+                              : busyLearners.some(
+                                  (t) =>
+                                    t.taskId === task.task_id &&
+                                    t.userId === learner.user_id
+                                )
+                              ? 'text-warning'
+                              : 'text-danger'
+                          "
+                          class="text-xs"
+                          >{{
+                            learner.task_result.completed === true
+                              ? $t("pages.tasks.is_completed")
+                              : busyLearners.some(
+                                  (t) =>
+                                    t.taskId === task.task_id &&
+                                    t.userId === learner.user_id
+                                )
+                              ? $t("pages.tasks.in_process_this")
+                              : $t("pages.tasks.not_been_completed_yet")
+                          }}</span
+                        >
+                      </div>
+                    </div>
+
+                    <circleProgressBar
+                      v-if="
+                        learner.task_result &&
+                        learner.task_result.completed === true
+                      "
+                      :progress="learner.task_result.percentage"
+                    />
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div
+              v-if="conference.lesson_type_slug !== 'file_test'"
+              class="col-span-12"
+            >
+              <button
+                class="btn btn-outline-success"
+                :class="task.launched ? 'disabled' : ''"
+                @click="showTaskForLearners()"
+              >
+                <i class="pi pi-play"></i>
+                {{
+                  task.launched
+                    ? $t("pages.tasks.launched")
+                    : $t("pages.tasks.run")
+                }}
+              </button>
+            </div>
+          </div>
+        </template>
+      </modal>
+
+      <modal
+        :show="learnerTaskResultModalIsVisible"
+        :onClose="() => closeLearnerTaskResultModal()"
+        :className="'modal-xl'"
+        :showLoader="false"
+        :closeOnClickSelf="false"
+      >
+        <template v-slot:header_content v-if="currentLearner && task">
+          <h5>{{ task.task_slug }}</h5>
+        </template>
+        <template
+          v-slot:body_content
+          v-if="
+            currentLearner &&
+            currentLearner.task_result &&
+            currentLearner.task_result.answers
+          "
+        >
+          <taskResultChart :taskResult="currentLearner.task_result">
+            <template v-slot:header_content>
+              <div class="col-span-12">
+                <div class="flex gap-x-2 items-center mb-3">
+                  <userAvatar
+                    :padding="0.5"
+                    :className="'w-9 h-9'"
+                    :user="{
+                      last_name: currentLearner.last_name,
+                      first_name: currentLearner.first_name,
+                      avatar: currentLearner.avatar,
+                    }"
+                  />
+                  <div>
+                    <p class="text-inactive text-xs mb-0">
+                      {{ $t("learner") }}:
+                    </p>
+                    <p class="font-medium mb-0">
+                      {{ currentLearner.last_name }}
+                      {{ currentLearner.first_name }}
+                    </p>
+                  </div>
+                </div>
+                <hr />
+              </div>
+            </template>
+          </taskResultChart>
+        </template>
+      </modal>
+    </template>
   </div>
   <div v-else class="col-span-12">
     <div class="card p-6 flex flex-col justify-center items-center">

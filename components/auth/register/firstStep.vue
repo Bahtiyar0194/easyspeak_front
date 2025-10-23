@@ -100,11 +100,7 @@
             <i class="pi pi-map-marker"></i>
             <input type="text" name="street" placeholder=" " />
             <label :class="{ 'label-error': errors.street }">
-              {{
-                errors.street
-                  ? errors.street[0]
-                  : $t("form.street")
-              }}
+              {{ errors.street ? errors.street[0] : $t("form.street") }}
             </label>
           </div>
         </div>
@@ -113,11 +109,7 @@
             <i class="pi pi-building"></i>
             <input type="text" name="house" placeholder=" " />
             <label :class="{ 'label-error': errors.house }">
-              {{
-                errors.house
-                  ? errors.house[0]
-                  : $t("form.house")
-              }}
+              {{ errors.house ? errors.house[0] : $t("form.house") }}
             </label>
           </div>
         </div>

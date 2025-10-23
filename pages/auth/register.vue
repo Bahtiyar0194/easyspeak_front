@@ -125,7 +125,6 @@ const pending = ref(true);
 const errors = ref([]);
 const accept = ref(false);
 const locations = ref([]);
-const { login } = useSanctumAuth();
 const schoolStore = useSchoolStore();
 const policyModalIsVisible = ref(false);
 

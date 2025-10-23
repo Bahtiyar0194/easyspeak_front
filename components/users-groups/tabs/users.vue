@@ -214,10 +214,10 @@
       <h4>{{ $t("pages.users.invite_user_title") }}</h4>
     </template>
     <template v-slot:body_content>
-      <subscription v-if="school?.subscription_expired" />
+      <subscription v-if="schoolStore.schoolData && schoolStore.schoolData.subscription_expired" />
       <form
-        class="mt-2"
         v-else
+        class="mt-2"
         @submit.prevent="inviteUserSubmit"
         ref="inviteFormRef"
       >
@@ -608,7 +608,11 @@
                     >
                       <button
                         class="w-full"
-                        :class="taskItem.task_result.completed === false ? 'cursor-auto' : 'cursor-pointer'"
+                        :class="
+                          taskItem.task_result.completed === false
+                            ? 'cursor-auto'
+                            : 'cursor-pointer'
+                        "
                         @click="
                           taskItem.task_result.completed === true
                             ? selectTask(taskItem)
@@ -803,7 +807,8 @@ import circleProgressBar from "../../ui/circleProgressBar.vue";
 import taskResultChart from "../../lesson/components/tasks/taskResultChart.vue";
 const router = useRouter();
 const errors = ref([]);
-const { $axiosPlugin, $schoolPlugin } = useNuxtApp();
+const { $axiosPlugin } = useNuxtApp();
+const schoolStore = useSchoolStore();
 const { t } = useI18n();
 const pending = ref(true);
 const pendingInvite = ref(false);
@@ -821,7 +826,6 @@ const { refreshIdentity } = useSanctumAuth();
 const users = ref([]);
 const user = ref(null);
 const userGrade = ref(null);
-const school = $schoolPlugin;
 const attributes = ref([]);
 
 const inviteModalIsVisible = ref(false);
@@ -1076,7 +1080,9 @@ const editUserSubmit = async (user_id) => {
 const closeInviteModal = () => {
   inviteModalIsVisible.value = false;
   pendingInvite.value = false;
-  inviteFormRef.value.reset();
+  if(inviteFormRef.value){
+    inviteFormRef.value.reset();
+  }
   errors.value = [];
 };
 

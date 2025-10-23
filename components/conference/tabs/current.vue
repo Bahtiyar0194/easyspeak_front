@@ -54,9 +54,7 @@
                 </p>
                 <p class="text-inactive">
                   <i class="pi pi-clock"></i> {{ $t("end_time") }}:
-                  <b class="text-active">{{
-                    conference.end_time_formatted
-                  }}</b>
+                  <b class="text-active">{{ conference.end_time_formatted }}</b>
                 </p>
 
                 <p class="text-inactive mb-0">
@@ -94,9 +92,13 @@
                     {{ $t("pages.conference.join") }}
                   </nuxt-link>
 
-                  <button v-if="authUser.user_id === conference.operator_id" class="btn btn-outline-danger" @click="openDeleteModal(conference)">
+                  <button
+                    v-if="authUser.user_id === conference.operator_id"
+                    class="btn btn-outline-danger"
+                    @click="openDeleteModal(conference)"
+                  >
                     <i class="pi pi-trash"></i>
-                    {{ $t('delete') }}
+                    {{ $t("delete") }}
                   </button>
                 </div>
               </div>
@@ -123,7 +125,7 @@
       <h4>{{ $t("pages.conference.create_conference") }}</h4>
     </template>
     <template v-slot:body_content>
-      <subscription v-if="school?.subscription_expired" />
+      <subscription v-if="schoolStore.schoolData && schoolStore.schoolData.subscription_expired" />
       <p v-else-if="conferences.length > 0" class="mb-0">
         {{ $t("pages.conference.you_cant_create_a_conference") }}
       </p>
@@ -180,7 +182,8 @@ import userTag from "../../ui/userTag.vue";
 
 const router = useRouter();
 const errors = ref([]);
-const { $axiosPlugin, $schoolPlugin } = useNuxtApp();
+const { $axiosPlugin } = useNuxtApp();
+const schoolStore = useSchoolStore();
 const attributes = ref([]);
 const pending = ref(true);
 const pendingAdd = ref(false);
@@ -192,7 +195,6 @@ const childRef = ref(null);
 const authUser = useSanctumUser();
 const conferences = ref([]);
 const conference = ref(null);
-const school = $schoolPlugin;
 
 const addModalIsVisible = ref(false);
 const deleteModalIsVisible = ref(false);
@@ -235,9 +237,6 @@ const addConferenceSubmit = async () => {
     .post("conferences/create", formData)
     .then((response) => {
       pendingAdd.value = false;
-      if (childRef.value) {
-        childRef.value.resetForm();
-      }
       closeAddModal();
       getConferences();
     })
@@ -320,13 +319,16 @@ const getConferenceAttributes = async () => {
 
 const closeAddModal = () => {
   addModalIsVisible.value = false;
+  if (childRef.value) {
+    childRef.value.resetForm();
+  }
   pendingAdd.value = false;
 };
 
 const openDeleteModal = (conf) => {
   conference.value = conf;
   deleteModalIsVisible.value = true;
-}
+};
 
 const closeDeleteModal = () => {
   deleteModalIsVisible.value = false;
