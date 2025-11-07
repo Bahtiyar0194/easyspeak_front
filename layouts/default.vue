@@ -3,14 +3,14 @@
   <div class="relative flex flex-col min-h-screen">
     <stickyBox :offsetTop="0" :className="'z-10 shrink-0'">
       <div
-        class="bg-active w-full flex justify-between px-4 lg:px-20 py-6 border-b-inactive"
+        class="bg-active w-full flex items-center justify-between px-4 lg:px-20 py-4 border-b-inactive"
       >
         <div>
           <nuxt-link :to="localePath('/')">
-            <!-- <img class="w-full" src="~/public/logo.svg"> -->
-            <span class="font-medium text-corp text-3xl">{{
-              $contacts.name
-            }}</span>
+            <div class="logo">
+              <img class="w-28 logo-light" src="~/public/images/logo-light.svg" />
+              <img class="w-28 logo-dark" src="~/public/images/logo-dark.svg" />
+            </div>
           </nuxt-link>
         </div>
 
@@ -74,7 +74,13 @@
                 >
                   {{ $t("pages." + item + ".title") }}
                 </nuxt-link>
-                <a v-else class="leading-none" :href="item.link" :target="item.blank === true ? '_blank' : '_self'">{{ item.text }}</a>
+                <a
+                  v-else
+                  class="leading-none"
+                  :href="item.link"
+                  :target="item.blank === true ? '_blank' : '_self'"
+                  >{{ item.text }}</a
+                >
               </div>
             </li>
           </ul>
@@ -127,21 +133,21 @@ const footer_menu_contact = [
     icon: "pi pi-mobile",
     text: $contacts.phone_format,
     link: "tel:" + $contacts.phone,
-    blank: false
+    blank: false,
   },
   {
     internal: false,
     icon: "pi pi-envelope",
     text: $contacts.email,
     link: "mailto:" + $contacts.email,
-    blank: false
+    blank: false,
   },
   {
     internal: false,
     icon: "pi pi-map-marker",
     text: $contacts.legal_address[localeProperties.value.code],
     link: $contacts.legal_address.map_link,
-    blank: true
+    blank: true,
   },
 ];
 </script>

@@ -13,7 +13,10 @@
             :key="plan.subscription_plan_id"
             :value="plan.subscription_plan_id"
           >
-            {{ plan.subscription_plan_name }}
+            {{ plan.subscription_plan_name }} - {{
+              plan.price.toLocaleString("ru-RU")
+            }}
+            {{ $contacts.bank.currency.symbol }}
           </option>
         </select>
         <label :class="{ 'label-error': errors.subscription_plan_id }">

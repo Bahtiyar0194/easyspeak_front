@@ -362,7 +362,7 @@
   <modal
     :show="fileModalIsVisible"
     :onClose="() => closeFileModal()"
-    :className="'modal-lg'"
+    :className="'modal-2xl'"
     :showLoader="false"
     :closeOnClickSelf="true"
   >
@@ -395,7 +395,7 @@
             </p>
 
             <div class="btn-wrap">
-              <button
+              <button v-if="currentFile.material_type_slug !== 'video'"
                 class="btn btn-light"
                 @click="
                   downloadFile(

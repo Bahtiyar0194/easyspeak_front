@@ -4,6 +4,7 @@ export default defineNuxtConfig({
     '@fortawesome/fontawesome-free/css/all.css',
     'primeicons/primeicons.css',
     'bootstrap-icons/font/bootstrap-icons.css',
+    'plyr/dist/plyr.css',
     //'vue3-carousel/dist/carousel.css',
     'keen-slider/keen-slider.min.css',
     'vue-toastification/dist/index.css',

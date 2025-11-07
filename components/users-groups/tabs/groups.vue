@@ -563,7 +563,7 @@ const newGroupSteps = [
   {
     title: t("pages.groups.saving_a_group"),
     component: thirdStep,
-    props: { groupData },
+    props: { errors, groupData },
   },
 ];
 
@@ -581,7 +581,7 @@ const editGroupSteps = [
   {
     title: t("pages.groups.saving_a_group"),
     component: thirdStep,
-    props: { groupData },
+    props: { errors, groupData },
   },
 ];
 

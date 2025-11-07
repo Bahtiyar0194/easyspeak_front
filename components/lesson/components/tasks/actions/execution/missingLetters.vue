@@ -596,21 +596,29 @@ const focusInput = (event) => {
 
 const changeFocus = (event) => {
   const currentInput = event.target;
-  const value = currentInput.value;
+  const value = currentInput.value.trim(); // убираем пробелы
+  const inputs = Array.from(document.getElementsByClassName("letter_input"));
+  const currentIndex = inputs.indexOf(currentInput);
 
   if (value === "") {
-    return false;
-  } else if (value === " ") {
-    currentInput.value = ""; // ← исправлено
-  } else {
-    const inputs = Array.from(document.getElementsByClassName("letter_input"));
-    const currentIndex = inputs.indexOf(currentInput);
-
-    // Найти следующий пустой input
-    for (let i = currentIndex + 1; i < inputs.length; i++) {
-      if (inputs[i].value === "") {
+    // Найти предыдущий input
+    for (let i = currentIndex - 1; i >= 0; i--) {
+      if (inputs[i]) {
         inputs[i].focus();
         break;
+      }
+    }
+  } else {
+    // Если введён пробел — очистить
+    if (value === " ") {
+      currentInput.value = "";
+    } else {
+      // Найти следующий пустой input
+      for (let i = currentIndex + 1; i < inputs.length; i++) {
+        if (inputs[i].value === "") {
+          inputs[i].focus();
+          break;
+        }
       }
     }
   }

@@ -1,4 +1,5 @@
 <template>
+  <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
   <div class="col-span-12">
     <div class="custom-grid">
       <roleProvider :roles="[1, 2, 3, 4]">
@@ -172,7 +173,7 @@
           </div>
 
           <div class="col-span-12 relative">
-            <loader v-if="pending" :className="'overlay !rounded-lg'" />
+            <loader v-if="pendingSchedule" :className="'overlay !rounded-lg'" />
             <!-- Отображение по режиму -->
             <div
               v-if="mode === 'year'"
@@ -373,7 +374,7 @@
               </div>
 
               <alert v-else :className="'light'">
-                <loader v-if="pending" :className="'overlay'" />
+                <loader v-if="pendingSchedule" :className="'overlay'" />
                 <p class="mb-0">{{ $t("pages.events.no_events") }}</p>
               </alert>
             </div>
@@ -670,6 +671,7 @@ const { $axiosPlugin } = useNuxtApp();
 const attributes = ref([]);
 const schedule = ref([]);
 const pending = ref(true);
+const pendingSchedule = ref(true);
 const pendingEdit = ref(false);
 const searchFormRef = ref(null);
 const editFormRef = ref(null);
@@ -831,12 +833,13 @@ const getScheduleAttributes = async () => {
 };
 
 const getSchedule = async () => {
-  pending.value = true;
+  pendingSchedule.value = true;
   const formData = new FormData(searchFormRef.value);
   await $axiosPlugin
     .post("schedule/get", formData)
     .then((response) => {
       schedule.value = response.data;
+      pendingSchedule.value = false;
       pending.value = false;
     })
     .catch((err) => {

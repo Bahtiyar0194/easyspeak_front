@@ -1636,7 +1636,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .modal-body{
-  @apply overflow-y-auto overflow-x-hidden;
+  @apply overflow-y-auto overflow-x-hidden min-h-10;
   max-height: 80vh;
 }
 
@@ -1698,13 +1698,13 @@ select.error:has(option:checked:disabled) {
 
 .db__header{
   @apply fixed top-0 left-0 w-full bg-active flex justify-between items-center px-3 border-b-inactive z-20;
-  height: 65px;
+  height: 80px;
 }
 
 .db__sidebar__menu{
   @apply bg-active px-3.5 fixed z-50 border-r-inactive;
-  height: calc(100vh - 64px);
-  top: 64px;
+  height: calc(100vh - 79px);
+  top: 79px;
 }
 
 .db__sidebar__menu a{
@@ -1737,7 +1737,7 @@ select.error:has(option:checked:disabled) {
 
 .db__content{
   @apply pb-3 pr-3 pl-16 w-full relative overflow-auto h-screen;
-  padding-top: 85px;
+  padding-top: 95px;
 }
 
 .db__footer__menu{
@@ -1896,7 +1896,6 @@ select.error:has(option:checked:disabled) {
 }
 
 .logo > img{
-  height: 56px;
   max-width: 180px
 }
 

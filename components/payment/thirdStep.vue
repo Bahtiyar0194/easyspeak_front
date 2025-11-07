@@ -182,8 +182,7 @@
           {{
             plans
               .find((plan) => plan.subscription_plan_id === selectedPlan)
-              .price.toFixed(2)
-              .toLocaleString("ru-RU")
+              .price.toLocaleString("ru-RU")
           }}
           {{ $contacts.bank.currency.symbol }}</b
         >

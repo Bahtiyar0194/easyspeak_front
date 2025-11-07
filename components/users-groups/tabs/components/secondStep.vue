@@ -169,11 +169,16 @@
                     </td>
                     <td>
                       <template v-if="user.groups.length > 0">
-                        <span class="text-corp"
+                        <span
+                          class="text-corp"
                           v-for="(group, groupIndex) in user.groups"
                           :key="group.group_id"
                         >
-                        {{groupIndex >= user.groups.length - 1 ? ' ' : '' }}{{ group.group_name }}{{ groupIndex >= user.groups.length - 1 ? '' : ','  }}
+                          {{ groupIndex >= user.groups.length - 1 ? " " : ""
+                          }}{{ group.group_name
+                          }}{{
+                            groupIndex >= user.groups.length - 1 ? "" : ","
+                          }}
                         </span>
                       </template>
                       <span v-else>{{ $t("pages.groups.not_member") }}</span>
@@ -235,6 +240,19 @@
               }"
             />
           </div>
+
+          <ul v-if="errors && errors.members" class="list-group nowrap mt-4">
+            <li class="text-danger font-bold">
+              {{ $t("pages.groups.already_members_of_a_similar_group") }}
+            </li>
+            <li v-for="member in errors.members" :key="member.user_id">
+              {{ $t("learner") }}:
+              <b>{{ member.last_name }} {{ member.first_name }}</b>
+              <br>
+              {{ $t("pages.groups.group") }}:
+              <b>{{ member.group_name }}</b>
+            </li>
+          </ul>
         </div>
       </div>
     </div>

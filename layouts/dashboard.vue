@@ -1,9 +1,13 @@
 <template>
   <div>
     <div class="db__header">
-      <div class="w-32 lg:w-56">
-        <!-- <img class="w-full" src="~/public/logo.svg"> -->
-        <span class="font-medium text-corp text-2xl">{{ $contacts.name }}</span>
+      <div>
+        <nuxt-link :to="localePath('/')">
+          <div class="logo">
+            <img class="w-28 logo-light" src="~/public/images/logo-light.svg" />
+            <img class="w-28 logo-dark" src="~/public/images/logo-dark.svg" />
+          </div>
+        </nuxt-link>
       </div>
 
       <div class="btn-wrap items-center">
@@ -140,8 +144,8 @@ const dashboardMenu = [
     title: "pages.invoices.title",
     icon: "pi pi-receipt",
     link: "/dashboard/invoices",
-    roles: [1]
-  }
+    roles: [1],
+  },
 ];
 
 const hasAccess = computed(() => {

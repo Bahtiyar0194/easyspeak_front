@@ -25,16 +25,16 @@ const tabs_data = computed(() => [
         icon: 'bi bi-broadcast',
         component: current
     },
-    {
-        name: 'planned',
-        title: t('pages.conference.statuses.planned'),
-        icon: 'bi bi-calendar2-event',
-        component: planned
-    },
-    {
-        name: 'passed',
-        title: t('pages.conference.statuses.passed'),
-        icon: 'bi bi-check2-square'
-    },
+    // {
+    //     name: 'planned',
+    //     title: t('pages.conference.statuses.planned'),
+    //     icon: 'bi bi-calendar2-event',
+    //     component: planned
+    // },
+    // {
+    //     name: 'passed',
+    //     title: t('pages.conference.statuses.passed'),
+    //     icon: 'bi bi-check2-square'
+    // },
 ]);
 </script>
