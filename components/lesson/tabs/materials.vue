@@ -70,7 +70,9 @@
                 :class="material.file_icon || material.block_icon"
               ></i>
               <div class="flex flex-col gap-y-0.5">
-                <span class="font-bold text-active">{{ material.annotation }}</span>
+                <span class="font-bold text-active">{{
+                  material.annotation
+                }}</span>
                 <span class="text-inactive text-xs">{{
                   material.file_material_type_name ||
                   material.block_material_type_name
@@ -158,6 +160,7 @@
         : 'modal-lg'
     "
     :showLoader="pendingAdd"
+    :progress="uploadProgress"
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
@@ -219,6 +222,7 @@
         : 'modal-lg'
     "
     :showLoader="pendingEdit"
+    :progress="uploadProgress"
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
@@ -359,6 +363,7 @@ const editFormRef = ref(null);
 const pendingAdd = ref(false);
 const pendingEdit = ref(false);
 const pendingDelete = ref(false);
+const uploadProgress = ref(0);
 const currentMaterial = ref(null);
 const currentMaterialType = ref(null);
 const errors = ref([]);
@@ -410,6 +415,7 @@ const closeAddModal = () => {
 
 const addMaterialSubmit = async () => {
   pendingAdd.value = true;
+  uploadProgress.value = 0;
   const formData = new FormData(addFormRef.value);
   formData.append("operation_type_id", 17);
   formData.append(
@@ -418,7 +424,13 @@ const addMaterialSubmit = async () => {
   );
 
   await $axiosPlugin
-    .post("courses/add_material/" + props.lessonData.lesson_id, formData)
+    .post("courses/add_material/" + props.lessonData.lesson_id, formData, {
+      onUploadProgress: (e) => {
+        if (e.total) {
+          uploadProgress.value = Math.round((e.loaded * 100) / e.total);
+        }
+      },
+    })
     .then((response) => {
       closeAddModal();
       getLesson();
@@ -469,6 +481,7 @@ const closeEditModal = () => {
 
 const editMaterialSubmit = async () => {
   pendingEdit.value = true;
+  uploadProgress.value = 0;
   const formData = new FormData(editFormRef.value);
   formData.append("operation_type_id", 24);
   formData.append(
@@ -484,7 +497,14 @@ const editMaterialSubmit = async () => {
         props.lessonData.lesson_id +
         "/" +
         currentMaterial.value.lesson_material_id,
-      formData
+      formData,
+      {
+        onUploadProgress: (e) => {
+          if (e.total) {
+            uploadProgress.value = Math.round((e.loaded * 100) / e.total);
+          }
+        },
+      }
     )
     .then((response) => {
       closeEditModal();

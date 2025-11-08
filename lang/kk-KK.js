@@ -169,7 +169,7 @@ export default {
         upload: "Жүктеу",
         upload_file: "Файл жүктеу",
         uploading_a_new_file: "Жаңа файл жүктеу",
-        uploading_file: "Файл жүктелініп жатыр...",
+        uploading_file: "Файл жүктелініп жатыр",
         upload_from_media: "Бұрын жүктелгендердің ішінен таңдау",
         generate: "ЖИ арқылы генерациялау",
         deleting_a_file: "Файлды жою",
@@ -210,7 +210,8 @@ export default {
                 normal: "Қалыпты",
                 quality: "Сапасы",
                 fullscreen: "Бүкіл экранға",
-                exitFullscreen: "Бүкіл экраннан шығу"
+                exitFullscreen: "Бүкіл экраннан шығу",
+                processing: "Бейнефайл өңделіп жатыр. Сіз әзірше бейнефайлдың түпнұсқасын қарап отырсыз"
             }
         }
     },

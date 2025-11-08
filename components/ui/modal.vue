@@ -11,6 +11,7 @@
           props.loaderOpacityFull === true ? 'overlay opacity-full' : 'overlay'
         "
         :showPendingText="props.showPendingText"
+        :progress="props.progress"
       />
       <div class="modal-header">
         <slot name="header_content" />
@@ -45,6 +46,11 @@ const props = defineProps({
   showLoader: {
     type: Boolean,
     required: false,
+  },
+  progress: {
+    type: Number,
+    required: false,
+    default: 0
   },
   loaderOpacityFull: {
     type: Boolean,

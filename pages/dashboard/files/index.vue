@@ -253,6 +253,7 @@
     :onClose="() => closeAddModal()"
     :className="'modal-lg'"
     :showLoader="pendingAdd"
+    :progress="uploadProgress"
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
@@ -327,6 +328,7 @@
     :onClose="() => closeReplaceModal()"
     :className="'modal-lg'"
     :showLoader="pendingReplace"
+    :progress="uploadProgress"
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
@@ -395,7 +397,8 @@
             </p>
 
             <div class="btn-wrap">
-              <button v-if="currentFile.material_type_slug !== 'video'"
+              <button
+                v-if="currentFile.material_type_slug !== 'video'"
                 class="btn btn-light"
                 @click="
                   downloadFile(
@@ -455,6 +458,8 @@ const replaceFormRef = ref(null);
 const searchFilter = ref(false);
 const diskInfo = ref(false);
 
+const uploadProgress = ref(0);
+
 const disk = ref(null);
 const fileTypes = ref([]);
 const currentFileType = ref(null);
@@ -462,8 +467,8 @@ const currentFile = ref(null);
 const files = ref([]);
 
 const perPage = ref(10);
-const sortKey = ref("files.file_name"); // Ключ сортировки
-const sortDirection = ref("asc"); // Направление сортировки: asc или desc
+const sortKey = ref("files.created_at"); // Ключ сортировки
+const sortDirection = ref("desc"); // Направление сортировки: asc или desc
 
 const addModalIsVisible = ref(false);
 const replaceModalIsVisible = ref(false);
@@ -569,11 +574,18 @@ const getFile = (file) => {
 
 const addFileSubmit = async () => {
   pendingAdd.value = true;
+  uploadProgress.value = 0;
   const formData = new FormData(addFormRef.value);
   formData.append("operation_type_id", 17);
 
   await $axiosPlugin
-    .post("media/add", formData)
+    .post("media/add", formData, {
+      onUploadProgress: (e) => {
+        if (e.total) {
+          uploadProgress.value = Math.round((e.loaded * 100) / e.total);
+        }
+      },
+    })
     .then((response) => {
       getFiles();
       closeAddModal();
@@ -601,11 +613,18 @@ const addFileSubmit = async () => {
 
 const replaceFileSubmit = async (fileId) => {
   pendingReplace.value = true;
+  uploadProgress.value = 0;
   const formData = new FormData(replaceFormRef.value);
   formData.append("operation_type_id", 17);
 
   await $axiosPlugin
-    .post("media/replace/" + fileId, formData)
+    .post("media/replace/" + fileId, formData, {
+      onUploadProgress: (e) => {
+        if (e.total) {
+          uploadProgress.value = Math.round((e.loaded * 100) / e.total);
+        }
+      },
+    })
     .then((response) => {
       getFiles();
       currentFile.value = null;

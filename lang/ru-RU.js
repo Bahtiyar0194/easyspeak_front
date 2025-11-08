@@ -169,7 +169,7 @@ export default {
         upload: "Загрузить",
         upload_file: "Загрузить файл",
         uploading_a_new_file: "Загрузка нового файла",
-        uploading_file: "Идет загрузка файла...",
+        uploading_file: "Идет загрузка файла",
         upload_from_media: "Выбрать из ранее загруженных",
         generate: "Cгенерировать с помощью ИИ",
         deleting_a_file: "Удаление файла",
@@ -210,7 +210,8 @@ export default {
                 normal: "Нормальная",
                 quality: "Качество",
                 fullscreen: "На весь экран",
-                exitFullscreen: "Выйти из полного экрана"
+                exitFullscreen: "Выйти из полного экрана",
+                processing: "Видеофайл обрабатывается. Пока вы смотрите оригинальный видеофайл"
             }
         }
     },

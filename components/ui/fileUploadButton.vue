@@ -28,7 +28,7 @@
           v-else-if="selectedFile.type.startsWith('video/')"
           :key="'video_' + previewUrl"
           :src="previewUrl"
-          :class="'mb-4'"
+          :preview="true"
         />
       </template>
 
