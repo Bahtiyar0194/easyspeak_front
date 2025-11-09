@@ -187,6 +187,7 @@ export default {
             title: "Файлды ауыстыру",
             replace: "Ауыстыру",
         },
+        convert: "Түрлендіру",
         image: {
             select: "Суретті таңдаңыз",
             current: "Ағымдағы жүктеліп тұрған сурет"

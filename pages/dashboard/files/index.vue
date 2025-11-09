@@ -365,7 +365,7 @@
     :show="fileModalIsVisible"
     :onClose="() => closeFileModal()"
     :className="'modal-2xl'"
-    :showLoader="false"
+    :showLoader="pendingConvert"
     :closeOnClickSelf="true"
   >
     <template v-slot:header_content>
@@ -418,6 +418,18 @@
                 <i class="pi pi-replay"></i>
                 {{ $t("file.replace.replace") }}
               </button>
+
+              <button
+                v-if="
+                  getFileExtension(currentFile.target) === 'mp4' &&
+                  currentFile.processing === 0
+                "
+                class="btn btn-light"
+                @click="convertFileSubmit(currentFile.file_id)"
+              >
+                <i class="pi pi-cog"></i>
+                {{ $t("file.convert") }}
+              </button>
             </div>
           </div>
         </div>
@@ -450,6 +462,7 @@ const { $axiosPlugin } = useNuxtApp();
 const pending = ref(true);
 const pendingAdd = ref(false);
 const pendingReplace = ref(false);
+const pendingConvert = ref(false);
 const pendingFiles = ref(false);
 const tableRef = ref(null);
 const searchFormRef = ref(null);
@@ -651,6 +664,39 @@ const replaceFileSubmit = async (fileId) => {
         }
       } else {
         router.push("/error");
+      }
+    });
+};
+
+const convertFileSubmit = async (fileId) => {
+  pendingConvert.value = true;
+  const formData = new FormData(replaceFormRef.value);
+  formData.append("operation_type_id", 17);
+
+  await $axiosPlugin
+    .post("media/convert/" + fileId, formData)
+    .then((response) => {
+      setTimeout(() => {
+        getFiles();
+        pendingConvert.value = false;
+        currentFile.value = null;
+        setTimeout(() => {
+          currentFile.value = files.value.data.find(
+            (f) => f.file_id === fileId
+          );
+        }, 1000);
+      }, 1000);
+    })
+    .catch((err) => {
+      if (err.response) {
+        router.push({
+          path: "/error",
+          query: {
+            status: err.response.status,
+            message: err.response.data.message,
+            url: err.request.responseURL,
+          },
+        });
       }
     });
 };
