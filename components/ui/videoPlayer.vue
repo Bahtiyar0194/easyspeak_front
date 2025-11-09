@@ -129,7 +129,7 @@ onMounted(() => {
 <script setup>
 import alert from "./alert.vue";
 import loader from "./loader.vue";
-import { useRouter } from "nuxt/app";
+import { useRouter, useRuntimeConfig } from "nuxt/app";
 import { ref, onMounted, onBeforeUnmount } from "vue";
 import Hls from "hls.js";
 
@@ -137,6 +137,7 @@ const router = useRouter();
 const pending = ref(false);
 const processing = ref(false);
 const { $axiosPlugin, $Plyr } = useNuxtApp();
+const config = useRuntimeConfig();
 const { t } = useI18n();
 
 const props = defineProps({
@@ -225,10 +226,12 @@ async function loadAndInitVideo(fileName, video, baseOptions) {
       processing.value = true;
     }
 
-    if (props.src.endsWith(".m3u8")) {
+    if (response.data.target.endsWith(".m3u8")) {
       if (Hls.isSupported()) {
         hls = new Hls();
-        hls.loadSource(props.src);
+        hls.loadSource(
+          config.public.apiBase + "/media/get/" + response.data.target
+        );
         hls.attachMedia(video);
 
         hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
@@ -259,7 +262,8 @@ async function loadAndInitVideo(fileName, video, baseOptions) {
         });
       } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
         // Safari
-        video.src = props.src;
+        video.src =
+          config.public.apiBase + "/media/get/" + response.data.target;
         const safariOptions = {
           ...baseOptions,
           settings: baseOptions.settings.filter((s) => s !== "quality"),
