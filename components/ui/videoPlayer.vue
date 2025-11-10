@@ -141,8 +141,14 @@ const config = useRuntimeConfig();
 const { t } = useI18n();
 
 const props = defineProps({
-  src: { type: String, required: true },
-  preview: { type: Boolean, default: false },
+  src: {
+    type: String,
+    required: true,
+  },
+  preview: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const videoEl = ref(null);
@@ -300,7 +306,6 @@ function handleError(err) {
 <style scoped>
 .video-container {
   max-width: 100%;
-  margin: auto;
   border-radius: 10px;
   overflow: hidden;
 }

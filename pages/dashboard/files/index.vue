@@ -191,7 +191,7 @@
                 <tr
                   v-for="file in files.data"
                   :key="file.file_id"
-                  @click="getFile(file)"
+                  @click="getFile(file.file_id)"
                 >
                   <td>{{ file.file_name }}</td>
                   <td>
@@ -365,7 +365,7 @@
     :show="fileModalIsVisible"
     :onClose="() => closeFileModal()"
     :className="'modal-2xl'"
-    :showLoader="pendingConvert"
+    :showLoader="pendingFile"
     :closeOnClickSelf="true"
   >
     <template v-slot:header_content>
@@ -462,7 +462,7 @@ const { $axiosPlugin } = useNuxtApp();
 const pending = ref(true);
 const pendingAdd = ref(false);
 const pendingReplace = ref(false);
-const pendingConvert = ref(false);
+const pendingFile = ref(false);
 const pendingFiles = ref(false);
 const tableRef = ref(null);
 const searchFormRef = ref(null);
@@ -580,9 +580,29 @@ const getFiles = async (url) => {
     });
 };
 
-const getFile = (file) => {
-  currentFile.value = file;
+const getFile = async (file_id) => {
+  pendingFile.value = true;
   fileModalIsVisible.value = true;
+  await $axiosPlugin
+    .get("media/get/file_info/" + file_id)
+    .then((response) => {
+      currentFile.value = response.data;
+      pendingFile.value = false;
+    })
+    .catch((err) => {
+      if (err.response) {
+        router.push({
+          path: "/error",
+          query: {
+            status: err.response.status,
+            message: err.response.data.message,
+            url: err.request.responseURL,
+          },
+        });
+      } else {
+        router.push("/error");
+      }
+    });
 };
 
 const addFileSubmit = async () => {
@@ -602,6 +622,7 @@ const addFileSubmit = async () => {
     .then((response) => {
       getFiles();
       closeAddModal();
+      getFile(response.data.file_id);
     })
     .catch((err) => {
       if (err.response) {
@@ -639,13 +660,10 @@ const replaceFileSubmit = async (fileId) => {
       },
     })
     .then((response) => {
-      getFiles();
       currentFile.value = null;
+      getFiles();
       closeReplaceModal();
-      setTimeout(() => {
-        currentFile.value = files.value.data.find((f) => f.file_id === fileId);
-        fileModalIsVisible.value = true;
-      }, 1000);
+      getFile(fileId);
     })
     .catch((err) => {
       if (err.response) {
@@ -669,23 +687,16 @@ const replaceFileSubmit = async (fileId) => {
 };
 
 const convertFileSubmit = async (fileId) => {
-  pendingConvert.value = true;
+  pendingFile.value = true;
   const formData = new FormData(replaceFormRef.value);
   formData.append("operation_type_id", 17);
 
   await $axiosPlugin
     .post("media/convert/" + fileId, formData)
     .then((response) => {
-      setTimeout(() => {
-        getFiles();
-        pendingConvert.value = false;
-        currentFile.value = null;
-        setTimeout(() => {
-          currentFile.value = files.value.data.find(
-            (f) => f.file_id === fileId
-          );
-        }, 1000);
-      }, 1000);
+      currentFile.value = null;
+      getFiles();
+      getFile(fileId);
     })
     .catch((err) => {
       if (err.response) {
