@@ -695,7 +695,6 @@ const convertFileSubmit = async (fileId) => {
     .post("media/convert/" + fileId, formData)
     .then((response) => {
       currentFile.value = null;
-      getFiles();
       getFile(fileId);
     })
     .catch((err) => {
