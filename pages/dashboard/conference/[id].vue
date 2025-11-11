@@ -857,6 +857,34 @@
           </taskResultChart>
         </template>
       </modal>
+
+      <modal
+        :show="leaveModalIsVisible"
+        :onClose="() => cancelLeave()"
+        :className="'modal-lg'"
+        :showLoader="false"
+        :closeOnClickSelf="true"
+      >
+        <template v-slot:header_content>
+          <h5>{{ $t("pages.conference.leave.title") }}</h5>
+        </template>
+        <template v-slot:body_content>
+          <p>{{ $t("pages.conference.leave.confirm") }}</p>
+          <div class="btn-wrap justify-end mt-8">
+            <button
+              @click="proceedLeave()"
+              class="btn btn-danger"
+            >
+              <i class="pi pi-sign-out"></i>
+              {{ $t("pages.conference.leave.yes") }}
+            </button>
+            <button @click="cancelLeave()" class="btn btn-light">
+              <i class="pi pi-sign-in"></i>
+              {{ $t("pages.conference.leave.no") }}
+            </button>
+          </div>
+        </template>
+      </modal>
     </template>
   </div>
   <div v-else class="col-span-12">
@@ -870,8 +898,15 @@
 </template>
 
 <script setup>
-import { useRoute, useRouter } from "nuxt/app";
-import { ref, onMounted, onBeforeUnmount, provide, shallowRef } from "vue";
+import { useRoute, useRouter, onBeforeRouteLeave } from "nuxt/app";
+import {
+  ref,
+  onMounted,
+  onUnmounted,
+  onBeforeUnmount,
+  provide,
+  shallowRef,
+} from "vue";
 import { monitorNetworkAndAdjustQuality } from "../../../utils/networkQuality";
 import { useToast } from "vue-toastification";
 import Peer from "peerjs";
@@ -890,6 +925,7 @@ import stickyBox from "../../../components/ui/stickyBox.vue";
 
 const router = useRouter();
 const route = useRoute();
+const pendingNavigation = ref(null);
 const conference_id = route.params.id;
 const pageTitle = ref("");
 
@@ -937,6 +973,7 @@ const messages = ref([]);
 const unReadMessages = ref(0);
 
 //Modals
+const leaveModalIsVisible = ref(false);
 const participantsModalIsVisible = ref(false);
 const drawingBoardModalIsVisible = ref(false);
 const messagesModalIsVisible = ref(false);
@@ -979,6 +1016,32 @@ definePageMeta({
   layout: "dashboard",
   middleware: ["sanctum:auth"],
 });
+
+// SPA-переходы
+onBeforeRouteLeave((to, from, next) => {
+  confirmLeave();
+  pendingNavigation.value = next;
+  next(false);
+});
+
+// функция для подтверждения ухода
+const confirmLeave = () => {
+  leaveModalIsVisible.value = true;
+};
+
+// методы модального окна
+const proceedLeave = () => {
+  leaveModalIsVisible.value = false;
+  if (pendingNavigation.value) {
+    pendingNavigation.value();
+    pendingNavigation.value = null;
+  }
+};
+
+const cancelLeave = () => {
+  leaveModalIsVisible.value = false;
+  pendingNavigation.value = null;
+};
 
 const openMaterial = (material) => {
   closeAllModals();
@@ -1873,6 +1936,17 @@ const reloadPage = () => {
 
 onMounted(() => {
   getConference();
+
+  const handleBeforeUnload = (event) => {
+    event.preventDefault();
+    event.returnValue = "";
+    return "";
+  };
+
+  window.addEventListener("beforeunload", handleBeforeUnload);
+  onUnmounted(() => {
+    window.removeEventListener("beforeunload", handleBeforeUnload);
+  });
 });
 
 onBeforeUnmount(() => {
