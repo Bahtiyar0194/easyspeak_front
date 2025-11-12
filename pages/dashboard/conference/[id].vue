@@ -871,10 +871,7 @@
         <template v-slot:body_content>
           <p>{{ $t("pages.conference.leave.confirm") }}</p>
           <div class="btn-wrap justify-end mt-8">
-            <button
-              @click="proceedLeave()"
-              class="btn btn-danger"
-            >
+            <button @click="proceedLeave()" class="btn btn-danger">
               <i class="pi pi-sign-out"></i>
               {{ $t("pages.conference.leave.yes") }}
             </button>
@@ -925,7 +922,7 @@ import stickyBox from "../../../components/ui/stickyBox.vue";
 
 const router = useRouter();
 const route = useRoute();
-const pendingNavigation = ref(null);
+const pendingRoute = ref(null);
 const conference_id = route.params.id;
 const pageTitle = ref("");
 
@@ -1019,28 +1016,22 @@ definePageMeta({
 
 // SPA-переходы
 onBeforeRouteLeave((to, from, next) => {
-  confirmLeave();
-  pendingNavigation.value = next;
-  next(false);
+  if (pendingRoute.value) {
+    next(true);
+  } else {
+    leaveModalIsVisible.value = true;
+    pendingRoute.value = to;
+  }
 });
-
-// функция для подтверждения ухода
-const confirmLeave = () => {
-  leaveModalIsVisible.value = true;
-};
 
 // методы модального окна
 const proceedLeave = () => {
-  leaveModalIsVisible.value = false;
-  if (pendingNavigation.value) {
-    pendingNavigation.value();
-    pendingNavigation.value = null;
-  }
+  router.push(pendingRoute.value);
 };
 
 const cancelLeave = () => {
   leaveModalIsVisible.value = false;
-  pendingNavigation.value = null;
+  pendingRoute.value = null;
 };
 
 const openMaterial = (material) => {
