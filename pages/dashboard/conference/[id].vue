@@ -1016,11 +1016,15 @@ definePageMeta({
 
 // SPA-переходы
 onBeforeRouteLeave((to, from, next) => {
-  if (pendingRoute.value) {
-    next(true);
+  if (localStream.value) {
+    if (pendingRoute.value) {
+      next(true);
+    } else {
+      leaveModalIsVisible.value = true;
+      pendingRoute.value = to;
+    }
   } else {
-    leaveModalIsVisible.value = true;
-    pendingRoute.value = to;
+    next(true);
   }
 });
 
