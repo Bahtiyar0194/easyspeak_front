@@ -1123,7 +1123,7 @@ const selectCourse = (course) => {
     gradeModalClass.value = "modal-4xl";
     activeCourse.value = course;
     pendingGrade.value = false;
-  }, 500);
+  }, 200);
 };
 
 const goToCourses = () => {
@@ -1142,7 +1142,7 @@ const selectLevel = (level) => {
     gradeModalClass.value = gradeModalDefaultClass;
     activeLevel.value = level;
     pendingGrade.value = false;
-  }, 500);
+  }, 200);
 };
 
 const goToLevels = () => {
@@ -1160,7 +1160,7 @@ const selectSection = (section) => {
     gradeModalClass.value = "modal-2xl";
     activeSection.value = section;
     pendingGrade.value = false;
-  }, 500);
+  }, 200);
 };
 
 const goToSections = () => {
@@ -1177,7 +1177,7 @@ const selectLesson = (lesson) => {
     gradeModalClass.value = "modal-2xl";
     activeLesson.value = lesson;
     pendingGrade.value = false;
-  }, 500);
+  }, 200);
 };
 
 const goToLessons = () => {
@@ -1193,7 +1193,7 @@ const selectTask = (task) => {
     gradeModalClass.value = "modal-2xl";
     activeTask.value = task;
     pendingGrade.value = false;
-  }, 500);
+  }, 200);
 };
 
 const goToTasks = () => {

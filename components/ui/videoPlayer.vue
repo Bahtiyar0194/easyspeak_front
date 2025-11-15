@@ -183,6 +183,15 @@ onMounted(() => {
       fullscreen: t("file.video.player.fullscreen"),
       exitFullscreen: t("file.video.player.exitFullscreen"),
     },
+    // markers: {
+    //   enabled: true,
+    //   points: [
+    //     {
+    //       time: 10,
+    //       label: 'Ammy'
+    //     }
+    //   ]
+    // }
   };
 
   if (props.preview === true) {
@@ -219,8 +228,26 @@ function setupVideoInteractions() {
   });
 }
 
-function initPlyr(video, options) {
-  player = new $Plyr(video, options);
+async function initPlyr(video, options = {}) {
+  const baseName = props.src
+    .split("/")
+    .pop()
+    .replace(/\.[^/.]+$/, "");
+  const vttUrl =
+    config.public.apiBase + "/media/get/" + baseName + "_thumbs.vtt";
+
+  let previewOptions = {};
+  try {
+    const res = await fetch(vttUrl, { method: "HEAD" }); // проверяем существование
+    if (res.ok) {
+      previewOptions = { previewThumbnails: { enabled: true, src: vttUrl } };
+    }
+  } catch (e) {
+    console.warn("Preview thumbnails not found:", e);
+  }
+
+  const mergedOptions = { ...options, ...previewOptions };
+  player = new $Plyr(video, mergedOptions);
 }
 
 async function loadAndInitVideo(fileName, video, baseOptions) {

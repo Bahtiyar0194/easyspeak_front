@@ -12,6 +12,7 @@
             v-for="plan in plans"
             :key="plan.subscription_plan_id"
             :value="plan.subscription_plan_id"
+            :disabled="schoolStore.schoolData.active_users_count > plan.users_count"
           >
             {{ plan.subscription_plan_name }} - {{
               plan.price.toLocaleString("ru-RU")
@@ -32,6 +33,8 @@
 </template>
 
 <script setup>
+const schoolStore = useSchoolStore();
+
 const props = defineProps({
   errors: {
     type: Object,

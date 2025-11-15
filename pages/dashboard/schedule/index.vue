@@ -150,7 +150,7 @@
               <button
                 v-for="m in modes"
                 :key="m"
-                class="btn !w-full max-md:!px-2 max-md:!py-1 max-md:!text-sm max-md:!rounded-lg"
+                class="btn !w-full max-md:!px-2 max-md:!py-1 max-md:!text-sm max-md:!rounded-lg !font-medium"
                 :class="mode === m ? 'btn-success' : 'btn-light'"
                 @click="mode = m"
               >
@@ -234,7 +234,12 @@
                     <div
                       v-for="e in eventsForDay(currentDate.date(d)).slice(0, 2)"
                       :key="e.uuid"
-                      class="py-0.5 px-1 rounded bg-success text-white"
+                      :class="[
+                        'py-0.5 px-1 rounded',
+                        currentDate.date(d).isBefore(dayjs(), 'day')
+                          ? 'bg-inactive text-inactive'
+                          : 'bg-success text-white',
+                      ]"
                     >
                       <div class="flex gap-1.5 text-nowrap">
                         <span class="font-medium">{{ e.time }}</span>
@@ -295,7 +300,12 @@
                         currentDate.date(d.date())
                       ).slice(0, 2)"
                       :key="e.uuid"
-                      class="py-0.5 px-1 rounded bg-success text-white"
+                      :class="[
+                        'py-0.5 px-1 rounded text-white',
+                        currentDate.date(d.date()).isBefore(dayjs(), 'day')
+                          ? 'bg-inactive text-inactive'
+                          : 'bg-success text-white',
+                      ]"
                     >
                       <div class="flex gap-1.5 text-nowrap">
                         <span class="font-medium">{{ e.time }}</span>

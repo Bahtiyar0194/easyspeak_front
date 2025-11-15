@@ -39,13 +39,21 @@
                 {{ $t("form.bin") }}:
                 <b>{{ schoolStore.schoolData.bin }}</b>
               </p>
-              <p class="mb-0">
+              <p class="mb-3">
                 {{ $t("registered_at") }}:
                 <b>{{
                   new Date(
                     schoolStore.schoolData.created_at
                   ).toLocaleDateString()
                 }}</b>
+              </p>
+
+              <p class="mb-0">
+                {{ $t("pages.users.users_count") }}:
+
+                <b class="text-corp"
+                  >{{ schoolStore.schoolData.active_users_count }}
+                </b>
               </p>
             </div>
           </div>
