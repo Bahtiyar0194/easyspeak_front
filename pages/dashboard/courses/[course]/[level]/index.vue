@@ -1,7 +1,11 @@
 <template>
   <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
   <div
-    v-if="sectionsData && sectionsData?.level?.is_available"
+    v-if="
+      sectionsData.level &&
+      sectionsData.level.available_status &&
+      sectionsData.level.available_status.is_available === true
+    "
     class="col-span-12"
   >
     <div class="custom-grid">
@@ -24,7 +28,7 @@
       </div>
 
       <div
-        v-if="sectionsData.level.is_available_always === 1"
+        v-if="sectionsData.level.available_status.is_available_always === true"
         class="col-span-12"
       >
         <div class="bg-corp text-white p-4 rounded-xl">

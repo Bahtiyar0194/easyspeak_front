@@ -59,6 +59,7 @@ export default {
     nothing_was_found_for_your_query: "По вашему запросу ничего не найдено",
     time_is_up: "Время вышло!",
     remaining_time: "Оставшееся время",
+    already_started: "Уже началась",
     write_here_and_press_add: "Напишите здесь и затем нажмите на кнопку 'Добавить'",
 
     sort_by_this_column: 'Сортировать по данному столбцу',
@@ -81,6 +82,7 @@ export default {
     selected: "Выбрано",
     not_selected: "Не выбрано",
     not_specified: "Не указано",
+    changed: "Изменено",
     your_answer: "Ваш ответ",
     learner_answer: "Ответ ученика",
     type_your_answer: "Введите ваш ответ",
@@ -150,6 +152,14 @@ export default {
         switch_to_a_dark_theme: "Переключиться на темную тему"
     },
 
+    save_changes: {
+        title: "Сохранение изменении",
+        confirm: "Вы хотите сохранить изменения?",
+        save: "Да, сохранить",
+        unsave: "Не сохранять",
+        return: "Вернуться"
+    },
+
     file: {
         file: "Файл",
         files: "Файлы",
@@ -214,6 +224,14 @@ export default {
                 fullscreen: "На весь экран",
                 exitFullscreen: "Выйти из полного экрана",
                 processing: "Видеофайл обрабатывается. Пока вы смотрите оригинальный видеофайл"
+            },
+            markers: {
+                title: 'Маркеры',
+                add: 'Добавить маркер',
+                name: 'Название маркера',
+                name_error: 'Введите название маркера',
+                second: 'Секунд',
+                second_error: 'Введите секунду'
             }
         }
     },
@@ -378,6 +396,25 @@ export default {
         }
     },
 
+    telegram: {
+        connect: {
+            title: 'Подключиться к Telegram боту',
+            connect: 'Подключить',
+        },
+        disconnect: {
+            title: 'Отключение от Telegram бота',
+            disconnect: 'Отключить',
+            confirm: 'Ваш аккаунт {auth_user_name} будет отключен от Telegram аккаунта {tg_user_name}. После отвязки бота вы перестанете получать уведомления о занятиях и важных обновлениях. При необходимости вы сможете подключить бота снова в любое время. Вы уверены? Для продолжения нажмите кнопку "Отключить".',
+        },
+        banner: {
+            title: 'Подключите Telegram-бот от EasySpeak',
+            description: 'Будьте всегда в курсе событии, получайте уведомления о занятиях, смотрите расписание и отслеживайте свой прогресс прямо в Telegram.'
+        },
+        cancel: 'Отмена',
+        message_1: 'Ваш аккаунт {auth_user_name} будет подключен к Telegram аккаунту {tg_user_name}. Для продолжения нажмите кнопку "Подключить".',
+        message_2: 'Ваш аккаунт {auth_user_name} уже подключен к Telegram аккаунту {old_tg_user_name}. Для подключения к Telegram аккаунту {new_tg_user_name} нажмите кнопку "Подключить".'
+    },
+
     board: {
         show_tool_parameters: 'Показать свойства инструмента',
         tool_parameters: 'Свойства инструмента',
@@ -406,6 +443,37 @@ export default {
             clear: 'Очистить',
             save: 'Сохранить'
         }
+    },
+
+    weekdays: {
+        monday: {
+            title: 'Понедельник',
+            even: 'Каждый понедельник'
+        },
+        tuesday: {
+            title: 'Вторник',
+            even: 'Каждый вторник'
+        },
+        wednesday: {
+            title: 'Среда',
+            even: 'Каждая среда'
+        },
+        thursday: {
+            title: 'Четверг',
+            even: 'Каждый четверг'
+        },
+        friday: {
+            title: 'Пятница',
+            even: 'Каждая пятница'
+        },
+        saturday: {
+            title: 'Суббота',
+            even: 'Каждая суббота'
+        },
+        sunday: {
+            title: 'Воскресенье',
+            even: 'Каждое воскресенье'
+        },
     },
 
     pages: {
@@ -513,6 +581,11 @@ export default {
             sign_out: 'Выйти из аккаунта',
         },
 
+        logout: {
+            title: 'Выход из аккаунта',
+            please_wait: 'Пожалуйста подождите, идет выход из аккаунта'
+        },
+
         register: {
             title: 'Регистрация',
             have_an_account: 'У меня есть акканут.',
@@ -590,11 +663,22 @@ export default {
         },
 
         payment: {
+            title: 'Просмотр оплаты',
             choose_a_payment_method: 'Выбор метода оплаты',
+            choose_a_payment_form: 'Выберите форму приема оплаты',
             payment_method: 'Метод оплаты',
+            payment_form: 'Форма приема оплаты',
             accept_payment: 'Подтверждение оплаты',
+            please_wait: 'Пожалуйста подождите, выполняется прием оплаты',
             to_pay: 'Оплатить',
             to: 'Всего к оплате',
+
+            forms: {
+                natural_person: 'От самого физ.лица (ученика)',
+                legal_entity: 'От имени юр.лица',
+                message_1: 'Внимание! Вы можете обрабатывать платежи только зарегистрированным группам от имени юридического лица.'
+            },
+
             methods: {
                 invoice: {
                     title: 'Счет на оплату',
@@ -648,12 +732,13 @@ export default {
             success: 'Оплата прошла успешно',
             success_alt: 'Оплачено',
             fail: 'Оплата не прошла',
-            fail_alt: 'Не оплачено'
+            fail_alt: 'Не оплачено',
+            fail_alt_2: 'Не оплачено',
         },
 
         '3ds': {
             title: '3-D Secure аутентификация',
-            please_wait: 'Пожалуйста подождите. Идет 3-D Secure аутентификация'
+            please_wait: 'Пожалуйста подождите, идет 3-D Secure аутентификация'
         },
 
         invoices: {
@@ -663,14 +748,18 @@ export default {
         },
 
         schedule: {
-            title: 'Расписание',
+            title: 'Расписание уроков',
+            show_schedule: 'Показать расписание',
+            show_entire_schedule: 'Показать полное расписание',
             search_filter: 'Фильтр поиска по расписанию',
-            start_date: 'Дата начала занятии',
-            start_date_from: 'Дата начала занятии (с)',
-            start_date_to: 'Дата начала занятии (по)',
-            end_date: 'Дата окончания занятии',
-            start_time: 'Время начала занятии',
-            end_time: 'Время окончания занятии',
+            lesson_days: 'Дни проведения уроков',
+            select_lesson_days: 'Выберите дни проведения уроков',
+            start_date: 'Дата начала расписания',
+            start_date_from: 'Дата начала расписания (с)',
+            start_date_to: 'Дата начала расписания (по)',
+            end_date: 'Дата окончания расписания',
+            start_time: 'Время начала урока',
+            end_time: 'Время окончания урока',
         },
 
         events: {
@@ -686,7 +775,9 @@ export default {
             delete_confirm: 'Вы действительно хотите удалить данную конференцию?',
             mic: 'Микрофон',
             mic_turn_on: 'Включить микрофон',
+            mic_turned_on: 'Микрофон включен',
             mic_turn_off: 'Отключить микрофон',
+            mic_turned_off: 'Микрофон отключен',
             video: 'Видео',
             video_turn_on: 'Включить видео',
             video_turn_off: 'Отключить видео',
@@ -711,7 +802,8 @@ export default {
                 slider: 'Карусель'
             },
             messages: {
-                requesting_access: 'Получение доступа к камере и микрофону'
+                requesting_access: 'Получение доступа к камере и микрофону',
+                no_paid: 'Доступ к конференции ограничен, поскольку данный урок не был оплачен.'
             },
             statuses: {
                 current: 'Текущие',
@@ -763,7 +855,7 @@ export default {
             choose_a_course_section: 'Выберите главу',
             course_is_not_available: 'Курс недоступен. Пожалуйста, свяжитесь с администратором для получения доступа к курсу.',
             course_is_not_available_for_learner: 'Для получения доступа к курсу нужно добавить ученика в группу.',
-            not_sections: 'Нету секции для курсов.',
+            not_sections: 'Нет секции для курса.',
             modal: {
                 description: 'Пройдите короткий тест, чтобы узнать свой уровень владения языком! Для начала выберите школу и зарегистрируйтесь на нашей платформе.',
                 description_alt: 'Пройдите короткий тест, чтобы узнать свой уровень владения языком.',
@@ -774,9 +866,26 @@ export default {
         lessons: {
             title: 'Уроки',
             lessons_count: 'Уроков',
+            lessons_list: 'Список уроков',
             there_is_no_lessons: 'Нет уроков',
+            there_is_no_lessons_alt: 'Нет уроков для данной секции',
+            pay_for_lessons: 'Оплатить занятия',
+            pay_for_lessons_alt: 'Оплата занятии',
+            price: 'Стоимость одного занятия',
+            price_alt: 'Стоимость занятия',
+            price_edit: 'Стоимость занятия может изменить только владелец школы',
             lesson: 'Урок',
             lesson_name: 'Название урока',
+            free_lesson: 'Бесплатный урок',
+            first_lesson_free: 'Первый урок бесплатный',
+            bought_by_learner: 'Оплачено учеником',
+            current_lessons: 'Текущие уроки',
+            no_current_lessons: 'Пока нет текущих уроков на данный момент',
+            gone_lessons: 'Пройденные уроки',
+            upcoming_lessons: 'Ближайшие уроки',
+            upcoming_lessons_alt: 'Предстоящие уроки',
+            no_gone_lessons: 'Пока нет пройденных уроков на данный момент',
+            no_upcoming_lessons: 'Пока нет ближайших уроков на данный момент',
             lesson_description: 'Краткое описание урока',
             choosing_a_lesson: 'Выбор урока',
             choose_a_lesson: 'Выберите урок',

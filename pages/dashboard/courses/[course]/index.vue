@@ -8,9 +8,9 @@
         class="col-span-12 lg:col-span-3"
       >
         <nuxt-link
-          :class="level.is_available === false ? 'cursor-not-allowed' : ''"
+          :class="level.available_status.is_available === false ? 'cursor-not-allowed' : ''"
           :to="
-            level.is_available === false
+            level.available_status.is_available === false
               ? null
               : localePath(
                   '/dashboard/courses/' + course_slug + '/' + level.level_slug

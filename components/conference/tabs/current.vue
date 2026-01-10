@@ -21,95 +21,23 @@
           :key="conference.uuid"
           class="col-span-12 lg:col-span-6"
         >
-          <div class="card p-4">
-            <div class="custom-grid">
-              <div class="col-span-12">
-                <h3>
-                  {{ conference.lesson_name }}
-                </h3>
-
-                <p class="text-inactive">
-                  <i class="pi pi-book"></i> {{ $t("pages.courses.course") }}:
-                  <b class="text-active"
-                    >{{ conference.course_name }} -
-                    {{ conference.level_name }}</b
-                  >
-                </p>
-                <p class="text-inactive">
-                  <i class="pi pi-users"></i> {{ $t("pages.groups.group") }}:
-                  <b class="text-active">{{ conference.group_name }}</b>
-                </p>
-                <p class="text-inactive">
-                  <i class="pi pi-user"></i> {{ $t("mentor") }}:
-                  <b class="text-active"
-                    >{{ conference.mentor_last_name }}
-                    {{ conference.mentor_first_name }}</b
-                  >
-                </p>
-                <p class="text-inactive">
-                  <i class="pi pi-clock"></i> {{ $t("start_time") }}:
-                  <b class="text-active">{{
-                    conference.start_time_formatted
-                  }}</b>
-                </p>
-                <p class="text-inactive">
-                  <i class="pi pi-clock"></i> {{ $t("end_time") }}:
-                  <b class="text-active">{{ conference.end_time_formatted }}</b>
-                </p>
-
-                <p class="text-inactive mb-0">
-                  <i class="pi pi-clock"></i> {{ $t("remaining_time") }}:
-                  <b class="text-danger">
-                    <countdownTimer
-                      :endDate="conference.end_time"
-                      :onComplete="() => timeIsUp()"
-                    />
-                  </b>
-                </p>
-              </div>
-              <div class="col-span-12">
-                <p>
-                  {{ $t("pages.groups.members") }}:
-                  <b>{{ conference.members.length }}</b>
-                </p>
-
-                <div v-if="conference.members.length > 0" class="btn-wrap">
-                  <userTag
-                    v-for="(member, index) in conference.members"
-                    :key="index"
-                    :user="member"
-                    :closable="false"
-                  />
-                </div>
-              </div>
-              <div class="col-span-12">
-                <div class="btn-wrap">
-                  <nuxt-link
-                    class="btn btn-outline-success animate-pulse-glow"
-                    :to="localePath('/dashboard/conference/' + conference.uuid)"
-                  >
-                    <i class="pi pi-video"></i>
-                    {{ $t("pages.conference.join") }}
-                  </nuxt-link>
-
-                  <button
-                    v-if="authUser.user_id === conference.operator_id"
-                    class="btn btn-outline-danger"
-                    @click="openDeleteModal(conference)"
-                  >
-                    <i class="pi pi-trash"></i>
-                    {{ $t("delete") }}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+          <currentConferenceCard
+            :conference="conference"
+            :openDeleteModal="openDeleteModal"
+            :timeIsUp="timeIsUp"
+          />
         </div>
       </div>
 
       <alert v-else :className="'light'">
         <loader v-if="pending" :className="'overlay'" />
-        <p class="mb-0">{{ $t("pages.conference.no_current_conferences") }}</p>
+        <img
+          class="w-24 mx-auto mb-2"
+          src="~/public/images/calendar-search.svg"
+        />
+        <p class="mb-0">
+          <b>{{ $t("pages.conference.no_current_conferences") }}</b>
+        </p>
       </alert>
     </div>
   </div>
@@ -125,7 +53,11 @@
       <h4>{{ $t("pages.conference.create_conference") }}</h4>
     </template>
     <template v-slot:body_content>
-      <subscription v-if="schoolStore.schoolData && schoolStore.schoolData.subscription_expired" />
+      <subscription
+        v-if="
+          schoolStore.schoolData && schoolStore.schoolData.subscription_expired
+        "
+      />
       <p v-else-if="conferences.length > 0" class="mb-0">
         {{ $t("pages.conference.you_cant_create_a_conference") }}
       </p>
@@ -172,13 +104,12 @@
 <script setup>
 import { useRouter } from "nuxt/app";
 import conferenceStructureForm from "../conferenceStructureForm.vue";
+import currentConferenceCard from "../currentConferenceCard.vue";
 import modal from "../../ui/modal.vue";
 import subscription from "../../ui/subscription.vue";
 import loader from "../../ui/loader.vue";
 import alert from "../../ui/alert.vue";
-import countdownTimer from "../../ui/countdownTimer.vue";
 import roleProvider from "../../ui/roleProvider.vue";
-import userTag from "../../ui/userTag.vue";
 
 const router = useRouter();
 const errors = ref([]);
@@ -192,7 +123,6 @@ const pendingDelete = ref(false);
 const addFormRef = ref(null);
 const childRef = ref(null);
 
-const authUser = useSanctumUser();
 const conferences = ref([]);
 const conference = ref(null);
 

@@ -34,7 +34,7 @@
 
       <i v-else-if="props.icon" :class="props.icon"></i>
 
-      <div v-if="selectedFile">
+      <div v-if="selectedFile" class="mt-4">
         <p v-if="props.error" class="text-danger">
           {{ props.error[0] || props.error }}
         </p>

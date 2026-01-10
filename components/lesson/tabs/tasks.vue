@@ -90,7 +90,7 @@
                   class="flex gap-2 items-center w-full"
                   :class="
                     props.lessonData.lesson_type_slug === 'file_test' &&
-                    props.lessonData.is_only_learner === true &&
+                    props.lessonData.available_status.is_only_learner === true &&
                     !taskItem.task_result.answers
                       ? ''
                       : 'link'
@@ -99,7 +99,7 @@
                     taskItem.task_result.answers
                       ? openTaskResult(taskItem)
                       : props.lessonData.lesson_type_slug === 'file_test' &&
-                        props.lessonData.is_only_learner === true
+                        props.lessonData.available_status.is_only_learner === true
                       ? false
                       : openTask(taskItem)
                   "

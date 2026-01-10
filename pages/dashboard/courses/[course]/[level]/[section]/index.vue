@@ -2,7 +2,7 @@
   <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
 
   <div
-    v-if="lessonsData && lessonsData?.level?.is_available"
+    v-if="lessonsData && lessonsData?.level?.available_status?.is_available"
     class="col-span-12"
   >
     <div class="custom-grid">
@@ -48,7 +48,7 @@
             :key="lessonIndex"
             class="list-item cursor-pointer"
             @click="
-              lesson.is_available
+              lesson.available_status.is_available
                 ? openLesson(
                     '/dashboard/courses/' +
                       course_slug +
@@ -67,7 +67,7 @@
                 <div
                   class="font-medium"
                   :class="
-                    lesson.is_available === true
+                    lesson.available_status.is_available === true
                       ? 'text-corp'
                       : 'text-inactive line-through'
                   "
@@ -80,7 +80,7 @@
                       v-if="lesson.lesson_type_slug !== 'file_test'"
                       class="text-xs"
                       :class="
-                        lesson.is_available === true
+                        lesson.available_status.is_available === true
                           ? 'text-active'
                           : 'text-inactive'
                       "
@@ -90,7 +90,7 @@
                     <span
                       class="text-xs"
                       :class="
-                        lesson.is_available === true
+                        lesson.available_status.is_available === true
                           ? 'text-active'
                           : 'text-inactive'
                       "
@@ -101,6 +101,21 @@
                   <span class="text-xs text-inactive"
                     >({{ lesson.lesson_type_name }})</span
                   >
+
+                  <!-- <span
+                    v-if="lesson.available_status.is_bought_status != null"
+                    class="text-xs"
+                    :class="
+                      lesson.available_status.is_bought_status.is_bought === true
+                        ? 'text-success'
+                        : 'text-danger'
+                    "
+                    ><b>{{
+                      lesson.available_status.is_bought_status.is_bought === true
+                        ? (lesson.available_status.is_bought_status.is_free ? $t("pages.lessons.free_lesson") : $t("pages.payment-result.success_alt"))
+                        : $t("pages.payment-result.fail_alt")
+                    }}</b></span
+                  > -->
                 </div>
               </div>
 
@@ -112,7 +127,7 @@
 
       <div v-else class="col-span-12">
         <alert :className="'light'">
-          <p class="mb-0">{{ $t("pages.courses.not_sections") }}</p>
+          <p class="mb-0">{{ $t("pages.lessons.there_is_no_lessons_alt") }}</p>
         </alert>
       </div>
     </div>
@@ -316,7 +331,6 @@ const getSection = async () => {
       pending.value = false;
     })
     .catch((err) => {
-      console.log(err);
       if (err.response) {
         router.push({
           path: "/error",

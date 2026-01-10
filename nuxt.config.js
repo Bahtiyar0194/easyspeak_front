@@ -56,6 +56,7 @@ export default defineNuxtConfig({
       turnURL: process.env.TURN_URL,
       turnUSERNAME: process.env.TURN_USERNAME,
       turnPASSWORD: process.env.TURN_PASSWORD,
+      telegramBotName: process.env.TELEGRAM_BOT_NAME,
 
       sanctum: {
         mode: 'token',
@@ -68,7 +69,7 @@ export default defineNuxtConfig({
         redirect: {
           keepRequestedRoute: true,
           onLogin: '/dashboard',
-          onLogout: '/',
+          onLogout: '/auth/login',
           onAuthOnly: '/auth/login',
           onGuestOnly: '/dashboard',
         },

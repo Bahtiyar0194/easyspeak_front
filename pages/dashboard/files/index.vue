@@ -313,6 +313,99 @@
               "
             />
           </div>
+
+          <!-- <div
+            v-if="
+              currentFileType && currentFileType.material_type_slug === 'video'
+            "
+            class="col-span-12"
+          >
+            <div class="card p-4">
+              <div class="custom-grid">
+                <div class="col-span-12">
+                  <p class="mb-0">
+                    <b>{{ $t("file.video.markers.title") }}</b>
+                  </p>
+                </div>
+
+                <div v-if="markers.length > 0" class="col-span-12">
+                  <div class="custom-grid">
+                    <div
+                      v-for="(marker, markerIndex) in markers"
+                      :key="markerIndex"
+                      class="col-span-12"
+                    >
+                      <div class="bg-corp text-white rounded-xl p-3">
+                        <div
+                          class="flex flex-wrap items-center justify-between gap-4"
+                        >
+                          <span
+                            >{{ formatSecondsToTime(marker.second) }} -
+                            <b>{{ marker.name }}</b></span
+                          >
+
+                          <button
+                            type="button"
+                            @click="removeMarker(markerIndex)"
+                          >
+                            <i class="pi pi-times"></i>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-span-7">
+                  <div class="form-group-border active">
+                    <i class="pi pi-thumbtack"></i>
+                    <input type="text" v-model="markerName" placeholder=" " />
+                    <label
+                      :class="markerErrorName === true ? 'label-error' : ''"
+                      >{{
+                        $t(
+                          markerErrorName === true
+                            ? "file.video.markers.name_error"
+                            : "file.video.markers.name"
+                        )
+                      }}</label
+                    >
+                  </div>
+                </div>
+                <div class="col-span-5">
+                  <div class="form-group-border active">
+                    <i class="pi pi-clock"></i>
+                    <input
+                      type="number"
+                      v-model="markerSecond"
+                      placeholder=" "
+                    />
+                    <label
+                      :class="markerErrorSecond === true ? 'label-error' : ''"
+                      >{{
+                        $t(
+                          markerErrorSecond === true
+                            ? "file.video.markers.second_error"
+                            : "file.video.markers.second"
+                        )
+                      }}</label
+                    >
+                  </div>
+                </div>
+                <div class="col-span-12">
+                  <div class="btn-wrap justify-end">
+                    <button
+                      class="btn btn-sm btn-light"
+                      type="button"
+                      @click="addMarker"
+                    >
+                      <i class="pi pi-plus"></i>
+                      {{ $t("file.video.markers.add") }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div> -->
         </div>
 
         <button class="btn btn-primary mt-4" type="submit">
@@ -439,6 +532,7 @@
 </template>
 
 <script setup>
+import { formatSecondsToTime } from "../../../utils/formatSecondsToTime";
 import modal from "../../../components/ui/modal.vue";
 import loader from "../../../../components/ui/loader.vue";
 import roleProvider from "../../../components/ui/roleProvider.vue";
@@ -470,6 +564,12 @@ const addFormRef = ref(null);
 const replaceFormRef = ref(null);
 const searchFilter = ref(false);
 const diskInfo = ref(false);
+
+const markers = ref([]);
+const markerName = ref("");
+const markerErrorName = ref(false);
+const markerSecond = ref("");
+const markerErrorSecond = ref(false);
 
 const uploadProgress = ref(0);
 
@@ -711,6 +811,38 @@ const convertFileSubmit = async (fileId) => {
     });
 };
 
+const addMarker = () => {
+  markerErrorName.value = false;
+  markerErrorSecond.value = false;
+
+  if (markerName.value === "") {
+    markerErrorName.value = true;
+  }
+
+  if (markerSecond.value === "") {
+    markerErrorSecond.value = true;
+  }
+
+  if (markerErrorName.value === false && markerErrorSecond.value === false) {
+    markers.value.push({
+      name: markerName.value,
+      second: markerSecond.value,
+    });
+
+    // сортировка по возрастанию
+    markers.value.sort((a, b) => a.second - b.second);
+
+    markerName.value = "";
+    markerSecond.value = "";
+  }
+};
+
+const removeMarker = (markerIndex) => {
+  if (markerIndex >= 0 && markerIndex < markers.value.length) {
+    markers.value.splice(markerIndex, 1);
+  }
+};
+
 const getFileExtension = (filename) => {
   const match = filename.match(/\.([0-9a-z]+)$/i);
   return match ? match[1] : "";
@@ -721,6 +853,7 @@ const closeAddModal = () => {
   pendingAdd.value = false;
   addFormRef.value.reset();
   currentFileType.value = null;
+  markers.value = [];
   errors.value = [];
 };
 
@@ -728,6 +861,7 @@ const closeReplaceModal = () => {
   replaceModalIsVisible.value = false;
   pendingReplace.value = false;
   replaceFormRef.value.reset();
+  markers.value = [];
   errors.value = [];
 };
 

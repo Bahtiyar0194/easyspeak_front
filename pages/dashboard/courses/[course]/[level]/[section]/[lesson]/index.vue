@@ -154,8 +154,8 @@ const getLesson = async () => {
       pageTitle.value = response.data.lesson.lesson_name;
 
       lessonData.value = response.data.lesson;
-      courseIsAvailable.value = response.data.level.is_available;
-      lessonIsAvailable.value = response.data.lesson.is_available;
+      courseIsAvailable.value = response.data.level.available_status.is_available;
+      lessonIsAvailable.value = response.data.lesson.available_status.is_available;
       pending.value = false;
     })
     .catch((err) => {

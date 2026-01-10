@@ -1,7 +1,7 @@
 <template>
     <div :class="props.className" ref="selectWrapper" tabindex="0">
         <i :class="props.icon"></i>
-        <input class="cursor-pointer"
+        <input class="!cursor-pointer"
             :value="checkedCount > 0 ? ($t('selected') + ': ' + checkedCount) : $t('not_selected')"
             @click="toggleSelect" readonly>
 

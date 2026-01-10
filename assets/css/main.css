@@ -388,6 +388,74 @@
   @apply bg-corp;
 }
 
+.scroll-fade {
+  overflow-y: auto;
+}
+
+.scroll-fade::-webkit-scrollbar {
+  width: 0px;
+}
+
+.scroll-fade::-webkit-scrollbar-thumb {
+  width: 0px;
+}
+
+/* обе стороны */
+.mask-both {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    black var(--fade),
+    black calc(100% - var(--fade)),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    black var(--fade),
+    black calc(100% - var(--fade)),
+    transparent
+  );
+}
+
+/* только снизу */
+.mask-bottom {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    black,
+    black calc(100% - var(--fade)),
+    transparent
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    black,
+    black calc(100% - var(--fade)),
+    transparent
+  );
+}
+
+/* только сверху */
+.mask-top {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    black var(--fade),
+    black
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent,
+    black var(--fade),
+    black
+  );
+}
+
+/* без fade */
+.mask-none {
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+
 [contenteditable]{
   @apply h-full;
 }
@@ -519,6 +587,10 @@ td.th{
   @apply bg-active;
 }
 
+.table table tbody tr.success{
+  @apply bg-success-100 text-dark-500;
+}
+
 .table.table-striped table tbody tr:nth-child(even){
   @apply bg-inactive;
 }
@@ -640,6 +712,17 @@ select.error:has(option:checked:disabled) {
   @apply border-0 bg-transparent w-full text-active py-3 pl-8 pr-2 relative z-10; 
 }
 
+.form-group > input:disabled, 
+.form-group > select:disabled, 
+.form-group > textarea:disabled {
+  @apply text-inactive cursor-not-allowed; 
+}
+
+.form-group > input:read-only, 
+.form-group > textarea:read-only {
+  @apply text-inactive cursor-not-allowed;
+}
+
 .form-group.input-group > select{
   @apply pl-4 border-l-inactive;
 }
@@ -693,6 +776,17 @@ select.error:has(option:checked:disabled) {
 .form-group-border > select, 
 .form-group-border > textarea {
   @apply border-0 bg-transparent w-full text-active py-2 pl-8 pr-2.5 relative z-10;
+}
+
+.form-group-border > input:disabled, 
+.form-group-border > select:disabled, 
+.form-group-border > textarea:disabled {
+  @apply text-inactive cursor-not-allowed;
+}
+
+.form-group-border > input:read-only, 
+.form-group-border > textarea:read-only {
+  @apply text-inactive cursor-not-allowed;
 }
 
 .form-group-border.input-group > select{
@@ -919,6 +1013,49 @@ select.error:has(option:checked:disabled) {
   @apply bg-gray-400;
 }
 
+.ios-switch {
+  @apply relative inline-block;
+  width: 38px;
+  height: 21px;
+}
+
+/* скрываем стандартный checkbox */
+.ios-switch input {
+  @apply opacity-0 w-0 h-0;
+}
+
+/* фон переключателя */
+.ios-switch > .slider {
+  @apply absolute cursor-pointer inset-0 bg-gray-400 duration-300;
+  border-radius: 34px;
+}
+
+/* кружок */
+.ios-switch > .slider::before {
+  @apply absolute duration-300;
+  content: "";
+  height: 15px;
+  width: 15px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  border-radius: 50%;
+}
+
+/* включено */
+input:checked + .slider {
+  @apply bg-success;
+}
+
+input:checked + .slider::before {
+  transform: translateX(17px);
+}
+
+input:disabled + .slider {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+
 .title-wrap{
   @apply flex flex-wrap justify-between gap-4;
 }
@@ -1082,6 +1219,10 @@ select.error:has(option:checked:disabled) {
   @apply border-inactive bg-inactive text-active;
 }
 
+.btn-white{
+  @apply border-none bg-white text-black;
+}
+
 .btn-primary{
   @apply bg-corp border-corp border text-white;
 }
@@ -1229,7 +1370,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .alert{
-  @apply p-6 text-center text-inactive rounded-xl relative overflow-hidden; 
+  @apply p-4 text-center text-inactive rounded-xl relative overflow-hidden; 
 }
 
 .alert.light{
@@ -1637,7 +1778,7 @@ select.error:has(option:checked:disabled) {
 
 .modal-body{
   @apply overflow-y-auto overflow-x-hidden min-h-10;
-  max-height: 80vh;
+  max-height: 90vh;
 }
 
 .modal-footer{
@@ -1771,6 +1912,10 @@ select.error:has(option:checked:disabled) {
 
 .dropdown-menu, .multiple-select-menu-wrap{
   @apply hidden absolute z-30 rounded-xl shadow-xl bg-active text-sm border-inactive px-4 my-2 w-max;
+}
+
+.dropdown-menu.up{
+  @apply bottom-12;
 }
 
 .dropdown-menu.no-absolute{
@@ -2144,8 +2289,8 @@ select.error:has(option:checked:disabled) {
   @apply absolute top-0 left-0 w-full h-full pointer-events-none;
 }
 
-@media (max-height: 900px) {
+@media (max-height: 700px) {
   .modal-body {
-    max-height: 64vh;
+    height: 64vh;
   }
 }

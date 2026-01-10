@@ -1,5 +1,17 @@
 <template>
   <div class="dropdown" ref="dropdownWrapper">
+    <ul
+      v-if="props.dropdownUp === true"
+      class="dropdown-menu up"
+      ref="dropdownMenu"
+      :class="{
+        show: dropdownMenuOpen === true,
+        right: props.position === 'right',
+        'no-absolute': props.noAbsolute === true,
+      }"
+    >
+      <slot name="menu_content" />
+    </ul>
     <div @click="showDropdown" class="cursor-pointer">
       <div class="flex items-center gap-0.5">
         <slot name="btn_content" />
@@ -23,13 +35,13 @@
       </div>
     </div>
     <ul
+      v-if="props.dropdownUp === false"
       class="dropdown-menu"
       ref="dropdownMenu"
-      @click="hideDropdown"
       :class="{
         show: dropdownMenuOpen === true,
         right: props.position === 'right',
-        'no-absolute': noAbsolute === true,
+        'no-absolute': props.noAbsolute === true,
       }"
     >
       <slot name="menu_content" />
@@ -54,6 +66,12 @@ const props = defineProps({
     required: false,
   },
   noAbsolute: {
+    type: Boolean,
+    default: false,
+    required: false,
+  },
+
+  dropdownUp: {
     type: Boolean,
     default: false,
     required: false,

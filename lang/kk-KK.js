@@ -59,6 +59,7 @@ export default {
     nothing_was_found_for_your_query: "Сіздің сұранымыңыз бойынша ештеңе табылған жоқ",
     time_is_up: "Уақыт бітті!",
     remaining_time: "Қалған уақыт",
+    already_started: "Басталып кетті",
     write_here_and_press_add: "Осы жерге енгізіңіз кейін 'Қосу' батырмасын басыңыз",
 
     sort_by_this_column: 'Осы баған бойынша сұрыптау',
@@ -81,6 +82,7 @@ export default {
     selected: "Таңдалды",
     not_selected: "Таңдалмаған",
     not_specified: "Көрсетілмеген",
+    changed: "Өзгерген",
     your_answer: "Сіздің жауабыңыз",
     learner_answer: "Оқушының жауабы",
     type_your_answer: "Жауабыңызды осында енгізіңіз",
@@ -150,6 +152,14 @@ export default {
         switch_to_a_dark_theme: "Қараңғы тақырыпқа ауысу"
     },
 
+    save_changes: {
+        title: "Өзгерістерді сақтау",
+        confirm: "Сіз өзгерістерді сақтағыңыз келеді ме?",
+        save: "Сақтау",
+        unsave: "Сақтамау",
+        return: "Оралу"
+    },
+
     file: {
         file: "Файл",
         files: "Файлдар",
@@ -214,6 +224,14 @@ export default {
                 fullscreen: "Бүкіл экранға",
                 exitFullscreen: "Бүкіл экраннан шығу",
                 processing: "Бейнефайл өңделіп жатыр. Сіз әзірше бейнефайлдың түпнұсқасын қарап отырсыз"
+            },
+            markers: {
+                title: 'Маркерлер',
+                add: 'Маркер қосу',
+                name: 'Маркер атауы',
+                name_error: 'Маркер атауын енгізіңіз',
+                second: 'Секунд',
+                second_error: 'Секундты енгізіңіз'
             }
         }
     },
@@ -378,6 +396,25 @@ export default {
         }
     },
 
+    telegram: {
+        connect: {
+            title: 'Telegram ботқа қосылу',
+            connect: 'Қосылу',
+        },
+        disconnect: {
+            title: 'Telegram ботты өшіру',
+            disconnect: 'Өшіру',
+            confirm: 'Сіздің аккаунт {auth_user_name} {tg_user_name} Telegram аккаунтынан ажыратылады. Ботты өшірген жағдайда сіз сабақтар мен маңызды жаңартулар туралы хабарлама алуды тоқтатасыз. Қажет болса, ботты кез келген уақытта қайта қосуға болады. Келісесіз бе? Жалғастыру үшін "Өшіру" батырмасын басыңыз.'
+        },
+        banner: {
+            title: 'EasySpeak Telegram-ботына қосылыңыз',
+            description: 'Тікелей Telegram арқылы кесте бойынша жоспарланған сабақтар туралы хабарламалар, сабақ кестесі және оқу үлегрімін көріп отыра аласыз.'
+        },
+        cancel: 'Бас тарту',
+        message_1: 'Сіздің аккаунт {auth_user_name} {tg_user_name} Telegram аккаунтына қосылады. Жалғастыру үшін "Қосу" батырмасын басыңыз.',
+        message_2: 'Сіздің аккаунт {auth_user_name} {old_tg_user_name} Telegram аккаунтына қосулы тұр. {new_tg_user_name} Telegram аккаунтына қосылу үшін "Қосу" батырмасын басыңыз.'
+    },
+
     board: {
         show_tool_parameters: 'Құралдың сипаттамасын көрсету',
         tool_parameters: 'Құралдың сипаттамасы',
@@ -406,6 +443,37 @@ export default {
             clear: 'Тазарту',
             save: 'Сақтау'
         }
+    },
+
+    weekdays: {
+        monday: {
+            title: 'Дүйсенбі',
+            even: 'Әр дүйсенбі сайын'
+        },
+        tuesday: {
+            title: 'Сейсенбі',
+            even: 'Әр сейсенбі сайын'
+        },
+        wednesday: {
+            title: 'Сәрсенбі',
+            even: 'Әр сәрсенбі сайын'
+        },
+        thursday: {
+            title: 'Бейсенбі',
+            even: 'Әр бейсенбі сайын'
+        },
+        friday: {
+            title: 'Жұма',
+            even: 'Әр жұма сайын'
+        },
+        saturday: {
+            title: 'Сенбі',
+            even: 'Әр сенбі сайын'
+        },
+        sunday: {
+            title: 'Жексенбі',
+            even: 'Әр жексенбі сайын'
+        },
     },
 
     pages: {
@@ -514,6 +582,11 @@ export default {
             sign_out: 'Аккаунттан шығу',
         },
 
+        logout: {
+            title: 'Аккаунттан шығу',
+            please_wait: 'Күте тұрыңыз, аккаунттан шығып жатырмыз'
+        },
+
         register: {
             title: 'Тіркелу',
             have_an_account: 'Менде акканут бар.',
@@ -593,11 +666,22 @@ export default {
         },
 
         payment: {
+            title: 'Төлемдерді көру',
             choose_a_payment_method: 'Төлем түрін таңдау',
+            choose_a_payment_form: 'Төлем қабылдау түрін таңдаңыз',
             payment_method: 'Төлем түрі',
+            payment_form: 'Төлем қабылдау түрі',
             accept_payment: 'Төлемді растау',
+            please_wait: 'Күте тұрыңыз, төлем қабылданып жатыр',
             to_pay: 'Төлеу',
             to: 'Жалпы төлеуге',
+
+            forms: {
+                natural_person: 'Жеке тұлғаның өз атынан (оқушыдан)',
+                legal_entity: 'Заңды тұлғаның атынан',
+                message_1: 'Назар аударыңыз! Сіз тек заңды тұлғаның атынан тіркелген топтардың төлемдерін өңдей аласыз.'
+            },
+
             methods: {
                 invoice: {
                     title: 'Төлем шоты',
@@ -650,12 +734,13 @@ export default {
             success: 'Төлем сәтті өтті',
             success_alt: 'Төленді',
             fail: 'Төлем өтпей қалды',
-            fail_alt: 'Төлем өткен жоқ'
+            fail_alt: 'Төлем өткен жоқ',
+            fail_alt_2: 'Төленген жоқ',
         },
 
         '3ds': {
             title: '3-D Secure аутентификация',
-            please_wait: 'Күте тұрыңыз. 3-D Secure аутентификациясы жүріп жатыр'
+            please_wait: 'Күте тұрыңыз, 3-D Secure аутентификациясы жүріп жатыр'
         },
 
         invoices: {
@@ -665,14 +750,18 @@ export default {
         },
 
         schedule: {
-            title: 'Кесте',
+            title: 'Сабақ кестесі',
+            show_schedule: 'Сабақ кестесін көру',
+            show_entire_schedule: 'Толық кестені көру',
             search_filter: 'Кесте бойынша іздеу сүзгісі',
+            lesson_days: 'Сабақ өтетін күндер',
+            select_lesson_days: 'Сабақ өтетін күндерді таңдаңыз',
+            start_date_from: 'Сабақ кестесінің басталу уақыты (бастап)',
+            start_date_to: 'Сабақ кестесінің басталу уақыты (дейін)',
+            start_date: 'Сабақ кестесінің басталу күні',
+            end_date: 'Сабақ кестесінің аяқталу күні',
             start_time: 'Сабақтың басталу уақыты',
-            start_date_from: 'Сабақтың басталу уақыты (бастап)',
-            start_date_to: 'Сабақтың басталу уақыты (дейін)',
             end_time: 'Сабақтың аяқталу уақыты',
-            start_date: 'Сабақтың басталу күні',
-            end_date: 'Сабақтың аяқталу күні',
         },
 
         events: {
@@ -688,7 +777,9 @@ export default {
             delete_confirm: 'Сіз бұл конференцияны расымен жойғыңыз келе ме?',
             mic: 'Микрофон',
             mic_turn_on: 'Микрофонды іске қосу',
+            mic_turned_on: 'Микрофон қосулы',
             mic_turn_off: 'Микрофонды өшіру',
+            mic_turned_off: 'Микрофон өшірулі',
             video: 'Бейне',
             video_turn_on: 'Бейнені іске қосу',
             video_turn_off: 'Бейнені өшіру',
@@ -713,7 +804,8 @@ export default {
                 slider: 'Карусель'
             },
             messages: {
-                requesting_access: 'Камера мен микрофонға қолжетімділік сұралуда'
+                requesting_access: 'Камера мен микрофонға қолжетімділік сұралуда',
+                no_paid: 'Конференцияға кіру шектеулі, өйткені бұл сабақ төленбеген.'
             },
             statuses: {
                 current: 'Ағымдағы',
@@ -776,9 +868,26 @@ export default {
         lessons: {
             title: 'Сабақтар',
             lessons_count: 'Сабақтар саны',
+            lessons_list: 'Сабақтар тізімі',
             there_is_no_lessons: 'Сабақ қосылмаған',
+            there_is_no_lessons_alt: 'Мында сабақтар қосылмаған',
+            pay_for_lessons: 'Сабақтарды төлеу',
+            pay_for_lessons_alt: 'Сабақтарды төлеу',
+            price: 'Бір сабақтың құны',
+            price_alt: 'Сабақтың құны',
+            price_edit: 'Сабақтың құнын тек мектеп иесі ғана өзгерте алады',
             lesson: 'Сабақ',
             lesson_name: 'Сабақтың атауы',
+            free_lesson: 'Тегін сабақ',
+            first_lesson_free: 'Бірінші сабақ тегін',
+            bought_by_learner: 'Оқушы өзі сатып алды',
+            current_lessons: 'Қазір өтіп жатырған сабақтар',
+            no_current_lessons: 'Әзірше өтіп жатырған сабақтар жоқ',
+            gone_lessons: 'Өтіп кеткен сабақтар',
+            upcoming_lessons: 'Жақын арада өтетін сабақтар',
+            upcoming_lessons_alt: 'Өтетін сабақтар',
+            no_gone_lessons: 'Әзірше өтіп кеткен сабақтар жоқ',
+            no_upcoming_lessons: 'Әзірше жақын арада өтетін сабақтар жоқ',
             lesson_description: 'Сабақтың қысқаша сипаттамасы',
             choosing_a_lesson: 'Сабақты таңдау',
             choose_a_lesson: 'Сабақты таңдаңыз',

@@ -63,24 +63,94 @@
       </div>
 
       <div v-if="authUser" class="db__footer__menu">
-        <button
-          @click="toggleMute"
-          :title="
-            isMuted
-              ? $t('pages.conference.mic_turn_on')
-              : $t('pages.conference.mic_turn_off')
-          "
+        <dropdownMenu
+          :dropdownArrow="false"
+          :dropdownUp="true"
+          :position="'left'"
         >
-          <i v-if="isMuted" class="bi bi-mic-mute text-danger"></i>
-          <div v-else>
-            <i v-if="volume > 50" class="bi bi-mic-fill text-success"></i>
-            <i v-else class="bi bi-mic text-success"></i>
-          </div>
+          <template v-slot:btn_content>
+            <button
+              :title="
+                isMuted
+                  ? $t('pages.conference.mic_turn_on')
+                  : $t('pages.conference.mic_turn_off')
+              "
+            >
+              <i v-if="isMuted" class="bi bi-mic-mute text-danger"></i>
+              <div v-else>
+                <i v-if="volume > 50" class="bi bi-mic-fill text-success"></i>
+                <i v-else class="bi bi-mic text-success"></i>
+              </div>
 
-          <span :class="isMuted ? 'text-danger' : 'text-success'">{{
-            $t("pages.conference.mic")
-          }}</span>
-        </button>
+              <span :class="isMuted ? 'text-danger' : 'text-success'">{{
+                $t("pages.conference.mic")
+              }}</span>
+            </button>
+          </template>
+
+          <template v-slot:menu_content>
+            <li>
+              <div class="flex gap-x-2 items-center my-1">
+                <label class="ios-switch">
+                  <input
+                    type="checkbox"
+                    :checked="!isMuted"
+                    @change="toggleMute()"
+                  />
+                  <span class="slider"></span>
+                </label>
+
+                <p class="mb-0">
+                  {{
+                    isMuted
+                      ? $t("pages.conference.mic_turned_off")
+                      : $t("pages.conference.mic_turned_on")
+                  }}
+                </p>
+              </div>
+
+              <!-- <button
+                @click="toggleMute"
+                :title="
+                  isMuted
+                    ? $t('pages.conference.mic_turn_on')
+                    : $t('pages.conference.mic_turn_off')
+                "
+              >
+                <i v-if="isMuted" class="bi bi-mic-mute text-danger"></i>
+                <div v-else>
+                  <i v-if="volume > 50" class="bi bi-mic-fill text-success"></i>
+                  <i v-else class="bi bi-mic text-success"></i>
+                </div>
+
+                <span :class="isMuted ? 'text-danger' : 'text-success'">{{
+                  $t("pages.conference.mic")
+                }}</span>
+              </button> -->
+            </li>
+            <li v-if="microphones.length > 1">
+              <div class="flex flex-col gap-y-2">
+                <p class="text-inactive text-xs mb-0">
+                  {{ $t("pages.conference.mic") }}:
+                </p>
+                <label
+                  v-for="mic in microphones"
+                  :key="mic.deviceId"
+                  class="custom-radio"
+                >
+                  <input
+                    type="radio"
+                    :value="mic.deviceId"
+                    :checked="selectedMicrophoneId === mic.deviceId"
+                    @change="switchMicrophone(mic.deviceId)"
+                    name="microphone"
+                  />
+                  <span> {{ mic.label }}</span>
+                </label>
+              </div>
+            </li>
+          </template>
+        </dropdownMenu>
 
         <button
           @click="toggleStream"
@@ -919,7 +989,7 @@ import taskResultChart from "../../../components/lesson/components/tasks/taskRes
 import circleProgressBar from "../../../components/ui/circleProgressBar.vue";
 import materialViewer from "../../../components/lesson/components/materialViewer.vue";
 import stickyBox from "../../../components/ui/stickyBox.vue";
-
+import dropdownMenu from "../../../components/ui/dropdownMenu.vue";
 const router = useRouter();
 const route = useRoute();
 const pendingRoute = ref(null);
@@ -950,6 +1020,11 @@ const localStream = ref(null);
 const myStream = ref(null);
 const screenStream = ref(null); // Поток экрана
 const streams = ref([]);
+
+const microphones = ref([]);
+const dynamics = ref([]);
+const cameras = ref([]);
+const selectedMicrophoneId = ref(null);
 
 const offlineMembers = computed(() => {
   if (!conference.value) return []; // пока members не загружен — возвращаем пустой массив
@@ -1262,7 +1337,18 @@ const getConference = async () => {
         pendingConference.value = response.data;
       } else if (response.data.type === "ended") {
         endedConference.value = response.data;
-      } else {
+      } 
+      // else if (
+      //   conference.value.is_only_learner === true &&
+      //   conference.value.is_bought_status &&
+      //   conference.value.is_bought_status.is_bought === false
+      // ) {
+      //   errorMessage.value = {
+      //     message: t("pages.conference.messages.no_paid"),
+      //     pending: false,
+      //   };
+      // } 
+      else {
         startStream();
         getConferenceTasks();
       }
@@ -1365,10 +1451,15 @@ const startStream = async () => {
       video: {
         width: 1280,
         height: 720,
+        frameRate: { max: 15 },
         facingMode: "user",
       },
-      audio: true,
+      audio: selectedMicrophoneId.value
+        ? { deviceId: { exact: selectedMicrophoneId.value } }
+        : true,
     });
+
+    loadMicrophones();
 
     myPeer = new Peer(undefined, {
       host: config.public.peerBase,
@@ -1388,7 +1479,7 @@ const startStream = async () => {
     });
 
     myPeer.on("open", (id) => {
-      monitorNetworkAndAdjustQuality(myPeer);
+      //monitorNetworkAndAdjustQuality(myPeer);
 
       addStream(
         false,
@@ -1399,6 +1490,7 @@ const startStream = async () => {
         isStream.value,
         isMuted.value
       );
+
       myStream.value = streams.value.find((s) => s.peer_id === id);
 
       if (isStream.value === false) {
@@ -1605,6 +1697,7 @@ const startStream = async () => {
 
 const joinToRoom = async () => {
   await $socketPlugin.connect();
+
   $socketPlugin.emit(
     "join-room",
     "room_" + conference.value.uuid,
@@ -1777,12 +1870,10 @@ const toggleStream = () => {
 
     myStream.value.isStream = isStream.value;
 
-    if (streams.value.length > 1) {
-      $socketPlugin.emit("toggle-video", {
-        peerId: myPeer.id,
-        isStream: isStream.value,
-      });
-    }
+    $socketPlugin.emit("toggle-video", {
+      peerId: myPeer.id,
+      isStream: isStream.value,
+    });
   } else {
     toast(t("errors.media.camera_error"), {
       toastClassName: ["custom-toast", "danger"],
@@ -1799,12 +1890,10 @@ const toggleMute = () => {
 
     myStream.value.isMuted = isMuted.value;
 
-    if (streams.value.length > 1) {
-      $socketPlugin.emit("toggle-audio", {
-        peerId: myPeer.id,
-        isMuted: isMuted.value,
-      });
-    }
+    $socketPlugin.emit("toggle-audio", {
+      peerId: myPeer.id,
+      isMuted: isMuted.value,
+    });
   } else {
     toast(t("errors.media.camera_error"), {
       toastClassName: ["custom-toast", "danger"],
@@ -1829,9 +1918,15 @@ const toggleScreenSharing = async () => {
   if (!isScreenSharing.value) {
     try {
       screenStream.value = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
+        video: {
+          width: { max: 640 },
+          height: { max: 360 },
+          frameRate: { max: 10 },
+        },
+        audio: false, // ❌ не захватываем системный звук
       });
       isScreenSharing.value = true;
+
       replaceTrackInConnections(
         screenStream.value.getVideoTracks()[0],
         "video"
@@ -1857,6 +1952,75 @@ const stopScreenSharing = () => {
   screenStream.value = null;
 };
 
+const loadMicrophones = async () => {
+  // ❗ гарантируем labels
+  await navigator.mediaDevices.getUserMedia({ audio: true });
+
+  const devices = await navigator.mediaDevices.enumerateDevices();
+
+  // ✅ ОБЯЗАТЕЛЬНО очищаем
+  microphones.value = [];
+
+  devices.forEach((d) => {
+    if (d.kind !== "audioinput") return;
+
+    // ❌ пропускаем alias
+    if (d.deviceId === "default" || d.deviceId === "communications") return;
+
+    // ✅ уникальность по groupId
+    if (!microphones.value.some((m) => m.groupId === d.groupId)) {
+      microphones.value.push(d);
+    }
+  });
+
+  const savedId = localStorage.getItem("micdeviceid");
+
+  if (savedId && microphones.value.some((m) => m.deviceId === savedId)) {
+    selectedMicrophoneId.value = savedId;
+  } else if (microphones.value.length > 0) {
+    // fallback
+    selectedMicrophoneId.value = microphones.value[0].deviceId;
+    localStorage.setItem("micdeviceid", selectedMicrophoneId.value);
+  } else {
+    selectedMicrophoneId.value = null;
+  }
+};
+
+const switchMicrophone = async (micDeviceId) => {
+  selectedMicrophoneId.value = micDeviceId;
+  localStorage.setItem("micdeviceid", micDeviceId);
+
+  const audioStream = await navigator.mediaDevices.getUserMedia({
+    audio: { deviceId: { exact: micDeviceId } },
+    video: false,
+  });
+
+  const newAudioTrack = audioStream.getAudioTracks()[0];
+
+  // 🔑 ВАЖНО: синхронизация mute-состояния
+  newAudioTrack.enabled = !isMuted.value;
+
+  // 🔑 заменяем ТОЛЬКО sender
+  Object.values(peers).forEach((call) => {
+    const sender = call.peerConnection
+      .getSenders()
+      .find((s) => s.track?.kind === "audio");
+
+    if (sender) {
+      sender.replaceTrack(newAudioTrack);
+    }
+  });
+
+  // 🔑 обновляем localStream БЕЗ stop/remove стрима
+  const oldTrack = localStream.value.getAudioTracks()[0];
+  if (oldTrack) {
+    oldTrack.stop(); // ← желательно, чтобы не висел device
+    localStream.value.removeTrack(oldTrack);
+  }
+
+  localStream.value.addTrack(newAudioTrack);
+};
+
 const trackMicrophone = async (stream) => {
   const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -1877,12 +2041,12 @@ const trackMicrophone = async (stream) => {
 
     myStream.value.volume = volume.value;
 
-    if (!isMuted.value && streams.value.length > 1 && volume.value >= 50) {
-      $socketPlugin.emit("microphone-volume", {
-        peerId: myPeer.id,
-        volume: volume.value,
-      });
-    }
+    // if (!isMuted.value && streams.value.length > 1 && volume.value >= 50) {
+    //   $socketPlugin.emit("microphone-volume", {
+    //     peerId: myPeer.id,
+    //     volume: volume.value,
+    //   });
+    // }
   };
 };
 
@@ -1930,6 +2094,10 @@ const reloadPage = () => {
 };
 
 onMounted(() => {
+  navigator.mediaDevices.addEventListener("devicechange", (event) => {
+    loadMicrophones();
+  });
+
   getConference();
 
   const handleBeforeUnload = (event) => {
@@ -1939,12 +2107,17 @@ onMounted(() => {
   };
 
   window.addEventListener("beforeunload", handleBeforeUnload);
+
   onUnmounted(() => {
     window.removeEventListener("beforeunload", handleBeforeUnload);
   });
 });
 
 onBeforeUnmount(() => {
+  navigator.mediaDevices.removeEventListener("devicechange", (event) => {
+    loadMicrophones();
+  });
+
   if (localStream) {
     stopLocalStream();
   }

@@ -182,6 +182,12 @@
       :className="'modal-xl'"
       :showLoader="pending"
       :closeOnClickSelf="false"
+      :showPendingText="true"
+      :pendingText="
+        currentStep === paymentSteps.length
+          ? $t('pages.payment.please_wait')
+          : $t('loading')
+      "
     >
       <template v-slot:header_content>
         <h4>{{ $t("pages.subscription.prolongation_title") }}</h4>
@@ -193,7 +199,7 @@
               ? createCryptogram()
               : handlePayment()
           "
-          ref="formRef"
+          ref="paymentFormRef"
         >
           <steps :currentStep="currentStep" :steps="paymentSteps">
             <div
@@ -253,9 +259,9 @@ import { useRoute, useRouter } from "nuxt/app";
 import steps from "../../../components/ui/steps.vue";
 import { formatAmountToWords } from "../../../utils/amountToWords";
 import { formatToInvoiceNumber } from "../../../utils/formatToInvoiceNumber";
-import firstStep from "../../../components/payment/firstStep.vue";
-import secondStep from "../../../components/payment/secondStep.vue";
-import thirdStep from "../../../components/payment/thirdStep.vue";
+import firstStep from "../../../components/payment/school/firstStep.vue";
+import secondStep from "../../../components/payment/school/secondStep.vue";
+import thirdStep from "../../../components/payment/school/thirdStep.vue";
 import modal from "../../../components/ui/modal.vue";
 const config = useRuntimeConfig();
 const { $axiosPlugin, $pdfMake, $contacts } = useNuxtApp();
@@ -271,7 +277,7 @@ const subscriptionModalIsVisible = ref(false);
 const pending = ref(true);
 const selectedPlan = ref("");
 const plans = ref([]);
-const formRef = ref(null);
+const paymentFormRef = ref(null);
 const cryptogram = ref("");
 const errors = ref([]);
 
@@ -351,12 +357,12 @@ const getPaymentAttributes = async () => {
     pending.value = false;
 
     // Загружаем скрипт
-    await loadScript(response.data.tiptop.checkout_url);
+    await loadScript(schoolStore.schoolData.tiptoppay.checkout_url);
 
     // Теперь объект tiptop гарантированно доступен
     checkout.value = new tiptop.Checkout({
-      publicId: response.data.tiptop.public_id,
-      container: formRef.value,
+      publicId: schoolStore.schoolData.tiptoppay.public_id,
+      container: paymentFormRef.value,
     });
 
     plans.value = response.data.plans;
@@ -396,7 +402,7 @@ const createCryptogram = async () => {
 
 const handlePayment = async () => {
   pending.value = true;
-  const formData = new FormData(formRef.value);
+  const formData = new FormData(paymentFormRef.value);
   formData.append("lang", localeProperties.value.code);
   formData.append("subscription_plan_id", selectedPlan.value);
   formData.append("payment_method", currentPaymentMethod.value);
@@ -404,7 +410,7 @@ const handlePayment = async () => {
   formData.append("step", currentStep.value);
 
   await $axiosPlugin
-    .post("payment/handle", formData)
+    .post("payment/school/handle", formData)
     .then((response) => {
       errors.value = [];
       if (response.data.step) {
@@ -449,9 +455,23 @@ const handlePayment = async () => {
       }
     })
     .catch((err) => {
-      errors.value = err.response.data;
-      pending.value = false;
-      return;
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          pending.value = false;
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
     });
 };
 

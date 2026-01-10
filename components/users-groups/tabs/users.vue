@@ -753,10 +753,10 @@
                 >
                   <button
                     @click="
-                      level.is_available === true ? selectLevel(level) : null
+                      level.available_status.is_available === true ? selectLevel(level) : null
                     "
                     :class="
-                      level.is_available === true
+                      level.available_status.is_available === true
                         ? 'cursor-pointer'
                         : 'cursor-not-allowed'
                     "

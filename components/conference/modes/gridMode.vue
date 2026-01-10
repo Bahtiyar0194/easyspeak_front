@@ -21,7 +21,7 @@
       >
         {{ stream.userInfo.last_name + " " + stream.userInfo.first_name }}
       </div>
-
+      
       <video
         class="w-full h-full aspect-square md:aspect-video object-cover"
         :srcObject="stream.stream"

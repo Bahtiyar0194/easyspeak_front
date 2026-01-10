@@ -113,40 +113,54 @@
     </div>
 
     <div class="col-span-12">
-      <div class="form-group-border active">
-        <i class="pi pi-calendar"></i>
-        <input
-          type="date"
-          name="start_date"
-          v-model="currentGroup.start_date"
-        />
-        <label :class="{ 'label-error': errors.start_date }">
-          {{
-            errors.start_date
-              ? errors.start_date[0]
-              : $t("pages.schedule.start_date")
-          }}
+      <p class="mb-1 text-inactive">
+        {{ $t("pages.payment.choose_a_payment_form") }}:
+      </p>
+      <div class="flex flex-col gap-y-2">
+        <label class="custom-radio">
+          <input type="radio" value="0" :checked="currentGroup?.is_legal === 0" name="is_legal" />
+          <span>{{ $t("pages.payment.forms.natural_person") }}</span>
+        </label>
+
+        <label class="custom-radio">
+          <input type="radio" value="1" :checked="currentGroup?.is_legal === 1" name="is_legal" />
+          <span>{{ $t("pages.payment.forms.legal_entity") }}</span>
         </label>
       </div>
     </div>
 
     <div class="col-span-12">
       <div class="form-group-border active">
-        <i class="pi pi-clock"></i>
-        <input type="time" name="start_time"  v-model="currentGroup.start_time"/>
-        <label :class="{ 'label-error': errors.start_time }">
+        <i class="pi pi-credit-card"></i>
+        <input
+          :readonly="!hasRole([1, 2])"
+          :title="!hasRole([1, 2]) ? $t('pages.lessons.price_edit') : ''"
+          type="number"
+          name="lesson_price"
+          v-model="currentGroup.current_price"
+        />
+        <label :class="{ 'label-error': errors.lesson_price }">
           {{
-            errors.start_time
-              ? errors.start_time[0]
-              : $t("pages.schedule.start_time")
+            errors.lesson_price
+              ? errors.lesson_price[0]
+              : $t("pages.lessons.price")
           }}
+          ({{ $contacts.bank.currency.symbol }})
         </label>
       </div>
+    </div>
+
+    <div class="col-span-12">
+      <label class="custom-radio-checkbox text-nowrap">
+        <input type="checkbox" name="first_lesson_free" :checked="currentGroup.first_lesson_free === 1" />
+        <span>{{ $t("pages.lessons.first_lesson_free") }}</span>
+      </label>
     </div>
   </div>
 </template>
 
 <script setup>
+import { hasRole } from "../../../../utils/hasRole";
 const props = defineProps({
   errors: {
     type: Object,

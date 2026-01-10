@@ -85,10 +85,10 @@
             </div>
           </li>
           <li>
-            <button>
+            <nuxt-link :to="localePath('/dashboard/profile')">
               <i class="pi pi-user"></i>
               {{ $t("pages.profile.title") }}
-            </button>
+            </nuxt-link>
           </li>
         </template>
         <template v-else>
@@ -100,10 +100,10 @@
           </li>
         </template>
         <li>
-          <button @click="handleLogout()">
+          <nuxt-link :to="localePath('/auth/logout')">
             <i class="pi pi-sign-out"></i>
             {{ $t("pages.login.sign_out") }}
-          </button>
+          </nuxt-link>
         </li>
       </template>
     </dropdownMenu>
@@ -122,7 +122,7 @@ import userAvatar from "../ui/userAvatar.vue";
 import roleProvider from "../ui/roleProvider.vue";
 
 const { $axiosPlugin } = useNuxtApp();
-const { logout, refreshIdentity } = useSanctumAuth();
+const { refreshIdentity } = useSanctumAuth();
 const authUser = useSanctumUser();
 const router = useRouter();
 const schoolStore = useSchoolStore();
@@ -155,13 +155,5 @@ const changeUserMode = async (role_type_id) => {
         router.push("/error");
       }
     });
-};
-
-const handleLogout = () => {
-  logout().then(() => {
-    $axiosPlugin.defaults.headers.common["Authorization"] = null;
-
-    schoolStore.getSchool();
-  });
 };
 </script>
