@@ -39,7 +39,7 @@
       </div>
     </roleProvider>
 
-    <div v-if="dashboard && authUser && !authUser.telegram" class="col-span-12 md:col-span-6 lg:col-span-9">
+    <!-- <div v-if="dashboard && authUser && !authUser.telegram" class="col-span-12 md:col-span-6 lg:col-span-9">
       <div
         style="
           background-image: linear-gradient(225deg, #3c8ce7 10%, #00eaff 100%);
@@ -67,7 +67,7 @@
           src="~/public/images/telegram/telegram.png"
         />
       </div>
-    </div>
+    </div> -->
 
     <div v-if="dashboard" class="col-span-12">
       <div class="custom-grid">
