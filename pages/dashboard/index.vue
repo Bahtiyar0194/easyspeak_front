@@ -240,7 +240,7 @@
     </div>
   </client-only>
 
-  <modal
+  <!-- <modal
     :show="eventModalIsVisible"
     :onClose="() => closeEventModal()"
     :className="'modal-xl'"
@@ -361,7 +361,7 @@
         </div>
       </form>
     </template>
-  </modal>
+  </modal> -->
 </template>
 
 <script setup>
