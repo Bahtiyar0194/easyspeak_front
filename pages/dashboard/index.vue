@@ -39,7 +39,10 @@
       </div>
     </roleProvider>
 
-    <!-- <div v-if="dashboard && authUser && !authUser.telegram" class="col-span-12 md:col-span-6 lg:col-span-9">
+    <div
+      v-if="dashboard && authUser && !authUser.telegram"
+      class="col-span-12 md:col-span-6 lg:col-span-9"
+    >
       <div
         style="
           background-image: linear-gradient(225deg, #3c8ce7 10%, #00eaff 100%);
@@ -67,7 +70,7 @@
           src="~/public/images/telegram/telegram.png"
         />
       </div>
-    </div> -->
+    </div>
 
     <div v-if="dashboard" class="col-span-12">
       <div class="custom-grid">
@@ -238,130 +241,131 @@
         </div>
       </div>
     </div>
-  </client-only>
 
-  <!-- <modal
-    :show="eventModalIsVisible"
-    :onClose="() => closeEventModal()"
-    :className="'modal-xl'"
-    :showLoader="false"
-    :closeOnClickSelf="true"
-  >
-    <template v-slot:header_content>
-      <h4>{{ currentEvent?.lesson_name }}</h4>
-    </template>
-    <template v-if="currentEvent" v-slot:body_content>
-      <div class="custom-grid">
-        <div class="col-span-12">
-          <p class="text-inactive">
-            <i class="pi pi-book"></i> {{ $t("pages.courses.course") }}:
-            <b class="text-active"
-              >{{ currentEvent.course_name }} - {{ currentEvent.level_name }}</b
-            >
-          </p>
-          <p class="text-inactive">
-            <i class="pi pi-users"></i> {{ $t("pages.groups.group") }}:
-            <b class="text-active">{{ currentEvent.group_name }}</b>
-          </p>
-          <p class="text-inactive">
-            <i class="pi pi-user"></i> {{ $t("mentor") }}:
-            <b class="text-active"
-              >{{ currentEvent.mentor_last_name }}
-              {{ currentEvent.mentor_first_name }}</b
-            >
-          </p>
-          <p class="text-inactive">
-            <i class="pi pi-clock"></i> {{ $t("start_time") }}:
-            <b class="text-active">{{ currentEvent.start_time_formatted }}</b>
-          </p>
-          <p class="text-inactive mb-0">
-            <i class="pi pi-clock"></i> {{ $t("end_time") }}:
-            <b class="text-active">{{ currentEvent.end_time_formatted }}</b>
-          </p>
+    <modal
+      :show="eventModalIsVisible"
+      :onClose="() => closeEventModal()"
+      :className="'modal-xl'"
+      :showLoader="false"
+      :closeOnClickSelf="true"
+    >
+      <template v-slot:header_content>
+        <h4>{{ currentEvent?.lesson_name }}</h4>
+      </template>
+      <template v-if="currentEvent" v-slot:body_content>
+        <div class="custom-grid">
+          <div class="col-span-12">
+            <p class="text-inactive">
+              <i class="pi pi-book"></i> {{ $t("pages.courses.course") }}:
+              <b class="text-active"
+                >{{ currentEvent.course_name }} -
+                {{ currentEvent.level_name }}</b
+              >
+            </p>
+            <p class="text-inactive">
+              <i class="pi pi-users"></i> {{ $t("pages.groups.group") }}:
+              <b class="text-active">{{ currentEvent.group_name }}</b>
+            </p>
+            <p class="text-inactive">
+              <i class="pi pi-user"></i> {{ $t("mentor") }}:
+              <b class="text-active"
+                >{{ currentEvent.mentor_last_name }}
+                {{ currentEvent.mentor_first_name }}</b
+              >
+            </p>
+            <p class="text-inactive">
+              <i class="pi pi-clock"></i> {{ $t("start_time") }}:
+              <b class="text-active">{{ currentEvent.start_time_formatted }}</b>
+            </p>
+            <p class="text-inactive mb-0">
+              <i class="pi pi-clock"></i> {{ $t("end_time") }}:
+              <b class="text-active">{{ currentEvent.end_time_formatted }}</b>
+            </p>
+          </div>
+          <div class="col-span-12">
+            <p>
+              {{ $t("pages.groups.members") }}:
+              <b>{{ currentEvent.members.length }}</b>
+            </p>
+
+            <div v-if="currentEvent.members.length > 0" class="btn-wrap">
+              <userTag
+                v-for="(member, index) in currentEvent.members"
+                :key="index"
+                :user="member"
+                :closable="false"
+              />
+            </div>
+          </div>
         </div>
-        <div class="col-span-12">
-          <p>
-            {{ $t("pages.groups.members") }}:
-            <b>{{ currentEvent.members.length }}</b>
-          </p>
+      </template>
+    </modal>
 
-          <div v-if="currentEvent.members.length > 0" class="btn-wrap">
-            <userTag
-              v-for="(member, index) in currentEvent.members"
+    <modal
+      :show="paymentModalIsVisible"
+      :onClose="() => closePaymentModal()"
+      :className="paymentModalSize"
+      :showLoader="pendingPayment"
+      :showPendingText="true"
+      :pendingText="
+        currentStep === paymentSteps.length
+          ? $t('pages.payment.please_wait')
+          : $t('loading')
+      "
+      :closeOnClickSelf="false"
+    >
+      <template v-slot:header_content>
+        <h4>{{ $t("pages.lessons.pay_for_lessons_alt") }}</h4>
+      </template>
+      <template v-slot:body_content>
+        <form
+          @submit.prevent="
+            currentStep === paymentSteps.length
+              ? createCryptogram()
+              : handlePayment()
+          "
+          ref="paymentFormRef"
+        >
+          <steps :currentStep="currentStep" :steps="paymentSteps">
+            <div
+              v-for="(step, index) in paymentSteps"
               :key="index"
-              :user="member"
-              :closable="false"
-            />
+              :class="currentStep === index + 1 ? 'block' : 'hidden'"
+            >
+              <component
+                v-if="step.component"
+                :is="step.component"
+                v-bind="step.props"
+              ></component>
+            </div>
+          </steps>
+
+          <div class="btn-wrap justify-end mt-4">
+            <button
+              v-if="currentStep > 1"
+              class="btn btn-light"
+              @click="backToStep(currentStep - 1)"
+              type="button"
+            >
+              <i class="pi pi-arrow-left"></i>
+              {{ $t("back") }}
+            </button>
+
+            <button class="btn btn-primary" type="submit">
+              <template v-if="currentStep !== paymentSteps.length">
+                <i class="pi pi-arrow-right"></i>
+                {{ $t("continue") }}
+              </template>
+              <template v-else>
+                <i class="pi pi-credit-card"></i>
+                {{ $t("pages.payment.to_pay") }}
+              </template>
+            </button>
           </div>
-        </div>
-      </div>
-    </template>
-  </modal>
-
-  <modal
-    :show="paymentModalIsVisible"
-    :onClose="() => closePaymentModal()"
-    :className="paymentModalSize"
-    :showLoader="pendingPayment"
-    :showPendingText="true"
-    :pendingText="
-      currentStep === paymentSteps.length
-        ? $t('pages.payment.please_wait')
-        : $t('loading')
-    "
-    :closeOnClickSelf="false"
-  >
-    <template v-slot:header_content>
-      <h4>{{ $t("pages.lessons.pay_for_lessons_alt") }}</h4>
-    </template>
-    <template v-slot:body_content>
-      <form
-        @submit.prevent="
-          currentStep === paymentSteps.length
-            ? createCryptogram()
-            : handlePayment()
-        "
-        ref="paymentFormRef"
-      >
-        <steps :currentStep="currentStep" :steps="paymentSteps">
-          <div
-            v-for="(step, index) in paymentSteps"
-            :key="index"
-            :class="currentStep === index + 1 ? 'block' : 'hidden'"
-          >
-            <component
-              v-if="step.component"
-              :is="step.component"
-              v-bind="step.props"
-            ></component>
-          </div>
-        </steps>
-
-        <div class="btn-wrap justify-end mt-4">
-          <button
-            v-if="currentStep > 1"
-            class="btn btn-light"
-            @click="backToStep(currentStep - 1)"
-            type="button"
-          >
-            <i class="pi pi-arrow-left"></i>
-            {{ $t("back") }}
-          </button>
-
-          <button class="btn btn-primary" type="submit">
-            <template v-if="currentStep !== paymentSteps.length">
-              <i class="pi pi-arrow-right"></i>
-              {{ $t("continue") }}
-            </template>
-            <template v-else>
-              <i class="pi pi-credit-card"></i>
-              {{ $t("pages.payment.to_pay") }}
-            </template>
-          </button>
-        </div>
-      </form>
-    </template>
-  </modal> -->
+        </form>
+      </template>
+    </modal>
+  </client-only>
 </template>
 
 <script setup>
