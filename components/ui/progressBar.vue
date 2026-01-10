@@ -50,21 +50,16 @@ const props = defineProps({
 });
 
 const displayedProgress = ref(0);
-let isMounted = false;
 
-onMounted(() => {
-  isMounted = true;
-});
 
 watch(
   () => props.progressPercentage,
   (newVal) => {
-    if (!isMounted) return; // Не анимируем на сервере
 
     const start = displayedProgress.value;
     const end = Math.min(Math.max(Number(newVal), 0), 100);
 
-    const duration = 1000;
+    const duration = 2000;
     const frameRate = 30;
     const totalFrames = Math.round(duration / (1000 / frameRate));
     let currentFrame = 0;
