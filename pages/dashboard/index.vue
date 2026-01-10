@@ -39,7 +39,7 @@
       </div>
     </roleProvider>
 
-    <div v-if="!authUser.telegram" class="col-span-12 md:col-span-6 lg:col-span-9">
+    <div v-if="authUser && !authUser.telegram" class="col-span-12 md:col-span-6 lg:col-span-9">
       <div
         style="
           background-image: linear-gradient(225deg, #3c8ce7 10%, #00eaff 100%);
