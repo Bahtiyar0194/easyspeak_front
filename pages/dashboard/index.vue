@@ -10,7 +10,7 @@
 
     <roleProvider :roles="[1, 2, 3]">
       <div
-        v-if="schoolStore.schoolData.all_users_count"
+        v-if="schoolStore.schoolData && schoolStore.schoolData.all_users_count"
         class="col-span-12 md:col-span-6 lg:col-span-3"
       >
         <div class="card p-6">
@@ -39,7 +39,7 @@
       </div>
     </roleProvider>
 
-    <div v-if="authUser && !authUser.telegram" class="col-span-12 md:col-span-6 lg:col-span-9">
+    <div v-if="dashboard && authUser && !authUser.telegram" class="col-span-12 md:col-span-6 lg:col-span-9">
       <div
         style="
           background-image: linear-gradient(225deg, #3c8ce7 10%, #00eaff 100%);
