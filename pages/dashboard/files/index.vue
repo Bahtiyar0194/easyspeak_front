@@ -167,7 +167,7 @@
       >
         <template v-if="files.data?.length > 0">
           <div class="table table-striped table-sm selectable">
-            <loader v-if="pendingFiles" :className="'overlay'" />
+            <loader v-if="pendingFiles" :className="'overlay'" :showPendingText="true"/>
             <table ref="tableRef">
               <thead>
                 <tr>
@@ -241,7 +241,7 @@
         </template>
 
         <alert v-else :className="'light'">
-          <loader v-if="pendingFiles" :className="'overlay'" />
+          <loader v-if="pendingFiles" :className="'overlay'" :showPendingText="true"/>
           <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
         </alert>
       </div>

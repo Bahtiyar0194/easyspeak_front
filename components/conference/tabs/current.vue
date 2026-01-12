@@ -30,7 +30,7 @@
       </div>
 
       <alert v-else :className="'light'">
-        <loader v-if="pending" :className="'overlay'" />
+        <loader v-if="pending" :className="'overlay'" :showPendingText="true" />
         <img
           class="w-24 mx-auto mb-2"
           src="~/public/images/calendar-search.svg"

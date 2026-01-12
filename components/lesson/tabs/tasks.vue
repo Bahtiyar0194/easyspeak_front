@@ -83,14 +83,19 @@
             class="list-group overflow-hidden"
             :move="{ transition: { duration: 0.3 } }"
           >
-            <loader v-if="pendingTasks" :className="'overlay'" />
+            <loader
+              v-if="pendingTasks"
+              :className="'overlay'"
+              :showPendingText="true"
+            />
             <li v-for="(taskItem, taskIndex) in tasks" :key="taskItem.task_id">
               <div class="flex items-center justify-between gap-4">
                 <div
                   class="flex gap-2 items-center w-full"
                   :class="
                     props.lessonData.lesson_type_slug === 'file_test' &&
-                    props.lessonData.available_status.is_only_learner === true &&
+                    props.lessonData.available_status.is_only_learner ===
+                      true &&
                     !taskItem.task_result.answers
                       ? ''
                       : 'link'
@@ -99,14 +104,17 @@
                     taskItem.task_result.answers
                       ? openTaskResult(taskItem)
                       : props.lessonData.lesson_type_slug === 'file_test' &&
-                        props.lessonData.available_status.is_only_learner === true
+                        props.lessonData.available_status.is_only_learner ===
+                          true
                       ? false
                       : openTask(taskItem)
                   "
                 >
                   <i class="text-3xl text-active" :class="taskItem.icon"></i>
                   <div class="flex flex-col gap-y-0.5">
-                    <span class="font-medium text-active">{{ taskItem.task_slug }}</span>
+                    <span class="font-medium text-active">{{
+                      taskItem.task_slug
+                    }}</span>
                     <span class="text-inactive text-xs">{{
                       taskItem.task_type_name
                     }}</span>

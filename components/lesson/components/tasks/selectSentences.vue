@@ -115,7 +115,11 @@
     <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
       <template v-if="sentences.data?.length > 0">
         <div class="table table-striped table-sm selectable">
-          <loader v-if="pending" :className="'overlay'" />
+          <loader
+            v-if="pending"
+            :className="'overlay'"
+            :showPendingText="true"
+          />
           <table ref="tableRef">
             <thead>
               <tr>
@@ -212,7 +216,7 @@
       </template>
 
       <alert v-else :className="'light'">
-        <loader v-if="pending" :className="'overlay'" />
+        <loader v-if="pending" :className="'overlay'" :showPendingText="true" />
         <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
       </alert>
     </div>
@@ -233,8 +237,13 @@
           >{{ errors.sentences_count[0] }}</span
         >
         <span v-else>
-          {{ $t(props.showQuestionsCount === true ? "pages.questions.added_questions_count" : "pages.sentences.added_sentences_count") }}:
-          <b>{{ selectedSentences.length }}</b></span
+          {{
+            $t(
+              props.showQuestionsCount === true
+                ? "pages.questions.added_questions_count"
+                : "pages.sentences.added_sentences_count"
+            )
+          }}: <b>{{ selectedSentences.length }}</b></span
         >
       </p>
 
@@ -310,8 +319,8 @@ const props = defineProps({
   showQuestionsCount: {
     default: false,
     type: Boolean,
-    required: false
-  }
+    required: false,
+  },
 });
 
 const { errors, selectedSentences } = toRefs(props);

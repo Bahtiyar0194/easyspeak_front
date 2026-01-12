@@ -1373,6 +1373,14 @@ input:disabled + .slider {
   @apply p-6 text-center text-inactive rounded-xl relative overflow-hidden; 
 }
 
+.alert:has(.overlay) {
+  @apply p-16;
+}
+
+.alert:has(.overlay) > .overlay{
+  @apply opacity-100;
+}
+
 .alert.light{
   @apply border-inactive bg-active text-active;
 }

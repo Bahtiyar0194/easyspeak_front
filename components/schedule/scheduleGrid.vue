@@ -29,7 +29,7 @@
     </div>
 
     <div class="col-span-12 relative">
-      <loader v-if="pendingSchedule" :className="'overlay !rounded-lg'" />
+      <loader v-if="pendingSchedule" :className="'overlay !rounded-lg'" :showPendingText="true" />
       <!-- Отображение по режиму -->
       <div v-if="mode === 'year'" class="grid grid-cols-3 gap-0.5 md:gap-1">
         <div
@@ -241,7 +241,7 @@
         </div>
 
         <alert v-else :className="'light'">
-          <loader v-if="pendingSchedule" :className="'overlay'" />
+          <loader v-if="pendingSchedule" :className="'overlay'" :showPendingText="true"/>
           <p class="mb-0">{{ $t("pages.events.no_events") }}</p>
         </alert>
       </div>

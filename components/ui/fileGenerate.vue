@@ -1,6 +1,6 @@
 <template>
   <div ref="inputWrapper">
-    <loader v-if="pending" :className="'overlay'" />
+    <loader v-if="pending" :className="'overlay'" :showPendingText="true"/>
     <div class="form-group-border select active label-active mb-4">
       <i class="pi pi-microphone"></i>
       <select v-model="currentVoice">

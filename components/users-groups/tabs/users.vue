@@ -142,7 +142,11 @@
     <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
       <template v-if="users.data?.length > 0">
         <div class="table table-striped table-sm selectable">
-          <loader v-if="pending" :className="'overlay'" />
+          <loader
+            v-if="pending"
+            :className="'overlay'"
+            :showPendingText="true"
+          />
           <table ref="tableRef">
             <thead>
               <tr>
@@ -197,7 +201,7 @@
       </template>
 
       <alert v-else :className="'light'">
-        <loader v-if="pending" :className="'overlay'" />
+        <loader v-if="pending" :className="'overlay'" :showPendingText="true" />
         <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
       </alert>
     </div>
@@ -214,7 +218,11 @@
       <h4>{{ $t("pages.users.invite_user_title") }}</h4>
     </template>
     <template v-slot:body_content>
-      <subscription v-if="schoolStore.schoolData && schoolStore.schoolData.subscription_expired" />
+      <subscription
+        v-if="
+          schoolStore.schoolData && schoolStore.schoolData.subscription_expired
+        "
+      />
       <form
         v-else
         class="mt-2"
@@ -753,7 +761,9 @@
                 >
                   <button
                     @click="
-                      level.available_status.is_available === true ? selectLevel(level) : null
+                      level.available_status.is_available === true
+                        ? selectLevel(level)
+                        : null
                     "
                     :class="
                       level.available_status.is_available === true
@@ -1080,7 +1090,7 @@ const editUserSubmit = async (user_id) => {
 const closeInviteModal = () => {
   inviteModalIsVisible.value = false;
   pendingInvite.value = false;
-  if(inviteFormRef.value){
+  if (inviteFormRef.value) {
     inviteFormRef.value.reset();
   }
   errors.value = [];
