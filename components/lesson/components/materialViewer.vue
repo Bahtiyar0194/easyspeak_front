@@ -221,52 +221,56 @@ const prompts = [
 const promptInput = ref("");
 
 const sendPrompt = async () => {
-  // добавляем сообщение пользователя
-  chat.value.push({
-    id: crypto.randomUUID(),
-    role: "user",
-    content: promptInput.value,
-  });
-
-  pendingPrompt.value = true;
-
-  // подготовка формы
-  const formData = new FormData();
-  formData.append("lang", localeProperties.value.name);
-  formData.append("prompt", promptInput.value);
-  formData.append("material", JSON.stringify(props.material));
-
-  promptInput.value = "";
-
-  try {
-    // отправка запроса
-    const response = await $axiosPlugin.post("/material/explain", formData);
-
-    // добавляем ответ ассистента
+  if (promptInput.value !== "") {
+    // добавляем сообщение пользователя
     chat.value.push({
       id: crypto.randomUUID(),
-      role: "assistant",
-      content: "", // пустое место для Typed,
+      role: "user",
+      content: promptInput.value,
     });
 
-    setTimeout(() => {
-      initTyped(response.data);
-    }, 100);
-  } catch (err) {
-    if (err.response) {
-      router.push({
-        path: "/error",
-        query: {
-          status: err.response.status,
-          message: err.response.data.message.error.message || err.response.data.message,
-          url: err.request.responseURL,
-        },
+    pendingPrompt.value = true;
+
+    // подготовка формы
+    const formData = new FormData();
+    formData.append("lang", localeProperties.value.name);
+    formData.append("prompt", promptInput.value);
+    formData.append("material", JSON.stringify(props.material));
+
+    promptInput.value = "";
+
+    try {
+      // отправка запроса
+      const response = await $axiosPlugin.post("/material/explain", formData);
+
+      // добавляем ответ ассистента
+      chat.value.push({
+        id: crypto.randomUUID(),
+        role: "assistant",
+        content: "", // пустое место для Typed,
       });
-    } else {
-      router.push("/error");
+
+      setTimeout(() => {
+        initTyped(response.data);
+      }, 100);
+    } catch (err) {
+      if (err.response) {
+        router.push({
+          path: "/error",
+          query: {
+            status: err.response.status,
+            message:
+              err.response.data.message.error.message ||
+              err.response.data.message,
+            url: err.request.responseURL,
+          },
+        });
+      } else {
+        router.push("/error");
+      }
+    } finally {
+      pendingPrompt.value = false;
     }
-  } finally {
-    pendingPrompt.value = false;
   }
 };
 
@@ -295,14 +299,23 @@ const getChat = async () => {
     });
 };
 
+const handleKeyPress = (event) => {
+  if (event.key === "Enter") {
+    sendPrompt();
+  }
+};
+
 onMounted(async () => {
   props.showChat === true && getChat();
+  window.addEventListener("keydown", handleKeyPress);
 });
 
 onBeforeUnmount(() => {
   if (typedInstance) {
     typedInstance.destroy();
   }
+
+  window.removeEventListener("keydown", handleKeyPress);
 });
 
 watch(
