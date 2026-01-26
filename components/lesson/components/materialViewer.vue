@@ -3,7 +3,7 @@
     <div class="custom-grid">
       <div
         :class="
-          props.showChat === true ? 'col-span-12 lg:col-span-8' : 'col-span-12'
+          props.showChat === true ? 'col-span-12 lg:col-span-7' : 'col-span-12'
         "
       >
         <videoPlayer
@@ -29,7 +29,7 @@
           :options="JSON.parse(props.material.options)"
         />
       </div>
-      <div v-if="props.showChat === true" class="col-span-12 lg:col-span-4">
+      <div v-if="props.showChat === true" class="col-span-12 lg:col-span-5">
         <stickyBox>
           <div class="card">
             <loader
