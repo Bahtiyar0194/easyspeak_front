@@ -818,7 +818,7 @@ const getGroups = async (url) => {
   formData.append("sort_direction", sortDirection.value); // Добавляем направление сортировки
 
   if (!url) {
-    url = "agreement/get";
+    url = "groups/get";
   }
 
   await $axiosPlugin
