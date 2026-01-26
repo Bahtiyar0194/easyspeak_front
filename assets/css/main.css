@@ -548,7 +548,7 @@ ul > li::marker
 }
 
 hr{
-  @apply border-inactive !border-t-0 my-1;
+  @apply border-inactive !border-t-0 my-2;
 }
 
 blockquote{
@@ -565,6 +565,10 @@ input[type=number]::-webkit-outer-spin-button {
   -moz-appearance: none;
   appearance: none;
   margin: 0; 
+}
+
+input:disabled{
+  @apply text-inactive;
 }
 
 .table{
@@ -1213,6 +1217,10 @@ input:disabled + .slider {
 
 .btn-active{
   @apply border-active text-active;
+}
+
+.btn-active-invert{
+  @apply bg-black dark:bg-white text-white dark:text-black;
 }
 
 .btn-inactive{

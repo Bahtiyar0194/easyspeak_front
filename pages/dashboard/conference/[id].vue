@@ -490,7 +490,7 @@
         :onClose="() => closeMaterialModal(true)"
         :className="
           currentMaterial && currentMaterial.block_material_type_slug
-            ? 'modal-4xl'
+            ? 'modal-full'
             : 'modal-lg'
         "
         :showLoader="false"
@@ -529,7 +529,7 @@
               </div>
             </div>
             <div class="col-span-12">
-              <materialViewer :material="currentMaterial" />
+              <materialViewer :material="currentMaterial" :showChat="currentMaterial && currentMaterial.block_material_type_slug ? true : false" />
             </div>
           </div>
         </template>

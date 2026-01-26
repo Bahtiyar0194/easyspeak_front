@@ -1,19 +1,18 @@
 <template>
-  <div v-if="props.tableData" class="col-span-12">
-    <div class="custom-grid">
-      <div class="col-span-12">
-        <div ref="tableContainer"
-          class="table" id="material_table"
-          :class="{
-            'table-sm': props.options.tableSmall,
-            'table-striped': props.options.tableStriped,
-            bordered: props.options.tableBordered,
-            'text-center': props.options.textCentered,
-          }"
-          v-html="sanitize(props.tableData)"
-        ></div>
-      </div>
-    </div>
+  <div class="col-span-12">
+    <div
+      v-if="props.tableData"
+      ref="tableContainer"
+      class="table"
+      id="material_table"
+      :class="{
+        'table-sm': props.options.tableSmall,
+        'table-striped': props.options.tableStriped,
+        bordered: props.options.tableBordered,
+        'text-center': props.options.textCentered,
+      }"
+      v-html="sanitize(props.tableData)"
+    ></div>
   </div>
 </template>
 <script setup>
@@ -32,7 +31,7 @@ const props = defineProps({
 
 onMounted(async () => {
   await nextTick();
-  const table = tableContainer.value.querySelector('table');
+  const table = tableContainer.value.querySelector("table");
   if (!table) return;
 
   Array.from(table.rows).forEach((row, rowIndex) => {

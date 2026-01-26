@@ -170,7 +170,11 @@
     <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
       <template v-if="groups.data?.length > 0">
         <div class="table table-striped table-sm selectable">
-          <loader v-if="pending" :className="'overlay'" :showPendingText="true"/>
+          <loader
+            v-if="pending"
+            :className="'overlay'"
+            :showPendingText="true"
+          />
           <table ref="tableRef">
             <thead>
               <tr>
@@ -279,6 +283,7 @@
     :onClose="() => closeModal()"
     :className="'modal-2xl'"
     :showLoader="pendingGroup"
+    :showPendingText="true"
     :closeOnClickSelf="true"
   >
     <template v-slot:header_content>
@@ -387,6 +392,7 @@
     :onClose="() => closeModal('create')"
     :className="currentStep != 3 ? 'modal-4xl' : ''"
     :showLoader="pendingCreate"
+    :showPendingText="true"
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
@@ -448,6 +454,7 @@
     :onClose="() => closeModal('edit')"
     :className="currentStep != 3 ? 'modal-4xl' : ''"
     :showLoader="pendingEdit"
+    :showPendingText="true"
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
@@ -500,6 +507,7 @@
     :onClose="() => closeModal('schedule')"
     :className="'modal-6xl'"
     :showLoader="false"
+    :showPendingText="true"
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
@@ -560,6 +568,7 @@
     :onClose="() => closeModal('return_to_payments')"
     :className="'modal-xl'"
     :showLoader="pendingPaymentStatus"
+    :showPendingText="true"
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
@@ -809,7 +818,7 @@ const getGroups = async (url) => {
   formData.append("sort_direction", sortDirection.value); // Добавляем направление сортировки
 
   if (!url) {
-    url = "groups/get";
+    url = "agreement/get";
   }
 
   await $axiosPlugin

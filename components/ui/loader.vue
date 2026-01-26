@@ -1,5 +1,5 @@
 <template>
-  <div :class="props.className" class="p-4">
+  <div :class="props.className" class="p-4 select-none">
     <div class="overlay-loading-circle"></div>
 
     <div
