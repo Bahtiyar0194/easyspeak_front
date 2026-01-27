@@ -111,6 +111,8 @@ export default {
     for_re_examination: "Для повторного изучения",
     get_ready: "Приготовьтесь",
     thinking: "Думаю",
+    recording: "Идет запись",
+    handling: "Обрабатывается",
     number_of_options: "Количество вариантов",
     number_of_attempts: "Количество попыток на исправление ошибок",
     random_order: "Выводить в случайном порядке",

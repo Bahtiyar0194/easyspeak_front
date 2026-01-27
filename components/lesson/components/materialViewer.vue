@@ -90,15 +90,6 @@
                       </div>
                     </div>
                   </div>
-
-                  <div v-if="pendingPrompt === true" class="col-span-12">
-                    <p class="text-inactive mb-0 dots select-none">
-                      {{ $t("thinking") }}
-                      <span class="blink animation-delay:0s">.</span>
-                      <span class="blink animation-delay:0.3s">.</span>
-                      <span class="blink animation-delay:0.6s">.</span>
-                    </p>
-                  </div>
                 </div>
               </scrollFadeContainer>
             </div>
@@ -117,27 +108,51 @@
                 </button>
               </div>
               <div class="bg-inactive border-inactive p-2 rounded-full">
-                <div class="flex gap-x-2">
+                <div class="flex items-center gap-x-2">
+                  <div
+                    v-if="pendingPrompt === true || recording === true"
+                    class="w-full pl-2"
+                  >
+                    <p class="text-inactive mb-0 dots select-none">
+                      {{
+                        pendingPrompt === true
+                          ? pendingAudio === true
+                            ? $t("handling")
+                            : $t("thinking")
+                          : $t("recording")
+                      }}
+                      <span class="blink animation-delay:0s">.</span>
+                      <span class="blink animation-delay:0.3s">.</span>
+                      <span class="blink animation-delay:0.6s">.</span>
+                    </p>
+                  </div>
                   <input
+                    v-else
                     class="w-full px-2"
-                    :disabled="pendingPrompt === true"
                     type="text"
                     :placeholder="$t('type_your_message')"
                     v-model="promptInput"
                   />
                   <button
-                    @click="sendPrompt()"
+                    @click="
+                      promptInput === ''
+                        ? recording === true
+                          ? stop()
+                          : record()
+                        : sendPrompt()
+                    "
                     class="btn btn-circle btn-active-invert"
                     :class="pendingPrompt === true ? 'disabled' : ''"
                   >
                     <i
-                      class="pi"
                       :class="
                         pendingPrompt === true
-                          ? 'pi-spinner btn-loading-circle'
+                          ? 'pi pi-spinner btn-loading-circle'
                           : promptInput === ''
-                          ? 'pi-microphone'
-                          : 'pi-arrow-up'
+                          ? recording === true
+                            ? 'bi bi-record-fill text-danger pulse'
+                            : 'bi bi-mic-fill'
+                          : 'pi pi-arrow-up'
                       "
                     ></i>
                   </button>
@@ -152,6 +167,7 @@
 </template>
 <script setup>
 import { useRouter } from "nuxt/app";
+import { useAudioRecorder } from "../../../composables/useAudioRecorder";
 import Typed from "typed.js";
 import loader from "../../ui/loader.vue";
 import stickyBox from "../../ui/stickyBox.vue";
@@ -165,6 +181,7 @@ import { onMounted } from "vue";
 const config = useRuntimeConfig();
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
+const { startRecording, stopRecording } = useAudioRecorder();
 const authUser = useSanctumUser();
 const { t, localeProperties } = useI18n();
 
@@ -172,6 +189,10 @@ const chatContainer = ref(null);
 const chat = ref([]);
 const pending = ref(false);
 const pendingPrompt = ref(false);
+const pendingAudio = ref(false);
+
+let pressTime = 0;
+const recording = ref(false);
 
 const scrollBox = ref(null);
 
@@ -211,6 +232,64 @@ const initTyped = (content) => {
     showCursor: false,
     cursorChar: "|",
   });
+};
+
+const record = async () => {
+  pressTime = Date.now();
+  await startRecording();
+
+  setTimeout(() => {
+    recording.value = true;
+  }, 500);
+};
+
+const stop = async () => {
+  recording.value = false;
+  const blob = await stopRecording();
+
+  if (Date.now() - pressTime < 300) {
+    // слишком коротко — отмена
+    alert("too short");
+    return;
+  } else if (Date.now() - pressTime > 10000) {
+    // слишком коротко — отмена
+    alert("too long");
+    return;
+  }
+
+  pendingPrompt.value = true;
+  pendingAudio.value = true;
+
+  // подготовка формы
+  const formData = new FormData();
+  formData.append("audio", blob, "speech.webm");
+
+  promptInput.value = "";
+
+  try {
+    // отправка запроса
+    const response = await $axiosPlugin.post("/openai/stt", formData);
+
+    promptInput.value = response.data.text;
+  } catch (err) {
+    if (err.response) {
+      router.push({
+        path: "/error",
+        query: {
+          status: err.response.status,
+          message:
+            err.response.data.message.error.message ||
+            err.response.data.message,
+          url: err.request.responseURL,
+        },
+      });
+    } else {
+      router.push("/error");
+    }
+  } finally {
+    pendingPrompt.value = false;
+    pendingAudio.value = false;
+  }
 };
 
 const prompts = [

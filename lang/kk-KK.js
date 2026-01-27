@@ -111,6 +111,8 @@ export default {
     for_re_examination: "Қайта оқуға арналған",
     get_ready: "Дайын болыңыз",
     thinking: "Ойланып жатырмын",
+    recording: "Жазылып жатыр",
+    handling: "Өңделіп жатыр",
     number_of_options: "Нұсқалар саны",
     number_of_attempts: "Қателерді түзету әрекеттерінің саны",
     random_order: "Кездейсоқ тәртіпте шығару",
