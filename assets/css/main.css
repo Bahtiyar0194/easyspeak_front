@@ -1409,6 +1409,28 @@ input:disabled + .slider {
   @apply border border-danger text-danger;
 }
 
+.tooltip{
+  @apply bg-inactive border-inactive text-active text-xs rounded-lg py-1.5 px-2 w-max absolute -top-12 right-0 opacity-0 duration-300 pointer-events-none select-none;
+}
+
+.tooltip.primary{
+  @apply bg-corp text-white;
+}
+
+.tooltip::after{
+  content: "";
+  @apply absolute -bottom-1.5 right-3 w-2.5 h-2.5 rotate-45 bg-inactive border-r-inactive border-b-inactive;
+
+}
+
+.tooltip.primary::after{
+  @apply bg-corp;
+}
+
+.tooltip.show{
+  @apply opacity-100;
+}
+
 .note{
   @apply pl-3 py-3 px-9 border-inactive bg-active rounded-xl relative;
 }

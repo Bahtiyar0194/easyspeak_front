@@ -39,8 +39,37 @@ export function useAudioRecorder() {
         });
     };
 
+    /**
+ * Проверка: была ли речь или тишина
+ */
+    const isSilentBlob = async (blob, threshold = 0.01) => {
+        if (!blob || blob.size === 0) return true;
+
+        const audioContext = new AudioContext();
+        const arrayBuffer = await blob.arrayBuffer();
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+        let sum = 0;
+        let samples = 0;
+
+        for (let c = 0; c < audioBuffer.numberOfChannels; c++) {
+            const channel = audioBuffer.getChannelData(c);
+            for (let i = 0; i < channel.length; i++) {
+                sum += channel[i] * channel[i];
+            }
+            samples += channel.length;
+        }
+
+        const rms = Math.sqrt(sum / samples);
+
+        await audioContext.close();
+
+        return rms < threshold;
+    };
+
     return {
         startRecording,
         stopRecording,
+        isSilentBlob,
     };
 }

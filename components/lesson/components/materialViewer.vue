@@ -114,13 +114,15 @@
                     class="w-full pl-2"
                   >
                     <p class="text-inactive mb-0 dots select-none">
-                      {{
-                        pendingPrompt === true
-                          ? pendingAudio === true
-                            ? $t("handling")
-                            : $t("thinking")
-                          : $t("recording")
-                      }}
+                      <span class="blink">
+                        {{
+                          pendingPrompt === true
+                            ? pendingAudio === true
+                              ? $t("handling")
+                              : $t("thinking")
+                            : $t("recording")
+                        }}</span
+                      >
                       <span class="blink animation-delay:0s">.</span>
                       <span class="blink animation-delay:0.3s">.</span>
                       <span class="blink animation-delay:0.6s">.</span>
@@ -141,7 +143,7 @@
                           : record()
                         : sendPrompt()
                     "
-                    class="btn btn-circle btn-active-invert"
+                    class="btn btn-circle btn-active-invert relative"
                     :class="pendingPrompt === true ? 'disabled' : ''"
                   >
                     <i
@@ -149,12 +151,18 @@
                         pendingPrompt === true
                           ? 'pi pi-spinner btn-loading-circle'
                           : promptInput === ''
-                          ? recording === true
-                            ? 'bi bi-record-fill text-danger pulse'
-                            : 'bi bi-mic-fill'
-                          : 'pi pi-arrow-up'
+                            ? recording === true
+                              ? 'bi bi-record-fill text-danger pulse'
+                              : 'bi bi-mic-fill'
+                            : 'pi pi-arrow-up'
                       "
                     ></i>
+
+                    <tooltip
+                      :show="tooltipIsShow"
+                      :title="tooltipTitle"
+                      :className="''"
+                    />
                   </button>
                 </div>
               </div>
@@ -167,11 +175,13 @@
 </template>
 <script setup>
 import { useRouter } from "nuxt/app";
+import { playAudio, stopAudio } from "../../../utils/playAudio";
 import { useAudioRecorder } from "../../../composables/useAudioRecorder";
 import Typed from "typed.js";
 import loader from "../../ui/loader.vue";
 import stickyBox from "../../ui/stickyBox.vue";
 import scrollFadeContainer from "../../ui/scrollFadeContainer.vue";
+import tooltip from "../../ui/tooltip.vue";
 import videoPlayer from "../../ui/videoPlayer.vue";
 import audioPlayerWithWave from "../../ui/audioPlayerWithWave.vue";
 import textViewer from "../../ui/textViewer.vue";
@@ -181,7 +191,7 @@ import { onMounted } from "vue";
 const config = useRuntimeConfig();
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
-const { startRecording, stopRecording } = useAudioRecorder();
+const { startRecording, stopRecording, isSilentBlob } = useAudioRecorder();
 const authUser = useSanctumUser();
 const { t, localeProperties } = useI18n();
 
@@ -190,6 +200,10 @@ const chat = ref([]);
 const pending = ref(false);
 const pendingPrompt = ref(false);
 const pendingAudio = ref(false);
+
+const tooltipTitle = ref("");
+const tooltipIsShow = ref(false);
+let tooltipTimer = null;
 
 let pressTime = 0;
 const recording = ref(false);
@@ -216,7 +230,7 @@ const initTyped = (content) => {
   if (!lastMessage) return;
 
   const el = chatContainer.value?.querySelector(
-    `[data-message-id="${lastMessage.id}"]`
+    `[data-message-id="${lastMessage.id}"]`,
   );
 
   if (!el) return;
@@ -234,31 +248,56 @@ const initTyped = (content) => {
   });
 };
 
+const showTooltip = (title, duration = 2000) => {
+  tooltipTitle.value = title;
+  tooltipIsShow.value = true;
+
+  stopAudio();
+  playAudio("/audio/error-short.mp3");
+
+  if (tooltipTimer) {
+    clearTimeout(tooltipTimer);
+  }
+
+  tooltipTimer = setTimeout(() => {
+    tooltipIsShow.value = false;
+    tooltipTimer = null;
+  }, duration);
+};
+
 const record = async () => {
+  recording.value = true;
+  stopAudio();
+  playAudio("/audio/rec-start.mp3");
+
   pressTime = Date.now();
   await startRecording();
-
-  setTimeout(() => {
-    recording.value = true;
-  }, 500);
 };
 
 const stop = async () => {
   recording.value = false;
   const blob = await stopRecording();
 
-  if (Date.now() - pressTime < 300) {
+  if (Date.now() - pressTime < 500) {
     // слишком коротко — отмена
-    alert("too short");
+    showTooltip(t("recording_too_short"), 3000);
     return;
   } else if (Date.now() - pressTime > 10000) {
     // слишком коротко — отмена
-    alert("too long");
+    showTooltip(t("recording_too_long"), 3000);
+    return;
+  }
+
+  if (await isSilentBlob(blob)) {
+    showTooltip(t("recording_silent"), 3000);
     return;
   }
 
   pendingPrompt.value = true;
   pendingAudio.value = true;
+
+  stopAudio();
+  playAudio("/audio/rec-stop.mp3");
 
   // подготовка формы
   const formData = new FormData();
@@ -403,6 +442,6 @@ watch(
     await nextTick();
     scrollBox.value.scrollToBottom(true); // true это плавно
   },
-  { immediate: true }
+  { immediate: true },
 );
 </script>
