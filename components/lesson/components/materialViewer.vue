@@ -70,24 +70,47 @@
 
                   <div v-if="chat.length" class="col-span-12">
                     <div ref="chatContainer" class="flex flex-col gap-y-4">
-                      <div
-                        v-for="message in chat"
-                        :key="message.id"
-                        :data-message-id="message.id"
-                        class="w-full"
-                        :class="
-                          message.role === 'user' ? 'flex justify-end pl-4' : ''
-                        "
-                      >
+                      <template v-for="message in chat" :key="message.uuid">
                         <div
-                          :class="
-                            message.role === 'user'
-                              ? 'bg-corp text-white px-3 py-2 rounded-2xl text-right w-fit'
-                              : 'text-justify'
-                          "
-                          v-html="message.content"
-                        ></div>
-                      </div>
+                          v-if="message.user_prompt"
+                          class="w-full flex justify-end pl-4"
+                        >
+                          <div
+                            class="bg-corp text-white px-3 py-2 rounded-2xl text-right w-fit"
+                            :data-u-message-id="message.uuid"
+                            v-html="sanitize(message.user_prompt)"
+                          ></div>
+                        </div>
+
+                        <div
+                          v-if="message.ai_content"
+                          class="w-full flex flex-col gap-y-4"
+                        >
+                          <div
+                            class="text-justify"
+                            :data-ai-message-id="message.uuid"
+                            v-html="sanitize(message.ai_content)"
+                          ></div>
+<!-- 
+                          <div class="btn-wrap justify-end">
+                            <button class="btn btn-light btn-sm btn-square">
+                              <i class="pi pi-clone"></i>
+                            </button>
+
+                            <button class="btn btn-light btn-sm btn-square">
+                              <i class="pi pi-thumbs-up"></i>
+                            </button>
+
+                            <button class="btn btn-light btn-sm btn-square">
+                              <i class="pi pi-thumbs-down"></i>
+                            </button>
+
+                            <button class="btn btn-light btn-sm btn-square">
+                              <i class="pi pi-volume-up"></i>
+                            </button>
+                          </div> -->
+                        </div>
+                      </template>
                     </div>
                   </div>
                 </div>
@@ -176,6 +199,7 @@
 <script setup>
 import { useRouter } from "nuxt/app";
 import { playAudio, stopAudio } from "../../../utils/playAudio";
+import { sanitize } from "../../../utils/sanitize";
 import { useAudioRecorder } from "../../../composables/useAudioRecorder";
 import Typed from "typed.js";
 import loader from "../../ui/loader.vue";
@@ -230,7 +254,7 @@ const initTyped = (content) => {
   if (!lastMessage) return;
 
   const el = chatContainer.value?.querySelector(
-    `[data-message-id="${lastMessage.id}"]`,
+    `[data-ai-message-id="${lastMessage.uuid}"]`,
   );
 
   if (!el) return;
@@ -342,9 +366,8 @@ const sendPrompt = async () => {
   if (promptInput.value !== "") {
     // добавляем сообщение пользователя
     chat.value.push({
-      id: crypto.randomUUID(),
-      role: "user",
-      content: promptInput.value,
+      uuid: crypto.randomUUID(),
+      user_prompt: promptInput.value,
     });
 
     pendingPrompt.value = true;
@@ -363,13 +386,22 @@ const sendPrompt = async () => {
 
       // добавляем ответ ассистента
       chat.value.push({
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: "", // пустое место для Typed,
+        uuid: crypto.randomUUID(),
+        ai_content: "...", // пустое место для Typed,
       });
 
       setTimeout(() => {
-        initTyped(response.data);
+        initTyped(response.data.text);
+
+        if (response.data.audio) {
+          stopAudio();
+          playAudio("data:audio/mpeg;base64," + response.data.audio);
+        } else if (response.data.audio_url) {
+          stopAudio();
+          playAudio(
+            config.public.apiBase + "/media/get/" + response.data.audio_url,
+          );
+        }
       }, 100);
     } catch (err) {
       if (err.response) {

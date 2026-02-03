@@ -48,7 +48,7 @@
     </div>
 
     <p v-if="(error || props.error) && !file" class="text-danger mb-0">
-      {{ error || props.error[0] || props.error }}
+      {{ error.error.detail.message || error || props.error[0] }}
     </p>
 
     <input type="hidden" :name="props.generateFileInputName" :value="file" />

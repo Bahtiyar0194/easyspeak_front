@@ -29,7 +29,11 @@
     </div>
 
     <div class="col-span-12 relative">
-      <loader v-if="pendingSchedule" :className="'overlay !rounded-lg'" :showPendingText="true" />
+      <loader
+        v-if="pendingSchedule"
+        :className="'overlay !rounded-lg'"
+        :showPendingText="true"
+      />
       <!-- Отображение по режиму -->
       <div v-if="mode === 'year'" class="grid grid-cols-3 gap-0.5 md:gap-1">
         <div
@@ -101,7 +105,7 @@
               >
                 <div class="flex gap-1.5 text-nowrap">
                   <span class="font-medium">{{ e.time }}</span>
-                  <span>{{ e.lesson_name }}</span>
+                  <span>{{ e.section_name }} - {{ e.lesson_name }}</span>
                 </div>
               </div>
 
@@ -156,7 +160,7 @@
               <div
                 v-for="e in eventsForDay(currentDate.date(d.date())).slice(
                   0,
-                  2
+                  2,
                 )"
                 :key="e.uuid"
                 :class="[
@@ -168,7 +172,7 @@
               >
                 <div class="flex gap-1.5 text-nowrap">
                   <span class="font-medium">{{ e.time }}</span>
-                  <span>{{ e.lesson_name }}</span>
+                  <span>{{ e.section_name }} - {{ e.lesson_name }}</span>
                 </div>
               </div>
 
@@ -191,7 +195,8 @@
       <div v-if="mode === 'day'">
         <div
           v-if="eventsForDay(currentDate.format('YYYY-MM-DD')).length > 0"
-          class="table table-sm table-striped" :class="props.openEventModal ? 'selectable' : ''"
+          class="table table-sm table-striped"
+          :class="props.openEventModal ? 'selectable' : ''"
         >
           <table>
             <thead>
@@ -215,7 +220,7 @@
                 <td>
                   <b>{{ e.time }}</b>
                 </td>
-                <td>{{ e.lesson_name }}</td>
+                <td>{{ e.section_name }} - {{ e.lesson_name }}</td>
                 <td>{{ e.lesson_type_name }}</td>
                 <td>{{ e.group_name }}</td>
                 <td>{{ e.course_name }}</td>
@@ -241,7 +246,11 @@
         </div>
 
         <alert v-else :className="'light'">
-          <loader v-if="pendingSchedule" :className="'overlay'" :showPendingText="true"/>
+          <loader
+            v-if="pendingSchedule"
+            :className="'overlay'"
+            :showPendingText="true"
+          />
           <p class="mb-0">{{ $t("pages.events.no_events") }}</p>
         </alert>
       </div>
@@ -270,7 +279,7 @@ const props = defineProps({
     type: Boolean,
     required: true,
   },
-  
+
   openEventModal: {
     type: Function,
     default: null,
@@ -325,7 +334,7 @@ const shortWeekday = (i) =>
   dayjs().day(i).locale(localeProperties.value.code).format("dd");
 
 const daysInMonth = computed(() =>
-  Array.from({ length: currentDate.value.daysInMonth() }, (_, i) => i + 1)
+  Array.from({ length: currentDate.value.daysInMonth() }, (_, i) => i + 1),
 );
 
 const blankDays = computed(() => {
@@ -337,8 +346,8 @@ const currentWeek = computed(() =>
   Array.from({ length: 7 }, (_, i) =>
     dayjs(currentDate.value)
       .startOf("isoWeek") // 👈 понедельник
-      .add(i, "day")
-  )
+      .add(i, "day"),
+  ),
 );
 
 const isToday = (day) => {

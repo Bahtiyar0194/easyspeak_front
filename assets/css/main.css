@@ -575,6 +575,14 @@ input:disabled{
   @apply w-full relative overflow-x-auto rounded-xl shadow-md flex border-inactive text-left;
 }
 
+.table:has(.overlay) {
+  @apply p-8;
+}
+
+.table:has(.overlay) > .overlay{
+  @apply opacity-100;
+}
+
 .table table{
   @apply w-full overflow-hidden relative;
 }
@@ -1845,7 +1853,7 @@ input:disabled + .slider {
 }
 
 .overlay-loading-circle {
-  @apply w-10 h-10 border-4 border-corp rounded-full block;
+  @apply w-10 h-10 p-4 border-4 border-corp rounded-full block;
   border-bottom-color: transparent !important;
   animation: 0.75s linear infinite spinner-border;
 }

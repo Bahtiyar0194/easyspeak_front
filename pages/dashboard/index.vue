@@ -40,7 +40,7 @@
     </roleProvider>
 
     <div
-      v-if="dashboard && authUser && !authUser.telegram"
+      v-if="dashboard && authUser && !authUser.telegram && !schoolStore.isAiSchoolDomain"
       class="col-span-12 md:col-span-6 lg:col-span-9"
     >
       <div
@@ -73,7 +73,7 @@
     </div>
 
     <div v-if="dashboard" class="col-span-12">
-      <div class="custom-grid">
+      <div class="custom-grid" v-if="!schoolStore.isAiSchoolDomain">
         <div class="col-span-12 lg:col-span-5">
           <div class="custom-grid">
             <div class="col-span-12">

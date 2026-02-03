@@ -9,7 +9,7 @@
         </alert>
       </div>
       <div class="col-span-12">
-        <scrollFadeContainer :maxHeight="500" :fadeSize="60">
+        <scrollFadeContainer :maxHeight="400" :fadeSize="40">
           <div class="custom-grid">
             <div
               v-for="(lesson, lessonIndex) in schedule"
@@ -25,7 +25,7 @@
                     class="mb-0"
                     :class="lesson.is_gone === true ? 'text-inactive' : ''"
                   >
-                    <b>{{ lesson.start_time_formatted }}</b> -
+                    <b>{{ lesson.start_time_formatted }}</b> - {{ lesson.section_name }} -
                     {{ lesson.lesson_name }}
                   </p>
                   <p
@@ -71,7 +71,7 @@
                             changePaymentStatus(
                               member.user_id,
                               lesson.lesson_id,
-                              $event.target.checked
+                              $event.target.checked,
                             )
                           "
                         />
@@ -100,7 +100,7 @@
                             newPayments.find(
                               (p) =>
                                 p.user_id === member.user_id &&
-                                p.lesson_id === lesson.lesson_id
+                                p.lesson_id === lesson.lesson_id,
                             )
                           "
                           >({{ $t("changed") }})</span

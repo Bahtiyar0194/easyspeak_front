@@ -1,6 +1,7 @@
 export const useSchoolStore = defineStore('school', {
     state: () => ({
-        schoolData: null
+        schoolData: null,
+        isAiSchoolDomain: false
     }),
 
     actions: {
@@ -47,6 +48,8 @@ export const useSchoolStore = defineStore('school', {
                 if (response.data.school_id) {
                     const school = response.data;
                     this.schoolData = school;
+                    // Если это AI школа
+                    this.isAiSchoolDomain = school.school_domain === 'ai';
 
                     document.body.classList.add(
                         school.title_font_class,

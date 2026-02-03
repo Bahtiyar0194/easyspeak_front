@@ -18,26 +18,30 @@
       </div>
     </div>
     <div class="flex">
-      <div
-        ref="menuWrapper"
-        class="db__sidebar__menu"
-        @mouseenter="showMenu = true"
-        @mouseleave="showMenu = false"
-        @click="showMenu = true"
-      >
-        <roleProvider
-          v-for="(item, index) in dashboardMenu"
-          :key="index"
-          :roles="item.roles"
+      <client-only>
+        <div
+          ref="menuWrapper"
+          class="db__sidebar__menu"
+          @mouseenter="showMenu = true"
+          @mouseleave="showMenu = false"
+          @click="showMenu = true"
         >
-          <nuxt-link :to="localePath(item.link)">
-            <i :class="item.icon"></i>
-            <span class="font-medium" :class="{ show: showMenu === true }">{{
-              $t(item.title)
-            }}</span>
-          </nuxt-link>
-        </roleProvider>
-      </div>
+          <roleProvider
+            v-for="(item, index) in dashboardMenu.filter(
+              (i) => i.is_show === true,
+            )"
+            :key="index"
+            :roles="item.roles"
+          >
+            <nuxt-link :to="localePath(item.link)">
+              <i :class="item.icon"></i>
+              <span class="font-medium" :class="{ show: showMenu === true }">{{
+                $t(item.title)
+              }}</span>
+            </nuxt-link>
+          </roleProvider>
+        </div>
+      </client-only>
       <div class="db__content">
         <div v-if="hasAccess" class="custom-grid">
           <div class="col-span-12">
@@ -74,6 +78,7 @@ import roleProvider from "../components/ui/roleProvider.vue";
 import { useRoute } from "nuxt/app";
 
 const authUser = useSanctumUser();
+const schoolStore = useSchoolStore();
 const menuWrapper = ref(null);
 const showMenu = ref(false);
 const route = useRoute();
@@ -83,24 +88,28 @@ const dashboardMenu = [
     title: "pages.dashboard.title",
     icon: "pi pi-home",
     link: "/dashboard",
+    is_show: true,
     roles: [1, 2, 3, 4, 5],
   },
   {
     title: "pages.users-groups.title",
     icon: "pi pi-users",
     link: "/dashboard/users-groups",
+    is_show: true,
     roles: [1, 2, 3, 4],
   },
   {
     title: "pages.schedule.title",
     icon: "pi pi-calendar-clock",
     link: "/dashboard/schedule",
+    is_show: !schoolStore.isAiSchoolDomain,
     roles: [1, 2, 3, 4, 5],
   },
   {
     title: "pages.conference.title",
     icon: "pi pi-video",
     link: "/dashboard/conference",
+    is_show: !schoolStore.isAiSchoolDomain,
     roles: [1, 2, 3, 4, 5],
   },
   // {
@@ -113,30 +122,35 @@ const dashboardMenu = [
     title: "pages.courses.title",
     icon: "pi pi-book",
     link: "/dashboard/courses",
+    is_show: true,
     roles: [1, 2, 3, 4, 5],
   },
   {
     title: "pages.education-program.title",
     icon: "pi pi-book",
     link: "/dashboard/education-program",
+    is_show: !schoolStore.isAiSchoolDomain,
     roles: [1],
   },
   {
     title: "pages.checking-tasks.title",
     icon: "pi pi-list-check",
     link: "/dashboard/checking-tasks",
+    is_show: !schoolStore.isAiSchoolDomain,
     roles: [1, 2, 3, 4],
   },
   {
     title: "pages.files.title",
     icon: "pi pi-file",
     link: "/dashboard/files",
+    is_show: !schoolStore.isAiSchoolDomain,
     roles: [1],
   },
   {
     title: "pages.school.title",
     icon: "pi pi-building-columns",
     link: "/dashboard/school",
+    is_show: !schoolStore.isAiSchoolDomain,
     roles: [1, 2, 3],
   },
 
@@ -144,16 +158,20 @@ const dashboardMenu = [
     title: "pages.invoices.title",
     icon: "pi pi-receipt",
     link: "/dashboard/invoices",
+    is_show: !schoolStore.isAiSchoolDomain,
     roles: [1],
   },
 ];
 
 const hasAccess = computed(() => {
   const currentMenuItem = dashboardMenu.find(
-    (item) => item.link === route.fullPath
+    (item) => item.link === route.fullPath,
   );
   if (currentMenuItem) {
-    if (currentMenuItem.roles.includes(authUser.value?.current_role_id)) {
+    if (
+      currentMenuItem.roles.includes(authUser.value?.current_role_id) &&
+      currentMenuItem.is_show === true
+    ) {
       return true;
     } else {
       return false;

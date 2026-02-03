@@ -9,7 +9,7 @@ export function playAudio(url) {
 
     audio = new Audio(url); // Создаем новый объект Audio
     audio.play().catch(error => {
-        console.error('Ошибка при воспроизведении первого аудиофайла:', error);
+        console.error('Ошибка при воспроизведении аудиофайла:', error);
     });
 }
 
@@ -38,11 +38,11 @@ export function playSuccessSound(url) {
         setTimeout(() => {
             const secondAudio = new Audio(url);
             secondAudio.play().catch(error => {
-                console.error('Ошибка при воспроизведении второго аудиофайла:', error);
+                console.error('Ошибка при воспроизведении аудиофайла:', error);
             });
         }, 300);
     }).catch(error => {
-        console.error('Ошибка при воспроизведении первого аудиофайла:', error);
+        console.error('Ошибка при воспроизведении аудиофайла:', error);
     });
 }
 
@@ -55,6 +55,6 @@ export function playErrorSound() {
 
     audio = new Audio('/audio/error-short.mp3'); // Создаем новый объект Audio
     audio.play().catch(error => {
-        console.error('Ошибка при воспроизведении первого аудиофайла:', error);
+        console.error('Ошибка при воспроизведении аудиофайла:', error);
     });
 }
