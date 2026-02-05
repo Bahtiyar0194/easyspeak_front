@@ -92,7 +92,10 @@
                             v-html="sanitize(message.ai_content)"
                           ></div>
 
-                          <div class="btn-wrap">
+                          <div
+                            v-if="message.ai_content !== '...'"
+                            class="btn-wrap"
+                          >
                             <button
                               class="btn btn-light btn-sm btn-square"
                               @click="copyText(message.uuid)"
@@ -150,7 +153,10 @@
 
                             <button
                               class="btn btn-light btn-sm btn-square"
-                              v-if="currentExplainId === message.uuid && message.target"
+                              v-if="
+                                currentExplainId === message.uuid &&
+                                message.target
+                              "
                               @click="backwardExplain()"
                               :title="$t('file.video.player.backward')"
                             >
@@ -165,13 +171,15 @@
                                   ? 'disabled'
                                   : ''
                               "
-                              :title="currentExplainId === message.uuid
-                                    ? pendingAudioExplain === true
-                                      ? $t('loading')
-                                      : audioExplainStatus === 'play'
-                                        ? $t('file.video.player.pause')
-                                        : $t('file.video.player.play')
-                                    : $t('listen')"
+                              :title="
+                                currentExplainId === message.uuid
+                                  ? pendingAudioExplain === true
+                                    ? $t('loading')
+                                    : audioExplainStatus === 'play'
+                                      ? $t('file.video.player.pause')
+                                      : $t('file.video.player.play')
+                                  : $t('listen')
+                              "
                               @click="
                                 toggleAudioExplain(
                                   message.uuid,
@@ -369,6 +377,9 @@ const initTyped = (content) => {
     smartBackspace: false,
     showCursor: false,
     cursorChar: "|",
+    onComplete: () => {
+      lastMessage.ai_content = content;
+    },
   });
 };
 
@@ -630,7 +641,7 @@ const sendPrompt = async () => {
 
       // добавляем ответ ассистента
       chat.value.push({
-        uuid: crypto.randomUUID(),
+        uuid: response.data.uuid,
         ai_content: "...", // пустое место для Typed,
         target: response.data.audio
           ? "data:audio/mpeg;base64," + response.data.audio
