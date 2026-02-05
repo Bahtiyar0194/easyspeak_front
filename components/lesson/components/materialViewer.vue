@@ -150,7 +150,7 @@
 
                             <button
                               class="btn btn-light btn-sm btn-square"
-                              v-if="currentExplainId === message.uuid"
+                              v-if="currentExplainId === message.uuid && message.target"
                               @click="backwardExplain()"
                               :title="$t('file.video.player.backward')"
                             >

@@ -38,6 +38,48 @@ export default defineNuxtConfig({
     }
   },
 
+  pwa: {
+    registerType: 'autoUpdate',
+    manifest: {
+      name: 'EasySpeak',
+      short_name: 'EasySpeak',
+      description: 'EasySpeak Progressive Web App',
+      theme_color: '#ffffff',
+      background_color: '#ffffff',
+      display: 'standalone',
+      lang: 'ru',
+      icons: [
+        {
+          src: '/public/icon-192.png',
+          sizes: '192x192',
+          type: 'image/png'
+        },
+        {
+          src: '/public/icon-512.png',
+          sizes: '512x512',
+          type: 'image/png'
+        }
+      ]
+    },
+    workbox: {
+      navigateFallback: '/',
+      runtimeCaching: [
+        {
+          urlPattern: ({ request }) => request.destination === 'document',
+          handler: 'NetworkFirst',
+        },
+        {
+          urlPattern: ({ request }) =>
+            ['style', 'script', 'image', 'font'].includes(request.destination),
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'assets-cache',
+          },
+        },
+      ],
+    },
+  },
+
   modules: ["@nuxtjs/i18n", 'nuxt-auth-sanctum', '@pinia/nuxt', '@vueuse/motion/nuxt', "nuxt-pdfmake"],
 
   postcss: {

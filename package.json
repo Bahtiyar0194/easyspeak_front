@@ -11,6 +11,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "-": "^0.0.1",
     "@ckpack/vue-color": "^1.6.0",
     "@fortawesome/fontawesome-free": "^6.6.0",
     "@nuxtjs/i18n": "^8.3.1",
@@ -19,6 +20,7 @@
     "@tiptap/extension-underline": "^2.11.5",
     "@tiptap/starter-kit": "^2.11.5",
     "@tiptap/vue-3": "^2.11.5",
+    "@vite-pwa/nuxt": "^1.1.0",
     "@vueuse/motion": "^2.2.5",
     "axios": "^1.7.2",
     "bootstrap-icons": "^1.11.3",
