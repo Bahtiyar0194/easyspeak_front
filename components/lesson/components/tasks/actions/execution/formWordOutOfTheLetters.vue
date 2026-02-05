@@ -272,7 +272,7 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/get/form_a_word_out_of_the_letters/" + props.task.task_id
+      "tasks/get/form_a_word_out_of_the_letters/" + props.task.task_id,
     );
     taskData.value = res.data;
     onStartTask();
@@ -297,10 +297,10 @@ const getTask = async () => {
 
     // Инициализация массивов
     missingLetterInputs.value = taskData.value.words.map((word) =>
-      Array(word.word.length).fill("")
+      Array(word.word.length).fill(""),
     );
     results.value = taskData.value.words.map(
-      (word) => Array(word.word.length).fill(null) // null - еще не проверено
+      (word) => Array(word.word.length).fill(null), // null - еще не проверено
     );
   } catch (err) {
     const errorRoute = err.response
@@ -351,7 +351,8 @@ const setWord = () => {
       if (currentWord.value.audio_file) {
         stopAudio();
         playAudio(
-          config.public.apiBase + "/media/get/" + currentWord.value.audio_file
+          config.public.apiBase + "/media/get/" + currentWord.value.audio_file,
+          () => {},
         );
       }
     }
@@ -432,7 +433,9 @@ const checkWord = (letter, event) => {
       if (Boolean(taskData.value.options.play_audio_with_the_correct_answer)) {
         if (currentWord.value.audio_file) {
           playSuccessSound(
-            config.public.apiBase + "/media/get/" + currentWord.value.audio_file
+            config.public.apiBase +
+              "/media/get/" +
+              currentWord.value.audio_file,
           );
         }
       }
@@ -442,11 +445,11 @@ const checkWord = (letter, event) => {
 
       if (
         reStudyWords.value.some(
-          (w) => w.task_word_id === currentWord.value.task_word_id
+          (w) => w.task_word_id === currentWord.value.task_word_id,
         )
       ) {
         reStudyWords.value = reStudyWords.value.filter(
-          (w) => w.task_word_id !== currentWord.value.task_word_id
+          (w) => w.task_word_id !== currentWord.value.task_word_id,
         );
       }
 
@@ -462,7 +465,7 @@ const checkWord = (letter, event) => {
 
       if (
         Boolean(
-          taskData.value.options.play_error_sound_with_the_incorrect_answer
+          taskData.value.options.play_error_sound_with_the_incorrect_answer,
         )
       ) {
         playErrorSound();
@@ -489,14 +492,14 @@ const generateRandomLetters = (count) => {
   const letters = "abcdefghijklmnopqrstuvwxyz";
   return Array.from(
     { length: count },
-    () => letters[Math.floor(Math.random() * letters.length)]
+    () => letters[Math.floor(Math.random() * letters.length)],
   );
 };
 
 // Подготовка букв для отображения
 const displayedLetters = computed(() => {
   const correctLetters = currentWord.value.missingLetters.map(
-    (index) => currentWord.value?.word[index - 1]
+    (index) => currentWord.value?.word[index - 1],
   );
   const randomLetters = generateRandomLetters(5); // 5 случайных букв
   const allLetters = [...correctLetters, ...randomLetters];
@@ -522,7 +525,7 @@ const debounceKeyboard = debounceHandler(
       toastClassName: ["custom-toast", "warning"],
       timeout: 5000,
     }),
-  1000
+  1000,
 );
 
 // Function to log key number and handle answer checking
@@ -597,6 +600,6 @@ watch(
     if (newVal === taskData.value.words.length) {
       saveTaskResult();
     }
-  }
+  },
 );
 </script>

@@ -139,10 +139,10 @@
                   successButtonIndex === index
                     ? 'btn-success disabled'
                     : errorButtonIndex === index
-                    ? 'btn-danger wobble'
-                    : checkingStatus
-                    ? 'btn-inactive disabled'
-                    : 'btn-inactive'
+                      ? 'btn-danger wobble'
+                      : checkingStatus
+                        ? 'btn-inactive disabled'
+                        : 'btn-inactive'
                 "
                 v-motion="{
                   initial: { opacity: 0 },
@@ -266,7 +266,7 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/get/learning_words/" + props.task.task_id
+      "tasks/get/learning_words/" + props.task.task_id,
     );
     taskData.value = res.data;
     onStartTask();
@@ -337,7 +337,8 @@ const setWord = () => {
       if (currentWord.value.audio_file) {
         stopAudio();
         playAudio(
-          config.public.apiBase + "/media/get/" + currentWord.value.audio_file
+          config.public.apiBase + "/media/get/" + currentWord.value.audio_file,
+          () => {},
         );
       }
     }
@@ -413,18 +414,18 @@ const checkAnswer = (answerIndex) => {
     if (Boolean(taskData.value.options.play_audio_with_the_correct_answer)) {
       if (currentWord.value.audio_file) {
         playSuccessSound(
-          config.public.apiBase + "/media/get/" + currentWord.value.audio_file
+          config.public.apiBase + "/media/get/" + currentWord.value.audio_file,
         );
       }
     }
 
     if (
       reStudyWords.value.some(
-        (w) => w.task_word_id === currentWord.value.task_word_id
+        (w) => w.task_word_id === currentWord.value.task_word_id,
       )
     ) {
       reStudyWords.value = reStudyWords.value.filter(
-        (w) => w.task_word_id !== currentWord.value.task_word_id
+        (w) => w.task_word_id !== currentWord.value.task_word_id,
       );
     }
 
@@ -535,6 +536,6 @@ watch(
     if (newVal === taskData.value.words.length) {
       saveTaskResult();
     }
-  }
+  },
 );
 </script>

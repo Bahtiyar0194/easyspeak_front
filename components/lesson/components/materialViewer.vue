@@ -84,31 +84,120 @@
 
                         <div
                           v-if="message.ai_content"
-                          class="w-full flex flex-col gap-y-4"
+                          class="w-full flex flex-col gap-y-2"
                         >
                           <div
                             class="text-justify"
                             :data-ai-message-id="message.uuid"
                             v-html="sanitize(message.ai_content)"
                           ></div>
-<!-- 
-                          <div class="btn-wrap justify-end">
-                            <button class="btn btn-light btn-sm btn-square">
-                              <i class="pi pi-clone"></i>
+
+                          <div class="btn-wrap">
+                            <button
+                              class="btn btn-light btn-sm btn-square"
+                              @click="copyText(message.uuid)"
+                              :title="
+                                message.copied ? $t('copied') : $t('copy')
+                              "
+                            >
+                              <i
+                                class="pi"
+                                :class="
+                                  message.copied ? 'pi-check' : 'pi-clone'
+                                "
+                              ></i>
                             </button>
 
-                            <button class="btn btn-light btn-sm btn-square">
-                              <i class="pi pi-thumbs-up"></i>
+                            <button
+                              class="btn btn-light btn-sm btn-square"
+                              @click="
+                                sendFeedback(
+                                  message.like === 1 ? null : 1,
+                                  message.uuid,
+                                )
+                              "
+                              :title="$t('like')"
+                            >
+                              <i
+                                class="pi"
+                                :class="
+                                  message.like === 1
+                                    ? 'pi-thumbs-up-fill'
+                                    : 'pi-thumbs-up'
+                                "
+                              ></i>
                             </button>
 
-                            <button class="btn btn-light btn-sm btn-square">
-                              <i class="pi pi-thumbs-down"></i>
+                            <button
+                              class="btn btn-light btn-sm btn-square"
+                              @click="
+                                sendFeedback(
+                                  message.like === 0 ? null : 0,
+                                  message.uuid,
+                                )
+                              "
+                              :title="$t('dislike')"
+                            >
+                              <i
+                                class="pi"
+                                :class="
+                                  message.like === 0
+                                    ? 'pi-thumbs-down-fill'
+                                    : 'pi-thumbs-down'
+                                "
+                              ></i>
                             </button>
 
-                            <button class="btn btn-light btn-sm btn-square">
-                              <i class="pi pi-volume-up"></i>
+                            <button
+                              class="btn btn-light btn-sm btn-square"
+                              v-if="currentExplainId === message.uuid"
+                              @click="backwardExplain()"
+                              :title="$t('file.video.player.backward')"
+                            >
+                              <i class="bi bi-skip-backward"></i>
                             </button>
-                          </div> -->
+
+                            <button
+                              class="btn btn-light btn-sm btn-square"
+                              :class="
+                                currentExplainId === message.uuid &&
+                                pendingAudioExplain === true
+                                  ? 'disabled'
+                                  : ''
+                              "
+                              :title="currentExplainId === message.uuid
+                                    ? pendingAudioExplain === true
+                                      ? $t('loading')
+                                      : audioExplainStatus === 'play'
+                                        ? $t('file.video.player.pause')
+                                        : $t('file.video.player.play')
+                                    : $t('listen')"
+                              @click="
+                                toggleAudioExplain(
+                                  message.uuid,
+                                  currentExplainId === message.uuid &&
+                                    audioExplainStatus === 'play'
+                                    ? 'pause'
+                                    : 'play',
+                                  message.target
+                                    ? `${config.public.apiBase}/media/get/${message.target}`
+                                    : null,
+                                )
+                              "
+                            >
+                              <i
+                                :class="[
+                                  currentExplainId === message.uuid
+                                    ? pendingAudioExplain === true
+                                      ? 'pi pi-spinner btn-loading-circle'
+                                      : audioExplainStatus === 'play'
+                                        ? 'bi bi-pause'
+                                        : 'bi bi-play'
+                                    : 'bi bi-volume-up',
+                                ]"
+                              />
+                            </button>
+                          </div>
                         </div>
                       </template>
                     </div>
@@ -198,7 +287,14 @@
 </template>
 <script setup>
 import { useRouter } from "nuxt/app";
-import { playAudio, stopAudio } from "../../../utils/playAudio";
+import {
+  backward,
+  pauseAudio,
+  playAudio,
+  resumeAudio,
+  stopAudio,
+} from "../../../utils/playAudio";
+import { debounceHandler } from "../../../utils/debounceHandler";
 import { sanitize } from "../../../utils/sanitize";
 import { useAudioRecorder } from "../../../composables/useAudioRecorder";
 import Typed from "typed.js";
@@ -231,6 +327,10 @@ let tooltipTimer = null;
 
 let pressTime = 0;
 const recording = ref(false);
+
+const currentExplainId = ref(null);
+const audioExplainStatus = ref(null);
+const pendingAudioExplain = ref(false);
 
 const scrollBox = ref(null);
 
@@ -277,7 +377,7 @@ const showTooltip = (title, duration = 2000) => {
   tooltipIsShow.value = true;
 
   stopAudio();
-  playAudio("/audio/error-short.mp3");
+  playAudio("/audio/error-short.mp3", () => {});
 
   if (tooltipTimer) {
     clearTimeout(tooltipTimer);
@@ -292,7 +392,7 @@ const showTooltip = (title, duration = 2000) => {
 const record = async () => {
   recording.value = true;
   stopAudio();
-  playAudio("/audio/rec-start.mp3");
+  playAudio("/audio/rec-start.mp3", () => {});
 
   pressTime = Date.now();
   await startRecording();
@@ -321,7 +421,7 @@ const stop = async () => {
   pendingAudio.value = true;
 
   stopAudio();
-  playAudio("/audio/rec-stop.mp3");
+  playAudio("/audio/rec-stop.mp3", () => {});
 
   // подготовка формы
   const formData = new FormData();
@@ -354,6 +454,150 @@ const stop = async () => {
     pendingAudio.value = false;
   }
 };
+
+const getAudioExplain = async (uuid) => {
+  pendingAudioExplain.value = true;
+
+  try {
+    // отправка запроса
+    const response = await $axiosPlugin.post("/material/audio_explain/" + uuid);
+
+    if (response.data.audio) {
+      const mess = chat.value.find((m) => m.uuid === uuid);
+      if (mess) {
+        mess.target = "data:audio/mpeg;base64," + response.data.audio;
+        toggleAudioExplain(uuid, "play", mess.target);
+      }
+    }
+  } catch (err) {
+    if (err.response) {
+      router.push({
+        path: "/error",
+        query: {
+          status: err.response.status,
+          message:
+            err.response.data.message.error.message ||
+            err.response.data.message,
+          url: err.request.responseURL,
+        },
+      });
+    } else {
+      router.push("/error");
+    }
+  } finally {
+    pendingAudioExplain.value = false;
+  }
+};
+
+const toggleAudioExplain = (uuid, action, url) => {
+  // если кликнули на другое аудио
+  if (currentExplainId.value && currentExplainId.value !== uuid) {
+    stopAudio();
+    audioExplainStatus.value = null;
+  }
+
+  currentExplainId.value = uuid;
+
+  if (!url) {
+    getAudioExplain(uuid);
+    return;
+  }
+
+  pendingAudioExplain.value = false;
+
+  if (action === "play") {
+    if (audioExplainStatus.value === "pause") {
+      resumeAudio();
+    } else {
+      playAudio(url, () => {
+        // 🔥 АУДИО ЗАКОНЧИЛОСЬ
+        audioExplainStatus.value = null;
+        currentExplainId.value = null;
+      });
+    }
+
+    audioExplainStatus.value = "play";
+  }
+
+  if (action === "pause") {
+    pauseAudio();
+    audioExplainStatus.value = "pause";
+  }
+};
+
+const backwardExplain = () => {
+  audioExplainStatus.value = "pause";
+  backward();
+  audioExplainStatus.value = "play";
+};
+
+const copyText = async (uuid) => {
+  const mess = chat.value.find((m) => m.uuid === uuid);
+  if (mess) {
+    // 1. HTML в буфер
+    const htmlBlob = new Blob([sanitize(mess.ai_content)], {
+      type: "text/html",
+    });
+
+    // 2. Plain text (убираем теги)
+    const temp = document.createElement("div");
+    temp.innerHTML = sanitize(mess.ai_content);
+    const text = temp.innerText;
+
+    const textBlob = new Blob([text], { type: "text/plain" });
+
+    const item = new ClipboardItem({
+      "text/html": htmlBlob,
+      "text/plain": textBlob,
+    });
+
+    await navigator.clipboard.write([item]);
+
+    mess.copied = true;
+
+    setTimeout(() => {
+      mess.copied = null;
+    }, 3000);
+  }
+};
+
+const sendFeedback = async (like, uuid) => {
+  const mess = chat.value.find((m) => m.uuid === uuid);
+  if (mess) {
+    mess.like = like;
+
+    debounceFeedback(mess.like, uuid);
+  }
+};
+
+const debounceFeedback = debounceHandler(async (like, uuid) => {
+  const formData = new FormData();
+
+  if (like !== null) {
+    formData.append("feedback", like);
+  }
+
+  try {
+    // отправка запроса
+    const response = await $axiosPlugin.post(
+      "/material/feedback/" + uuid,
+      formData,
+    );
+  } catch (err) {
+    if (err.response) {
+      router.push({
+        path: "/error",
+        query: {
+          status: err.response.status,
+          message: err.response.data.message,
+          url: err.request.responseURL,
+        },
+      });
+    } else {
+      router.push("/error");
+    }
+  }
+}, 1000);
 
 const prompts = [
   t("materials.chat.prompts.explain"),
@@ -388,6 +632,11 @@ const sendPrompt = async () => {
       chat.value.push({
         uuid: crypto.randomUUID(),
         ai_content: "...", // пустое место для Typed,
+        target: response.data.audio
+          ? "data:audio/mpeg;base64," + response.data.audio
+            ? response.data.audio_url
+            : response.data.audio_url
+          : null,
       });
 
       setTimeout(() => {
@@ -395,11 +644,12 @@ const sendPrompt = async () => {
 
         if (response.data.audio) {
           stopAudio();
-          playAudio("data:audio/mpeg;base64," + response.data.audio);
+          playAudio("data:audio/mpeg;base64," + response.data.audio, () => {});
         } else if (response.data.audio_url) {
           stopAudio();
           playAudio(
             config.public.apiBase + "/media/get/" + response.data.audio_url,
+            () => {},
           );
         }
       }, 100);
@@ -464,7 +714,7 @@ onBeforeUnmount(() => {
   if (typedInstance) {
     typedInstance.destroy();
   }
-
+  stopAudio();
   window.removeEventListener("keydown", handleKeyPress);
 });
 

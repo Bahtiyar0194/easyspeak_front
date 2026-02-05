@@ -1,6 +1,6 @@
 let audio = null;
 
-export function playAudio(url) {
+export function playAudio(url, onEnded = () => { }) {
     // Если аудио уже играет, останавливаем его перед воспроизведением нового
     if (audio) {
         audio.pause();
@@ -11,11 +11,30 @@ export function playAudio(url) {
     audio.play().catch(error => {
         console.error('Ошибка при воспроизведении аудиофайла:', error);
     });
+
+    audio.onended = () => {
+        audio = null
+        onEnded() // Это коллбэк при остановке аудио playAudio(url, () => {тут код})
+    }
 }
 
 export function pauseAudio() {
     if (audio) {
         audio.pause();
+    }
+}
+
+export function resumeAudio() {
+    if (audio) {
+        audio.play();
+    }
+}
+
+export function backward() {
+    if (audio) {
+        audio.pause();
+        audio.currentTime = 0; // Сбрасываем аудио на начало
+        audio.play();
     }
 }
 

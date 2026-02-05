@@ -205,7 +205,7 @@ const getTask = async () => {
     onPending(true);
 
     const res = await $axiosPlugin.get(
-      "tasks/get/true_or_false/" + props.task.task_id
+      "tasks/get/true_or_false/" + props.task.task_id,
     );
 
     taskData.value = res.data;
@@ -280,7 +280,8 @@ const setSentence = () => {
         playAudio(
           config.public.apiBase +
             "/media/get/" +
-            currentSentence.value.audio_file
+            currentSentence.value.audio_file,
+          () => {},
         );
       }
     }
@@ -301,7 +302,7 @@ const checkSentence = (answer) => {
         playSuccessSound(
           config.public.apiBase +
             "/media/get/" +
-            currentSentence.value.audio_file
+            currentSentence.value.audio_file,
         );
       }
     }
@@ -321,11 +322,11 @@ const checkSentence = (answer) => {
 
     if (
       reStudySentences.value.some(
-        (s) => s.task_sentence_id === currentSentence.value.task_sentence_id
+        (s) => s.task_sentence_id === currentSentence.value.task_sentence_id,
       )
     ) {
       reStudySentences.value = reStudySentences.value.filter(
-        (s) => s.task_sentence_id !== currentSentence.value.task_sentence_id
+        (s) => s.task_sentence_id !== currentSentence.value.task_sentence_id,
       );
     }
   } else {
@@ -435,6 +436,6 @@ watch(
     if (newVal === taskData.value.sentences.length) {
       saveTaskResult();
     }
-  }
+  },
 );
 </script>
