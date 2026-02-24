@@ -7,7 +7,7 @@
             <div class="custom-grid !gap-0">
               <div class="col-span-12 md:col-span-8">
                 <div
-                  class="border-inactive !border-l-0 !border-t-0 md:!border-b-0 !border-r-0 md:!border-r bg-active py-10 px-6 rounded-2xl"
+                  class="border-inactive !border-l-0 !border-t-0 md:!border-b-0 !border-r-0 md:!border-r bg-active pt-8 pb-4 px-6 rounded-2xl"
                 >
                   <div class="custom-grid">
                     <div class="col-span-12">
@@ -26,7 +26,8 @@
                           {{
                             errors.cardNumber
                               ? $t(
-                                  "form.card.tiptop.errors." + errors.cardNumber
+                                  "form.card.tiptop.errors." +
+                                    errors.cardNumber,
                                 )
                               : $t("form.card.card_num")
                           }}
@@ -46,6 +47,7 @@
                           data-cp="expDateMonth"
                           v-mask="'##'"
                           placeholder=" "
+                          autocomplete="mm"
                         />
                         <label
                           class="!left-2"
@@ -57,7 +59,7 @@
                             errors.expDateMonth
                               ? $t(
                                   "form.card.tiptop.errors." +
-                                    errors.expDateMonth
+                                    errors.expDateMonth,
                                 )
                               : $t("form.card.month")
                           }}
@@ -71,6 +73,7 @@
                           data-cp="expDateYear"
                           v-mask="'##'"
                           placeholder=" "
+                          autocomplete="yy"
                         />
                         <label
                           class="!left-2"
@@ -82,11 +85,24 @@
                             errors.expDateYear
                               ? $t(
                                   "form.card.tiptop.errors." +
-                                    errors.expDateYear
+                                    errors.expDateYear,
                                 )
                               : $t("form.card.year")
                           }}
                         </label>
+                      </div>
+                    </div>
+
+                    <div class="col-span-12">
+                      <div class="flex gap-x-2 justify-end">
+                        <img
+                          class="w-10"
+                          src="~/public/images/payment/visa_alt.svg"
+                        />
+                                              <img
+                          class="w-10"
+                          src="~/public/images/payment/mastercard_alt.svg"
+                        />
                       </div>
                     </div>
                   </div>
@@ -109,7 +125,7 @@
                         class="!px-3"
                         data-cp="cvv"
                         v-mask="'###'"
-                        :type="showCVV ? 'text' : 'password'"
+                  
                         placeholder=" "
                       />
                       <label

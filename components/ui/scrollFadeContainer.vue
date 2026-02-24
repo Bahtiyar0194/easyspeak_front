@@ -23,7 +23,7 @@ const props = defineProps({
   },
   fadeSize: {
     type: Number,
-    default: 40,
+    default: 80,
   },
 });
 
@@ -31,9 +31,18 @@ const container = ref(null);
 const isAtTop = ref(true);
 const isAtBottom = ref(false);
 
-let observer = null;
+let resizeObserver = null;
 
 /* ---------- scroll helpers ---------- */
+
+const scrollToTop = (smooth = false) => {
+  if (!container.value) return;
+
+  container.value.scrollTo({
+    top: 0,
+    behavior: smooth ? "smooth" : "auto",
+  });
+};
 
 const scrollToBottom = (smooth = false) => {
   if (!container.value) return;
@@ -68,21 +77,16 @@ onMounted(async () => {
 
   onScroll();
 
-  observer = new MutationObserver(() => {
-    if (isNearBottom()) {
-      scrollToBottom(false); // ❗ без smooth — typing-safe
-    }
+  // 👇 следим за изменением размеров контейнера
+  resizeObserver = new ResizeObserver(() => {
+    onScroll(); // пересчёт maskClass
   });
 
-  observer.observe(container.value, {
-    childList: true,
-    subtree: true,
-    characterData: true,
-  });
+  resizeObserver.observe(container.value);
 });
 
 onBeforeUnmount(() => {
-  observer?.disconnect();
+  resizeObserver?.disconnect();
 });
 
 /* ---------- fade mask ---------- */
@@ -95,6 +99,7 @@ const maskClass = computed(() => {
 });
 
 defineExpose({
+  scrollToTop,
   scrollToBottom,
 });
 </script>

@@ -1000,17 +1000,17 @@ const openPaymentsModal = () => {
   groupModalIsVisible.value = false;
   paymentsModalIsVisible.value = true;
   upcomingLessons.value = currentGroup.value.schedule.filter(
-    (lesson) => lesson.is_gone === false
+    (lesson) => lesson.is_gone === false,
   );
   goneLessons.value = currentGroup.value.schedule.filter(
-    (lesson) => lesson.is_gone === true
+    (lesson) => lesson.is_gone === true,
   );
   newPayments.value = [];
 };
 
 const changePaymentStatus = (userId, lessonId, checked) => {
   const index = newPayments.value.findIndex(
-    (p) => p.user_id === userId && p.lesson_id === lessonId
+    (p) => p.user_id === userId && p.lesson_id === lessonId,
   );
 
   if (index === -1) {
@@ -1101,10 +1101,9 @@ const closeModal = (action) => {
   } else {
     groupModalIsVisible.value = false;
     selectedDays.value = [];
+    groupData.value = [];
+    groupMembers.value = [];
   }
-
-  groupData.value = [];
-  groupMembers.value = [];
   currentStep.value = 1;
   errors.value = [];
 };
@@ -1133,8 +1132,8 @@ const selectedCourseId = ref("");
 // Вычисляемые свойства для получения выбранных данных
 const selectedCourse = computed(() =>
   attributes?.value?.courses?.find(
-    (course) => course.course_id === Number(selectedCourseId.value)
-  )
+    (course) => course.course_id === Number(selectedCourseId.value),
+  ),
 );
 
 // Сброс значений при изменении выбора

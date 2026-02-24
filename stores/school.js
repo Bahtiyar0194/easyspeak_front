@@ -1,7 +1,7 @@
 export const useSchoolStore = defineStore('school', {
     state: () => ({
         schoolData: null,
-        isAiSchoolDomain: false
+        isAiSchoolDomain: true
     }),
 
     actions: {

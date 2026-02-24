@@ -1,15 +1,12 @@
 <template>
   <div
     class="card relative overflow-hidden group"
-    :class="
-      props.level.available_status.is_available === false ? 'grayscale' : ''
-    "
   >
     <img :src="`/images/courses/${props.level.course_name_slug}.png`" />
 
     <div
-      class="absolute left-0 bottom-0 w-full group-hover:h-full transition-all duration-200 bg-black bg-opacity-80 flex justify-center items-center group-hover:items-center px-4"
-      :class="
+      class="absolute left-0 bottom-0 w-full group-hover:h-full transition-all duration-200 flex justify-center items-center group-hover:items-center px-4 backdrop-blur-sm bg-black bg-opacity-50"
+      :class="!schoolStore.isAiSchoolDomain && 
         props.level.available_status.is_available === false ? 'h-full' : 'h-14'
       "
     >
@@ -22,25 +19,28 @@
               : 'justify-between'
           "
         >
-          <p class="mb-0 text-white leading-none font-bold text-lg">
+          <p class="mb-0 text-white leading-none font-medium text-lg">
             {{ props.level.level_name }}
           </p>
 
           <p
             v-if="props.level.available_status.is_available === true"
-            class="mb-0 text-white leading-none text-lg"
-            :class="displayedProgress > 0 ? 'text-success' : ''"
+            class="mb-0 text-white leading-none font-medium text-lg"
+            
           >
             {{ displayedProgress.toFixed(2) }}%
           </p>
         </div>
 
         <p
-          v-if="props.level.available_status.is_available === false"
+          v-if="!schoolStore.isAiSchoolDomain && props.level.available_status.is_available === false"
           class="mb-0 text-white text-center text-sm"
         >
           {{ $t(props.message) }}
         </p>
+        
+
+
         <template v-if="props.level.available_status.is_available === true">
           <progressBar
             :progressPercentage="displayedProgress"
@@ -56,6 +56,9 @@
 
 <script setup>
 import progressBar from "../ui/progressBar.vue";
+
+const schoolStore = useSchoolStore();
+
 const props = defineProps({
   level: {
     type: Object,

@@ -2,7 +2,9 @@
   <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
 
   <div
-    v-if="lessonsData && lessonsData?.level?.available_status?.is_available"
+    v-if="
+      lessonsData && lessonsData.level.available_status.is_available === true
+    "
     class="col-span-12"
   >
     <div class="custom-grid">
@@ -48,7 +50,7 @@
             :key="lessonIndex"
             class="list-item cursor-pointer"
             @click="
-              lesson.available_status.is_available
+              lesson.available_status.is_available === true
                 ? openLesson(
                     '/dashboard/courses/' +
                       course_slug +
@@ -57,9 +59,11 @@
                       '/' +
                       section_id +
                       '/' +
-                      lesson.lesson_id
+                      lesson.lesson_id,
                   )
-                : openUnAvailableModal()
+                : schoolStore.isAiSchoolDomain
+                  ? openPaymentModal()
+                  : openUnAvailableModal()
             "
           >
             <div class="flex justify-between items-center gap-x-2">
@@ -98,7 +102,9 @@
                       <b>{{ lesson.tasks.length }}</b></span
                     >
                   </div>
-                  <span class="text-xs text-inactive"
+                  <span
+                    v-if="!schoolStore.isAiSchoolDomain"
+                    class="text-xs text-inactive"
                     >({{ lesson.lesson_type_name }})</span
                   >
 
@@ -228,6 +234,74 @@
   </roleProvider>
 
   <modal
+    :show="paymentModalIsVisible"
+    :onClose="() => closePaymentModal()"
+    :className="'modal-xl'"
+    :showLoader="pendingPayment"
+    :showPendingText="true"
+    :pendingText="
+      currentStep === paymentSteps.length
+        ? $t('pages.payment.please_wait')
+        : $t('loading')
+    "
+    :closeOnClickSelf="false"
+  >
+    <template v-slot:header_content>
+      <h4>{{ lessonsData?.level.level_name }}</h4>
+    </template>
+    <template v-slot:body_content>
+      <form
+        v-if="lessonsData"
+        @submit.prevent="
+          currentStep === paymentSteps.length
+            ? createCryptogram()
+            : handlePayment()
+        "
+        ref="paymentFormRef"
+        autocomplete="off"
+      >
+        <steps :currentStep="currentStep" :steps="paymentSteps">
+          <div
+            v-for="(step, index) in paymentSteps"
+            :key="index"
+            :class="currentStep === index + 1 ? 'block' : 'hidden'"
+          >
+            <component
+              v-if="step.component"
+              :is="step.component"
+              v-bind="step.props"
+            ></component>
+          </div>
+        </steps>
+
+        <div class="btn-wrap justify-end mt-4">
+          <button
+            v-if="currentStep > 1"
+            class="btn btn-light"
+            @click="backToStep(currentStep - 1)"
+            type="button"
+          >
+            <i class="pi pi-arrow-left"></i>
+            {{ $t("back") }}
+          </button>
+
+          <button class="btn btn-primary" type="submit">
+            <template v-if="currentStep !== paymentSteps.length">
+              <i class="pi pi-arrow-right"></i>
+              {{ $t("continue") }}
+            </template>
+            <template v-else>
+              <i class="pi pi-credit-card"></i>
+              {{ $t("pages.payment.to_pay") }}
+            </template>
+          </button>
+        </div>
+      </form>
+      <canvas id="confetti-canvas"></canvas>
+    </template>
+  </modal>
+
+  <modal
     :show="unAvailableModalIsVisible"
     :onClose="() => (unAvailableModalIsVisible = false)"
     :className="'modal-xl'"
@@ -244,24 +318,32 @@
 </template>
 
 <script setup>
+import { useRouter } from "nuxt/app";
+import { useRoute } from "vue-router";
+import { debounceHandler } from "../../../../../../utils/debounceHandler";
 import modal from "../../../../../../components/ui/modal.vue";
 import alert from "../../../../../../components/ui/alert.vue";
 import loader from "../../../../../../components/ui/loader.vue";
 import progressBar from "../../../../../../components/ui/progressBar.vue";
 import circleProgressBar from "../../../../../../components/ui/circleProgressBar.vue";
 import roleProvider from "../../../../../../components/ui/roleProvider.vue";
-import { useRouter } from "nuxt/app";
-import { useRoute } from "vue-router";
+import steps from "../../../../../../components/ui/steps.vue";
+import firstStep from "../../components/payment/level/firstStep.vue";
+import secondStep from "../../components/payment/level/secondStep.vue";
+import { startConfetti, stopConfetti } from "../../../../../../utils/confetti";
 
 const router = useRouter();
 const route = useRoute();
+const { t } = useI18n();
+const schoolStore = useSchoolStore();
+
 const errors = ref([]);
 const course_slug = route.params.course;
 const level_slug = route.params.level;
 const section_id = route.params.section;
 
 const { $axiosPlugin } = useNuxtApp();
-const lessonsData = ref([]);
+const lessonsData = ref(null);
 const pending = ref(true);
 const pendingAddLesson = ref(false);
 
@@ -274,6 +356,14 @@ const addLessonFormRef = ref(null);
 
 const lessonTypes = ref([]);
 
+const checkout = ref(null);
+const paymentModalIsVisible = ref(false);
+const paymentModalSize = ref("modal-lg");
+const pendingPayment = ref(false);
+const paymentFormRef = ref(null);
+const cryptogram = ref("");
+const promoCode = ref("");
+
 useHead(() => ({
   title: pageTitle.value,
   meta: [{ name: "description", content: "Section" }],
@@ -283,6 +373,78 @@ definePageMeta({
   layout: "dashboard",
   middleware: ["sanctum:auth"],
 });
+
+const findPromo = async () => {
+  errors.value = [];
+  lessonsData.value.level.promo_discount = null;
+
+  if (promoCode.value !== "") {
+    pendingPayment.value = true;
+    const formData = new FormData();
+    formData.append("code", promoCode.value);
+
+    await $axiosPlugin
+      .post("/courses/promo/find", formData)
+      .then((response) => {
+        errors.value = [];
+        lessonsData.value.level.promo_discount = response.data.discount_percent;
+        startConfetti("confetti-canvas");
+      })
+      .catch((err) => {
+        if (err.response) {
+          if (err.response.status == 422) {
+            errors.value = err.response.data;
+          } else {
+            router.push({
+              path: "/error",
+              query: {
+                status: err.response.status,
+                message: err.response.data.message,
+                url: err.request.responseURL,
+              },
+            });
+          }
+        } else {
+          router.push("/error");
+        }
+      })
+      .finally(() => {
+        pendingPayment.value = false;
+      });
+  }
+};
+
+const debouncePromo = debounceHandler(() => findPromo(), 800);
+
+const paymentSteps = [
+  {
+    title: t("pages.payment.making_an_order"),
+    component: firstStep,
+    modalSize: "lg",
+    props: {
+      errors,
+      lessonsData,
+      promoCode,
+      findPromo,
+      debouncePromo,
+    },
+  },
+  {
+    title: t("pages.payment.accept_payment"),
+    component: secondStep,
+    modalSize: "xl",
+    props: {
+      errors,
+    },
+  },
+];
+
+const currentStep = ref(1);
+
+const backToStep = (step) => {
+  currentStep.value = step;
+  paymentModalSize.value = "modal-" + paymentSteps[step - 1].modalSize;
+};
 
 const showAddLessonModal = () => {
   addLessonModalIsVisible.value = true;
@@ -295,7 +457,7 @@ const getSection = async () => {
     .get("courses/" + course_slug + "/" + level_slug + "/" + section_id)
     .then((response) => {
       const courseCrumbItem = document.querySelector(
-        'span[data-crumb="[course]"]'
+        'span[data-crumb="[course]"]',
       );
 
       // Проверить, найден ли элемент
@@ -305,7 +467,7 @@ const getSection = async () => {
       }
 
       const levelCrumbItem = document.querySelector(
-        'span[data-crumb="[level]"]'
+        'span[data-crumb="[level]"]',
       );
 
       // Проверить, найден ли элемент
@@ -315,7 +477,7 @@ const getSection = async () => {
       }
 
       const sectionCrumbItem = document.querySelector(
-        'span[data-crumb="[section]"]'
+        'span[data-crumb="[section]"]',
       );
 
       // Проверить, найден ли элемент
@@ -361,7 +523,7 @@ const addLessonSubmit = async () => {
         "/" +
         section_id +
         "/add_lesson",
-      formData
+      formData,
     )
     .then((response) => {
       getSection();
@@ -423,12 +585,77 @@ const openLesson = (url) => {
   router.push(url);
 };
 
+const openPaymentModal = () => {
+  paymentModalIsVisible.value = true;
+  errors.value = [];
+
+};
+
+const closePaymentModal = () => {
+  paymentModalIsVisible.value = false;
+  currentStep.value = 1;
+  errors.value = [];
+  pendingPayment.value = false;
+  paymentFormRef.value.reset();
+  promoCode.value = "";
+  cryptogram.value = "";
+};
+
 const openUnAvailableModal = () => {
   unAvailableModalIsVisible.value = true;
+};
+
+const createPaymentScript = async () => {
+  console.log("sections");
+  // Загружаем скрипт
+  await loadScript(schoolStore.schoolData.tiptoppay.checkout_url);
+
+  // Теперь объект tiptop гарантированно доступен
+  checkout.value = new tiptop.Checkout({
+    publicId: schoolStore.schoolData.tiptoppay.public_id,
+    container: paymentFormRef.value,
+  });
+};
+
+const loadScript = (src) => {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) {
+      return resolve();
+    }
+    const script = document.createElement("script");
+    script.src = src;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject();
+    document.head.appendChild(script);
+  });
+};
+
+const createCryptogram = async () => {
+  pendingPayment.value = true;
+  await checkout.value
+    .createPaymentCryptogram()
+    .then((c) => {
+      cryptogram.value = c;
+      setTimeout(() => {
+        if (cryptogram.value) {
+          handlePayment();
+        }
+      }, 200);
+    })
+    .catch((err) => {
+      errors.value = err;
+      pendingPayment.value = false;
+    });
 };
 
 onMounted(() => {
   getLessonTypes();
   getSection();
+  createPaymentScript();
+});
+
+onBeforeUnmount(() => {
+  stopConfetti();
 });
 </script>

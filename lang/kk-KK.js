@@ -76,7 +76,7 @@ export default {
     invite: "Шақыру",
     search: "Іздеу",
     accept: "Қабылдау",
-
+    apply: "Қолдану",
     operator: "Оператор",
     iniciator: "Бастамашы",
     executor: "Орындаушы",
@@ -159,6 +159,7 @@ export default {
 
     total: 'Барлығы',
     step: 'Қадам',
+    step_num: "Қадам {num}",
     theme: {
         switch_to_a_light_theme: "Жарық тақырыпқа ауысу",
         switch_to_a_dark_theme: "Қараңғы тақырыпқа ауысу"
@@ -439,6 +440,17 @@ export default {
         message_2: 'Сіздің аккаунт {auth_user_name} {old_tg_user_name} Telegram аккаунтына қосулы тұр. {new_tg_user_name} Telegram аккаунтына қосылу үшін "Қосу" батырмасын басыңыз.'
     },
 
+    promo: {
+        code: 'Промокод',
+        discount: 'Промокод бойынша жеңілдік',
+        desc_1: 'Промокодты енгізіп, жеңілдік алыңыз',
+        errors: {
+            not_found: 'Мұндай аты бар промокод табылмады',
+            limit_has_expired: 'Бұл промокод шектеулі',
+            date_expired: 'Бұл промокодтың жарамдылық мерзімі аяқталды'
+        }
+    },
+
     board: {
         show_tool_parameters: 'Құралдың сипаттамасын көрсету',
         tool_parameters: 'Құралдың сипаттамасы',
@@ -699,6 +711,8 @@ export default {
             please_wait: 'Күте тұрыңыз, төлем қабылданып жатыр',
             to_pay: 'Төлеу',
             to: 'Жалпы төлеуге',
+            making_an_order: 'Тапсырысты рәсімдеу',
+            check_order_data: 'Тапсырыс деректерін тексеріп алыңыз',
 
             forms: {
                 natural_person: 'Жеке тұлғаның өз атынан (оқушыдан)',

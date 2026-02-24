@@ -45,7 +45,9 @@ export default defineNuxtConfig({
       short_name: 'EasySpeak',
       description: 'EasySpeak Progressive Web App',
       theme_color: '#ffffff',
-      background_color: '#ffffff',
+      background_color: '#ffffff',    
+      start_url: '/dashboard',
+      scope: '/',
       display: 'standalone',
       lang: 'ru',
       icons: [

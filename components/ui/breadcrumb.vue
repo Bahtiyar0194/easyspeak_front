@@ -1,6 +1,6 @@
 <template>
   <client-only>
-    <ul class="breadcrumb font-medium">
+    <ul class="breadcrumb font-medium select-none">
       <li v-if="!route.meta.layout">
         <nuxt-link to="/">
           <span>{{ $t('pages.home.title') }}</span>

@@ -1,30 +1,36 @@
 <template>
-  <div class="steps">
-    <progressBar
-      :progressPercentage="progressPercentage"
-      :className="'success sm'"
-    />
-    <div class="steps-wrap">
-      <div
-        v-for="(step, index) in props.steps"
-        :key="index"
-        class="step-item"
-        :class="{
-          current: props.currentStep === index + 1,
-          completed: props.currentStep > index + 1,
-          xs: props.steps.length >= 3,
-        }"
-      >
-        <div class="step-icon">
-          <i v-if="props.currentStep > index + 1" class="pi pi-check"></i>
-          <span v-else><b>{{ index + 1 }}</b></span>
+  <client-only>
+    <div class="steps">
+      <progressBar
+        :progressPercentage="progressPercentage"
+        :className="'success sm'"
+      />
+      <div class="steps-wrap">
+        <div
+          v-for="(step, index) in props.steps"
+          :key="index"
+          class="step-item"
+          :class="{
+            current: props.currentStep === index + 1,
+            completed: props.currentStep > index + 1,
+            xs: props.steps.length >= 3,
+          }"
+        >
+          <div class="step-icon">
+            <i v-if="props.currentStep > index + 1" class="pi pi-check"></i>
+            <span v-else
+              ><b>{{ index + 1 }}</b></span
+            >
+          </div>
+          <div class="step-label">
+            <b>{{ step.title }}</b>
+          </div>
         </div>
-        <div class="step-label"><b>{{ step.title }}</b></div>
       </div>
     </div>
-  </div>
 
-  <slot />
+    <slot />
+  </client-only>
 </template>
 
 <script setup>

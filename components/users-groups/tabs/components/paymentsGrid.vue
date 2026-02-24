@@ -9,7 +9,7 @@
         </alert>
       </div>
       <div class="col-span-12">
-        <scrollFadeContainer :maxHeight="400" :fadeSize="40">
+        <scrollFadeContainer :maxHeight="400" :fadeSize="80">
           <div class="custom-grid">
             <div
               v-for="(lesson, lessonIndex) in schedule"

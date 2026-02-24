@@ -69,7 +69,7 @@
                     '/' +
                     level_slug +
                     '/' +
-                    section.section_id
+                    section.section_id,
                 )
               "
             >
@@ -169,6 +169,7 @@ import circleProgressBar from "../../../../../components/ui/circleProgressBar.vu
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
 
+
 const errors = ref([]);
 const router = useRouter();
 const route = useRoute();
@@ -201,7 +202,7 @@ const getLevel = async () => {
     .get("courses/get_level/" + course_slug + "/" + level_slug)
     .then((response) => {
       const courseCrumbItem = document.querySelector(
-        'span[data-crumb="[course]"]'
+        'span[data-crumb="[course]"]',
       );
 
       // Проверить, найден ли элемент
@@ -211,7 +212,7 @@ const getLevel = async () => {
       }
 
       const levelCrumbItem = document.querySelector(
-        'span[data-crumb="[level]"]'
+        'span[data-crumb="[level]"]',
       );
 
       // Проверить, найден ли элемент
@@ -249,7 +250,7 @@ const addSectionSubmit = async () => {
   await $axiosPlugin
     .post(
       "courses/" + course_slug + "/" + level_slug + "/add_section",
-      formData
+      formData,
     )
     .then((response) => {
       getLevel();

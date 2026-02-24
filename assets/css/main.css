@@ -487,6 +487,10 @@ p {
   @apply mb-3;
 }
 
+b{
+  @apply font-medium;
+}
+
 h1,
 h2,
 h3,
@@ -1634,6 +1638,10 @@ input:disabled + .slider {
 
 .list-group{
   @apply bg-active rounded-xl border-inactive px-4;
+}
+
+.list-group.inactive{
+  @apply bg-inactive;
 }
 
 .list-group.sm{

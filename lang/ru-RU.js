@@ -76,7 +76,7 @@ export default {
     invite: "Пригласить",
     search: "Искать",
     accept: "Принять",
-
+    apply: "Применить",
     operator: "Оператор",
     iniciator: "Инициатор",
     executor: "Исполнитель",
@@ -159,6 +159,7 @@ export default {
 
     total: 'Итого',
     step: 'Шаг',
+    step_num: "Шаг {num}",
     theme: {
         switch_to_a_light_theme: "Переключиться на светлую тему",
         switch_to_a_dark_theme: "Переключиться на темную тему"
@@ -439,6 +440,17 @@ export default {
         message_2: 'Ваш аккаунт {auth_user_name} уже подключен к Telegram аккаунту {old_tg_user_name}. Для подключения к Telegram аккаунту {new_tg_user_name} нажмите кнопку "Подключить".'
     },
 
+    promo: {
+        code: 'Промокод',
+        discount: 'Скидка по промокоду',
+        desc_1: 'Введите промокод и получите скидку',
+        errors: {
+            not_found: 'Промокод с таким названием не найден',
+            limit_has_expired: 'Лимит данного промокода исчерпан',
+            date_expired: 'Истек срок действия данного промокода'
+        }
+    },
+
     board: {
         show_tool_parameters: 'Показать свойства инструмента',
         tool_parameters: 'Свойства инструмента',
@@ -696,6 +708,8 @@ export default {
             please_wait: 'Пожалуйста подождите, выполняется прием оплаты',
             to_pay: 'Оплатить',
             to: 'Всего к оплате',
+            making_an_order: 'Оформление заказа',
+            check_order_data: 'Проверьте данные заказа',
 
             forms: {
                 natural_person: 'От самого физ.лица (ученика)',

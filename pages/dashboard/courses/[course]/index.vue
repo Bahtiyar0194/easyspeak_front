@@ -9,8 +9,7 @@
       >
         <nuxt-link
           :class="level.available_status.is_available === false ? 'cursor-not-allowed' : ''"
-          :to="
-            level.available_status.is_available === false
+          :to="level.available_status.is_available === false
               ? null
               : localePath(
                   '/dashboard/courses/' + course_slug + '/' + level.level_slug

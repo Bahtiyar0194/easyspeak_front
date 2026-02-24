@@ -2,7 +2,7 @@
   <div>
     <div class="db__header">
       <div>
-        <nuxt-link :to="localePath('/')">
+        <nuxt-link :to="localePath('/dashboard')">
           <div class="logo">
             <img class="w-28 logo-light" src="~/public/images/logo-light.svg" />
             <img class="w-28 logo-dark" src="~/public/images/logo-dark.svg" />
