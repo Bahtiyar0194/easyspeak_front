@@ -28,11 +28,11 @@
       </div>
 
       <div
-        v-if="sectionsData.level.available_status.is_available_always === true"
+        v-if="sectionsData.level.available_status.is_available_always === true && sectionsData.level.price === 0"
         class="col-span-12"
       >
         <div class="bg-corp text-white p-4 rounded-xl">
-          <p class="mb-1">
+          <p class="mb-0">
             <b>
               {{ $t("pages.courses.modal.description_alt") }}
             </b>

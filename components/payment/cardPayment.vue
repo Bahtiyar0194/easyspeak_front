@@ -125,7 +125,8 @@
                         class="!px-3"
                         data-cp="cvv"
                         v-mask="'###'"
-                  
+                        autocomplete="new-cvv"
+                        :type="showCVV ? 'text' : 'password'"
                         placeholder=" "
                       />
                       <label

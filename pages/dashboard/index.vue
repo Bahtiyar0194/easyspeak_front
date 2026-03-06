@@ -40,7 +40,12 @@
     </roleProvider>
 
     <div
-      v-if="dashboard && authUser && !authUser.telegram && !schoolStore.isAiSchoolDomain"
+      v-if="
+        dashboard &&
+        authUser &&
+        !authUser.telegram &&
+        !schoolStore.isAiSchoolDomain
+      "
       class="col-span-12 md:col-span-6 lg:col-span-9"
     >
       <div
@@ -448,7 +453,7 @@ const getDashboard = async () => {
         (l) =>
           l.is_active === false &&
           l.is_bought_status != null &&
-          l.is_bought_status.is_bought === false
+          l.is_bought_status.is_bought === false,
       );
 
       pending.value = false;
@@ -470,27 +475,10 @@ const getDashboard = async () => {
 };
 
 const createPaymentScript = async () => {
-  // Загружаем скрипт
-  await loadScript(schoolStore.schoolData.tiptoppay.checkout_url);
-
   // Теперь объект tiptop гарантированно доступен
   checkout.value = new tiptop.Checkout({
     publicId: schoolStore.schoolData.tiptoppay.public_id_marketplace,
     container: paymentFormRef.value,
-  });
-};
-
-const loadScript = (src) => {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) {
-      return resolve();
-    }
-    const script = document.createElement("script");
-    script.src = src;
-    script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject();
-    document.head.appendChild(script);
   });
 };
 

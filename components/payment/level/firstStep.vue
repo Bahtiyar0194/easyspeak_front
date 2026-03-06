@@ -1,5 +1,23 @@
 <template>
   <div v-if="lessonsData" class="custom-grid">
+    <div class="col-span-12">
+      <div
+        class="text-white p-4 rounded-xl select-none"
+        :class="lessonsData.level.has_expired === 1 ? 'bg-danger' : 'bg-corp'"
+      >
+        <p class="mb-0">
+          <b>
+            {{
+              $t(
+                lessonsData.level.has_expired === 1
+                  ? "pages.courses.has_expired"
+                  : "pages.courses.purchase",
+              )
+            }}
+          </b>
+        </p>
+      </div>
+    </div>
     <stepName :num="1" :title="$t('promo.desc_1')" />
 
     <div class="col-span-12">
@@ -7,7 +25,7 @@
         <i class="pi pi-tag"></i>
         <input
           class="uppercase"
-          autocomplete="off"
+          autocomplete="new-promo"
           v-model="promoCode"
           @input="debouncePromo()"
           name="promo_code"

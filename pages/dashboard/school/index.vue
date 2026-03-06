@@ -43,7 +43,7 @@
                 {{ $t("registered_at") }}:
                 <b>{{
                   new Date(
-                    schoolStore.schoolData.created_at
+                    schoolStore.schoolData.created_at,
                   ).toLocaleDateString()
                 }}</b>
               </p>
@@ -76,7 +76,7 @@
                 {{ $t("pages.subscription.expired_at") }}:
                 <b class="text-corp">{{
                   new Date(
-                    schoolStore.schoolData.subscription_expiration_at
+                    schoolStore.schoolData.subscription_expiration_at,
                   ).toLocaleDateString()
                 }}</b>
               </p>
@@ -107,7 +107,7 @@
 
                 <b>{{
                   formatToInvoiceNumber(
-                    schoolStore.schoolData.invoice.payment_id
+                    schoolStore.schoolData.invoice.payment_id,
                   )
                 }}</b>
               </p>
@@ -117,7 +117,7 @@
 
                 <b>{{
                   new Date(
-                    schoolStore.schoolData.invoice.created_at
+                    schoolStore.schoolData.invoice.created_at,
                   ).toLocaleDateString("ru-RU")
                 }}</b>
               </p>
@@ -337,27 +337,10 @@ const closeSubscriptionModal = () => {
   cryptogram.value = "";
 };
 
-const loadScript = (src) => {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) {
-      return resolve();
-    }
-    const script = document.createElement("script");
-    script.src = src;
-    script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject();
-    document.head.appendChild(script);
-  });
-};
-
 const getPaymentAttributes = async () => {
   try {
     const response = await $axiosPlugin.get("payment/get_attributes");
     pending.value = false;
-
-    // Загружаем скрипт
-    await loadScript(schoolStore.schoolData.tiptoppay.checkout_url);
 
     // Теперь объект tiptop гарантированно доступен
     checkout.value = new tiptop.Checkout({
@@ -478,7 +461,7 @@ const handlePayment = async () => {
 const generateInvoice = async (data) => {
   const signBase64 = await getBase64ImageFromUrl("/images/sign.png");
   const docTitle = `${$contacts.name} - ${t(
-    "pages.payment.methods.invoice.title"
+    "pages.payment.methods.invoice.title",
   )} № ${formatToInvoiceNumber(data.payment_id)}`;
 
   const docDefinition = {
@@ -512,7 +495,7 @@ const generateInvoice = async (data) => {
               [
                 {
                   text: `${t(
-                    "pages.payment.methods.invoice.document.beneficiary"
+                    "pages.payment.methods.invoice.document.beneficiary",
                   )}:`,
                 },
                 {
@@ -550,7 +533,7 @@ const generateInvoice = async (data) => {
               [
                 {
                   text: `${t(
-                    "pages.payment.methods.invoice.document.beneficiary_bank"
+                    "pages.payment.methods.invoice.document.beneficiary_bank",
                   )}:`,
                 },
                 {
@@ -599,7 +582,7 @@ const generateInvoice = async (data) => {
               [
                 {
                   text: `${t(
-                    "pages.payment.methods.invoice.document.created_at"
+                    "pages.payment.methods.invoice.document.created_at",
                   )}:`,
                 },
                 {
@@ -610,7 +593,7 @@ const generateInvoice = async (data) => {
               [
                 {
                   text: `${t(
-                    "pages.payment.methods.invoice.document.payment_term"
+                    "pages.payment.methods.invoice.document.payment_term",
                   )}:`,
                 },
                 {
@@ -633,7 +616,7 @@ const generateInvoice = async (data) => {
                 stack: [
                   {
                     text: t(
-                      "pages.payment.methods.invoice.document.please_be_careful"
+                      "pages.payment.methods.invoice.document.please_be_careful",
                     ),
                     bold: true,
                     alignment: "center",
@@ -641,7 +624,7 @@ const generateInvoice = async (data) => {
                   },
                   {
                     text: t(
-                      "pages.payment.methods.invoice.document.careful_desc"
+                      "pages.payment.methods.invoice.document.careful_desc",
                     ),
                     alignment: "center",
                   },
@@ -666,7 +649,7 @@ const generateInvoice = async (data) => {
                 },
                 {
                   text: `(${t(
-                    "pages.payment.methods.invoice.document.executor"
+                    "pages.payment.methods.invoice.document.executor",
                   )}):`,
                 },
               ],
@@ -691,7 +674,7 @@ const generateInvoice = async (data) => {
                 },
                 {
                   text: `(${t(
-                    "pages.payment.methods.invoice.document.customer"
+                    "pages.payment.methods.invoice.document.customer",
                   )}):`,
                 },
               ],
@@ -839,7 +822,7 @@ const generateInvoice = async (data) => {
         text: [
           {
             text: `${t(
-              "pages.payment.methods.invoice.document.total_items"
+              "pages.payment.methods.invoice.document.total_items",
             )}: `,
           },
           { text: "1, " },
@@ -864,7 +847,7 @@ const generateInvoice = async (data) => {
             text: formatAmountToWords(
               data.sum,
               localeProperties.value.code,
-              $contacts.bank.currency.iso
+              $contacts.bank.currency.iso,
             ),
             bold: true,
           },

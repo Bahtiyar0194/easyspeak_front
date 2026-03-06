@@ -22,6 +22,10 @@ export default defineNuxtConfig({
       ],
       script: [
         {
+          src: "https://checkout.tiptoppay.kz/checkout.js",
+          defer: true
+        },
+        {
           children: `
             (function() {
               const savedTheme = document.cookie.match(new RegExp('(^| )theme=([^;]+)'))?.[2];
@@ -45,7 +49,7 @@ export default defineNuxtConfig({
       short_name: 'EasySpeak',
       description: 'EasySpeak Progressive Web App',
       theme_color: '#ffffff',
-      background_color: '#ffffff',    
+      background_color: '#ffffff',
       start_url: '/dashboard',
       scope: '/',
       display: 'standalone',

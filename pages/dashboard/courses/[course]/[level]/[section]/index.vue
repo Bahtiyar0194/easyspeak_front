@@ -29,8 +29,49 @@
       </div>
 
       <div
+        v-if="
+          schoolStore.isAiSchoolDomain &&
+          lessonsData &&
+          lessonsData.level.is_available_always === 0
+        "
+        class="col-span-12 lg:col-span-3"
+      >
+        <stickyBox>
+          <div
+            class="text-white p-5 rounded-xl select-none"
+            :class="
+              lessonsData.level.has_expired === 1 ? 'bg-danger' : 'bg-corp'
+            "
+          >
+            <p>
+              <b>
+                {{
+                  $t(
+                    lessonsData.level.has_expired === 1
+                      ? "pages.courses.has_expired"
+                      : "pages.courses.purchase",
+                  )
+                }}
+              </b>
+            </p>
+
+            <button class="btn btn-white" @click="openPaymentModal()">
+              {{ $t("pages.courses.purchase_button") }}
+            </button>
+          </div>
+        </stickyBox>
+      </div>
+
+      <div
         v-if="lessonsData && lessonsData.section.lessons.length"
         class="col-span-12"
+        :class="
+          schoolStore.isAiSchoolDomain &&
+          lessonsData &&
+          lessonsData.level.is_available_always === 0
+            ? 'lg:col-span-9'
+            : ''
+        "
       >
         <ul class="list-group">
           <li v-if="lessonsData && lessonsData.section.completed_percent > 0">
@@ -258,7 +299,7 @@
             : handlePayment()
         "
         ref="paymentFormRef"
-        autocomplete="off"
+        autocomplete="payment-form"
       >
         <steps :currentStep="currentStep" :steps="paymentSteps">
           <div
@@ -321,6 +362,7 @@
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
 import { debounceHandler } from "../../../../../../utils/debounceHandler";
+import stickyBox from "../../../../../../components/ui/stickyBox.vue";
 import modal from "../../../../../../components/ui/modal.vue";
 import alert from "../../../../../../components/ui/alert.vue";
 import loader from "../../../../../../components/ui/loader.vue";
@@ -332,9 +374,10 @@ import firstStep from "../../components/payment/level/firstStep.vue";
 import secondStep from "../../components/payment/level/secondStep.vue";
 import { startConfetti, stopConfetti } from "../../../../../../utils/confetti";
 
+const config = useRuntimeConfig();
 const router = useRouter();
 const route = useRoute();
-const { t } = useI18n();
+const { t, localeProperties } = useI18n();
 const schoolStore = useSchoolStore();
 
 const errors = ref([]);
@@ -435,6 +478,7 @@ const paymentSteps = [
     modalSize: "xl",
     props: {
       errors,
+      lessonsData,
     },
   },
 ];
@@ -489,6 +533,10 @@ const getSection = async () => {
       pageTitle.value = response.data.section.section_name;
 
       lessonsData.value = response.data;
+
+      setTimeout(() => {
+        createPaymentScript();
+      }, 1000);
 
       pending.value = false;
     })
@@ -588,7 +636,6 @@ const openLesson = (url) => {
 const openPaymentModal = () => {
   paymentModalIsVisible.value = true;
   errors.value = [];
-
 };
 
 const closePaymentModal = () => {
@@ -605,11 +652,7 @@ const openUnAvailableModal = () => {
   unAvailableModalIsVisible.value = true;
 };
 
-const createPaymentScript = async () => {
-  console.log("sections");
-  // Загружаем скрипт
-  await loadScript(schoolStore.schoolData.tiptoppay.checkout_url);
-
+const createPaymentScript = () => {
   // Теперь объект tiptop гарантированно доступен
   checkout.value = new tiptop.Checkout({
     publicId: schoolStore.schoolData.tiptoppay.public_id,
@@ -617,18 +660,77 @@ const createPaymentScript = async () => {
   });
 };
 
-const loadScript = (src) => {
-  return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${src}"]`)) {
-      return resolve();
-    }
-    const script = document.createElement("script");
-    script.src = src;
-    script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject();
-    document.head.appendChild(script);
-  });
+const handlePayment = async () => {
+  pendingPayment.value = true;
+  const formData = new FormData(paymentFormRef.value);
+  formData.append("lang", localeProperties.value.code);
+  formData.append("level_id", lessonsData.value.level.level_id);
+  formData.append("cryptogram", cryptogram.value);
+  formData.append("step", currentStep.value);
+
+  await $axiosPlugin
+    .post("payment/course_level/handle", formData)
+    .then((response) => {
+      errors.value = [];
+      if (response.data.step) {
+        currentStep.value = response.data.step + 1;
+        paymentModalSize.value =
+          "modal-" + paymentSteps[response.data.step].modalSize;
+        pendingPayment.value = false;
+      } else {
+        if (response.data.Success === true) {
+          //   getSchool().then(() => {
+          router.push({
+            path: "/dashboard/payment-result",
+            query: {
+              success: true,
+            },
+          });
+          //   });
+        } else {
+          if (response.data.Model.AcsUrl) {
+            router.push({
+              path: "/dashboard/payment-result/3ds",
+              query: {
+                AcsUrl: response.data.Model.AcsUrl,
+                PaReq: response.data.Model.PaReq,
+                MD: response.data.Model.TransactionId,
+                TermUrl:
+                  config.public.apiBase + "/payment/tiptop/handle3ds/level",
+              },
+            });
+          } else {
+            router.push({
+              path: "/dashboard/payment-result",
+              query: {
+                success: false,
+                reason: response.data.Model.ReasonCode,
+                message: response.data.Model.CardHolderMessage,
+              },
+            });
+          }
+        }
+      }
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          pendingPayment.value = false;
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
 };
 
 const createCryptogram = async () => {
@@ -652,7 +754,6 @@ const createCryptogram = async () => {
 onMounted(() => {
   getLessonTypes();
   getSection();
-  createPaymentScript();
 });
 
 onBeforeUnmount(() => {
