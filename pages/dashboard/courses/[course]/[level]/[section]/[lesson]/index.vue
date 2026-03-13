@@ -56,6 +56,17 @@ definePageMeta({
 });
 
 const tabs_data = computed(() => [
+  // {
+  //   name: "ai-teacher",
+  //   title: t("ai-teacher"),
+  //   icon: "bi bi-robot",
+  //   component: materials,
+  //   props: {
+  //     lessonData: lessonData.value,
+  //     materialTypes: materialTypes.value,
+  //   },
+  //   className: "primary",
+  // },
   {
     name: "lesson",
     title: t("pages.lessons.lesson_materials"),
@@ -108,11 +119,18 @@ const getLesson = async () => {
 
   await $axiosPlugin
     .get(
-      "courses/" + course_slug + "/" + level_slug + "/" + section_id + "/get_lesson/" + lesson_id
+      "courses/" +
+        course_slug +
+        "/" +
+        level_slug +
+        "/" +
+        section_id +
+        "/get_lesson/" +
+        lesson_id,
     )
     .then((response) => {
       const courseCrumbItem = document.querySelector(
-        'span[data-crumb="[course]"]'
+        'span[data-crumb="[course]"]',
       );
 
       // Проверить, найден ли элемент
@@ -122,7 +140,7 @@ const getLesson = async () => {
       }
 
       const levelCrumbItem = document.querySelector(
-        'span[data-crumb="[level]"]'
+        'span[data-crumb="[level]"]',
       );
 
       // Проверить, найден ли элемент
@@ -132,7 +150,7 @@ const getLesson = async () => {
       }
 
       const sectionCrumbItem = document.querySelector(
-        'span[data-crumb="[section]"]'
+        'span[data-crumb="[section]"]',
       );
 
       // Проверить, найден ли элемент
@@ -142,7 +160,7 @@ const getLesson = async () => {
       }
 
       const lessonCrumbItem = document.querySelector(
-        'span[data-crumb="[lesson]"]'
+        'span[data-crumb="[lesson]"]',
       );
 
       // Проверить, найден ли элемент
@@ -154,8 +172,10 @@ const getLesson = async () => {
       pageTitle.value = response.data.lesson.lesson_name;
 
       lessonData.value = response.data.lesson;
-      courseIsAvailable.value = response.data.level.available_status.is_available;
-      lessonIsAvailable.value = response.data.lesson.available_status.is_available;
+      courseIsAvailable.value =
+        response.data.level.available_status.is_available;
+      lessonIsAvailable.value =
+        response.data.lesson.available_status.is_available;
       pending.value = false;
     })
     .catch((err) => {

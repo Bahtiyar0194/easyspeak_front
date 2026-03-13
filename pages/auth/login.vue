@@ -152,7 +152,7 @@ async function signIn() {
         "subdomain",
         schoolStore.schoolData
           ? schoolStore.schoolData.school_domain
-          : formRef.value.school_domain.value
+          : formRef.value.school_domain.value,
       );
 
       schoolStore.getSchool();
@@ -165,7 +165,10 @@ async function signIn() {
       }
 
       // ✅ Перенаправление обратно на сохранённый путь или на /dashboard
-      const redirectPath = route.query.redirect || "/dashboard";
+      const redirectPath =
+        route.query.redirect || !schoolStore.isAiSchoolDomain
+          ? "/dashboard"
+          : "/dashboard/courses/english";
       router.push(redirectPath);
     });
   } catch (err) {

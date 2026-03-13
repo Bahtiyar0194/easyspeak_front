@@ -2034,6 +2034,15 @@ input:disabled + .slider {
   @apply border-active text-active cursor-default; 
 }
 
+
+.tab-header-item.primary{
+  @apply border-corp text-corp cursor-default; 
+}
+
+.tab-header-item.active.primary{
+  @apply bg-corp text-white cursor-default; 
+}
+
 .tab-header-item.active.success{
   @apply border-success text-success; 
 }
