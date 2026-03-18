@@ -45,6 +45,8 @@ const courseIsAvailable = ref(false);
 const lessonIsAvailable = ref(false);
 const pageTitle = ref("");
 
+const schoolStore = useSchoolStore();
+
 useHead(() => ({
   title: pageTitle.value,
   meta: [{ name: "description", content: "Courses" }],
@@ -68,11 +70,12 @@ const tabs_data = computed(() => [
   //   className: "primary",
   // },
   {
-    name: "lesson",
-    title: t("pages.lessons.lesson_materials"),
-    icon: "pi pi-paperclip",
+    name: "materials",
+    title: t(schoolStore.isAiSchoolDomain ? "ai_mentor" : "pages.lessons.lesson_materials"),
+    icon: schoolStore.isAiSchoolDomain ? "bi bi-stars" : "pi pi-paperclip",
     component: materials,
     props: { lessonData: lessonData.value, materialTypes: materialTypes.value },
+    className: "primary",
   },
   {
     name: "tasks",

@@ -2036,7 +2036,7 @@ input:disabled + .slider {
 
 
 .tab-header-item.primary{
-  @apply border-corp text-corp cursor-default; 
+  @apply border-corp text-corp; 
 }
 
 .tab-header-item.active.primary{
