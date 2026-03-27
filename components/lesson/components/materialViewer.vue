@@ -733,7 +733,9 @@ watch(
   () => chat.value.length,
   async (newVal) => {
     await nextTick();
-    scrollBox.value.scrollToBottom(true); // true это плавно
+    if (scrollBox.value) {
+      scrollBox.value.scrollToBottom(true); // true это плавно
+    }
   },
   { immediate: true },
 );
