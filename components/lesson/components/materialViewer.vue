@@ -358,8 +358,11 @@ const props = defineProps({
 let typedInstance = null;
 
 const initTyped = (content) => {
+  console.log('init typed');
   const lastMessage = chat.value.at(-1);
   if (!lastMessage) return;
+
+  console.log(lastMessage);
 
   const el = chatContainer.value?.querySelector(
     `[data-ai-message-id="${lastMessage.uuid}"]`,
