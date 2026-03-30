@@ -650,6 +650,8 @@ const sendPrompt = async () => {
           : null,
       });
 
+      await nextTick();
+
       setTimeout(() => {
         initTyped(response.data.text);
 
@@ -663,7 +665,7 @@ const sendPrompt = async () => {
             () => {},
           );
         }
-      }, 100);
+      }, 200);
     } catch (err) {
       if (err.response) {
         router.push({
