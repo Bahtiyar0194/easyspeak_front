@@ -34,7 +34,6 @@ export default {
     export_to_pdf: "Экспорт в PDF",
     print_pdf: "Распечатать PDF",
     listen: "Слушать",
-    click_to_listen_to_the_audio: "Кликните чтобы прослушать аудио",
     all_rights: 'Все права защищены.',
     choose_your_language: 'Выберите Ваш язык',
     choose_a_mentor: 'Выберите учителя',
@@ -213,6 +212,7 @@ export default {
             replace: "Заменить",
         },
         convert: "Преобразовать",
+
         image: {
             select: "Выберите файл изображения",
             current: "Текущий загруженный файл изображения"
@@ -220,6 +220,9 @@ export default {
         audio: {
             select: "Выберите аудиофайл",
             current: "Текущий загруженный аудиофайл",
+            loading: "Пожалуйста подождите, аудиофайл загружается",
+            click_to_listen_to_the_audio: "Кликните чтобы вопроизвести аудио",
+            click_to_stop_to_the_audio: "Кликните чтобы остановить воспроизведение аудио",
             voice: "Голос",
             choose_a_voice: "Выберите голос"
         },

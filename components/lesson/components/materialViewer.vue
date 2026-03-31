@@ -38,9 +38,23 @@
               :showPendingText="true"
             />
             <div class="bg-inactive border-b-inactive p-4">
-              <h3 class="mb-0">
-                EasySpeak AI <i class="pi pi-sparkles text-corp"></i>
-              </h3>
+              <div class="flex flex-wrap justify-between items-center gap-4">
+                <h3 class="mb-0">
+                  EasySpeak AI <i class="pi pi-sparkles text-corp"></i>
+                </h3>
+
+                <!-- <div class="flex items-center gap-x-2">
+                  <label class="ios-switch">
+                    <input
+                      type="checkbox"
+                      :checked="!isMuted"
+                      @change="toggleMute()"
+                    />
+                    <span class="slider"></span>
+                  </label>
+                  <p class="mb-0 font-medium">Автоматическая речь</p>
+                </div> -->
+              </div>
             </div>
             <div class="p-4">
               <scrollFadeContainer
@@ -91,6 +105,16 @@
                             :data-ai-message-id="message.uuid"
                             v-html="sanitize(message.ai_content)"
                           ></div>
+
+                          <!-- <div class="mb-4">
+                            <audioPlayerWithWave
+                              :src="
+                                config.public.apiBase +
+                                '/material/audio_explain/' +
+                                message.uuid
+                              "
+                            />
+                          </div> -->
 
                           <div
                             v-if="message.ai_content !== '...'"
@@ -187,9 +211,6 @@
                                     audioExplainStatus === 'play'
                                     ? 'pause'
                                     : 'play',
-                                  message.target
-                                    ? `${config.public.apiBase}/media/get/${message.target}`
-                                    : null,
                                 )
                               "
                             >
@@ -388,7 +409,10 @@ const showTooltip = (title, duration = 2000) => {
   tooltipIsShow.value = true;
 
   stopAudio();
-  playAudio("/audio/error-short.mp3", () => {});
+  playAudio("/audio/error-short.mp3", {
+    onEnded: () => {},
+    onLoading: (state) => {},
+  });
 
   if (tooltipTimer) {
     clearTimeout(tooltipTimer);
@@ -403,7 +427,10 @@ const showTooltip = (title, duration = 2000) => {
 const record = async () => {
   recording.value = true;
   stopAudio();
-  playAudio("/audio/rec-start.mp3", () => {});
+  playAudio("/audio/rec-start.mp3", {
+    onEnded: () => {},
+    onLoading: (state) => {},
+  });
 
   pressTime = Date.now();
   await startRecording();
@@ -432,7 +459,10 @@ const stop = async () => {
   pendingAudio.value = true;
 
   stopAudio();
-  playAudio("/audio/rec-stop.mp3", () => {});
+  playAudio("/audio/rec-stop.mp3", {
+    onEnded: () => {},
+    onLoading: (state) => {},
+  });
 
   // подготовка формы
   const formData = new FormData();
@@ -466,42 +496,7 @@ const stop = async () => {
   }
 };
 
-const getAudioExplain = async (uuid) => {
-  pendingAudioExplain.value = true;
-
-  try {
-    // отправка запроса
-    const response = await $axiosPlugin.post("/material/audio_explain/" + uuid);
-
-    if (response.data.audio) {
-      const mess = chat.value.find((m) => m.uuid === uuid);
-      if (mess) {
-        mess.target = "data:audio/mpeg;base64," + response.data.audio;
-        toggleAudioExplain(uuid, "play", mess.target);
-      }
-    }
-  } catch (err) {
-    if (err.response) {
-      router.push({
-        path: "/error",
-        query: {
-          status: err.response.status,
-          message:
-            err.response.data.message.error.message ||
-            err.response.data.message,
-          url: err.request.responseURL,
-        },
-      });
-    } else {
-      router.push("/error");
-    }
-  } finally {
-    pendingAudioExplain.value = false;
-  }
-};
-
-const toggleAudioExplain = (uuid, action, url) => {
-  // если кликнули на другое аудио
+const toggleAudioExplain = (uuid, action) => {
   if (currentExplainId.value && currentExplainId.value !== uuid) {
     stopAudio();
     audioExplainStatus.value = null;
@@ -509,21 +504,19 @@ const toggleAudioExplain = (uuid, action, url) => {
 
   currentExplainId.value = uuid;
 
-  if (!url) {
-    getAudioExplain(uuid);
-    return;
-  }
-
-  pendingAudioExplain.value = false;
-
   if (action === "play") {
     if (audioExplainStatus.value === "pause") {
       resumeAudio();
     } else {
-      playAudio(url, () => {
-        // 🔥 АУДИО ЗАКОНЧИЛОСЬ
-        audioExplainStatus.value = null;
-        currentExplainId.value = null;
+      console.log(config.public.apiBase + "/material/audio_explain/" + uuid);
+      playAudio(config.public.apiBase + "/material/audio_explain/" + uuid, {
+        onEnded: () => {
+          audioExplainStatus.value = null;
+          currentExplainId.value = null;
+        },
+        onLoading: (state) => {
+          pendingAudioExplain.value = state;
+        },
       });
     }
 
@@ -643,29 +636,19 @@ const sendPrompt = async () => {
       chat.value.push({
         uuid: response.data.uuid,
         ai_content: "...", // пустое место для Typed,
-        target: response.data.audio
-          ? "data:audio/mpeg;base64," + response.data.audio
-            ? response.data.audio_url
-            : response.data.audio_url
-          : null,
       });
 
       await nextTick();
 
-      setTimeout(() => {
-        initTyped(response.data.text);
+      initTyped(response.data.text);
 
-        if (response.data.audio) {
-          stopAudio();
-          playAudio("data:audio/mpeg;base64," + response.data.audio, () => {});
-        } else if (response.data.audio_url) {
-          stopAudio();
-          playAudio(
-            config.public.apiBase + "/media/get/" + response.data.audio_url,
-            () => {},
-          );
-        }
-      }, 100);
+      // playAudio(
+      //   config.public.apiBase + "/material/audio_explain/" + response.data.uuid,
+      //   {
+      //     onEnded: () => {},
+      //     onLoading: (state) => {},
+      //   },
+      // );
     } catch (err) {
       if (err.response) {
         router.push({

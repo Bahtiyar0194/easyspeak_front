@@ -281,7 +281,10 @@ const setSentence = () => {
           config.public.apiBase +
             "/media/get/" +
             currentSentence.value.audio_file,
-          () => {},
+          {
+            onEnded: () => {},
+            onLoading: (state) => {},
+          },
         );
       }
     }

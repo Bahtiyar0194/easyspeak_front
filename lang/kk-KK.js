@@ -34,7 +34,6 @@ export default {
     export_to_pdf: "PDF экпорттау",
     print_pdf: "PDF басып шығару",
     listen: "Тыңдау",
-    click_to_listen_to_the_audio: "Аудионы тыңдау үшін басыңыз",
     all_rights: 'Барлық құқықтар сақталған.',
     choose_your_language: 'Тілді таңдаңыз',
     choose_a_mentor: 'Мұғалімді таңдаңыз',
@@ -213,6 +212,7 @@ export default {
             replace: "Ауыстыру",
         },
         convert: "Түрлендіру",
+
         image: {
             select: "Суретті таңдаңыз",
             current: "Ағымдағы жүктеліп тұрған сурет"
@@ -220,6 +220,9 @@ export default {
         audio: {
             select: "Аудиофайл таңдаңыз",
             current: "Ағымдағы жүктеліп тұрған аудио",
+            loading: "Күте тұрыңыз, аудиофайл жүктеліп жатыр",
+            click_to_listen_to_the_audio: "Аудионы тыңдау үшін басыңыз",
+            click_to_stop_to_the_audio: "Аудионы тоқтату үшін басыңыз",
             voice: "Дауыс",
             choose_a_voice: "Дауысты таңдаңыз"
         },

@@ -1,6 +1,9 @@
 let audio = null;
 
-export function playAudio(url, onEnded = () => { }) {
+export function playAudio(url, {
+    onEnded = () => { },
+    onLoading = () => { },
+} = {}) {
     // Если аудио уже играет, останавливаем его перед воспроизведением нового
     if (audio) {
         audio.pause();
@@ -8,14 +11,17 @@ export function playAudio(url, onEnded = () => { }) {
     }
 
     audio = new Audio(url); // Создаем новый объект Audio
-    audio.play().catch(error => {
-        console.error('Ошибка при воспроизведении аудиофайла:', error);
-    });
+
+    audio.addEventListener('loadstart', () => onLoading(true));
+    audio.addEventListener('waiting', () => onLoading(true));
+    audio.addEventListener('playing', () => onLoading(false));
 
     audio.onended = () => {
-        audio = null
-        onEnded() // Это коллбэк при остановке аудио playAudio(url, () => {тут код})
-    }
+        audio = null;
+        onEnded();
+    };
+
+    audio.play().catch(console.error);
 }
 
 export function pauseAudio() {

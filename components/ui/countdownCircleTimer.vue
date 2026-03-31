@@ -105,7 +105,10 @@ const timerClass = computed(() => {
   if (progress <= 0.33 && !hasPlayedAudio.value) {
     stopAudio();
     // Проигрываем аудио только один раз при достижении 33% времени
-    playAudio("/audio/magical-bell.aac", () => {});
+    playAudio("/audio/magical-bell.aac", {
+      onEnded: () => {},
+      onLoading: (state) => {},
+    });
     hasPlayedAudio.value = true; // Устанавливаем флаг, чтобы не проигрывать аудио снова
   }
 
@@ -129,7 +132,10 @@ const startTimer = () => {
       emit("timeIsUp"); // Отправляем событие завершения
 
       stopAudio();
-      playAudio("/audio/game-over.mp3", () => {});
+      playAudio("/audio/game-over.mp3", {
+        onEnded: () => {},
+        onLoading: (state) => {},
+      });
     }
   }, 1000);
 };

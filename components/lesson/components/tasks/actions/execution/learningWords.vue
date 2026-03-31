@@ -338,7 +338,10 @@ const setWord = () => {
         stopAudio();
         playAudio(
           config.public.apiBase + "/media/get/" + currentWord.value.audio_file,
-          () => {},
+          {
+            onEnded: () => {},
+            onLoading: (state) => {},
+          },
         );
       }
     }
