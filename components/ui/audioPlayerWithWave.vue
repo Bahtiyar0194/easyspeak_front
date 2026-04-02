@@ -25,8 +25,8 @@
         "
       ></i>
     </button>
-    <div v-if="isLoading" class="text-center">
-      <p class="font-medium mb-0 dots whitespace-nowrap">
+    <div v-if="isLoading">
+      <p class="font-medium mb-0 dots">
         {{ $t("file.audio.loading") }}
         <span class="blink animation-delay:0s">.</span>
         <span class="blink animation-delay:0.3s">.</span>
