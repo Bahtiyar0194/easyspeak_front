@@ -106,7 +106,7 @@
                             v-html="sanitize(message.ai_content)"
                           ></div>
 
-                          <!-- <div class="mb-4">
+                          <div class="mb-4">
                             <audioPlayerWithWave
                               :src="
                                 config.public.apiBase +
@@ -114,7 +114,7 @@
                                 message.uuid
                               "
                             />
-                          </div> -->
+                          </div>
 
                           <div
                             v-if="message.ai_content !== '...'"
@@ -175,7 +175,7 @@
                               ></i>
                             </button>
 
-                            <button
+                            <!-- <button
                               class="btn btn-light btn-sm btn-square"
                               v-if="
                                 currentExplainId === message.uuid &&
@@ -225,7 +225,7 @@
                                     : 'bi bi-volume-up',
                                 ]"
                               />
-                            </button>
+                            </button> -->
                           </div>
                         </div>
                       </template>
@@ -508,7 +508,6 @@ const toggleAudioExplain = (uuid, action) => {
     if (audioExplainStatus.value === "pause") {
       resumeAudio();
     } else {
-      console.log(config.public.apiBase + "/material/audio_explain/" + uuid);
       playAudio(config.public.apiBase + "/material/audio_explain/" + uuid, {
         onEnded: () => {
           audioExplainStatus.value = null;
