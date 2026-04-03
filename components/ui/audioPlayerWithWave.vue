@@ -71,6 +71,9 @@ onMounted(() => {
     barRadius: 5,
     height: 36,
     responsive: true,
+    backend: 'MediaElement', // 🔥 КРИТИЧНО ДЛЯ iOS СТРИМИНГА
+    fillParent: true,
+    preload: 'auto',
   });
 
   // Загрузка аудиофайла
@@ -86,6 +89,7 @@ onMounted(() => {
   });
 
   waveSurferInstance.on("error", () => {
+    console.error("Wavesurfer error:", err);
     isLoading.value = false;
   });
 

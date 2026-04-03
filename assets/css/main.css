@@ -1832,7 +1832,7 @@ input:disabled + .slider {
 
 .modal-body{
   @apply overflow-y-auto overflow-x-hidden min-h-10;
-  max-height: 90vh;
+  max-height: 80vh;
 }
 
 .modal-footer{
