@@ -276,12 +276,12 @@
                     :placeholder="$t('type_your_message')"
                     v-model="promptInput"
                   />
-                  <button
+                  <!-- <button
                     @click="
                       promptInput === ''
                         ? recording === true
-                          ? stop()
-                          : record()
+                          ? stopRecord()
+                          : startRecord()
                         : sendPrompt()
                     "
                     class="btn btn-circle btn-active-invert relative"
@@ -304,6 +304,48 @@
                       :title="tooltipTitle"
                       :className="''"
                     />
+                  </button> -->
+
+                  <button
+                    @touchstart.prevent="startRecord()"
+                    @touchend="stopRecord()"
+                    @touchcancel="stopRecord()"
+                    @mousedown="startRecord()"
+                    @mouseup="stopRecord()"
+                    @mouseleave="stopRecord()"
+                    v-if="promptInput === ''"
+                    class="btn btn-circle btn-active-invert relative"
+                    :class="pendingPrompt === true ? 'disabled' : ''"
+                  >
+                    <i
+                      :class="
+                        pendingPrompt === true
+                          ? 'pi pi-spinner btn-loading-circle'
+                          : recording === true
+                            ? 'bi bi-record-fill text-danger pulse'
+                            : 'bi bi-mic-fill'
+                      "
+                    ></i>
+
+                    <tooltip
+                      :show="tooltipIsShow"
+                      :title="tooltipTitle"
+                      :className="''"
+                    />
+                  </button>
+                  <button
+                    v-else
+                    @click="sendPrompt()"
+                    class="btn btn-circle btn-active-invert relative"
+                    :class="pendingPrompt === true ? 'disabled' : ''"
+                  >
+                    <i
+                      :class="
+                        pendingPrompt === true
+                          ? 'pi pi-spinner btn-loading-circle'
+                          : 'pi pi-arrow-up'
+                      "
+                    ></i>
                   </button>
                 </div>
               </div>
@@ -424,7 +466,7 @@ const showTooltip = (title, duration = 2000) => {
   }, duration);
 };
 
-const record = async () => {
+const startRecord = async () => {
   recording.value = true;
   stopAudio();
   playAudio("/audio/rec-start.mp3", {
@@ -436,7 +478,7 @@ const record = async () => {
   await startRecording();
 };
 
-const stop = async () => {
+const stopRecord = async () => {
   recording.value = false;
   const blob = await stopRecording();
 
@@ -445,7 +487,7 @@ const stop = async () => {
     showTooltip(t("recording_too_short"), 3000);
     return;
   } else if (Date.now() - pressTime > 10000) {
-    // слишком коротко — отмена
+    // слишком длинная запись — отмена
     showTooltip(t("recording_too_long"), 3000);
     return;
   }
