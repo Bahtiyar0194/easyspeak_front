@@ -309,7 +309,6 @@
                   <button
                     @touchstart.prevent="startRecord()"
                     @touchend="stopRecord()"
-                    @touchcancel="stopRecord()"
                     @mousedown="startRecord()"
                     @mouseup="stopRecord()"
                     v-if="promptInput === ''"
