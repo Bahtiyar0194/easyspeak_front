@@ -92,9 +92,24 @@ export function useAudioRecorder() {
         }
     };
 
+    const checkMicPermission = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+            // Разрешение есть
+            stream.getTracks().forEach(track => track.stop());
+            return 'granted';
+        } catch (err) {
+            if (err.name === 'NotAllowedError') return 'denied';
+            if (err.name === 'NotFoundError') return 'no_device';
+            return 'error';
+        }
+    };
+
     return {
         startRecording,
         stopRecording,
         isSilentBlob,
+        checkMicPermission
     };
 }

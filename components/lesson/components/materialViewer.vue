@@ -307,10 +307,10 @@
                   </button> -->
 
                   <button
-                    @touchstart.prevent="startRecord()"
-                    @touchend="stopRecord()"
-                    @mousedown="startRecord()"
-                    @mouseup="stopRecord()"
+                    @pointerdown="startRecord()"
+                    @pointerup="stopRecord()"
+                    @pointercancel="stopRecord()"
+                    @pointerleave="stopRecord()"
                     v-if="promptInput === ''"
                     class="btn btn-circle btn-active-invert relative"
                     :class="pendingPrompt === true ? 'disabled' : ''"
