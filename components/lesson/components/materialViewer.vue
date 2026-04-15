@@ -312,7 +312,6 @@
                     @touchcancel="stopRecord()"
                     @mousedown="startRecord()"
                     @mouseup="stopRecord()"
-                    @mouseleave="stopRecord()"
                     v-if="promptInput === ''"
                     class="btn btn-circle btn-active-invert relative"
                     :class="pendingPrompt === true ? 'disabled' : ''"
