@@ -309,8 +309,8 @@
                   <button
                     @pointerdown="startRecord()"
                     @pointerup="stopRecord()"
-                    @pointercancel="stopRecord()"
                     @pointerleave="stopRecord()"
+                    @pointercancel="stopRecord()"
                     v-if="promptInput === ''"
                     class="btn btn-circle btn-active-invert relative"
                     :class="pendingPrompt === true ? 'disabled' : ''"
@@ -380,7 +380,8 @@ import { onMounted } from "vue";
 const config = useRuntimeConfig();
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
-const { startRecording, stopRecording, isSilentBlob } = useAudioRecorder();
+const { startRecording, stopRecording, isSilentBlob, getFileExtension } =
+  useAudioRecorder();
 const authUser = useSanctumUser();
 const { t, localeProperties } = useI18n();
 
@@ -396,6 +397,7 @@ let tooltipTimer = null;
 
 let pressTime = 0;
 const recording = ref(false);
+const stoppingRecord = ref(false);
 
 const currentExplainId = ref(null);
 const audioExplainStatus = ref(null);
@@ -464,28 +466,74 @@ const showTooltip = (title, duration = 2000) => {
   }, duration);
 };
 
-const startRecord = async () => {
-  recording.value = true;
-  stopAudio();
-  playAudio("/audio/rec-start.mp3", {
-    onEnded: () => {},
-    onLoading: (state) => {},
-  });
+const getRecordingErrorMessage = (error) => {
+  if (error?.name === "NotAllowedError") {
+    return "Microphone access denied";
+  }
 
-  pressTime = Date.now();
-  await startRecording();
+  if (error?.name === "NotFoundError") {
+    return "Microphone not found";
+  }
+
+  return "Could not record audio";
+};
+
+const startRecord = async () => {
+  if (pendingPrompt.value === true || recording.value === true) {
+    return;
+  }
+
+  stoppingRecord.value = false;
+  stopAudio();
+
+  try {
+    await startRecording();
+
+    recording.value = true;
+    pressTime = Date.now();
+
+    playAudio("/audio/rec-start.mp3", {
+      onEnded: () => {},
+      onLoading: (state) => {},
+    });
+  } catch (error) {
+    recording.value = false;
+    pressTime = 0;
+    showTooltip(getRecordingErrorMessage(error), 3000);
+  }
 };
 
 const stopRecord = async () => {
-  recording.value = false;
-  const blob = await stopRecording();
+  if (recording.value === false || stoppingRecord.value === true) {
+    return;
+  }
 
-  if (Date.now() - pressTime < 500) {
-    // слишком коротко — отмена
+  recording.value = false;
+  stoppingRecord.value = true;
+  const recordDuration = Date.now() - pressTime;
+
+  let blob = null;
+
+  try {
+    blob = await stopRecording();
+  } catch (error) {
+    showTooltip(getRecordingErrorMessage(error), 3000);
+    return;
+  } finally {
+    stoppingRecord.value = false;
+    pressTime = 0;
+  }
+
+  if (!blob) {
+    return;
+  }
+
+  if (recordDuration < 500) {
+    // Recording is too short, cancel it.
     showTooltip(t("recording_too_short"), 3000);
     return;
-  } else if (Date.now() - pressTime > 10000) {
-    // слишком длинная запись — отмена
+  } else if (recordDuration > 10000) {
+    // Recording is too long, cancel it.
     showTooltip(t("recording_too_long"), 3000);
     return;
   }
@@ -504,14 +552,14 @@ const stopRecord = async () => {
     onLoading: (state) => {},
   });
 
-  // подготовка формы
+  // Prepare the form payload.
   const formData = new FormData();
-  formData.append("audio", blob, "speech.webm");
+  formData.append("audio", blob, `speech.${getFileExtension(blob.type)}`);
 
   promptInput.value = "";
 
   try {
-    // отправка запроса
+    // Send the STT request.
     const response = await $axiosPlugin.post("/openai/stt", formData);
 
     promptInput.value = response.data.text;
@@ -577,12 +625,12 @@ const backwardExplain = () => {
 const copyText = async (uuid) => {
   const mess = chat.value.find((m) => m.uuid === uuid);
   if (mess) {
-    // 1. HTML в буфер
+    // 1. Copy HTML to the clipboard.
     const htmlBlob = new Blob([sanitize(mess.ai_content)], {
       type: "text/html",
     });
 
-    // 2. Plain text (убираем теги)
+    // 2. Copy plain text without tags.
     const temp = document.createElement("div");
     temp.innerHTML = sanitize(mess.ai_content);
     const text = temp.innerText;
@@ -621,7 +669,7 @@ const debounceFeedback = debounceHandler(async (like, uuid) => {
   }
 
   try {
-    // отправка запроса
+    // Send the feedback request.
     const response = await $axiosPlugin.post(
       "/material/feedback/" + uuid,
       formData,
@@ -651,7 +699,7 @@ const promptInput = ref("");
 
 const sendPrompt = async () => {
   if (promptInput.value !== "") {
-    // добавляем сообщение пользователя
+    // Add the user message to the chat.
     chat.value.push({
       uuid: crypto.randomUUID(),
       user_prompt: promptInput.value,
@@ -659,7 +707,7 @@ const sendPrompt = async () => {
 
     pendingPrompt.value = true;
 
-    // подготовка формы
+    // Prepare the request payload.
     const formData = new FormData();
     formData.append("lang", localeProperties.value.name);
     formData.append("prompt", promptInput.value);
@@ -668,13 +716,13 @@ const sendPrompt = async () => {
     promptInput.value = "";
 
     try {
-      // отправка запроса
+      // Send the explain request.
       const response = await $axiosPlugin.post("/material/explain", formData);
 
-      // добавляем ответ ассистента
+      // Add the assistant response placeholder.
       chat.value.push({
         uuid: response.data.uuid,
-        ai_content: "...", // пустое место для Typed,
+        ai_content: "...", // Placeholder for Typed animation.
       });
 
       await nextTick();
@@ -755,10 +803,10 @@ onBeforeUnmount(() => {
 
 watch(
   () => chat.value.length,
-  async (newVal) => {
+  async () => {
     await nextTick();
     if (scrollBox.value) {
-      scrollBox.value.scrollToBottom(true); // true это плавно
+      scrollBox.value.scrollToBottom(true); // `true` enables smooth scrolling.
     }
   },
   { immediate: true },

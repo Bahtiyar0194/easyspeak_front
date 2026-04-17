@@ -3,11 +3,18 @@ export function useAudioRecorder() {
     let audioChunks = [];
     let stream = null;
 
+    const cleanupStream = () => {
+        if (stream) {
+            stream.getTracks().forEach((track) => track.stop());
+            stream = null;
+        }
+    };
+
     const getSupportedMimeType = () => {
         const types = [
             'audio/webm;codecs=opus', // Chrome / Android
             'audio/webm',
-            'audio/mp4',              // iOS Safari
+            'audio/mp4', // iOS Safari
             'audio/aac',
         ];
 
@@ -20,44 +27,75 @@ export function useAudioRecorder() {
         return '';
     };
 
+    const getFileExtension = (mimeType = '') => {
+        if (mimeType.includes('mp4')) return 'mp4';
+        if (mimeType.includes('aac')) return 'aac';
+        if (mimeType.includes('ogg')) return 'ogg';
+        if (mimeType.includes('mpeg')) return 'mp3';
+        return 'webm';
+    };
+
     const startRecording = async () => {
         if (!process.client) return;
 
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        cleanupStream();
 
-        const mimeType = getSupportedMimeType();
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-        mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
-        audioChunks = [];
+            const mimeType = getSupportedMimeType();
 
-        mediaRecorder.ondataavailable = (e) => {
-            if (e.data && e.data.size > 0) {
-                audioChunks.push(e.data);
-            }
-        };
+            mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
+            audioChunks = [];
 
-        // важно для iOS
-        mediaRecorder.start(100);
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data && e.data.size > 0) {
+                    audioChunks.push(e.data);
+                }
+            };
+
+            // Required for iOS.
+            mediaRecorder.start(100);
+        } catch (error) {
+            cleanupStream();
+            mediaRecorder = null;
+            audioChunks = [];
+            throw error;
+        }
     };
 
     const stopRecording = () => {
-        return new Promise((resolve) => {
-            if (!mediaRecorder) return resolve(null);
+        return new Promise((resolve, reject) => {
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                cleanupStream();
+                mediaRecorder = null;
+                audioChunks = [];
+                return resolve(null);
+            }
 
-            mediaRecorder.onstop = () => {
+            const recorder = mediaRecorder;
+
+            recorder.onstop = () => {
                 const blob = new Blob(audioChunks, {
-                    type: mediaRecorder.mimeType || 'audio/mp4',
+                    type: recorder.mimeType || 'audio/mp4',
                 });
 
-                // остановить микрофон
-                if (stream) {
-                    stream.getTracks().forEach(t => t.stop());
-                }
+                // Stop the microphone stream.
+                cleanupStream();
+                mediaRecorder = null;
+                audioChunks = [];
 
                 resolve(blob);
             };
 
-            mediaRecorder.stop();
+            recorder.onerror = (event) => {
+                cleanupStream();
+                mediaRecorder = null;
+                audioChunks = [];
+                reject(event.error || new Error('Audio recording failed'));
+            };
+
+            recorder.stop();
         });
     };
 
@@ -87,17 +125,17 @@ export function useAudioRecorder() {
 
             return rms < threshold;
         } catch (e) {
-            // если формат не декодируется (часто iOS/webm)
+            // Some browser formats, especially on iOS, may not decode here.
             return false;
         }
     };
 
     const checkMicPermission = async () => {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const permissionStream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-            // Разрешение есть
-            stream.getTracks().forEach(track => track.stop());
+            // Permission is available.
+            permissionStream.getTracks().forEach((track) => track.stop());
             return 'granted';
         } catch (err) {
             if (err.name === 'NotAllowedError') return 'denied';
@@ -110,6 +148,7 @@ export function useAudioRecorder() {
         startRecording,
         stopRecording,
         isSilentBlob,
-        checkMicPermission
+        checkMicPermission,
+        getFileExtension,
     };
 }
