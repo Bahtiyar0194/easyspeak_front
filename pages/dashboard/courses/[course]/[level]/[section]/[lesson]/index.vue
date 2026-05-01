@@ -1,5 +1,5 @@
 <template>
-  <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
+  <loader v-if="pendingLesson" :className="'full-overlay'" :showPendingText="true" />
   <tabs
     v-if="courseIsAvailable && lessonIsAvailable"
     :tabs="tabs_data"
@@ -38,7 +38,7 @@ const section_id = route.params.section;
 const lesson_id = route.params.lesson;
 
 const { $axiosPlugin } = useNuxtApp();
-const pending = ref(true);
+const pendingLesson = ref(true);
 const materialTypes = ref([]);
 const lessonData = ref([]);
 const courseIsAvailable = ref(false);
@@ -46,6 +46,8 @@ const lessonIsAvailable = ref(false);
 const pageTitle = ref("");
 
 const schoolStore = useSchoolStore();
+
+provide("pendingLesson", pendingLesson);
 
 useHead(() => ({
   title: pageTitle.value,
@@ -94,7 +96,6 @@ const tabs_data = computed(() => [
 ]);
 
 const getMaterialTypes = async () => {
-  pending.value = true;
 
   await $axiosPlugin
     .get("courses/get_material_types")
@@ -118,7 +119,6 @@ const getMaterialTypes = async () => {
 };
 
 const getLesson = async () => {
-  pending.value = true;
 
   await $axiosPlugin
     .get(
@@ -179,7 +179,6 @@ const getLesson = async () => {
         response.data.level.available_status.is_available;
       lessonIsAvailable.value =
         response.data.lesson.available_status.is_available;
-      pending.value = false;
     })
     .catch((err) => {
       if (err.response) {

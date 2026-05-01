@@ -104,10 +104,10 @@
                     taskItem.task_result.answers
                       ? openTaskResult(taskItem)
                       : props.lessonData.lesson_type_slug === 'file_test' &&
-                        props.lessonData.available_status.is_only_learner ===
-                          true
-                      ? false
-                      : openTask(taskItem)
+                          props.lessonData.available_status.is_only_learner ===
+                            true
+                        ? false
+                        : openTask(taskItem)
                   "
                 >
                   <i class="text-3xl text-active" :class="taskItem.icon"></i>
@@ -363,8 +363,8 @@ const openEditTask = (currentTask) => {
 
 const openTaskModal = (component, action, props = {}) => {
   modalIsVisible.value = true;
-  currentModal.value = defineAsyncComponent(() =>
-    import(`../components/tasks/actions/${action}/${component}.vue`)
+  currentModal.value = defineAsyncComponent(
+    () => import(`../components/tasks/actions/${action}/${component}.vue`),
   );
   modalProps.value = props;
 };
@@ -389,6 +389,9 @@ provide("tasks", tasks);
 provide("completedTasksCount", completedTasksCount);
 provide("openTask", openTask);
 
+const pendingLesson = inject("pendingLesson");
+const firstRequest = ref(true);
+
 const getLessonTasks = async () => {
   pendingTasks.value = true;
   completedTasksCount.value = 0;
@@ -399,6 +402,11 @@ const getLessonTasks = async () => {
     .then((response) => {
       tasks.value = response.data;
       pendingTasks.value = false;
+
+      if (firstRequest.value === true) {
+        pendingLesson.value = false;
+        firstRequest.value = false;
+      }
 
       for (let taskIndex = 0; taskIndex < tasks.value.length; taskIndex++) {
         const task = tasks.value[taskIndex];
