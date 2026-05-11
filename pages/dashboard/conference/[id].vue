@@ -1081,7 +1081,7 @@ const testIsStarted = ref(false);
 
 useHead({
   title: pageTitle,
-  meta: [{ name: "description", content: "My amazing site." }],
+  meta: [{ name: "description", content: t("pages.home.description") }],
 });
 
 definePageMeta({

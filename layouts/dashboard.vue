@@ -76,6 +76,7 @@ import notifications from "../components/ui/notifications.vue";
 import authUserMenu from "../components/auth/authUserMenu.vue";
 import roleProvider from "../components/ui/roleProvider.vue";
 import { useRoute } from "nuxt/app";
+import { watch } from "vue";
 
 const authUser = useSanctumUser();
 const schoolStore = useSchoolStore();
@@ -83,88 +84,10 @@ const menuWrapper = ref(null);
 const showMenu = ref(false);
 const route = useRoute();
 
-const dashboardMenu = [
-  {
-    title: "pages.dashboard.title",
-    icon: "pi pi-home",
-    link: "/dashboard",
-    is_show: true,
-    roles: [1, 2, 3, 4, 5],
-  },
-  {
-    title: "pages.users-groups.title",
-    icon: "pi pi-users",
-    link: "/dashboard/users-groups",
-    is_show: true,
-    roles: [1, 2, 3, 4],
-  },
-  {
-    title: "pages.schedule.title",
-    icon: "pi pi-calendar-clock",
-    link: "/dashboard/schedule",
-    is_show: !schoolStore.isAiSchoolDomain,
-    roles: [1, 2, 3, 4, 5],
-  },
-  {
-    title: "pages.conference.title",
-    icon: "pi pi-video",
-    link: "/dashboard/conference",
-    is_show: !schoolStore.isAiSchoolDomain,
-    roles: [1, 2, 3, 4, 5],
-  },
-  // {
-  //     title: 'pages.operations-requests.title',
-  //     icon: 'pi pi-file',
-  //     link: '/dashboard/operations-requests',
-  //     roles: [1, 2]
-  // },
-  {
-    title: "pages.courses.title",
-    icon: "pi pi-book",
-    link: "/dashboard/courses",
-    is_show: true,
-    roles: [1, 2, 3, 4, 5],
-  },
-  {
-    title: "pages.education-program.title",
-    icon: "pi pi-book",
-    link: "/dashboard/education-program",
-    is_show: !schoolStore.isAiSchoolDomain,
-    roles: [1],
-  },
-  {
-    title: "pages.checking-tasks.title",
-    icon: "pi pi-list-check",
-    link: "/dashboard/checking-tasks",
-    is_show: !schoolStore.isAiSchoolDomain,
-    roles: [1, 2, 3, 4],
-  },
-  {
-    title: "pages.files.title",
-    icon: "pi pi-file",
-    link: "/dashboard/files",
-    is_show: !schoolStore.isAiSchoolDomain,
-    roles: [1],
-  },
-  {
-    title: "pages.school.title",
-    icon: "pi pi-building-columns",
-    link: "/dashboard/school",
-    is_show: !schoolStore.isAiSchoolDomain,
-    roles: [1, 2, 3],
-  },
-
-  {
-    title: "pages.invoices.title",
-    icon: "pi pi-receipt",
-    link: "/dashboard/invoices",
-    is_show: !schoolStore.isAiSchoolDomain,
-    roles: [1],
-  },
-];
+const dashboardMenu = ref([]);
 
 const hasAccess = computed(() => {
-  const currentMenuItem = dashboardMenu.find(
+  const currentMenuItem = dashboardMenu.value.find(
     (item) => item.link === route.fullPath,
   );
   if (currentMenuItem) {
@@ -193,5 +116,92 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   document.removeEventListener("click", handleClickOutside);
+  dashboardMenu.value = [];
 });
+
+watch(
+  () => schoolStore.isAiSchoolDomain,
+  (newVal) => {
+    dashboardMenu.value = [
+      {
+        title: "pages.dashboard.title",
+        icon: "pi pi-home",
+        link: "/dashboard",
+        is_show: true,
+        roles: [1, 2, 3, 4, 5],
+      },
+      {
+        title: "pages.users-groups.title",
+        icon: "pi pi-users",
+        link: "/dashboard/users-groups",
+        is_show: true,
+        roles: [1, 2, 3, 4],
+      },
+      {
+        title: "pages.schedule.title",
+        icon: "pi pi-calendar-clock",
+        link: "/dashboard/schedule",
+        is_show: schoolStore.isAiSchoolDomain === false,
+        roles: [1, 2, 3, 4, 5],
+      },
+      {
+        title: "pages.conference.title",
+        icon: "pi pi-video",
+        link: "/dashboard/conference",
+        is_show: schoolStore.isAiSchoolDomain === false,
+        roles: [1, 2, 3, 4, 5],
+      },
+      // {
+      //     title: 'pages.operations-requests.title',
+      //     icon: 'pi pi-file',
+      //     link: '/dashboard/operations-requests',
+      //     roles: [1, 2]
+      // },
+      {
+        title: "pages.courses.title",
+        icon: "pi pi-book",
+        link: "/dashboard/courses",
+        is_show: true,
+        roles: [1, 2, 3, 4, 5],
+      },
+      {
+        title: "pages.education-program.title",
+        icon: "pi pi-book",
+        link: "/dashboard/education-program",
+        is_show: schoolStore.isAiSchoolDomain === false,
+        roles: [1],
+      },
+      {
+        title: "pages.checking-tasks.title",
+        icon: "pi pi-list-check",
+        link: "/dashboard/checking-tasks",
+        is_show: schoolStore.isAiSchoolDomain === false,
+        roles: [1, 2, 3, 4],
+      },
+      {
+        title: "pages.files.title",
+        icon: "pi pi-file",
+        link: "/dashboard/files",
+        is_show: schoolStore.isAiSchoolDomain === false,
+        roles: [1],
+      },
+      {
+        title: "pages.school.title",
+        icon: "pi pi-building-columns",
+        link: "/dashboard/school",
+        is_show: schoolStore.isAiSchoolDomain === false,
+        roles: [1, 2, 3],
+      },
+
+      {
+        title: "pages.invoices.title",
+        icon: "pi pi-receipt",
+        link: "/dashboard/invoices",
+        is_show: schoolStore.isAiSchoolDomain === false,
+        roles: [1],
+      },
+    ];
+  },
+  { immediate: true }, // сразу при монтировании если данные уже есть
+);
 </script>

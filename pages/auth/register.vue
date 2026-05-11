@@ -153,7 +153,7 @@ const backToStep = (step) => {
 
 useHead({
   title: t("pages.register.title"),
-  meta: [{ name: "description", content: "My amazing site." }],
+  meta: [{ name: "description", content: t("pages.home.description") }],
 });
 
 definePageMeta({

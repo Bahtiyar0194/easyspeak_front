@@ -408,7 +408,7 @@ const errors = ref([]);
 
 useHead({
   title: t("pages.dashboard.title"),
-  meta: [{ name: "description", content: "My amazing site." }],
+  meta: [{ name: "description", content: t("pages.home.description") }],
 });
 
 definePageMeta({
@@ -475,11 +475,13 @@ const getDashboard = async () => {
 };
 
 const createPaymentScript = async () => {
-  // Теперь объект tiptop гарантированно доступен
-  checkout.value = new tiptop.Checkout({
-    publicId: schoolStore.schoolData.tiptoppay.public_id_marketplace,
-    container: paymentFormRef.value,
-  });
+  if (schoolStore.schoolData.tiptoppay.public_id_marketplace) {
+    // Теперь объект tiptop гарантированно доступен
+    checkout.value = new tiptop.Checkout({
+      publicId: schoolStore.schoolData.tiptoppay.public_id_marketplace,
+      container: paymentFormRef.value,
+    });
+  }
 };
 
 const createCryptogram = async () => {

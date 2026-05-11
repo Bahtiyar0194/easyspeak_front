@@ -6,7 +6,7 @@ const { t } = useI18n();
 
 useHead({
     title: t('pages.conference.title'),
-    meta: [{ name: "description", content: "My amazing site." }],
+    meta: [{ name: "description", content: t("pages.home.description") }],
 });
 
 definePageMeta({

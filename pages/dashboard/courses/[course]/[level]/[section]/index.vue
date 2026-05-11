@@ -653,11 +653,13 @@ const openUnAvailableModal = () => {
 };
 
 const createPaymentScript = () => {
-  // Теперь объект tiptop гарантированно доступен
-  checkout.value = new tiptop.Checkout({
-    publicId: schoolStore.schoolData.tiptoppay.public_id,
-    container: paymentFormRef.value,
-  });
+  if (schoolStore.schoolData.tiptoppay.public_id) {
+    // Теперь объект tiptop гарантированно доступен
+    checkout.value = new tiptop.Checkout({
+      publicId: schoolStore.schoolData.tiptoppay.public_id,
+      container: paymentFormRef.value,
+    });
+  }
 };
 
 const handlePayment = async () => {

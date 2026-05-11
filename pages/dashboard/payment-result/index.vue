@@ -42,7 +42,7 @@ const route = useRoute();
 const { t } = useI18n();
 useHead({
   title: t("pages.payment-result.title"),
-  meta: [{ name: "description", content: "My amazing site." }],
+  meta: [{ name: "description", content: t("pages.home.description") }],
 });
 
 definePageMeta({

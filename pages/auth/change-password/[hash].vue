@@ -96,7 +96,7 @@ const userData = ref(null);
 
 useHead({
   title: t("pages.change-password.title"),
-  meta: [{ name: "description", content: "My amazing site." }],
+  meta: [{ name: "description", content: t("pages.home.description") }],
 });
 
 definePageMeta({

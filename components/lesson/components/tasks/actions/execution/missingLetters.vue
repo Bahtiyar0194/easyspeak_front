@@ -261,6 +261,7 @@
                             <input
                               v-model="word.userInput[letterIndex]"
                               @input="changeFocus($event)"
+                              @keydown.backspace="backFocus($event)"
                               type="text"
                               class="letter_input"
                               style="width: 1.5ch; text-align: center"
@@ -388,7 +389,7 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/get/missing_letters/" + props.task.task_id
+      "tasks/get/missing_letters/" + props.task.task_id,
     );
 
     taskData.value = res.data;
@@ -485,7 +486,7 @@ const setWords = () => {
 const checkWords = () => {
   currentWords.value.forEach((word) => {
     words.value = words.value.filter(
-      (w) => w.task_word_id !== word.task_word_id
+      (w) => w.task_word_id !== word.task_word_id,
     );
     let wrongLetter = false;
 
@@ -516,7 +517,7 @@ const pushToStudyWords = async (word) => {
 
   await nextTick();
   const answer = rightAnswers.value.querySelector(
-    "#right_answer_" + word.task_word_id
+    "#right_answer_" + word.task_word_id,
   );
 
   if (answer) {
@@ -529,7 +530,7 @@ const pushToStudyWords = async (word) => {
 
   if (reStudyWords.value.some((w) => w.task_word_id === word.task_word_id)) {
     reStudyWords.value = reStudyWords.value.filter(
-      (w) => w.task_word_id !== word.task_word_id
+      (w) => w.task_word_id !== word.task_word_id,
     );
   }
 };
@@ -544,11 +545,11 @@ const pushToCurrentReStudyWords = async (word) => {
     await nextTick();
 
     const userAnswer = wrongAnswers.value.querySelector(
-      "#user_answer_" + word.task_word_id
+      "#user_answer_" + word.task_word_id,
     );
 
     const rightAnswer = wrongAnswers.value.querySelector(
-      "#right_answer_" + word.task_word_id
+      "#right_answer_" + word.task_word_id,
     );
 
     if (userAnswer && rightAnswer) {
@@ -621,6 +622,20 @@ const changeFocus = (event) => {
         }
       }
     }
+  }
+};
+
+const backFocus = (event) => {
+  const input = event.target;
+
+  // если поле пустое → предыдущий input
+  if (input.value === "") {
+    const prev =
+      input.parentElement.parentElement.previousElementSibling?.querySelector(
+        "input",
+      );
+
+    prev?.focus();
   }
 };
 
@@ -699,6 +714,6 @@ watch(
     if (newVal === taskData.value.words.length) {
       saveTaskResult();
     }
-  }
+  },
 );
 </script>
