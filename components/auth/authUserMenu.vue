@@ -53,7 +53,7 @@
                       <b
                         ><u>{{
                           new Date(
-                            schoolStore.schoolData.subscription_expiration_at
+                            schoolStore.schoolData.subscription_expiration_at,
                           ).toLocaleDateString()
                         }}</u></b
                       >

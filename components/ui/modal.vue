@@ -73,7 +73,7 @@ const props = defineProps({
   pendingText: {
     type: String,
     required: false,
-    default: ''
+    default: "",
   },
 });
 
@@ -84,14 +84,14 @@ watch(
   () => props.show,
   (newVal) => {
     isVisible.value = newVal;
-  }
+  },
 );
 
 watch(
   () => props.showLoader,
   (newVal) => {
     loaderIsVisible.value = newVal;
-  }
+  },
 );
 
 const closeModal = () => {

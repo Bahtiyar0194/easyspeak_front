@@ -8,7 +8,10 @@
 
             <ul class="list-none px-0">
               <li v-for="item in headings" :key="item.id">
-                <button class="text-left" @click="scrollTo(item.id, headerOffset)">
+                <button
+                  class="text-left"
+                  @click="scrollTo(item.id, headerOffset)"
+                >
                   {{ item.text }}
                 </button>
               </li>
@@ -46,7 +49,9 @@
 
           <h4 class="text-center">Общие положения</h4>
 
-          <p class="title text-center font-bold mt-6">1. Термины и определения</p>
+          <p class="title text-center font-bold mt-6">
+            1. Термины и определения
+          </p>
 
           <p>
             1.1 <b>Договор Оферты</b> – договор заключаемый между Заказчиком и
@@ -65,7 +70,9 @@
             договору.
           </p>
 
-          <p class="title text-center font-bold mt-6">2. Предмет договора Оферты</p>
+          <p class="title text-center font-bold mt-6">
+            2. Предмет договора Оферты
+          </p>
 
           <p>
             2.1. Предметом договора Оферты является предоставление Заказчику
@@ -316,7 +323,9 @@
             ответить на возникшие вопросы Заказчика.
           </p>
 
-          <p class="title text-center font-bold mt-6">8. Ответственность сторон</p>
+          <p class="title text-center font-bold mt-6">
+            8. Ответственность сторон
+          </p>
 
           <p>
             8.1. В случаях неисполнения или ненадлежащего исполнения своих
@@ -648,7 +657,9 @@
             >.
           </p>
 
-          <p class="title text-center font-bold mt-6">14. Реквизиты Исполнителя</p>
+          <p class="title text-center font-bold mt-6">
+            14. Реквизиты Исполнителя
+          </p>
 
           <p>
             Юридическое лицо:

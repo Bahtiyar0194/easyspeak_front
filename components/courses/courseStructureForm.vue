@@ -167,26 +167,26 @@ const selectedLessonId = ref("");
 // Вычисляемые свойства для получения выбранных данных
 const selectedCourse = computed(() =>
   courseAttributes.value.courses.find(
-    (course) => course.course_id === Number(selectedCourseId.value)
-  )
+    (course) => course.course_id === Number(selectedCourseId.value),
+  ),
 );
 
 const selectedLevel = computed(() =>
   selectedCourse.value?.levels.find(
-    (level) => level.level_id === Number(selectedLevelId.value)
-  )
+    (level) => level.level_id === Number(selectedLevelId.value),
+  ),
 );
 
 const selectedSection = computed(() =>
   selectedLevel.value?.sections.find(
-    (section) => section.section_id === Number(selectedSectionId.value)
-  )
+    (section) => section.section_id === Number(selectedSectionId.value),
+  ),
 );
 
 const selectedLesson = computed(() =>
   selectedSection.value?.lessons.find(
-    (lesson) => lesson.lesson_id === Number(selectedLessonId.value)
-  )
+    (lesson) => lesson.lesson_id === Number(selectedLessonId.value),
+  ),
 );
 
 // Сброс значений при изменении выбора

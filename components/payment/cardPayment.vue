@@ -99,7 +99,7 @@
                           class="w-10"
                           src="~/public/images/payment/visa_alt.svg"
                         />
-                                              <img
+                        <img
                           class="w-10"
                           src="~/public/images/payment/mastercard_alt.svg"
                         />

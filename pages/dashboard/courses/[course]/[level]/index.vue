@@ -28,7 +28,10 @@
       </div>
 
       <div
-        v-if="sectionsData.level.available_status.is_available_always === true && sectionsData.level.price === 0"
+        v-if="
+          sectionsData.level.available_status.is_available_always === true &&
+          sectionsData.level.price === 0
+        "
         class="col-span-12"
       >
         <div class="bg-corp text-white p-4 rounded-xl">
@@ -44,7 +47,7 @@
         v-if="sectionsData && sectionsData.sections.length"
         class="col-span-12"
       >
-        <ul class="list-group">
+        <ul class="list-group active">
           <li v-if="sectionsData && sectionsData.level.completed_percent > 0">
             <p class="mb-2">
               <b>{{ $t("pages.courses.level_overall_progress") }}:</b>
@@ -168,7 +171,6 @@ import progressBar from "../../../../../components/ui/progressBar.vue";
 import circleProgressBar from "../../../../../components/ui/circleProgressBar.vue";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
-
 
 const errors = ref([]);
 const router = useRouter();

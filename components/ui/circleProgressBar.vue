@@ -23,7 +23,11 @@
       />
     </svg>
     <div class="font-bold text-active" :class="props.textClass">
-        {{ displayedProgress < 100 ? displayedProgress.toFixed(1) : parseInt(displayedProgress) }}%
+      {{
+        displayedProgress < 100
+          ? displayedProgress.toFixed(1)
+          : parseInt(displayedProgress)
+      }}%
     </div>
   </div>
 </template>
@@ -65,8 +69,7 @@ watch(
 
     const step = () => {
       currentFrame++;
-      const progress =
-        start + (end - start) * (currentFrame / totalFrames);
+      const progress = start + (end - start) * (currentFrame / totalFrames);
       displayedProgress.value = Math.round(progress);
       if (currentFrame < totalFrames) {
         requestAnimationFrame(step);
@@ -77,14 +80,14 @@ watch(
 
     step();
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // Вычисляем длину окружности для прогресс-бара
 const circumference = 2 * Math.PI * 45;
 
 const numericProgress = computed(() =>
-  Math.min(Math.max(Number(props.progress), 0), 100)
+  Math.min(Math.max(Number(props.progress), 0), 100),
 );
 
 const circleStyle = computed(() => {
@@ -93,7 +96,6 @@ const circleStyle = computed(() => {
     strokeDashoffset: `${circumference * (1 - numericProgress.value / 100)}`,
   };
 });
-
 
 const progressClass = computed(() => {
   const p = numericProgress.value;
@@ -117,6 +119,8 @@ const progressClass = computed(() => {
 .progress-circle {
   stroke-width: 6;
   stroke-linecap: round;
-  transition: stroke-dashoffset 1s ease-in-out, stroke 0.5s ease-in-out;
+  transition:
+    stroke-dashoffset 1s ease-in-out,
+    stroke 0.5s ease-in-out;
 }
 </style>

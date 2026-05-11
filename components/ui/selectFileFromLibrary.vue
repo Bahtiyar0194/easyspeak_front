@@ -84,10 +84,12 @@ const getFiles = async () => {
 };
 
 const selectFile = (event) => {
-    previewFile.value = null;
-    setTimeout(() => {
-        previewFile.value = files.value.find((f) => f.file_id == event.target.value);
-    }, 100);
+  previewFile.value = null;
+  setTimeout(() => {
+    previewFile.value = files.value.find(
+      (f) => f.file_id == event.target.value,
+    );
+  }, 100);
 };
 
 onMounted(() => {

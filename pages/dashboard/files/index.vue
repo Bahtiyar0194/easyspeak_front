@@ -167,7 +167,11 @@
       >
         <template v-if="files.data?.length > 0">
           <div class="table table-striped table-sm selectable">
-            <loader v-if="pendingFiles" :className="'overlay'" :showPendingText="true"/>
+            <loader
+              v-if="pendingFiles"
+              :className="'overlay'"
+              :showPendingText="true"
+            />
             <table ref="tableRef">
               <thead>
                 <tr>
@@ -241,7 +245,11 @@
         </template>
 
         <alert v-else :className="'light'">
-          <loader v-if="pendingFiles" :className="'overlay'" :showPendingText="true"/>
+          <loader
+            v-if="pendingFiles"
+            :className="'overlay'"
+            :showPendingText="true"
+          />
           <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
         </alert>
       </div>
@@ -496,7 +504,7 @@
                 @click="
                   downloadFile(
                     config.public.apiBase + '/media/get/' + currentFile.target,
-                    currentFile.file_name
+                    currentFile.file_name,
                   )
                 "
               >
@@ -874,7 +882,7 @@ const selectFileType = (event) => {
   currentFileType.value = null;
   setTimeout(() => {
     currentFileType.value = fileTypes.value.find(
-      (ft) => ft.material_type_id == event.target.value
+      (ft) => ft.material_type_id == event.target.value,
     );
   }, 100);
 };

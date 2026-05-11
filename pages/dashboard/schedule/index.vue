@@ -275,7 +275,7 @@
                 />
                 <span>{{
                   $t(
-                    "pages.conference.appoint_a_mentor_for_this_and_subsequent_lessons"
+                    "pages.conference.appoint_a_mentor_for_this_and_subsequent_lessons",
                   )
                 }}</span>
               </label>
@@ -283,7 +283,7 @@
                 v-if="mentorOnlyForThisLesson === 0"
                 :message="
                   $t(
-                    'pages.conference.appoint_a_mentor_for_this_and_subsequent_lessons_note'
+                    'pages.conference.appoint_a_mentor_for_this_and_subsequent_lessons_note',
                   )
                 "
                 :className="'outline-danger'"
@@ -586,8 +586,8 @@ const selectedCourseId = ref("");
 // Вычисляемые свойства для получения выбранных данных
 const selectedCourse = computed(() =>
   attributes?.value?.courses?.find(
-    (course) => course.course_id === Number(selectedCourseId.value)
-  )
+    (course) => course.course_id === Number(selectedCourseId.value),
+  ),
 );
 
 // Сброс значений при изменении выбора

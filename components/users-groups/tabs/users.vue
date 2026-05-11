@@ -702,7 +702,7 @@
                             </p>
                             <span class="text-xs text-left"
                               >{{ $t("pages.tasks.count") }}:
-                              <b>{{ lesson.tasks.length }}</b></span
+                              <b>{{ lesson.tasks_count }}</b></span
                             >
                           </div>
                           <circleProgressBar
@@ -1180,14 +1180,35 @@ const goToSections = () => {
   activeTask.value = null;
 };
 
-const selectLesson = (lesson) => {
+const selectLesson = async (lesson) => {
   pendingGrade.value = true;
 
-  setTimeout(() => {
-    gradeModalClass.value = "modal-2xl";
-    activeLesson.value = lesson;
-    pendingGrade.value = false;
-  }, 200);
+  await $axiosPlugin
+    .post(
+      "courses/get_lesson_grade", {
+        lesson_id: lesson.lesson_id,
+        user_id: user.value.user_id
+      }
+    )
+    .then((response) => {
+      gradeModalClass.value = "modal-2xl";
+      activeLesson.value = response.data;
+      pendingGrade.value = false;
+    })
+    .catch((err) => {
+      if (err.response) {
+        router.push({
+          path: "/error",
+          query: {
+            status: err.response.status,
+            message: err.response.data.message,
+            url: err.request.responseURL,
+          },
+        });
+      } else {
+        router.push("/error");
+      }
+    });
 };
 
 const goToLessons = () => {

@@ -24,7 +24,7 @@ const animateTo = (newValue, oldValue) => {
   const step = (currentTime) => {
     const progress = Math.min((currentTime - startTime) / props.duration, 1);
     displayNumber.value = Math.floor(
-      oldValue + (newValue - oldValue) * progress
+      oldValue + (newValue - oldValue) * progress,
     );
 
     if (progress < 1) {
@@ -41,7 +41,7 @@ watch(
   () => props.number,
   (newValue, oldValue) => {
     animateTo(newValue, oldValue);
-  }
+  },
 );
 
 // при первом рендере тоже красиво поднимаем число

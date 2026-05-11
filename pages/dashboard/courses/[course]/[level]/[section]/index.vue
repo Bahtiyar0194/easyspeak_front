@@ -73,7 +73,7 @@
             : ''
         "
       >
-        <ul class="list-group">
+        <ul class="list-group active">
           <li v-if="lessonsData && lessonsData.section.completed_percent > 0">
             <p class="mb-2">
               <b> {{ $t("pages.courses.section_overall_progress") }}:</b>

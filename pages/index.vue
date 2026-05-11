@@ -165,13 +165,6 @@
     </div>
   </section>
 
-  <!-- <section id="slider" class="py-16 px-4 lg:px-20 bg-active">
-    <h2 class="text-center mb-8">
-      {{ $t("pages.home.section_4.title") }}
-    </h2>
-    <keenSliderThumbs :images="images" />
-  </section> -->
-
   <section id="demo" class="py-20 px-4 bg-corp text-white text-center">
     <div class="flex flex-col justify-center items-center text-center">
       <h2 class="text-3xl mb-4">
@@ -285,15 +278,6 @@ useHead({
 const showContent = ref(false);
 const typedElement = ref();
 let typedInstance = null;
-
-const images = [
-  "https://1prof.by/wp-content/uploads/2024/10/swiss.jpg",
-  "https://avatars.mds.yandex.net/i?id=05f52196e390bf9f34f3754ad5a9d4da_l-8710005-images-thumbs&n=13",
-  "https://peterburg2.ru/uploads/24/02/21/o_ray-hennessy-xUUZcpQlqpM-unsplash.jpg",
-  "https://informburo.kz/storage/photos/94/main/Oh38ooVAU32ULU9c7rdUWZU2QoP4ojmlHrabANpL.jpg",
-  "https://i.pinimg.com/originals/fd/b2/47/fdb247ac713dce8dc8ef3d04cf9881ad.jpg",
-  "https://i.pinimg.com/736x/32/22/12/3222126cabf17df67bfded8f5767f8fd.jpg",
-];
 
 const sendRequestToDemo = async () => {
   pendingSend.value = true;

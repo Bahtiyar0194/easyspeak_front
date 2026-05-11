@@ -19,7 +19,7 @@
       </div>
     </roleProvider>
     <div class="col-span-12">
-      <ul v-if="categories.length > 0" class="list-group">
+      <ul v-if="categories.length > 0" class="list-group active">
         <li
           v-for="(category, categoryIndex) in categories"
           :key="categoryIndex"

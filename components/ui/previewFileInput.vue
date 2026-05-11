@@ -23,7 +23,7 @@
             class="btn btn-light mx-auto"
             @click="props.onChange"
           >
-          <i class="pi pi-file"></i>
+            <i class="pi pi-file"></i>
             {{ $t("file.change_file") }}
           </button>
         </div>

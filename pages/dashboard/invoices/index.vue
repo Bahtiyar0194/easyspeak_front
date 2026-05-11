@@ -170,7 +170,11 @@
       <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
         <template v-if="payments.data?.length > 0">
           <div class="table table-striped table-sm selectable">
-            <loader v-if="pendingPayments" :className="'overlay'" :showPendingText="true"/>
+            <loader
+              v-if="pendingPayments"
+              :className="'overlay'"
+              :showPendingText="true"
+            />
             <table ref="tableRef">
               <thead>
                 <tr>
@@ -244,7 +248,11 @@
         </template>
 
         <alert v-else :className="'light'">
-          <loader v-if="pendingPayments" :className="'overlay'" :showPendingText="true"/>
+          <loader
+            v-if="pendingPayments"
+            :className="'overlay'"
+            :showPendingText="true"
+          />
           <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
         </alert>
       </div>
@@ -588,7 +596,7 @@ const acceptPaymentSubmit = async (payment_id) => {
       if (response.data.success === true) {
         getPayments().then(() => {
           currentPayment.value = payments.value.data.find(
-            (p) => (p.payment_id = payment_id)
+            (p) => (p.payment_id = payment_id),
           );
           closeAcceptPaymentModal();
         });

@@ -12,11 +12,12 @@
             v-for="plan in plans"
             :key="plan.subscription_plan_id"
             :value="plan.subscription_plan_id"
-            :disabled="schoolStore.schoolData.active_users_count > plan.users_count"
+            :disabled="
+              schoolStore.schoolData.active_users_count > plan.users_count
+            "
           >
-            {{ plan.subscription_plan_name }} - {{
-              plan.price.toLocaleString("ru-RU")
-            }}
+            {{ plan.subscription_plan_name }} -
+            {{ plan.price.toLocaleString("ru-RU") }}
             {{ $contacts.bank.currency.symbol }}
           </option>
         </select>

@@ -8,11 +8,16 @@
         class="col-span-12 lg:col-span-3"
       >
         <nuxt-link
-          :class="level.available_status.is_available === false ? 'cursor-not-allowed' : ''"
-          :to="level.available_status.is_available === false
+          :class="
+            level.available_status.is_available === false
+              ? 'cursor-not-allowed'
+              : ''
+          "
+          :to="
+            level.available_status.is_available === false
               ? null
               : localePath(
-                  '/dashboard/courses/' + course_slug + '/' + level.level_slug
+                  '/dashboard/courses/' + course_slug + '/' + level.level_slug,
                 )
           "
         >
@@ -55,7 +60,7 @@ const getLevels = async () => {
     .get("courses/get_levels/" + course_slug)
     .then((response) => {
       const courseCrumbItem = document.querySelector(
-        'span[data-crumb="[course]"]'
+        'span[data-crumb="[course]"]',
       );
 
       // Проверить, найден ли элемент

@@ -86,7 +86,7 @@
             $t(
               index > 0
                 ? "form.select_an_internal_point"
-                : "form.select_a_point"
+                : "form.select_a_point",
             )
           }}
         </label>
@@ -179,7 +179,7 @@ const { errors, locations } = toRefs(props);
 const onSelectLocation = (levelIndex) => {
   const selectedLevel = selections.value[levelIndex];
   const selectedOption = selectedLevel.options.find(
-    (opt) => opt.location_id === selectedLevel.selectedId
+    (opt) => opt.location_id === selectedLevel.selectedId,
   );
 
   // Удалить все уровни ниже текущего
@@ -221,6 +221,6 @@ watch(
       ];
     }
   },
-  { immediate: true } // сразу при монтировании если данные уже есть
+  { immediate: true }, // сразу при монтировании если данные уже есть
 );
 </script>

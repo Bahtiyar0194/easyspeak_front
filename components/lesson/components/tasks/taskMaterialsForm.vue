@@ -4,7 +4,7 @@
     <div v-if="taskMaterials.length > 0" class="col-span-12">
       <TransitionGroup
         tag="ul"
-        class="list-group"
+        class="list-group active"
         :move="{ transition: { duration: 0.3 } }"
       >
         <li

@@ -14,7 +14,7 @@
 
       <b
         v-if="props.showPercentage"
-        class="absolute left-0 top-1/2 -translate-y-1/2 text-xs text-active z-0"
+        class="absolute top-1/2 -translate-y-1/2 text-xs text-active z-0"
         :class="
           props.progressPercentage === 0
             ? 'text-center left-1/2 -translate-x-1/2'
@@ -50,7 +50,6 @@ const props = defineProps({
 });
 
 const displayedProgress = ref(0);
-
 
 watch(
   () => props.progressPercentage,

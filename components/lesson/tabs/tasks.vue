@@ -80,7 +80,7 @@
         <div class="col-span-12 lg:col-span-9">
           <TransitionGroup
             tag="ul"
-            class="list-group overflow-hidden"
+            class="list-group active overflow-hidden"
             :move="{ transition: { duration: 0.3 } }"
           >
             <loader

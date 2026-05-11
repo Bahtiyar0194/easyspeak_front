@@ -176,7 +176,7 @@ definePageMeta({
 const getTelegramAccount = async () => {
   try {
     const response = await $axiosPlugin.get(
-      "telegram/get/" + route.query.tg_token
+      "telegram/get/" + route.query.tg_token,
     );
 
     telegramAccount.value = response.data;
@@ -202,7 +202,7 @@ const connectToTelegramBot = async () => {
   pendingBotModal.value = true;
   try {
     const response = await $axiosPlugin.post(
-      "telegram/connect/" + route.query.tg_token
+      "telegram/connect/" + route.query.tg_token,
     );
 
     refreshIdentity().then(() => {

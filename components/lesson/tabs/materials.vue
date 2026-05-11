@@ -53,7 +53,7 @@
     >
       <TransitionGroup
         tag="ul"
-        class="list-group"
+        class="list-group active"
         :move="{ transition: { duration: 0.3 } }"
       >
         <li

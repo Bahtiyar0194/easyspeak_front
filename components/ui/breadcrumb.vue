@@ -3,11 +3,14 @@
     <ul class="breadcrumb font-medium select-none">
       <li v-if="!route.meta.layout">
         <nuxt-link to="/">
-          <span>{{ $t('pages.home.title') }}</span>
+          <span>{{ $t("pages.home.title") }}</span>
         </nuxt-link>
       </li>
       <li v-for="(crumb, index) in crumbs" :key="index">
-        <nuxt-link :class="index < crumbs.length - 1 ? '' : 'inactive'" :to="crumb.to">
+        <nuxt-link
+          :class="index < crumbs.length - 1 ? '' : 'inactive'"
+          :to="crumb.to"
+        >
           <span :data-crumb="crumb.label">{{ crumb.label }}</span>
         </nuxt-link>
       </li>
@@ -41,5 +44,4 @@ const crumbs = computed(() => {
     label: getTitle(index),
   }));
 });
-
 </script>

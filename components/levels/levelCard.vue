@@ -1,13 +1,14 @@
 <template>
-  <div
-    class="card relative overflow-hidden group"
-  >
+  <div class="card relative overflow-hidden group">
     <img :src="`/images/courses/${props.level.course_name_slug}.png`" />
 
     <div
       class="absolute left-0 bottom-0 w-full group-hover:h-full transition-all duration-200 flex justify-center items-center group-hover:items-center px-4 backdrop-blur-sm bg-black bg-opacity-50"
-      :class="!schoolStore.isAiSchoolDomain && 
-        props.level.available_status.is_available === false ? 'h-full' : 'h-14'
+      :class="
+        !schoolStore.isAiSchoolDomain &&
+        props.level.available_status.is_available === false
+          ? 'h-full'
+          : 'h-14'
       "
     >
       <div class="flex flex-col gap-y-2 w-full">
@@ -26,20 +27,20 @@
           <p
             v-if="props.level.available_status.is_available === true"
             class="mb-0 text-white leading-none font-medium text-lg"
-            
           >
             {{ displayedProgress.toFixed(2) }}%
           </p>
         </div>
 
         <p
-          v-if="!schoolStore.isAiSchoolDomain && props.level.available_status.is_available === false"
+          v-if="
+            !schoolStore.isAiSchoolDomain &&
+            props.level.available_status.is_available === false
+          "
           class="mb-0 text-white text-center text-sm"
         >
           {{ $t(props.message) }}
         </p>
-        
-
 
         <template v-if="props.level.available_status.is_available === true">
           <progressBar
@@ -97,6 +98,6 @@ watch(
 
     step();
   },
-  { immediate: true }
+  { immediate: true },
 );
 </script>
