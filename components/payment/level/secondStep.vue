@@ -7,15 +7,8 @@
       <p class="text-xl mb-0 text-right">
         {{ $t("total") }}:
         <b class="font-bold">
-          <animatedNumber
-            :number="
-              lessonsData.level.promo_discount
-                ? lessonsData.level.price -
-                  (lessonsData.level.price / 100) *
-                    lessonsData.level.promo_discount
-                : lessonsData.level.price
-            "
-          />.00 {{ $contacts.bank.currency.symbol }}</b
+          <animatedNumber :number="finalPrice" />.00
+          {{ $contacts.bank.currency.symbol }}</b
         >
       </p>
     </div>
@@ -35,7 +28,25 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+
+  selectedSubscriptionId: {
+    type: Object,
+    required: true,
+  },
 });
 
-const { errors, lessonsData } = toRefs(props);
+const { errors, lessonsData, selectedSubscriptionId } = toRefs(props);
+
+const selectedSubscription = computed(() =>
+  lessonsData.value.level.subscription_types.find(
+    (s) => s.subscription_type_id === selectedSubscriptionId.value,
+  ),
+);
+
+const finalPrice = computed(() => {
+  const price = selectedSubscription.value?.price ?? 0;
+  const discount = lessonsData.value.level.promo_discount ?? 0;
+
+  return discount ? price - (price / 100) * discount : price;
+});
 </script>

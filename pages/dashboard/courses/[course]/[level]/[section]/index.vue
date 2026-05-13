@@ -399,6 +399,8 @@ const addLessonFormRef = ref(null);
 
 const lessonTypes = ref([]);
 
+const selectedSubscriptionId = ref("");
+
 const checkout = ref(null);
 const paymentModalIsVisible = ref(false);
 const paymentModalSize = ref("modal-lg");
@@ -467,6 +469,7 @@ const paymentSteps = [
     props: {
       errors,
       lessonsData,
+      selectedSubscriptionId,
       promoCode,
       findPromo,
       debouncePromo,
@@ -479,6 +482,7 @@ const paymentSteps = [
     props: {
       errors,
       lessonsData,
+      selectedSubscriptionId,
     },
   },
 ];
@@ -666,6 +670,7 @@ const handlePayment = async () => {
   pendingPayment.value = true;
   const formData = new FormData(paymentFormRef.value);
   formData.append("lang", localeProperties.value.code);
+  formData.append("subscription_type_id", selectedSubscriptionId.value);
   formData.append("level_id", lessonsData.value.level.level_id);
   formData.append("cryptogram", cryptogram.value);
   formData.append("step", currentStep.value);
