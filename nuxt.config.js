@@ -105,6 +105,7 @@ export default defineNuxtConfig({
       turnUSERNAME: process.env.TURN_USERNAME,
       turnPASSWORD: process.env.TURN_PASSWORD,
       telegramBotName: process.env.TELEGRAM_BOT_NAME,
+      metrikaid: '103898375',
 
       sanctum: {
         mode: 'token',
