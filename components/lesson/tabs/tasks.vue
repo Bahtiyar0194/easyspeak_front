@@ -463,10 +463,12 @@ const openDeleteModal = (task) => {
 
 const deleteTaskSubmit = async () => {
   pendingDelete.value = true;
+
+  const form_data = new FormData();
+  form_data.append("operation_type_id", 22);
+
   await $axiosPlugin
-    .delete("tasks/delete_task/" + props.lesson_id + "/" + deleteTaskId.value, {
-      params: { operation_type_id: 22 }, // Передача параметра в URL
-    })
+    .post("tasks/delete_task/" + props.lesson_id + "/" + deleteTaskId.value, form_data)
     .then((response) => {
       deleteModalIsVisible.value = false;
       getLessonTasks();
