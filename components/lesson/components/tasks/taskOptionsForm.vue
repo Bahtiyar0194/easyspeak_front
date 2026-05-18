@@ -135,7 +135,7 @@
         >
           {{
             $t(
-              "pages.tasks.task_options.play_error_sound_with_the_incorrect_answer"
+              "pages.tasks.task_options.play_error_sound_with_the_incorrect_answer",
             )
           }}
         </label>
@@ -345,7 +345,7 @@
           <span>{{
             $t(
               "pages.tasks.answer_the_questions.options.option_" +
-                (optionIndex + 1)
+                (optionIndex + 1),
             )
           }}</span>
         </label>
@@ -368,7 +368,7 @@
         >
           {{
             $t(
-              "pages.tasks.task_options.choose_one_of_the_methods_for_matching_words"
+              "pages.tasks.task_options.choose_one_of_the_methods_for_matching_words",
             )
           }}
         </p>
@@ -409,7 +409,7 @@
         <p class="mb-0 text-inactive">
           {{
             $t(
-              "pages.tasks.task_options.choose_one_of_the_methods_for_matching_words_by_pictures"
+              "pages.tasks.task_options.choose_one_of_the_methods_for_matching_words_by_pictures",
             )
           }}
         </p>
@@ -509,6 +509,29 @@
         <input type="checkbox" checked="true" name="random_order_pictures" />
         <span>{{ $t("random_order_pictures") }}</span>
       </label>
+    </div>
+
+    <div class="col-span-12">
+      <div class="form-group-border select active label-active">
+        <i class="pi pi-replay"></i>
+        <select name="show_on_platform">
+          <option disabled selected value="">
+            {{ $t("choose_your_option") }}
+          </option>
+          <option
+            v-for="item in showOnPlatformOptions"
+            :key="item"
+            :value="item"
+          >
+            {{
+              $t("pages.tasks.task_options.show_on_platform.options." + item)
+            }}
+          </option>
+        </select>
+        <label :class="{ 'label-error': errors.show_on_platform }">
+          {{ $t("pages.tasks.task_options.show_on_platform.title") }}
+        </label>
+      </div>
     </div>
   </div>
 </template>
@@ -709,6 +732,8 @@ const missingWordOptions = [
   "with_first_letter",
   "with_options",
 ];
+
+const showOnPlatformOptions = ["both", "b2b", "b2c"];
 
 const answerTheQuestionsOptions = ["text", "video", "audio"];
 

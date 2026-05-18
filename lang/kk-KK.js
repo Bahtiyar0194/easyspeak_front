@@ -1098,7 +1098,15 @@ export default {
                 choose_one_of_the_methods_for_matching_words_by_pictures: 'Суреттерге сай сөздерді сәйкестендіру әдістерінің біреуін таңдаңыз',
                 match_by_typing: 'Сөзді енгізу арқылы сәйкестендіру',
                 match_by_clicking: 'Сөзге басу арқылы сәйкестендіру',
-                match_by_drag_and_drop: 'Сүйреп апару арқылы сәйкестендіру'
+                match_by_drag_and_drop: 'Сүйреп апару арқылы сәйкестендіру',
+                show_on_platform: {
+                    title: 'Қай платформада көрсету керек?',
+                    options: {
+                        b2b: 'Тек B2B платформада',
+                        b2c: 'Тек на B2C платформада',
+                        both: 'Барлығын ескреру'
+                    }
+                }
             },
             translate: {
                 kk: 'Тапсырманың қазақша тілдегі атауы',

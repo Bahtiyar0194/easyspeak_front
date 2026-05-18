@@ -1096,7 +1096,15 @@ export default {
                 choose_one_of_the_methods_for_matching_words_by_pictures: 'Выберите один из методов для сопоставления слов по изображениям',
                 match_by_typing: 'Сопоставление с помощью ввода слова',
                 match_by_clicking: 'Сопоставление с помощью клика',
-                match_by_drag_and_drop: 'Сопоставление с помощью перетаскивания'
+                match_by_drag_and_drop: 'Сопоставление с помощью перетаскивания',
+                show_on_platform: {
+                    title: 'На какой платформе показывать?',
+                    options: {
+                        b2b: 'Только на B2B платформе',
+                        b2c: 'Только на B2C платформе',
+                        both: 'Показывать в любом случае'
+                    }
+                }
             },
             translate: {
                 kk: 'Название задания на казахском языке',
