@@ -692,6 +692,15 @@ export default {
             title: 'Школа'
         },
 
+        training_types: {
+            title: 'Форма изучения',
+            select: 'Выберите форму изучения',
+            types: {
+                self_study: 'Самостоятельное изучение с помощью ИИ учителя',
+                with_the_teacher: 'Изучение по видеоконференцсвязи с учителем'
+            }
+        },
+
         subscription: {
             plan: 'План подписки',
             your_plan: 'Ваш план подписки',

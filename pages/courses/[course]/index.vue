@@ -50,82 +50,103 @@
                 </p>
               </div>
             </div>
-            <div
-              v-for="(level, index) in selections"
-              :key="index"
-              class="col-span-12"
-            >
-              <div class="form-group-border select active label-active">
-                <i class="pi pi-map-marker"></i>
-                <select
-                  v-model="level.selectedId"
-                  @change="onSelectLocation(index)"
-                  :name="index === selections.length - 1 ? 'location_id' : null"
-                >
-                  <option disabled value="">
-                    {{ $t("form.select_a_point") }}
-                  </option>
-                  <option
-                    v-for="option in level.options"
-                    :key="option.location_id"
-                    :value="option.location_id"
-                  >
-                    {{ option.location_name }}
-                  </option>
-                </select>
-                <label
-                  :class="{
-                    'label-error':
-                      errors.location_id && index === selections.length - 1,
-                  }"
-                >
-                  {{
-                    $t(
-                      index > 0
-                        ? "form.select_an_internal_point"
-                        : "form.select_a_point"
-                    )
-                  }}
-                </label>
-              </div>
-            </div>
 
-            <div class="col-span-12" v-if="schools.length > 0">
-              <div class="form-group-border select active label-active">
-                <i class="pi pi-building-columns"></i>
-                <select name="school_id">
-                  <option disabled selected value="">
-                    {{ $t("form.select_a_school") }}
-                  </option>
-                  <option
-                    v-for="school in schools"
-                    :key="school.school_id"
-                    :value="school.school_id"
-                    v-html="
-                      `${school.school_name} (${school.full_school_name})`
-                    "
-                  />
-                </select>
-                <label
-                  :class="{
-                    'label-error': errors.school_id,
-                  }"
-                >
-                  {{ $t("form.select_a_school") }}
-                </label>
-              </div>
-            </div>
-
-            <div
-              v-if="
-                errors.school_id && schools.length === 0 && selectedLocationId
-              "
-              class="col-span-12"
-            >
-              <p class="text-danger mb-0">
-                {{ $t("form.schools_not_found") }}
+            <div class="col-span-12">
+              <p class="mb-1 text-inactive">
+                {{ $t("pages.training_types.select") }}:
               </p>
+              <div class="flex flex-col gap-y-2">
+                <label
+                  v-for="type in trainingTypes"
+                  :key="type"
+                  class="custom-radio"
+                >
+                  <input type="radio" :value="type" v-model="trainingType" />
+                  <span>{{ $t("pages.training_types.types." + type) }}</span>
+                </label>
+              </div>
             </div>
+
+            <template v-if="trainingType === 'with_the_teacher'">
+              <div
+                v-for="(level, index) in selections"
+                :key="index"
+                class="col-span-12"
+              >
+                <div class="form-group-border select active label-active">
+                  <i class="pi pi-map-marker"></i>
+                  <select
+                    v-model="level.selectedId"
+                    @change="onSelectLocation(index)"
+                    :name="
+                      index === selections.length - 1 ? 'location_id' : null
+                    "
+                  >
+                    <option disabled value="">
+                      {{ $t("form.select_a_point") }}
+                    </option>
+                    <option
+                      v-for="option in level.options"
+                      :key="option.location_id"
+                      :value="option.location_id"
+                    >
+                      {{ option.location_name }}
+                    </option>
+                  </select>
+                  <label
+                    :class="{
+                      'label-error':
+                        errors.location_id && index === selections.length - 1,
+                    }"
+                  >
+                    {{
+                      $t(
+                        index > 0
+                          ? "form.select_an_internal_point"
+                          : "form.select_a_point",
+                      )
+                    }}
+                  </label>
+                </div>
+              </div>
+
+              <div class="col-span-12" v-if="schools.length > 0">
+                <div class="form-group-border select active label-active">
+                  <i class="pi pi-building-columns"></i>
+                  <select name="school_id">
+                    <option disabled selected value="">
+                      {{ $t("form.select_a_school") }}
+                    </option>
+                    <option
+                      v-for="school in schools"
+                      :key="school.school_id"
+                      :value="school.school_id"
+                      v-html="
+                        `${school.school_name} (${school.full_school_name})`
+                      "
+                    />
+                  </select>
+                  <label
+                    :class="{
+                      'label-error': errors.school_id,
+                    }"
+                  >
+                    {{ $t("form.select_a_school") }}
+                  </label>
+                </div>
+              </div>
+
+              <div
+                v-if="
+                  errors.school_id && schools.length === 0 && selectedLocationId
+                "
+                class="col-span-12"
+              >
+                <p class="text-danger mb-0">
+                  {{ $t("form.schools_not_found") }}
+                </p>
+              </div>
+            </template>
 
             <button type="submit" class="btn btn-primary">
               <i class="pi pi-arrow-right"></i>
@@ -150,6 +171,9 @@ const config = useRuntimeConfig();
 const router = useRouter();
 const route = useRoute();
 const course_slug = route.params.course;
+
+const trainingTypes = ref(["self_study", "with_the_teacher"]);
+const trainingType = ref(trainingTypes.value[0]);
 
 const { $axiosPlugin } = useNuxtApp();
 const pending = ref(true);
@@ -179,7 +203,7 @@ const getLevels = async () => {
     .get("courses/get_levels_index/" + course_slug)
     .then((response) => {
       const courseCrumbItem = document.querySelector(
-        'span[data-crumb="[course]"]'
+        'span[data-crumb="[course]"]',
       );
 
       // Проверить, найден ли элемент
@@ -266,11 +290,11 @@ const selectLevel = (levelIndex) => {
         "/dashboard/courses/" +
           currentLevel.value.course_name_slug +
           "/" +
-          currentLevel.value.level_slug
+          currentLevel.value.level_slug,
       );
     } else {
       router.push(
-        "/auth/register?course=" + currentLevel.value.course_name_slug
+        "/auth/register?course=" + currentLevel.value.course_name_slug,
       );
     }
   }
@@ -280,7 +304,7 @@ const onSelectLocation = (levelIndex) => {
   selectedLocationId.value = null;
   const selectedLevel = selections.value[levelIndex];
   const selectedOption = selectedLevel.options.find(
-    (opt) => opt.location_id === selectedLevel.selectedId
+    (opt) => opt.location_id === selectedLevel.selectedId,
   );
 
   // Удалить все уровни ниже текущего
@@ -303,38 +327,48 @@ const sendRequest = async () => {
   const formData = new FormData(formRef.value);
   formData.append("lang", localeProperties.value.code);
 
-  await $axiosPlugin
-    .post("/courses/send_request", formData)
-    .then((res) => {
-      const url =
-        window.location.protocol +
-        "//" +
-        res.data +
-        "." +
-        window.location.host +
-        "/auth/register?course=" +
-        currentLevel.value.course_name_slug;
-      window.location.href = url;
-    })
-    .catch((err) => {
-      if (err.response) {
-        if (err.response.status == 422) {
-          errors.value = err.response.data;
-          pendingSend.value = false;
+  if (trainingType.value === "with_the_teacher") {
+    await $axiosPlugin
+      .post("/courses/send_request", formData)
+      .then((res) => {
+        const url =
+          window.location.protocol +
+          "//" +
+          res.data +
+          "." +
+          window.location.host +
+          "/auth/register?course=" +
+          currentLevel.value.course_name_slug;
+        window.location.href = url;
+      })
+      .catch((err) => {
+        if (err.response) {
+          if (err.response.status == 422) {
+            errors.value = err.response.data;
+            pendingSend.value = false;
+          } else {
+            router.push({
+              path: "/error",
+              query: {
+                status: err.response.status,
+                message: err.response.data.message,
+                url: err.request.responseURL,
+              },
+            });
+          }
         } else {
-          router.push({
-            path: "/error",
-            query: {
-              status: err.response.status,
-              message: err.response.data.message,
-              url: err.request.responseURL,
-            },
-          });
+          router.push("/error");
         }
-      } else {
-        router.push("/error");
-      }
-    });
+      });
+  } else {
+    const url =
+      window.location.protocol +
+      "//ai." +
+      window.location.host +
+      "/auth/register?course=" +
+      currentLevel.value.course_name_slug;
+    window.location.href = url;
+  }
 };
 
 onMounted(() => {
@@ -354,6 +388,6 @@ watch(
       ];
     }
   },
-  { immediate: true } // сразу при монтировании если данные уже есть
+  { immediate: true }, // сразу при монтировании если данные уже есть
 );
 </script>

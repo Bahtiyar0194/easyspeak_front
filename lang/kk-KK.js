@@ -694,6 +694,14 @@ export default {
             title: 'Мектеп'
         },
 
+        training_types: {
+            title: 'Оқу түрі',
+            select: 'Оқу түрін таңдаңыз',
+            types: {
+                self_study: 'Өз бетінше ЖИ мұғалімнің көмегімен үйрену',
+                with_the_teacher: 'Мұғаліммен бейнеконференцбайланыс арқылы үйрену'
+            }
+        },
 
         subscription: {
             plan: 'Жазылу жоспары',
