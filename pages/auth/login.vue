@@ -114,7 +114,7 @@ const { login } = useSanctumAuth();
 const route = useRoute();
 const router = useRouter();
 
-const gtm = window.dataLayer;
+const gtm = ref(null);
 
 const pending = ref(true);
 const errors = ref([]);
@@ -136,6 +136,7 @@ definePageMeta({
 
 onMounted(() => {
   pending.value = false;
+  gtm.value = window.dataLayer;
 });
 
 async function signIn() {

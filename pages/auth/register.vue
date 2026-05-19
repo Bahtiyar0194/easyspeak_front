@@ -128,7 +128,7 @@ const locations = ref([]);
 const schoolStore = useSchoolStore();
 const policyModalIsVisible = ref(false);
 
-const gtm = window.dataLayer;
+const gtm = ref(null);
 
 const formRef = ref(null);
 
@@ -245,6 +245,7 @@ const getCities = async () => {
 
 onMounted(() => {
   pending.value = false;
+  gtm.value = window.dataLayer;
   getCities();
 });
 </script>
