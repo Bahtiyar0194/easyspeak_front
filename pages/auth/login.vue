@@ -114,6 +114,8 @@ const { login } = useSanctumAuth();
 const route = useRoute();
 const router = useRouter();
 
+const gtm = window.dataLayer;
+
 const pending = ref(true);
 const errors = ref([]);
 const showPassword = ref(false);
@@ -163,6 +165,12 @@ async function signIn() {
         $axiosPlugin.defaults.headers.common["Authorization"] =
           "Bearer " + sanctumToken.value;
       }
+
+      gtm?.push({
+        event: "sign_in",
+        method: "email",
+        user_type: "student",
+      });
 
       // ✅ Перенаправление обратно на сохранённый путь или на /dashboard
       const redirectPath =

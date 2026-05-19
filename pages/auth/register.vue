@@ -128,6 +128,8 @@ const locations = ref([]);
 const schoolStore = useSchoolStore();
 const policyModalIsVisible = ref(false);
 
+const gtm = window.dataLayer;
+
 const formRef = ref(null);
 
 const registerSteps = [
@@ -188,10 +190,15 @@ const register = async () => {
         currentStep.value = res.data.step + 1;
         pending.value = false;
       } else {
+        gtm?.push({
+          event: "sign_up",
+          user_type: schoolStore.schoolData ? "student" : "school_owner",
+        });
+
         if (schoolStore.schoolData) {
           if (course && res.data.level.level_slug) {
             router.push(
-              "/dashboard/courses/" + course + "/" + res.data.level.level_slug
+              "/dashboard/courses/" + course + "/" + res.data.level.level_slug,
             );
           } else {
             router.push("/dashboard");
@@ -202,7 +209,7 @@ const register = async () => {
               res.data.school_domain +
               "." +
               window.location.host +
-              "/auth/login"
+              "/auth/login",
           );
         }
       }

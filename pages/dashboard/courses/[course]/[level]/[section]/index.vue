@@ -686,14 +686,12 @@ const handlePayment = async () => {
         pendingPayment.value = false;
       } else {
         if (response.data.Success === true) {
-          //   getSchool().then(() => {
           router.push({
             path: "/dashboard/payment-result",
             query: {
               success: true,
             },
           });
-          //   });
         } else {
           if (response.data.Model.AcsUrl) {
             router.push({

@@ -11,7 +11,7 @@
     >
       <button @click="selectLevel(levelIndex)">
         <div class="card relative overflow-hidden group">
-          <img :src="`/images/courses/${level.course_name_slug}.png`" />
+          <img class="w-full" :src="`/images/courses/${level.course_name_slug}.png`" />
 
           <div
             class="absolute left-0 bottom-0 w-full h-12 group-hover:h-full transition-all duration-200 bg-black bg-opacity-60 flex justify-center items-center group-hover:items-center p-4"

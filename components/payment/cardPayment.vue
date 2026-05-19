@@ -96,11 +96,11 @@
                     <div class="col-span-12">
                       <div class="flex gap-x-2 justify-end">
                         <img
-                          class="w-10"
+                          class="h-6"
                           src="~/public/images/payment/visa_alt.svg"
                         />
                         <img
-                          class="w-10"
+                          class="h-6"
                           src="~/public/images/payment/mastercard_alt.svg"
                         />
                       </div>
@@ -109,7 +109,7 @@
                 </div>
               </div>
               <div class="col-span-12 md:col-span-4">
-                <div class="py-8">
+                <div class="pt-8">
                   <div
                     class="h-10 border-inactive !border-x-0 bg-active w-full mb-4 hidden md:block"
                   ></div>
@@ -149,12 +149,25 @@
                       </button>
                     </div>
                   </div>
+
+                  <div class="flex gap-x-2 justify-end py-4 pr-4">
+                    <img class="h-4" src="~/public/images/payment/3ds.webp" />
+                    <img class="h-4" src="~/public/images/payment/ssl.png" />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="col-span-12">
+      <p class="mb-0 text-inactive text-xs">
+        Интернет-платежи защищены сертификатом SSL и протоколом 3D Secure и
+        другими средствами защиты информации. Мы никому не передаем платежные
+        данные, в том числе данные карты.
+      </p>
     </div>
   </div>
 </template>

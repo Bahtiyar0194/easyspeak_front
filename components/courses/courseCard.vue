@@ -1,6 +1,6 @@
 <template>
   <div class="card relative overflow-hidden group">
-    <img :src="`/images/courses/${props.course.course_name_slug}.png`" />
+    <img class="w-full" :src="`/images/courses/${props.course.course_name_slug}.png`" />
 
     <div
       class="absolute left-0 bottom-0 w-full h-12 group-hover:h-full transition-all duration-200 flex justify-center items-center group-hover:items-center px-4 backdrop-blur-sm bg-black bg-opacity-50"
