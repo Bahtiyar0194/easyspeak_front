@@ -402,13 +402,13 @@
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 1px;
+  height: 1px;
   background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   border-radius: 9999px;
   background: rgb(59 130 246 / 0.55);
   background-clip: padding-box;
@@ -427,23 +427,16 @@
 }
 
 ::-webkit-scrollbar:horizontal{
-  height: 8px;
+  height: 2px;
 }
 
 ::-webkit-scrollbar-thumb:horizontal{
-  height: 8px;
+  height: 2px;
 }
 
 .scroll-fade {
   overflow-y: auto;
-}
-
-.scroll-fade::-webkit-scrollbar {
-  width: 0px;
-}
-
-.scroll-fade::-webkit-scrollbar-thumb {
-  width: 0px;
+  scrollbar-width: none;
 }
 
 /* обе стороны */
@@ -788,7 +781,6 @@ select:focus-visible,
 textarea:focus-visible,
 [role="button"]:focus-visible {
   outline: none;
-  box-shadow: var(--shadow-focus);
 }
 
 select{

@@ -1,12 +1,12 @@
 <template>
   <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
   <client-only v-if="dashboard">
-    <div class="col-span-12">
+    <!-- <div class="col-span-12">
       <h2 class="mb-0">
         🚀 {{ authUser?.first_name }},
         <span class="lowercase">{{ $t("welcome") }}</span>
       </h2>
-    </div>
+    </div> -->
 
     <roleProvider :roles="[1, 2, 3]">
       <div
@@ -38,6 +38,10 @@
         </div>
       </div>
     </roleProvider>
+
+    <div class="col-span-12">
+      <aiExplainer :explainMode="'speaking'" />
+    </div>
 
     <div
       v-if="
@@ -375,6 +379,7 @@
 
 <script setup>
 import { useRouter } from "nuxt/app";
+import { sanitize } from "../../utils/sanitize";
 import steps from "../../components/ui/steps.vue";
 import firstStep from "../../components/payment/lesson/firstStep.vue";
 import secondStep from "../../components/payment/lesson/secondStep.vue";
@@ -387,6 +392,8 @@ import roleProvider from "../../components/ui/roleProvider.vue";
 import loader from "../../components/ui/loader.vue";
 import alert from "../../components/ui/alert.vue";
 import scrollFadeContainer from "../../components/ui/scrollFadeContainer.vue";
+import aiExplainer from "../../components/lesson/components/ai/aiExplainer.vue";
+
 const config = useRuntimeConfig();
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
