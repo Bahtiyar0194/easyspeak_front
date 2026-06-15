@@ -50,11 +50,21 @@
 
   <section class="bg-active pt-12 pb-20 px-4 lg:px-20">
     <h1 class="text-center mb-8">{{ $t("pages.home.video.title") }}</h1>
-    <videoPlayer
-      :src="config.public.apiBase + '/media/get/QSY7hqAANPiNyKfbvYsdrXCXJpgK70jKi128EJTt.m3u8'"
-      :preview="false"
-      :poster="config.public.apiBase + '/media/get/suUf67reTVXNDXXjmX26bqPpLrcc6Vwv7Kw0RXtf.jpg'"
-    />
+    <div class="custom-grid cols-10">
+      <div class="col-span-12 lg:col-span-6 lg:col-start-3">
+        <videoPlayer
+          :src="
+            config.public.apiBase +
+            '/media/get/QSY7hqAANPiNyKfbvYsdrXCXJpgK70jKi128EJTt.m3u8'
+          "
+          :preview="false"
+          :poster="
+            config.public.apiBase +
+            '/media/get/suUf67reTVXNDXXjmX26bqPpLrcc6Vwv7Kw0RXtf.jpg'
+          "
+        />
+      </div>
+    </div>
   </section>
 
   <section class="bg-corp py-20 px-4 lg:px-20">
@@ -81,7 +91,7 @@
         </div>
       </div>
       <div class="col-span-12 md:col-span-6">
-        <div class="card px-4 lg:px-8 py-8 !rounded-3xl">
+        <div class="card px-4 lg:px-8 py-8 !rounded-3xl h-full">
           <h2 class="mb-8 text-center">
             {{ $t("pages.home.section_2.card_2.title") }}
           </h2>
