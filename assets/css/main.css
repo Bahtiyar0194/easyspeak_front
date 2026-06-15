@@ -2176,7 +2176,7 @@ input:disabled + .slider {
 }
 
 .tab-header-item{
-  @apply px-3 py-2 border-inactive bg-active rounded-xl hover:cursor-pointer text-inactive flex items-center relative;
+  @apply px-3 py-2 border-inactive bg-active rounded-xl hover:cursor-pointer text-inactive flex items-center relative font-medium;
   box-shadow: var(--shadow-soft);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
 }

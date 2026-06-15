@@ -4,12 +4,14 @@
       <div class="col-span-12">
         <div class="btn-wrap">
           <button
-            class="btn btn-outline-primary"
+            class="btn btn-primary"
             @click="addModalIsVisible = true"
           >
             <i class="pi pi-plus"></i>
             {{ $t("pages.conference.create") }}
           </button>
+
+
         </div>
       </div>
     </roleProvider>

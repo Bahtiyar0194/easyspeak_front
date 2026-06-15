@@ -167,7 +167,7 @@ async function signIn() {
           "Bearer " + sanctumToken.value;
       }
 
-      gtm?.push({
+      gtm.value?.push({
         event: "sign_in",
         method: "email",
         user_type: "student",
@@ -181,6 +181,8 @@ async function signIn() {
       router.push(redirectPath);
     });
   } catch (err) {
+
+  console.log(err)
     if (err.response.status) {
       errors.value = err.response._data;
     }

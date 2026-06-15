@@ -24,7 +24,7 @@
             </p>
           </div>
 
-          <div v-if="chat.length" class="col-span-12">
+          <div v-if="chat.length" class="col-span-12 select-none">
             <div ref="chatContainer" class="flex flex-col gap-y-4">
               <template v-for="message in chat" :key="message.uuid">
                 <div

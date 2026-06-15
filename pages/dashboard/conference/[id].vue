@@ -282,7 +282,7 @@
                           v-if="
                             busyLearners.length > 0 &&
                             busyLearners.some(
-                              (l) => l.userId === stream.user_id
+                              (l) => l.userId === stream.user_id,
                             )
                           "
                           class="text-xs text-warning"
@@ -529,7 +529,14 @@
               </div>
             </div>
             <div class="col-span-12">
-              <materialViewer :material="currentMaterial" :showChat="currentMaterial && currentMaterial.block_material_type_slug ? true : false" />
+              <materialViewer
+                :material="currentMaterial"
+                :showChat="
+                  currentMaterial && currentMaterial.block_material_type_slug
+                    ? true
+                    : false
+                "
+              />
             </div>
           </div>
         </template>
@@ -647,8 +654,8 @@
                         conference.mentor_id === authUser.user_id
                           ? openLearnersTasksModal(taskItem)
                           : taskItem.task_result.answers
-                          ? openTaskResult(taskItem)
-                          : taskItem.launched && openTask(taskItem)
+                            ? openTaskResult(taskItem)
+                            : taskItem.launched && openTask(taskItem)
                       "
                     >
                       <i class="text-4xl" :class="taskItem.icon"></i>
@@ -676,13 +683,13 @@
                               ? conference.mentor_id === authUser.user_id
                                 ? $t("pages.tasks.launched")
                                 : taskItem.task_result.completed === false
-                                ? $t("pages.tasks.is_available")
-                                : $t("pages.tasks.is_completed")
+                                  ? $t("pages.tasks.is_available")
+                                  : $t("pages.tasks.is_completed")
                               : conference.mentor_id === authUser.user_id
-                              ? $t("pages.tasks.not_launched")
-                              : taskItem.task_result.completed === false
-                              ? $t("pages.tasks.is_unavailable")
-                              : $t("pages.tasks.is_completed")
+                                ? $t("pages.tasks.not_launched")
+                                : taskItem.task_result.completed === false
+                                  ? $t("pages.tasks.is_unavailable")
+                                  : $t("pages.tasks.is_completed")
                           }}</span
                         >
                       </div>
@@ -786,7 +793,7 @@
                     "
                     @click="
                       learner.task_result.completed === true &&
-                        openLearnerTaskResultModal(learner)
+                      openLearnerTaskResultModal(learner)
                     "
                     :title="
                       learner.task_result.completed === true
@@ -825,24 +832,24 @@
                             learner.task_result.completed === true
                               ? 'text-success'
                               : busyLearners.some(
-                                  (t) =>
-                                    t.taskId === task.task_id &&
-                                    t.userId === learner.user_id
-                                )
-                              ? 'text-warning'
-                              : 'text-danger'
+                                    (t) =>
+                                      t.taskId === task.task_id &&
+                                      t.userId === learner.user_id,
+                                  )
+                                ? 'text-warning'
+                                : 'text-danger'
                           "
                           class="text-xs"
                           >{{
                             learner.task_result.completed === true
                               ? $t("pages.tasks.is_completed")
                               : busyLearners.some(
-                                  (t) =>
-                                    t.taskId === task.task_id &&
-                                    t.userId === learner.user_id
-                                )
-                              ? $t("pages.tasks.in_process_this")
-                              : $t("pages.tasks.not_been_completed_yet")
+                                    (t) =>
+                                      t.taskId === task.task_id &&
+                                      t.userId === learner.user_id,
+                                  )
+                                ? $t("pages.tasks.in_process_this")
+                                : $t("pages.tasks.not_been_completed_yet")
                           }}</span
                         >
                       </div>
@@ -1186,10 +1193,11 @@ const openTask = (currentTask) => {
   task.value = currentTask;
   taskModalIsVisible.value = true;
 
-  currentTaskModal.value = defineAsyncComponent(() =>
-    import(
-      `../../../components/lesson/components/tasks/actions/execution/${task.value.task_type_component}.vue`
-    )
+  currentTaskModal.value = defineAsyncComponent(
+    () =>
+      import(
+        `../../../components/lesson/components/tasks/actions/execution/${task.value.task_type_component}.vue`
+      ),
   );
 
   taskModalProps.value = {
@@ -1301,7 +1309,10 @@ const showTaskForLearners = async () => {
   pendingLearnersTasksResult.value = true;
   await $axiosPlugin
     .post(
-      "conferences/run_task/" + conference.value.uuid + "/" + task.value.task_id
+      "conferences/run_task/" +
+        conference.value.uuid +
+        "/" +
+        task.value.task_id,
     )
     .then((response) => {
       getConferenceTasks();
@@ -1337,7 +1348,7 @@ const getConference = async () => {
         pendingConference.value = response.data;
       } else if (response.data.type === "ended") {
         endedConference.value = response.data;
-      } 
+      }
       // else if (
       //   conference.value.is_only_learner === true &&
       //   conference.value.is_bought_status &&
@@ -1347,7 +1358,7 @@ const getConference = async () => {
       //     message: t("pages.conference.messages.no_paid"),
       //     pending: false,
       //   };
-      // } 
+      // }
       else {
         startStream();
         getConferenceTasks();
@@ -1398,7 +1409,7 @@ const getConferenceTasks = async () => {
 
   try {
     const response = await $axiosPlugin.get(
-      "conferences/get_conference_tasks/" + conference.value.uuid
+      "conferences/get_conference_tasks/" + conference.value.uuid,
     );
     tasks.value = response.data;
 
@@ -1488,7 +1499,7 @@ const startStream = async () => {
         authUser.value.user_id,
         authUserInfo,
         isStream.value,
-        isMuted.value
+        isMuted.value,
       );
 
       myStream.value = streams.value.find((s) => s.peer_id === id);
@@ -1510,7 +1521,7 @@ const startStream = async () => {
 
     myPeer.on("call", (call) => {
       call.answer(
-        isScreenSharing.value ? screenStream.value : localStream.value
+        isScreenSharing.value ? screenStream.value : localStream.value,
       );
 
       call.on("stream", (remoteStream) => {
@@ -1521,7 +1532,7 @@ const startStream = async () => {
           call.metadata.userId,
           call.metadata.userInfo,
           call.metadata.isStream,
-          call.metadata.isMuted
+          call.metadata.isMuted,
         );
       });
 
@@ -1598,7 +1609,7 @@ const startStream = async () => {
     $socketPlugin.on("open_material", (data) => {
       if (authUser.value.user_id !== conference.value.mentor_id) {
         const selectedMaterial = conference.value.materials.find(
-          (m) => m.lesson_material_id === data.materialId
+          (m) => m.lesson_material_id === data.materialId,
         );
 
         if (selectedMaterial && taskInProgress.value === false) {
@@ -1613,7 +1624,7 @@ const startStream = async () => {
           await getConferenceTasks(); // теперь это точно будет дожидаться полной загрузки
 
           const selectedTask = tasks.value.find(
-            (t) => t.task_id === data.taskId
+            (t) => t.task_id === data.taskId,
           );
 
           if (selectedTask && !selectedTask?.task_result?.answers) {
@@ -1625,7 +1636,7 @@ const startStream = async () => {
                 {
                   toastClassName: ["custom-toast", "info"],
                   timeout: 10000,
-                }
+                },
               );
             } else {
               openTask(selectedTask);
@@ -1643,7 +1654,7 @@ const startStream = async () => {
     $socketPlugin.on("close_task", (data) => {
       if (authUser.value.user_id === conference.value.mentor_id) {
         busyLearners.value = busyLearners.value.filter(
-          (l) => l.userId !== data.userId
+          (l) => l.userId !== data.userId,
         );
       }
     });
@@ -1659,7 +1670,7 @@ const startStream = async () => {
         getConferenceTasks();
 
         busyLearners.value = busyLearners.value.filter(
-          (l) => l.userId !== data.userId
+          (l) => l.userId !== data.userId,
         );
 
         toast(
@@ -1670,7 +1681,7 @@ const startStream = async () => {
           {
             toastClassName: ["custom-toast", "success"],
             timeout: 10000,
-          }
+          },
         );
       }
     });
@@ -1723,7 +1734,7 @@ const joinToRoom = async () => {
                     isStream: isStream.value,
                     isMuted: isMuted.value,
                   },
-                }
+                },
               );
 
               outgoingCall.on("stream", (remoteStream) => {
@@ -1734,7 +1745,7 @@ const joinToRoom = async () => {
                   user.userId,
                   user.userInfo,
                   user.isStream,
-                  user.isMuted
+                  user.isMuted,
                 );
               });
 
@@ -1768,7 +1779,7 @@ const joinToRoom = async () => {
           });
         }
       }
-    }
+    },
   );
 };
 
@@ -1779,7 +1790,7 @@ const addStream = (
   user_id,
   userInfo,
   isStream,
-  isMuted
+  isMuted,
 ) => {
   if (!streams.value.some((stream) => stream.peer_id === peer_id)) {
     streams.value.push({
@@ -1848,7 +1859,7 @@ const removeStream = (peerId) => {
 
     if (authUser.value.user_id === conference.value.mentor_id) {
       busyLearners.value = busyLearners.value.filter(
-        (l) => l.userId !== streamToRemove.user_id
+        (l) => l.userId !== streamToRemove.user_id,
       );
     }
 
@@ -1929,7 +1940,7 @@ const toggleScreenSharing = async () => {
 
       replaceTrackInConnections(
         screenStream.value.getVideoTracks()[0],
-        "video"
+        "video",
       );
 
       screenStream.value.getVideoTracks()[0].onended = stopScreenSharing;
@@ -2030,7 +2041,7 @@ const trackMicrophone = async (stream) => {
   const microphone = audioContext.createMediaStreamSource(stream);
   const volumeProcessor = new AudioWorkletNode(
     audioContext,
-    "volume-processor"
+    "volume-processor",
   );
 
   microphone.connect(volumeProcessor);

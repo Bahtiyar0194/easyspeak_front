@@ -190,7 +190,7 @@ const register = async () => {
         currentStep.value = res.data.step + 1;
         pending.value = false;
       } else {
-        gtm?.push({
+        gtm.value?.push({
           event: "sign_up",
           user_type: schoolStore.schoolData ? "student" : "school_owner",
         });

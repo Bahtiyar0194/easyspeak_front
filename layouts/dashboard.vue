@@ -149,7 +149,7 @@ watch(
         icon: "pi pi-video",
         link: "/dashboard/conference",
         is_show: schoolStore.isAiSchoolDomain === false,
-        roles: [1, 2, 3, 4, 5],
+        roles: [1, 2, 3, 4],
       },
       // {
       //     title: 'pages.operations-requests.title',

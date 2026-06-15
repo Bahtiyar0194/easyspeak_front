@@ -118,6 +118,7 @@ onMounted(() => {
       controls
       playsinline
       controlsList="nodownload"
+      :data-poster="props.poster"
     ></video>
   </div>
 
@@ -149,6 +150,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  poster: {
+    type: String,
+    default: ""
+  }
 });
 
 const videoEl = ref(null);

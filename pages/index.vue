@@ -48,6 +48,15 @@
     </div>
   </section>
 
+  <section class="bg-active pt-12 pb-20 px-4 lg:px-20">
+    <h1 class="text-center mb-8">{{ $t("pages.home.video.title") }}</h1>
+    <videoPlayer
+      :src="config.public.apiBase + '/media/get/QSY7hqAANPiNyKfbvYsdrXCXJpgK70jKi128EJTt.m3u8'"
+      :preview="false"
+      :poster="config.public.apiBase + '/media/get/suUf67reTVXNDXXjmX26bqPpLrcc6Vwv7Kw0RXtf.jpg'"
+    />
+  </section>
+
   <section class="bg-corp py-20 px-4 lg:px-20">
     <div class="custom-grid">
       <div class="col-span-12 md:col-span-6">
@@ -261,8 +270,10 @@ import keenSliderThumbs from "../components/ui/keenSliderThumbs.vue";
 import Typed from "typed.js";
 import { onMounted, onBeforeUnmount, ref } from "vue";
 import modal from "../components/ui/modal.vue";
+import videoPlayer from "../components/ui/videoPlayer.vue";
 const { t, localeProperties } = useI18n();
 const { $axiosPlugin, $contacts } = useNuxtApp();
+const config = useRuntimeConfig();
 const demoModalIsVisible = ref(false);
 const pendingSend = ref(false);
 const requestIsSended = ref(false);
