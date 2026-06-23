@@ -155,6 +155,7 @@ export default {
     documents: 'Документы',
     check_your_data: 'Проверьте ваши данные',
     contacts: 'Контакты',
+    requisites: 'Реквизиты',
     description: 'Описание',
 
     total: 'Итого',
@@ -418,6 +419,7 @@ export default {
         select_an_internal_point: 'Выберите внутренний населенный пункт',
 
         card: {
+            bank: 'Банк',
             input_bank_data: 'Введите данные банковской карты',
             card_num: 'Номер карты',
             expiration_at: 'Срок действия карты',
@@ -871,6 +873,7 @@ export default {
             chat: 'Сообщения',
             search_conference: 'Поиск конференции',
             join: 'Войти в конференцию',
+            start_time: 'Дата и время начала конференции',
             until_the_start_of_the_conference: 'Осталось до начала конференции:',
             no_current_conferences: 'На данный момент нет текущих конференций.',
             not_appointed: 'Похоже, вы ещё не назначены учителем какой-либо группы. Пожалуйста, свяжитесь с администратором школы, чтобы решить этот вопрос. Если вы являетесь администратором, вам необходимо создать группу.',
@@ -896,6 +899,14 @@ export default {
                 confirm: 'Вы уверены, что хотите покинуть конференцию?',
                 yes: 'Да, покинуть',
                 no: 'Нет, остаться'
+            },
+            topic: {
+                title: 'Тема конференции',
+                description: 'Описание конференции'
+            },
+            poster: {
+                title: 'Постер для конференции',
+                required: 'Выберите постер для конференции'
             }
         },
 
@@ -930,6 +941,7 @@ export default {
             choose_a_course: 'Выберите курс',
             course_level: 'Категория курса',
             choose_a_course_level: 'Выберите категорию курса',
+            choose_a_course_levels: 'Выберите уровень(-ни) курса',
             level_overall_progress: 'Общий прогресс по уровню',
             section_overall_progress: 'Общий прогресс по главе',
             course_section: 'Глава',

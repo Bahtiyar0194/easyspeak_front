@@ -48,7 +48,7 @@
     </div>
   </section>
 
-  <section class="bg-active pt-12 pb-20 px-4 lg:px-20">
+  <section class="bg-active pt-12 pb-20 px-4 lg:px-12">
     <h1 class="text-center mb-8">{{ $t("pages.home.video.title") }}</h1>
     <div class="custom-grid cols-10">
       <div class="col-span-12 lg:col-span-6 lg:col-start-3">
@@ -67,7 +67,7 @@
     </div>
   </section>
 
-  <section class="bg-corp py-20 px-4 lg:px-20">
+  <section class="bg-corp py-20 px-4 lg:px-12">
     <div class="custom-grid">
       <div class="col-span-12 md:col-span-6">
         <div class="card px-4 lg:px-8 py-8 !rounded-3xl">
@@ -113,7 +113,7 @@
     </div>
   </section>
 
-  <!-- <section class="bg-active py-20 px-4 lg:px-20">
+  <!-- <section class="bg-active py-20 px-4 lg:px-12">
     <h2 class="text-3xl  mb-12 text-center">
       Как работает платформа?
     </h2>
@@ -149,7 +149,7 @@
   </section> -->
 
   <!-- Кому подойдёт -->
-  <section class="py-16 px-4 lg:px-20 bg-inactive">
+  <section class="py-16 px-4 lg:px-12 bg-inactive">
     <h2 class="text-center mb-12">
       {{ $t("pages.home.section_3.title") }}
     </h2>

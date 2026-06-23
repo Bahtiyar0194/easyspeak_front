@@ -1,5 +1,9 @@
 <template>
-  <loader v-if="pendingLesson" :className="'full-overlay'" :showPendingText="true" />
+  <loader
+    v-if="pendingLesson"
+    :className="'full-overlay'"
+    :showPendingText="true"
+  />
   <tabs
     v-if="courseIsAvailable && lessonIsAvailable"
     :tabs="tabs_data"
@@ -73,8 +77,8 @@ const tabs_data = computed(() => [
   // },
   {
     name: "materials",
-    title: t(schoolStore.isAiSchoolDomain ? "ai_mentor" : "pages.lessons.lesson_materials"),
-    icon: schoolStore.isAiSchoolDomain ? "bi bi-stars" : "pi pi-paperclip",
+    title: t("ai_mentor"),
+    icon: "bi bi-stars",
     component: materials,
     props: { lessonData: lessonData.value, materialTypes: materialTypes.value },
     className: "primary",
@@ -96,7 +100,6 @@ const tabs_data = computed(() => [
 ]);
 
 const getMaterialTypes = async () => {
-
   await $axiosPlugin
     .get("courses/get_material_types")
     .then((response) => {
@@ -119,7 +122,6 @@ const getMaterialTypes = async () => {
 };
 
 const getLesson = async () => {
-
   await $axiosPlugin
     .get(
       "courses/" +

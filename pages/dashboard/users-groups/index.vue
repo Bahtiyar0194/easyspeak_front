@@ -1,4 +1,9 @@
 <template>
+  <loader
+    v-if="pendingPage"
+    :className="'full-overlay'"
+    :showPendingText="true"
+  />
   <client-only>
     <tabs :tabs="tabs_data" />
   </client-only>
@@ -7,6 +12,7 @@
 import tabs from "../../../components/ui/tabs.vue";
 import users from "../../../components/users-groups/tabs/users.vue";
 import groups from "../../../components/users-groups/tabs/groups.vue";
+import loader from "../../../components/ui/loader.vue";
 const { t } = useI18n();
 
 useHead({
@@ -18,6 +24,8 @@ definePageMeta({
   layout: "dashboard",
   middleware: ["sanctum:auth"],
 });
+
+const pendingPage = ref(true);
 
 const tabs_data = computed(() => [
   {
@@ -33,4 +41,8 @@ const tabs_data = computed(() => [
     component: groups,
   },
 ]);
+
+onMounted(() => {
+  pendingPage.value = false;
+});
 </script>

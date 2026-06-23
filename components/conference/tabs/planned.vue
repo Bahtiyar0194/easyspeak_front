@@ -1,6 +1,6 @@
 <template>
   <div class="custom-grid">
-    <roleProvider :roles="[1, 2, 3, 4]">
+    <roleProvider :roles="[1, 2, 3, 4, 6]">
       <div class="col-span-12">
         <div class="btn-wrap">
           <button class="btn btn-primary" @click="addModalIsVisible = true">
@@ -51,7 +51,12 @@
     </template>
     <template v-slot:body_content>
       <form class="mt-2" @submit.prevent="addConferenceSubmit" ref="addFormRef">
-        <!-- <conferenceStructureForm ref="childRef" :attributes="attributes" /> -->
+        <conferenceStructureForm
+          ref="childRef"
+          :attributes="attributes"
+          :mode="mode"
+          :errors="errors"
+        />
       </form>
     </template>
   </modal>
@@ -102,6 +107,8 @@ const pending = ref(true);
 const pendingAdd = ref(false);
 const pendingDelete = ref(false);
 
+const mode = "plan";
+
 const addFormRef = ref(null);
 const childRef = ref(null);
 
@@ -145,12 +152,13 @@ const addConferenceSubmit = async () => {
   pendingAdd.value = true;
   const formData = new FormData(addFormRef.value);
   formData.append("operation_type_id", 27);
+  formData.append("mode", mode);
   await $axiosPlugin
     .post("conferences/create", formData)
     .then((response) => {
       pendingAdd.value = false;
       closeAddModal();
-      getConferences();
+      //getConferences();
     })
     .catch((err) => {
       if (err.response) {
@@ -231,6 +239,7 @@ const getConferenceAttributes = async () => {
 
 const closeAddModal = () => {
   addModalIsVisible.value = false;
+  errors.value = [];
   if (childRef.value) {
     childRef.value.resetForm();
   }
@@ -249,7 +258,7 @@ const closeDeleteModal = () => {
 };
 
 onMounted(() => {
-  //   getConferenceAttributes();
+  getConferenceAttributes();
   //   getConferences();
 });
 </script>
