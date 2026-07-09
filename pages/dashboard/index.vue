@@ -8,7 +8,7 @@
       </h2>
     </div> -->
 
-    <roleProvider :roles="[1, 2, 3]">
+    <!-- <roleProvider :roles="[1, 2, 3]">
       <div
         v-if="schoolStore.schoolData && schoolStore.schoolData.all_users_count"
         class="col-span-12 md:col-span-6 lg:col-span-3"
@@ -37,11 +37,7 @@
           </div>
         </div>
       </div>
-    </roleProvider>
-
-    <div class="col-span-12">
-      <aiExplainer :explainMode="'speaking'" />
-    </div>
+    </roleProvider> -->
 
     <div
       v-if="
@@ -50,7 +46,7 @@
         !authUser.telegram &&
         !schoolStore.isAiSchoolDomain
       "
-      class="col-span-12 md:col-span-6 lg:col-span-9"
+      class="col-span-12"
     >
       <div
         style="
@@ -81,49 +77,44 @@
       </div>
     </div>
 
-    <div v-if="dashboard" class="col-span-12">
-      <div class="custom-grid" v-if="!schoolStore.isAiSchoolDomain">
-        <div class="col-span-12 lg:col-span-5">
+    <div
+      class="col-span-12"
+      :class="schoolStore.isAiSchoolDomain ? 'lg:col-span-6' : ''"
+    >
+      <aiExplainer :explainMode="'speaking'" />
+    </div>
+
+    <div v-if="dashboard" class="col-span-12 lg:col-span-6">
+      <div class="custom-grid">
+        <div
+          v-if="dashboard.current_lessons && dashboard.current_lessons.length"
+          class="col-span-12"
+          :class="!schoolStore.isAiSchoolDomain ? 'lg:col-span-5' : ''"
+        >
           <div class="custom-grid">
             <div class="col-span-12">
-              <h3 class="mb-0 mt-4">
-                📖 {{ $t("pages.lessons.current_lessons") }}
-              </h3>
+              <h3 class="mb-0">📖 {{ $t("pages.lessons.current_lessons") }}</h3>
             </div>
-            <template
-              v-if="
-                dashboard.current_lessons && dashboard.current_lessons.length
-              "
+            <div
+              v-for="conference in dashboard.current_lessons"
+              :key="conference.uuid"
+              class="col-span-12"
             >
-              <div
-                v-for="conference in dashboard.current_lessons"
-                :key="conference.uuid"
-                class="col-span-12"
-              >
-                <currentConferenceCard
-                  :conference="conference"
-                  :timeIsUp="timeIsUp"
-                />
-              </div>
-            </template>
-            <div v-else class="col-span-12">
-              <alert :className="'light'">
-                <img
-                  class="w-24 mx-auto mb-2"
-                  src="~/public/images/calendar-search.svg"
-                />
-                <p class="mb-0">
-                  <b>{{ $t("pages.lessons.no_current_lessons") }}</b>
-                </p>
-              </alert>
+              <currentConferenceCard
+                :conference="conference"
+                :timeIsUp="timeIsUp"
+              />
             </div>
           </div>
         </div>
 
-        <div class="col-span-12 lg:col-span-7">
+        <div
+          class="col-span-12"
+          :class="!schoolStore.isAiSchoolDomain ? 'lg:col-span-7' : ''"
+        >
           <div class="custom-grid">
             <div class="col-span-12">
-              <h3 class="mb-0 mt-4">
+              <h3 class="mb-0">
                 📅 {{ $t("pages.lessons.upcoming_lessons") }}
               </h3>
             </div>
@@ -141,13 +132,17 @@
                         <tr>
                           <th>{{ $t("start_time") }}</th>
                           <th>{{ $t("pages.lessons.lesson_name") }}</th>
-                          <th>{{ $t("pages.lessons.lesson_type") }}</th>
-                          <roleProvider :roles="[1, 2, 3, 4]">
-                            <th>{{ $t("pages.groups.group") }}</th>
-                            <th>{{ $t("pages.courses.course") }}</th>
-                            <th>{{ $t("pages.groups.group_category") }}</th>
-                          </roleProvider>
-
+                          <template v-if="!schoolStore.isAiSchoolDomain">
+                            <roleProvider :roles="[1, 2, 3, 4]">
+                              <th>{{ $t("pages.lessons.lesson_type") }}</th>
+                              <th>{{ $t("pages.groups.group") }}</th>
+                              <th>{{ $t("pages.courses.course") }}</th>
+                              <th>{{ $t("pages.groups.group_category") }}</th>
+                            </roleProvider>
+                          </template>
+                          <template v-else>
+                            <th>{{ $t("pages.courses.title") }}</th>
+                          </template>
                           <th>{{ $t("mentor") }}</th>
                         </tr>
                       </thead>
@@ -160,7 +155,7 @@
                           :class="e.is_active === true ? 'success' : ''"
                         >
                           <td>
-                            <b>{{
+                            <b class="text-nowrap">{{
                               e.is_active === true
                                 ? $t("already_started")
                                 : e.start_time_formatted
@@ -183,29 +178,60 @@
                             }}</b
                           > -->
                           </td>
-                          <td>
+                          <td v-if="e.lesson_name">
                             {{ e.lesson_name }}
                           </td>
-                          <td>{{ e.lesson_type_name }}</td>
-                          <roleProvider :roles="[1, 2, 3, 4]">
-                            <td>{{ e.group_name }}</td>
-                            <td>{{ e.course_name }}</td>
-                            <td>{{ e.level_name }}</td>
-                          </roleProvider>
-
+                          <td v-if="e.topic">{{ e.topic }}</td>
+                          <template v-if="!schoolStore.isAiSchoolDomain">
+                            <roleProvider :roles="[1, 2, 3, 4]">
+                              <td>{{ e.lesson_type_name }}</td>
+                              <td>{{ e.group_name }}</td>
+                              <td>{{ e.course_name }}</td>
+                              <td>{{ e.level_name }}</td>
+                            </roleProvider>
+                          </template>
+                          <template v-else>
+                            <td>
+                              <div class="text-list text-nowrap">
+                                <span
+                                  v-for="(level, lIndex) in e.levels"
+                                  :key="lIndex"
+                                >
+                                  {{ level.level_name }}
+                                </span>
+                              </div>
+                            </td>
+                          </template>
                           <td>
                             <div class="flex gap-x-1 items-center">
                               <userAvatar
                                 :padding="0.5"
                                 :className="'w-6 h-6'"
                                 :user="{
-                                  last_name: e.mentor_last_name,
-                                  first_name: e.mentor_first_name,
-                                  avatar: e.mentor_avatar,
+                                  last_name:
+                                    e.mentor_last_name ||
+                                    e.moderator_last_name ||
+                                    '',
+                                  first_name:
+                                    e.mentor_first_name ||
+                                    e.moderator_first_name ||
+                                    '',
+                                  avatar:
+                                    e.mentor_avatar || e.moderator_avatar || '',
                                 }"
                               />
-                              {{ e.mentor_last_name }}
-                              {{ e.mentor_first_name }}
+                              <span class="text-nowrap">
+                                {{
+                                  e.mentor_last_name ||
+                                  e.moderator_last_name ||
+                                  ""
+                                }}
+                                {{
+                                  e.mentor_first_name ||
+                                  e.moderator_first_name ||
+                                  ""
+                                }}</span
+                              >
                             </div>
                           </td>
                         </tr>
@@ -226,6 +252,7 @@
                     {{ $t("pages.lessons.pay_for_lessons") }}
                   </button> -->
                   <nuxt-link
+                    v-if="!schoolStore.isAiSchoolDomain"
                     class="btn btn-light"
                     :to="localePath('/dashboard/schedule')"
                   >
@@ -255,57 +282,151 @@
       :show="eventModalIsVisible"
       :onClose="() => closeEventModal()"
       :className="'modal-xl'"
-      :showLoader="false"
+      :showLoader="pendingEvent"
+      :showPendingText="true"
       :closeOnClickSelf="true"
     >
       <template v-slot:header_content>
-        <h4>{{ currentEvent?.lesson_name }}</h4>
+        <h3>{{ currentEvent?.lesson_name || currentEvent?.topic }}</h3>
       </template>
       <template v-if="currentEvent" v-slot:body_content>
+        <canvas id="confetti-canvas"></canvas>
         <div class="custom-grid">
-          <div class="col-span-12">
-            <p class="text-inactive">
-              <i class="pi pi-book"></i> {{ $t("pages.courses.course") }}:
-              <b class="text-active"
-                >{{ currentEvent.course_name }} -
-                {{ currentEvent.level_name }}</b
-              >
-            </p>
-            <p class="text-inactive">
-              <i class="pi pi-users"></i> {{ $t("pages.groups.group") }}:
-              <b class="text-active">{{ currentEvent.group_name }}</b>
-            </p>
-            <p class="text-inactive">
-              <i class="pi pi-user"></i> {{ $t("mentor") }}:
-              <b class="text-active"
-                >{{ currentEvent.mentor_last_name }}
-                {{ currentEvent.mentor_first_name }}</b
-              >
-            </p>
-            <p class="text-inactive">
-              <i class="pi pi-clock"></i> {{ $t("start_time") }}:
-              <b class="text-active">{{ currentEvent.start_time_formatted }}</b>
-            </p>
-            <p class="text-inactive mb-0">
-              <i class="pi pi-clock"></i> {{ $t("end_time") }}:
-              <b class="text-active">{{ currentEvent.end_time_formatted }}</b>
-            </p>
-          </div>
-          <div class="col-span-12">
-            <p>
-              {{ $t("pages.groups.members") }}:
-              <b>{{ currentEvent.members.length }}</b>
-            </p>
+          <template v-if="acceptedConference">
+            <div class="col-span-12">
+              <h5>{{ $t("pages.conference.accept.success.title") }}</h5>
+              <p>
+                {{
+                  $t("pages.conference.accept.success.description", {
+                    conf_name: currentEvent?.topic || "",
+                  })
+                }}
+              </p>
+            </div>
 
-            <div v-if="currentEvent.members.length > 0" class="btn-wrap">
-              <userTag
-                v-for="(member, index) in currentEvent.members"
-                :key="index"
-                :user="member"
-                :closable="false"
+            <div class="col-span-12">
+              <b>{{ $t("add_to_calendar") }}:</b>
+            </div>
+
+            <div class="col-span-12">
+              <add-to-calendar-button
+                :name="currentEvent?.topic"
+                :startDate="currentEvent.date"
+                :endDate="currentEvent.date_end"
+                :startTime="currentEvent.time"
+                :endTime="currentEvent.time_end"
+                timeZone="Asia/Almaty"
+                :location="conferenceUrl"
+                :description="`${$t('pages.conference.accept.success.url_desc_1')} [url]${conferenceUrl}|${$t('pages.conference.accept.success.url_desc_2')}![/url]`"
+                options="'Apple','Google','iCal','Outlook.com'"
+                buttonsList
+                buttonStyle="round"
+              ></add-to-calendar-button>
+            </div>
+
+            <div class="col-span-12"></div>
+          </template>
+          <template v-else>
+            <div class="col-span-12" v-if="schoolStore.isAiSchoolDomain">
+              <img
+                class="w-full rounded-xl"
+                :src="
+                  currentEvent.poster_file
+                    ? config.public.apiBase +
+                      '/media/get/' +
+                      currentEvent.poster_file
+                    : null
+                "
               />
             </div>
-          </div>
+            <div class="col-span-12">
+              <template v-if="!schoolStore.isAiSchoolDomain">
+                <p class="text-inactive">
+                  <i class="pi pi-book"></i> {{ $t("pages.courses.course") }}:
+                  <b class="text-active"
+                    >{{ currentEvent.course_name }} -
+                    {{ currentEvent.level_name }}</b
+                  >
+                </p>
+                <p class="text-inactive">
+                  <i class="pi pi-users"></i> {{ $t("pages.groups.group") }}:
+                  <b class="text-active">{{ currentEvent.group_name }}</b>
+                </p>
+              </template>
+              <template v-else>
+                <p class="text-inactive">
+                  <i class="pi pi-book"></i> {{ $t("pages.courses.title") }}:
+                  <b class="text-active">
+                    <span class="text-list">
+                      <span
+                        v-for="(level, lIndex) in currentEvent.levels"
+                        :key="lIndex"
+                      >
+                        {{ level.level_name }}
+                      </span>
+                    </span>
+                  </b>
+                </p>
+              </template>
+              <p class="text-inactive">
+                <i class="pi pi-user"></i> {{ $t("mentor") }}:
+                <b class="text-active"
+                  >{{
+                    currentEvent.mentor_last_name ||
+                    currentEvent.moderator_last_name ||
+                    ""
+                  }}
+                  {{
+                    currentEvent.mentor_first_name ||
+                    currentEvent.moderator_first_name ||
+                    ""
+                  }}</b
+                >
+              </p>
+              <p class="text-inactive">
+                <i class="pi pi-clock"></i> {{ $t("start_time") }}:
+                <b class="text-active">{{
+                  currentEvent.start_time_formatted
+                }}</b>
+              </p>
+              <p class="text-inactive mb-0">
+                <i class="pi pi-clock"></i> {{ $t("end_time") }}:
+                <b class="text-active">{{ currentEvent.end_time_formatted }}</b>
+              </p>
+            </div>
+            <div v-if="currentEvent.members.length" class="col-span-12">
+              <p>
+                {{ $t("pages.conference.participants") }}:
+                <b>{{ currentEvent.members.length }}</b>
+              </p>
+
+              <div v-if="currentEvent.members.length > 0" class="btn-wrap">
+                <userTag
+                  v-for="(member, index) in currentEvent.members"
+                  :key="index"
+                  :user="member"
+                  :closable="false"
+                />
+              </div>
+            </div>
+
+            <div
+              v-if="
+                schoolStore.isAiSchoolDomain &&
+                currentEvent.is_active === false &&
+                currentEvent.is_learner === true
+              "
+              class="col-span-12"
+            >
+              <button
+                @click="acceptConference(currentEvent.uuid)"
+                class="btn btn-success"
+              >
+                <i class="pi pi-check"></i>
+                {{ $t("pages.conference.accept.title") }}
+              </button>
+            </div>
+          </template>
         </div>
       </template>
     </modal>
@@ -393,17 +514,21 @@ import loader from "../../components/ui/loader.vue";
 import alert from "../../components/ui/alert.vue";
 import scrollFadeContainer from "../../components/ui/scrollFadeContainer.vue";
 import aiExplainer from "../../components/lesson/components/ai/aiExplainer.vue";
+import { useToast } from "vue-toastification";
+import { startConfetti, stopConfetti } from "../../utils/confetti.js";
 
 const config = useRuntimeConfig();
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
 const schoolStore = useSchoolStore();
 const pending = ref(true);
+const toast = useToast();
 const { t, localeProperties } = useI18n();
 const authUser = useSanctumUser();
 const dashboard = ref([]);
 const paymentLessons = ref([]);
 const currentEvent = ref(null);
+const pendingEvent = ref(false);
 const eventModalIsVisible = ref(false);
 const paymentModalIsVisible = ref(false);
 const paymentModalSize = ref("modal-4xl");
@@ -411,6 +536,7 @@ const checkout = ref(null);
 const pendingPayment = ref(false);
 const paymentFormRef = ref(null);
 const cryptogram = ref("");
+const acceptedConference = ref(false);
 const errors = ref([]);
 
 useHead({
@@ -519,6 +645,7 @@ const openEventModal = (uuid) => {
 const closeEventModal = () => {
   eventModalIsVisible.value = false;
   currentEvent.value = null;
+  acceptedConference.value = false;
 };
 
 const openPaymentModal = () => {
@@ -609,13 +736,79 @@ const handlePayment = async () => {
     });
 };
 
+const acceptConference = async (uuid) => {
+  pendingEvent.value = true;
+
+  await $axiosPlugin
+    .post("conferences/accept/" + uuid)
+    .then((response) => {
+      pendingEvent.value = false;
+      acceptedConference.value = true;
+      startConfetti("confetti-canvas");
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 400) {
+          pendingEvent.value = false;
+
+          if (err.response.data.message) {
+            toast(
+              err.response.data.message === "not_bought"
+                ? t("pages.conference.not_bought", {
+                    courses: currentEvent.value.levels
+                      .map((l) => l.level_name)
+                      .join(", "),
+                  })
+                : t("pages.conference.accept." + err.response.data.message),
+              {
+                toastClassName: ["custom-toast", "danger"],
+                timeout: 10000,
+              },
+            );
+          }
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
+// 1. Получаем объект текущего запроса/URL
+const requestUrl = useRequestURL();
+
+// 2. Собираем корневой URL (протокол + домен) и добавляем нужный роут с UUID
+const conferenceUrl = computed(() => {
+  // requestUrl.origin вернет строку вида "https://my-site.kz" или "http://localhost:3000"
+  if (currentEvent.value) {
+    return `${requestUrl.origin}/dashboard/conference/${currentEvent.value.uuid}`;
+  }
+
+  return null;
+});
+
 const timeIsUp = () => {
   setTimeout(() => {
     getDashboard();
   }, 1000);
 };
 
-onMounted(() => {
+onMounted(async () => {
   getDashboard();
+
+  // Импортируем библиотеку только на стороне клиента (в браузере)
+  await import("add-to-calendar-button");
+});
+
+onBeforeUnmount(() => {
+  stopConfetti();
 });
 </script>

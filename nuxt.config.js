@@ -236,6 +236,17 @@ export default defineNuxtConfig({
     transpile: ['vue-toastification'],
   },
 
+  vite: {
+    vue: {
+      template: {
+        compilerOptions: {
+          // Говорим Vue, что все теги, начинающиеся с 'add-', являются кастомными элементами
+          isCustomElement: (tag) => tag.startsWith('add-')
+        }
+      }
+    }
+  },
+
 
   compatibilityDate: '2024-07-24'
 })

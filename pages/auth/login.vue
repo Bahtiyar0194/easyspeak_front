@@ -174,15 +174,10 @@ async function signIn() {
       });
 
       // ✅ Перенаправление обратно на сохранённый путь или на /dashboard
-      const redirectPath =
-        route.query.redirect || !schoolStore.isAiSchoolDomain
-          ? "/dashboard"
-          : "/dashboard/courses/english";
+      const redirectPath = route.query.redirect || "/dashboard";
       router.push(redirectPath);
     });
   } catch (err) {
-
-  console.log(err)
     if (err.response.status) {
       errors.value = err.response._data;
     }

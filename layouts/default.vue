@@ -34,7 +34,7 @@
         </div>
         <div
           class="col-span-12"
-          :class="route && route.path != '/' ? 'px-4 lg:px-20 py-6' : ''"
+          :class="route && route.path != '/' ? 'px-4 lg:px-12 py-6' : ''"
         >
           <NuxtPage />
         </div>

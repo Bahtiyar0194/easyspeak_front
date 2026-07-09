@@ -1007,6 +1007,7 @@ const { t } = useI18n();
 const config = useRuntimeConfig();
 const toast = useToast();
 const { $axiosPlugin, $socketPlugin } = useNuxtApp();
+const schoolStore = useSchoolStore();
 const authUser = useSanctumUser();
 
 const authUserInfo = {
@@ -1361,7 +1362,7 @@ const getConference = async () => {
       // }
       else {
         startStream();
-        getConferenceTasks();
+        //getConferenceTasks();
       }
 
       const confCrumbItem = document.querySelector('span[data-crumb="[id]"]');
@@ -1369,20 +1370,21 @@ const getConference = async () => {
       // Проверить, найден ли элемент
       if (confCrumbItem) {
         // Изменить текст внутри элемента
-        confCrumbItem.textContent =
-          response.data.conference.group_name +
-          " (" +
-          response.data.conference.lesson_name +
-          ")";
+        confCrumbItem.textContent = schoolStore.isAiSchoolDomain
+          ? response.data.conference.topic
+          : response.data.conference.group_name +
+            " (" +
+            response.data.conference.lesson_name +
+            ")";
       }
 
       pageTitle.value =
-        t("pages.conference.title") +
-        " - " +
-        response.data.conference.group_name +
-        " (" +
-        response.data.conference.lesson_name +
-        ")";
+        t("pages.conference.title") + " - " + schoolStore.isAiSchoolDomain
+          ? response.data.conference.topic
+          : response.data.conference.group_name +
+            " (" +
+            response.data.conference.lesson_name +
+            ")";
     })
     .catch((err) => {
       if (err.response) {

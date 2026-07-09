@@ -148,7 +148,7 @@ watch(
         title: "pages.conference.title",
         icon: "pi pi-video",
         link: "/dashboard/conference",
-        is_show: schoolStore.isAiSchoolDomain === false,
+        is_show: true,
         roles: [1, 2, 3, 4, 5, 6],
       },
       // {

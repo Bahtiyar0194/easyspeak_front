@@ -28,7 +28,10 @@ import planned from "../../../components/conference/tabs/planned.vue";
 import loader from "../../../components/ui/loader.vue";
 import { onMounted } from "vue";
 
+const { $axiosPlugin } = useNuxtApp();
+
 const pendingPage = ref(true);
+const attributes = ref([]);
 
 const tabs_data = computed(() => [
   {
@@ -36,12 +39,18 @@ const tabs_data = computed(() => [
     title: t("pages.conference.statuses.current"),
     icon: "bi bi-broadcast",
     component: current,
+    props: {
+      attributes,
+    },
   },
   {
     name: "planned",
     title: t("pages.conference.statuses.planned"),
     icon: "bi bi-calendar2-event",
     component: planned,
+    props: {
+      attributes,
+    },
   },
   // {
   //     name: 'passed',
@@ -50,7 +59,30 @@ const tabs_data = computed(() => [
   // },
 ]);
 
+const getConferenceAttributes = async () => {
+  await $axiosPlugin
+    .get("conferences/get_attributes")
+    .then((response) => {
+      attributes.value = response.data;
+      pendingPage.value = false;
+    })
+    .catch((err) => {
+      if (err.response) {
+        router.push({
+          path: "/error",
+          query: {
+            status: err.response.status,
+            message: err.response.data.message,
+            url: err.request.responseURL,
+          },
+        });
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
 onMounted(() => {
-  pendingPage.value = false;
+  getConferenceAttributes();
 });
 </script>

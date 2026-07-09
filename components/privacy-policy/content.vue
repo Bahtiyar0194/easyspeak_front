@@ -1,5 +1,5 @@
 <template>
-  <div class="custom-grid">
+  <div class="custom-grid !gap-x-6">
     <div class="col-span-12 md:col-span-4">
       <stickyBox :offsetTop="100">
         <div class="card p-4">

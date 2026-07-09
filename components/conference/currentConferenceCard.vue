@@ -1,85 +1,133 @@
 <template>
-  <div class="card p-4">
-    <div class="custom-grid">
-      <div class="col-span-12">
-        <h3>
-          {{ props.conference.lesson_name }}
-        </h3>
+  <div class="card">
+    <img
+      class="w-full"
+      v-if="schoolStore.isAiSchoolDomain"
+      :src="
+        props.conference.poster_file
+          ? config.public.apiBase + '/media/get/' + props.conference.poster_file
+          : null
+      "
+    />
+    <div class="p-4">
+      <div class="custom-grid">
+        <div class="col-span-12">
+          <h3 class="mb-3">
+            {{
+              schoolStore.isAiSchoolDomain
+                ? props.conference.topic
+                : props.conference.lesson_name
+            }}
+          </h3>
 
-        <p class="text-inactive">
-          <i class="pi pi-book"></i> {{ $t("pages.courses.course") }}:
-          <b class="text-active"
-            >{{ props.conference.course_name }} -
-            {{ props.conference.level_name }}</b
-          >
-        </p>
-        <p class="text-inactive">
-          <i class="pi pi-users"></i> {{ $t("pages.groups.group") }}:
-          <b class="text-active">{{ props.conference.group_name }}</b>
-        </p>
-        <p class="text-inactive">
-          <i class="pi pi-user"></i> {{ $t("mentor") }}:
-          <b class="text-active"
-            >{{ props.conference.mentor_last_name }}
-            {{ props.conference.mentor_first_name }}</b
-          >
-        </p>
-        <p class="text-inactive">
-          <i class="pi pi-clock"></i> {{ $t("start_time") }}:
-          <b class="text-active">{{ props.conference.start_time_formatted }}</b>
-        </p>
-        <p class="text-inactive">
-          <i class="pi pi-clock"></i> {{ $t("end_time") }}:
-          <b class="text-active">{{ props.conference.end_time_formatted }}</b>
-        </p>
+          <template v-if="!schoolStore.isAiSchoolDomain">
+            <p class="text-inactive">
+              <i class="pi pi-book"></i> {{ $t("pages.courses.course") }}:
+              <b class="text-active"
+                >{{ props.conference.course_name }} -
+                {{ props.conference.level_name }}</b
+              >
+            </p>
 
-        <p class="text-inactive mb-0">
-          <i class="pi pi-clock"></i> {{ $t("remaining_time") }}:
-          <b class="text-danger">
-            <countdownTimer
-              :endDate="props.conference.end_time"
-              :onComplete="() => props.timeIsUp()"
-            />
-          </b>
-        </p>
-      </div>
-      <div class="col-span-12">
-        <p>
-          {{ $t("pages.groups.members") }}:
-          <b>{{ props.conference.members.length }}</b>
-        </p>
+            <p class="text-inactive">
+              <i class="pi pi-users"></i> {{ $t("pages.groups.group") }}:
+              <b class="text-active">{{ props.conference.group_name }}</b>
+            </p>
+            <p class="text-inactive">
+              <i class="pi pi-user"></i> {{ $t("mentor") }}:
+              <b class="text-active"
+                >{{ props.conference.mentor_last_name }}
+                {{ props.conference.mentor_first_name }}</b
+              >
+            </p>
+          </template>
 
-        <div v-if="props.conference.members.length > 0" class="btn-wrap">
-          <userTag
-            v-for="(member, index) in props.conference.members"
-            :key="index"
-            :user="member"
-            :closable="false"
-          />
+          <template v-else>
+            <p class="text-inactive">
+              <b class="text-active">{{
+                props.conference.topic_description
+              }}</b>
+            </p>
+            <p class="text-inactive">
+              <i class="pi pi-user"></i> {{ $t("mentor") }}:
+              <b class="text-active"
+                >{{ props.conference.moderator_last_name }}
+                {{ props.conference.moderator_first_name }}</b
+              >
+            </p>
+
+            <p class="text-inactive">
+              <i class="pi pi-book"></i> {{ $t("pages.courses.title") }}:
+              <b class="text-active text-list">
+                <span
+                  v-for="(level, lIndex) in props.conference.levels"
+                  :key="lIndex"
+                >
+                  {{ level.level_name }}
+                </span>
+              </b>
+            </p>
+          </template>
+
+          <p class="text-inactive">
+            <i class="pi pi-clock"></i> {{ $t("start_time") }}:
+            <b class="text-active">{{
+              props.conference.start_time_formatted
+            }}</b>
+          </p>
+          <p class="text-inactive">
+            <i class="pi pi-clock"></i> {{ $t("end_time") }}:
+            <b class="text-active">{{ props.conference.end_time_formatted }}</b>
+          </p>
+
+          <p class="text-inactive mb-0">
+            <i class="pi pi-clock"></i> {{ $t("remaining_time") }}:
+            <b class="text-danger">
+              <countdownTimer
+                :endDate="props.conference.end_time"
+                :onComplete="() => props.timeIsUp()"
+              />
+            </b>
+          </p>
         </div>
-      </div>
-      <div class="col-span-12">
-        <div class="btn-wrap">
-          <nuxt-link
-            class="btn btn-success animate-pulse-glow"
-            :to="localePath('/dashboard/conference/' + props.conference.uuid)"
-          >
-            <i class="pi pi-video"></i>
-            {{ $t("pages.conference.join") }}
-          </nuxt-link>
+        <div class="col-span-12">
+          <p>
+            {{ $t("pages.groups.members") }}:
+            <b>{{ props.conference.members.length }}</b>
+          </p>
 
-          <button
-            v-if="
-              authUser.user_id === props.conference.operator_id &&
-              props.conference.forced === 1 &&
-              props.openDeleteModal
-            "
-            class="btn btn-outline-danger"
-            @click="props.openDeleteModal(conference)"
-          >
-            <i class="pi pi-trash"></i>
-            {{ $t("delete") }}
-          </button>
+          <div v-if="props.conference.members.length > 0" class="btn-wrap">
+            <userTag
+              v-for="(member, index) in props.conference.members"
+              :key="index"
+              :user="member"
+              :closable="false"
+            />
+          </div>
+        </div>
+        <div class="col-span-12">
+          <div class="btn-wrap">
+            <nuxt-link
+              class="btn btn-success animate-pulse-glow"
+              :to="localePath('/dashboard/conference/' + props.conference.uuid)"
+            >
+              <i class="pi pi-video"></i>
+              {{ $t("pages.conference.join") }}
+            </nuxt-link>
+
+            <button
+              v-if="
+                authUser.user_id === props.conference.operator_id &&
+                props.conference.forced === 1 &&
+                props.openDeleteModal
+              "
+              class="btn btn-outline-danger"
+              @click="props.openDeleteModal(conference)"
+            >
+              <i class="pi pi-trash"></i>
+              {{ $t("delete") }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -87,8 +135,12 @@
 </template>
 
 <script setup>
+import { useRuntimeConfig } from "nuxt/app";
 import countdownTimer from "../ui/countdownTimer.vue";
 import userTag from "../ui/userTag.vue";
+
+const schoolStore = useSchoolStore();
+const config = useRuntimeConfig();
 
 const authUser = useSanctumUser();
 

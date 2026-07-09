@@ -16,7 +16,7 @@
         <div
           v-for="conference in conferences"
           :key="conference.uuid"
-          class="col-span-12 lg:col-span-6"
+          class="col-span-12 lg:col-span-4"
         >
           <currentConferenceCard
             :conference="conference"
@@ -117,7 +117,6 @@ const router = useRouter();
 const errors = ref([]);
 const { $axiosPlugin } = useNuxtApp();
 const schoolStore = useSchoolStore();
-const attributes = ref([]);
 const pending = ref(true);
 const pendingAdd = ref(false);
 const pendingDelete = ref(false);
@@ -132,6 +131,15 @@ const conference = ref(null);
 
 const addModalIsVisible = ref(false);
 const deleteModalIsVisible = ref(false);
+
+const props = defineProps({
+  attributes: {
+    type: Object,
+    required: true,
+  },
+});
+
+const { attributes } = toRefs(props);
 
 const getConferences = async () => {
   pending.value = true;
@@ -228,30 +236,6 @@ const deleteConferenceSubmit = async () => {
     });
 };
 
-const getConferenceAttributes = async () => {
-  pending.value = true;
-  await $axiosPlugin
-    .get("conferences/get_attributes")
-    .then((response) => {
-      attributes.value = response.data;
-      pending.value = false;
-    })
-    .catch((err) => {
-      if (err.response) {
-        router.push({
-          path: "/error",
-          query: {
-            status: err.response.status,
-            message: err.response.data.message,
-            url: err.request.responseURL,
-          },
-        });
-      } else {
-        router.push("/error");
-      }
-    });
-};
-
 const closeAddModal = () => {
   addModalIsVisible.value = false;
   errors.value = [];
@@ -273,7 +257,6 @@ const closeDeleteModal = () => {
 };
 
 onMounted(() => {
-  getConferenceAttributes();
   getConferences();
 });
 </script>

@@ -105,7 +105,10 @@
               >
                 <div class="flex gap-1.5 text-nowrap">
                   <span class="font-medium">{{ e.time }}</span>
-                  <span>{{ e.section_name }} - {{ e.lesson_name }}</span>
+                  <span v-if="e.section_name && e.lesson_name"
+                    >{{ e.section_name }} - {{ e.lesson_name }}</span
+                  >
+                  <span v-if="e.topic">{{ e.topic }}</span>
                 </div>
               </div>
 
@@ -172,7 +175,10 @@
               >
                 <div class="flex gap-1.5 text-nowrap">
                   <span class="font-medium">{{ e.time }}</span>
-                  <span>{{ e.section_name }} - {{ e.lesson_name }}</span>
+                  <span v-if="e.section_name && e.lesson_name"
+                    >{{ e.section_name }} - {{ e.lesson_name }}</span
+                  >
+                  <span v-if="e.topic">{{ e.topic }}</span>
                 </div>
               </div>
 
@@ -203,10 +209,15 @@
               <tr>
                 <th>{{ $t("start_time") }}</th>
                 <th>{{ $t("pages.lessons.lesson_name") }}</th>
-                <th>{{ $t("pages.lessons.lesson_type") }}</th>
-                <th>{{ $t("pages.groups.group") }}</th>
-                <th>{{ $t("pages.courses.course") }}</th>
-                <th>{{ $t("pages.groups.group_category") }}</th>
+                <template v-if="!schoolStore.isAiSchoolDomain">
+                  <th>{{ $t("pages.lessons.lesson_type") }}</th>
+                  <th>{{ $t("pages.groups.group") }}</th>
+                  <th>{{ $t("pages.courses.course") }}</th>
+                  <th>{{ $t("pages.groups.group_category") }}</th>
+                </template>
+                <template v-else>
+                  <th>{{ $t("pages.courses.title") }}</th>
+                </template>
                 <th>{{ $t("mentor") }}</th>
               </tr>
             </thead>
@@ -220,24 +231,39 @@
                 <td>
                   <b>{{ e.time }}</b>
                 </td>
-                <td>{{ e.section_name }} - {{ e.lesson_name }}</td>
-                <td>{{ e.lesson_type_name }}</td>
-                <td>{{ e.group_name }}</td>
-                <td>{{ e.course_name }}</td>
-                <td>{{ e.level_name }}</td>
+                <td v-if="e.section_name && e.lesson_name">
+                  {{ e.section_name }} - {{ e.lesson_name }}
+                </td>
+                <td v-if="e.topic">{{ e.topic }}</td>
+                <template v-if="!schoolStore.isAiSchoolDomain">
+                  <td>{{ e.lesson_type_name }}</td>
+                  <td>{{ e.group_name }}</td>
+                  <td>{{ e.course_name }}</td>
+                  <td>{{ e.level_name }}</td>
+                </template>
+                <template v-else>
+                  <td>
+                    <div class="text-list">
+                      <span v-for="(level, lIndex) in e.levels" :key="lIndex">
+                        {{ level.level_name }}
+                      </span>
+                    </div>
+                  </td>
+                </template>
                 <td>
                   <div class="flex gap-x-1 items-center">
                     <userAvatar
                       :padding="0.5"
                       :className="'w-6 h-6'"
                       :user="{
-                        last_name: e.mentor_last_name,
-                        first_name: e.mentor_first_name,
-                        avatar: e.mentor_avatar,
+                        last_name: e.mentor_last_name || e.moderator_last_name || '',
+                        first_name:
+                          e.mentor_first_name || e.moderator_first_name || '',
+                        avatar: e.mentor_avatar || e.moderator_avatar || '',
                       }"
                     />
-                    {{ e.mentor_last_name }}
-                    {{ e.mentor_first_name }}
+                    {{ e.mentor_last_name || e.moderator_last_name || '' }}
+                    {{ e.mentor_first_name || e.moderator_first_name || '' }}
                   </div>
                 </td>
               </tr>
@@ -261,6 +287,7 @@
 import loader from "../ui/loader.vue";
 import alert from "../ui/alert.vue";
 import userAvatar from "../ui/userAvatar.vue";
+import countBadge from "../ui/countBadge.vue";
 
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
@@ -268,6 +295,8 @@ import "dayjs/locale/kk";
 
 import weekday from "dayjs/plugin/weekday";
 import isoWeek from "dayjs/plugin/isoWeek";
+
+const schoolStore = useSchoolStore();
 
 const props = defineProps({
   schedule: {
