@@ -151,7 +151,7 @@ const getSchedule = async () => {
 
 const timeIsUp = () => {
   setTimeout(() => {
-    getConferences();
+    getSchedule();
   }, 1000);
 };
 
@@ -165,7 +165,7 @@ const addConferenceSubmit = async () => {
     .then((response) => {
       pendingAdd.value = false;
       closeAddModal();
-      getConferences();
+      getSchedule();
     })
     .catch((err) => {
       if (err.response) {
@@ -197,7 +197,7 @@ const addConferenceSubmit = async () => {
 //     .then((response) => {
 //       pendingDelete.value = false;
 //       closeDeleteModal();
-//       getConferences();
+//       getSchedule();
 //     })
 //     .catch((err) => {
 //       if (err.response) {

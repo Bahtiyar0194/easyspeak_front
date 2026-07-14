@@ -25,7 +25,7 @@
           </p>
 
           <p
-            v-if="props.level.available_status.is_available === true"
+            v-if="props.showProgressBar === true &&  props.level.available_status.is_available === true"
             class="mb-0 text-white leading-none font-medium text-lg"
           >
             {{ displayedProgress.toFixed(2) }}%
@@ -42,7 +42,7 @@
           {{ $t(props.message) }}
         </p>
 
-        <template v-if="props.level.available_status.is_available === true">
+        <template v-if="props.showProgressBar === true && props.level.available_status.is_available === true">
           <progressBar
             :progressPercentage="displayedProgress"
             :wrapClass="'!my-0 !bg-white'"
@@ -63,6 +63,11 @@ const schoolStore = useSchoolStore();
 const props = defineProps({
   level: {
     type: Object,
+    required: true,
+  },
+
+  showProgressBar: {
+    type: Boolean,
     required: true,
   },
 

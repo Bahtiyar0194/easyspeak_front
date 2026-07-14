@@ -21,7 +21,7 @@
                 )
           "
         >
-          <levelCard :level="level" />
+          <levelCard :level="level" :showProgressBar="true" />
         </nuxt-link>
       </div>
     </div>

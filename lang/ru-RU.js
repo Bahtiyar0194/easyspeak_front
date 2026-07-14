@@ -1112,6 +1112,9 @@ export default {
             delete_task: "Удаление задания",
             delete_confirm: "Вы действительно хотите удалить данное задание?",
             start_the_task: 'Начать задание',
+            start_an_other_task: 'Запустить другое задание',
+            select_a_task: 'Выбрать задание',
+            select_a_task_alt: 'Выбор задания',
             complete_the_task: 'Завершить задание',
             start_the_test: 'Начать тестирование',
             test_is_started: 'Тестирование запущено',
@@ -1120,6 +1123,10 @@ export default {
             count: 'Количество задании',
             tasks_count: 'Задании',
             there_are_no_tasks: 'Для этого урока пока не добавлены задания.',
+            not_started: {
+                mentor: 'Вы еще не запустили ни одного задания для учеников',
+                learner: 'Пока еще ни одно задание не было запущено учителем'
+            },
             task_materials: 'Материалы задания',
             try_again: 'Пройти заново',
             next_task: 'Следующее задание',

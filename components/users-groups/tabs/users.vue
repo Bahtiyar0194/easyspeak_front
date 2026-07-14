@@ -773,6 +773,7 @@
                   >
                     <levelCard
                       :level="level"
+                      :showProgressBar="true"
                       :message="'pages.courses.course_is_not_available_for_learner'"
                     />
                   </button>
@@ -1184,12 +1185,10 @@ const selectLesson = async (lesson) => {
   pendingGrade.value = true;
 
   await $axiosPlugin
-    .post(
-      "courses/get_lesson_grade", {
-        lesson_id: lesson.lesson_id,
-        user_id: user.value.user_id
-      }
-    )
+    .post("courses/get_lesson_grade", {
+      lesson_id: lesson.lesson_id,
+      user_id: user.value.user_id,
+    })
     .then((response) => {
       gradeModalClass.value = "modal-2xl";
       activeLesson.value = response.data;

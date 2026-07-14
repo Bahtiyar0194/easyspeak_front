@@ -225,7 +225,10 @@
           <span>{{ $t("materials.title") }}</span>
         </button>
 
-        <button v-if="tasks.length > 0" @click="tasksModalIsVisible = true">
+        <button
+          v-if="tasks.length > 0 || schoolStore.isAiSchoolDomain"
+          @click="tasksModalIsVisible = true"
+        >
           <i class="bi bi-pen"></i>
           <countBadge
             v-if="tasksToComplete > 0"
@@ -558,177 +561,221 @@
         </template>
         <template v-slot:body_content v-if="conference">
           <div class="custom-grid">
-            <div
-              class="col-span-12 lg:col-span-4"
-              v-if="
-                conference.mentor_id !== authUser.user_id &&
-                conference.is_member
-              "
-            >
-              <stickyBox>
-                <div class="card p-3">
-                  <div class="flex justify-between items-center gap-x-2 mb-4">
-                    <h2 class="mb-2">{{ conference.lesson_name }}</h2>
-                    <circleProgressBar
-                      :progress="completedTasksPercent / tasks.length"
-                    />
-                  </div>
-                  <div class="flex flex-wrap justify-between mb-1">
-                    <span> {{ $t("pages.tasks.count") }}: </span>
-                    <b>{{ tasks.length }}</b>
-                  </div>
+            <template v-if="tasks.length">
+              <div
+                class="col-span-12 lg:col-span-4"
+                v-if="
+                  conference.mentor_id !== authUser.user_id &&
+                  conference.is_member
+                "
+              >
+                <stickyBox>
+                  <div class="card p-3">
+                    <div class="flex justify-between items-center gap-x-2 mb-4">
+                      <h2 class="mb-2">
+                        {{ conference.lesson_name || conference.topic }}
+                      </h2>
+                      <circleProgressBar
+                        :progress="completedTasksPercent / tasks.length"
+                      />
+                    </div>
+                    <div class="flex flex-wrap justify-between mb-1">
+                      <span> {{ $t("pages.tasks.count") }}: </span>
+                      <b>{{ tasks.length }}</b>
+                    </div>
 
-                  <div class="flex flex-wrap justify-between">
-                    <span> {{ $t("passed") }}: </span>
-                    <b>{{ completedTasksCount }}</b>
-                  </div>
+                    <div class="flex flex-wrap justify-between">
+                      <span> {{ $t("passed") }}: </span>
+                      <b>{{ completedTasksCount }}</b>
+                    </div>
 
-                  <div class="btn-wrap justify-end">
-                    <button
-                      v-if="
-                        conference.lesson_type_slug === 'file_test' &&
-                        completedTasksCount < tasks.length
-                      "
-                      class="btn btn-outline-primary mt-4"
-                      @click="startTheTest()"
-                    >
-                      <i class="pi pi-arrow-right"></i>
-                      {{
-                        completedTasksCount > 0
-                          ? $t("pages.tasks.continue_the_test")
-                          : $t("pages.tasks.start_the_test")
-                      }}
-                    </button>
+                    <div v-if="tasks.length" class="btn-wrap justify-end">
+                      <button
+                        v-if="
+                          conference.lesson_type_slug === 'file_test' &&
+                          completedTasksCount < tasks.length
+                        "
+                        class="btn btn-outline-primary mt-4"
+                        @click="startTheTest()"
+                      >
+                        <i class="pi pi-arrow-right"></i>
+                        {{
+                          completedTasksCount > 0
+                            ? $t("pages.tasks.continue_the_test")
+                            : $t("pages.tasks.start_the_test")
+                        }}
+                      </button>
+                    </div>
+                  </div>
+                </stickyBox>
+              </div>
+
+              <div
+                class="col-span-12"
+                :class="
+                  conference.mentor_id !== authUser.user_id &&
+                  conference.is_member
+                    ? 'lg:col-span-8'
+                    : ''
+                "
+              >
+                <div class="custom-grid">
+                  <div class="col-span-12">
+                    <ul class="list-group nowrap lg overflow-hidden">
+                      <li v-for="taskItem in tasks" :key="taskItem.task_id">
+                        <div class="flex items-center justify-between gap-4">
+                          <div
+                            class="flex gap-2 items-center w-full"
+                            :class="
+                              !taskItem.launched &&
+                              conference.mentor_id !== authUser.user_id
+                                ? 'cursor-not-allowed'
+                                : 'cursor-pointer'
+                            "
+                            @click="
+                              conference.mentor_id === authUser.user_id
+                                ? openLearnersTasksModal(taskItem)
+                                : taskItem.task_result.answers
+                                  ? openTaskResult(taskItem)
+                                  : taskItem.launched && openTask(taskItem)
+                            "
+                          >
+                            <i class="text-4xl" :class="taskItem.icon"></i>
+                            <div class="flex flex-col gap-y-0.5">
+                              <span class="font-medium">{{
+                                taskItem.task_slug
+                              }}</span>
+                              <span class="text-inactive text-xs">{{
+                                taskItem.task_type_name
+                              }}</span>
+
+                              <span
+                                v-if="
+                                  conference.lesson_type_slug !== 'file_test'
+                                "
+                                class="italic text-xs"
+                                :class="
+                                  taskItem.launched ||
+                                  (taskItem.task_result &&
+                                    taskItem.task_result.completed)
+                                    ? 'text-success'
+                                    : 'text-danger'
+                                "
+                              >
+                                {{
+                                  taskItem.launched
+                                    ? conference.mentor_id === authUser.user_id
+                                      ? $t("pages.tasks.launched")
+                                      : taskItem.task_result.completed === false
+                                        ? $t("pages.tasks.is_available")
+                                        : $t("pages.tasks.is_completed")
+                                    : conference.mentor_id === authUser.user_id
+                                      ? $t("pages.tasks.not_launched")
+                                      : taskItem.task_result.completed === false
+                                        ? $t("pages.tasks.is_unavailable")
+                                        : $t("pages.tasks.is_completed")
+                                }}</span
+                              >
+                            </div>
+                          </div>
+
+                          <circleProgressBar
+                            v-if="
+                              conference.mentor_id !== authUser.user_id &&
+                              taskItem.task_result &&
+                              taskItem.task_result.completed === true
+                            "
+                            :progress="taskItem.task_result.percentage"
+                          />
+                          <div
+                            class="pr-2"
+                            v-if="conference.mentor_id === authUser.user_id"
+                          >
+                            <span
+                              class="text-nowrap font-medium"
+                              :class="
+                                taskItem.completed_learners_tasks ===
+                                taskItem.learners.length
+                                  ? 'text-success'
+                                  : ''
+                              "
+                            >
+                              <span
+                                :class="
+                                  taskItem.completed_learners_tasks > 0 &&
+                                  'text-success'
+                                "
+                                >{{ taskItem.completed_learners_tasks }}</span
+                              >
+                              / {{ taskItem.learners.length }}</span
+                            >
+                          </div>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                  <div class="col-span-12">
+                    <div class="btn-wrap justify-end">
+                      <button
+                        v-if="
+                          conference.mentor_id === authUser.user_id &&
+                          conference.lesson_type_slug === 'file_test'
+                        "
+                        class="btn full mb-4"
+                        :class="
+                          testIsStarted
+                            ? 'disabled btn-outline-success'
+                            : 'btn-outline-primary'
+                        "
+                        @click="startTheTest()"
+                      >
+                        <i
+                          class="pi"
+                          :class="
+                            testIsStarted === true
+                              ? 'pi-arrow-right'
+                              : 'pi-check'
+                          "
+                        ></i>
+                        {{
+                          testIsStarted === true
+                            ? $t("pages.tasks.test_is_started")
+                            : $t("pages.tasks.start_the_test")
+                        }}
+                      </button>
+
+                      <button
+                        @click="openSelectTasksModal()"
+                        v-if="conference.mentor_id === authUser.user_id"
+                        class="btn btn-success"
+                      >
+                        <i class="pi pi-play"></i>
+                        {{ $t("pages.tasks.start_an_other_task") }}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </stickyBox>
-            </div>
+              </div>
+            </template>
 
-            <div
-              class="col-span-12"
-              :class="
-                conference.mentor_id !== authUser.user_id &&
-                conference.is_member
-                  ? 'lg:col-span-8'
-                  : ''
-              "
-            >
-              <button
-                v-if="
-                  conference.mentor_id === authUser.user_id &&
-                  conference.lesson_type_slug === 'file_test'
-                "
-                class="btn full mb-4"
-                :class="
-                  testIsStarted
-                    ? 'disabled btn-outline-success'
-                    : 'btn-outline-primary'
-                "
-                @click="startTheTest()"
-              >
-                <i
-                  class="pi"
-                  :class="
-                    testIsStarted === true ? 'pi-arrow-right' : 'pi-check'
-                  "
-                ></i>
-                {{
-                  testIsStarted === true
-                    ? $t("pages.tasks.test_is_started")
-                    : $t("pages.tasks.start_the_test")
-                }}
-              </button>
-
-              <ul class="list-group nowrap lg overflow-hidden">
-                <li v-for="taskItem in tasks" :key="taskItem.task_id">
-                  <div class="flex items-center justify-between gap-4">
-                    <div
-                      class="flex gap-2 items-center w-full"
-                      :class="
-                        !taskItem.launched &&
-                        conference.mentor_id !== authUser.user_id
-                          ? 'cursor-not-allowed'
-                          : 'cursor-pointer'
-                      "
-                      @click="
-                        conference.mentor_id === authUser.user_id
-                          ? openLearnersTasksModal(taskItem)
-                          : taskItem.task_result.answers
-                            ? openTaskResult(taskItem)
-                            : taskItem.launched && openTask(taskItem)
-                      "
-                    >
-                      <i class="text-4xl" :class="taskItem.icon"></i>
-                      <div class="flex flex-col gap-y-0.5">
-                        <span class="font-medium">{{
-                          taskItem.task_slug
-                        }}</span>
-                        <span class="text-inactive text-xs">{{
-                          taskItem.task_type_name
-                        }}</span>
-
-                        <span
-                          v-if="conference.lesson_type_slug !== 'file_test'"
-                          class="italic text-xs"
-                          :class="
-                            taskItem.launched ||
-                            (taskItem.task_result &&
-                              taskItem.task_result.completed)
-                              ? 'text-success'
-                              : 'text-danger'
-                          "
-                        >
-                          {{
-                            taskItem.launched
-                              ? conference.mentor_id === authUser.user_id
-                                ? $t("pages.tasks.launched")
-                                : taskItem.task_result.completed === false
-                                  ? $t("pages.tasks.is_available")
-                                  : $t("pages.tasks.is_completed")
-                              : conference.mentor_id === authUser.user_id
-                                ? $t("pages.tasks.not_launched")
-                                : taskItem.task_result.completed === false
-                                  ? $t("pages.tasks.is_unavailable")
-                                  : $t("pages.tasks.is_completed")
-                          }}</span
-                        >
-                      </div>
-                    </div>
-
-                    <circleProgressBar
-                      v-if="
-                        conference.mentor_id !== authUser.user_id &&
-                        taskItem.task_result &&
-                        taskItem.task_result.completed === true
-                      "
-                      :progress="taskItem.task_result.percentage"
-                    />
-                    <div
-                      class="pr-2"
-                      v-if="conference.mentor_id === authUser.user_id"
-                    >
-                      <span
-                        class="text-nowrap font-medium"
-                        :class="
-                          taskItem.completed_learners_tasks ===
-                          taskItem.learners.length
-                            ? 'text-success'
-                            : ''
-                        "
-                      >
-                        <span
-                          :class="
-                            taskItem.completed_learners_tasks > 0 &&
-                            'text-success'
-                          "
-                          >{{ taskItem.completed_learners_tasks }}</span
-                        >
-                        / {{ taskItem.learners.length }}</span
-                      >
-                    </div>
-                  </div>
-                </li>
-              </ul>
+            <div v-else class="col-span-12">
+              <div class="flex flex-col gap-4 justify-center items-center">
+                <p class="mb-0 text-center">
+                  {{
+                    conference.mentor_id === authUser.user_id
+                      ? $t("pages.tasks.not_started.mentor")
+                      : $t("pages.tasks.not_started.learner")
+                  }}
+                </p>
+                <button
+                  @click="openSelectTasksModal()"
+                  v-if="conference.mentor_id === authUser.user_id"
+                  class="btn btn-success"
+                >
+                  <i class="pi pi-play"></i>
+                  {{ $t("pages.tasks.select_a_task") }}
+                </button>
+              </div>
             </div>
           </div>
         </template>
@@ -866,23 +913,25 @@
                 </li>
               </ul>
             </div>
-            <div
-              v-if="conference.lesson_type_slug !== 'file_test'"
-              class="col-span-12"
-            >
-              <button
-                class="btn btn-outline-success"
-                :class="task.launched ? 'disabled' : ''"
-                @click="showTaskForLearners()"
+            <template v-if="!schoolStore.isAiSchoolDomain">
+              <div
+                v-if="conference.lesson_type_slug !== 'file_test'"
+                class="col-span-12"
               >
-                <i class="pi pi-play"></i>
-                {{
-                  task.launched
-                    ? $t("pages.tasks.launched")
-                    : $t("pages.tasks.run")
-                }}
-              </button>
-            </div>
+                <button
+                  class="btn btn-outline-success"
+                  :class="task.launched ? 'disabled' : ''"
+                  @click="showTaskForLearners()"
+                >
+                  <i class="pi pi-play"></i>
+                  {{
+                    task.launched
+                      ? $t("pages.tasks.launched")
+                      : $t("pages.tasks.run")
+                  }}
+                </button>
+              </div>
+            </template>
           </div>
         </template>
       </modal>
@@ -959,6 +1008,195 @@
           </div>
         </template>
       </modal>
+
+      <modal
+        :show="selectTasksModalIsVisible"
+        :onClose="() => closeSelectTasksModal()"
+        :className="tasksSelectionModalClass"
+        :showLoader="pendingTasksSelection"
+        :closeOnClickSelf="false"
+      >
+        <template v-slot:header_content>
+          <h5>{{ $t("pages.tasks.select_a_task_alt") }}</h5>
+        </template>
+        <template v-slot:body_content>
+          <div v-if="levels.length" class="custom-grid">
+            <div class="col-span-12">
+              <ul class="breadcrumb">
+                <li>
+                  <button
+                    @click="goToLevels()"
+                    :class="
+                      activeLevel || activeSection || activeLesson
+                        ? ''
+                        : 'inactive'
+                    "
+                  >
+                    <span>{{ $t("pages.courses.title") }}</span>
+                  </button>
+                </li>
+                <li v-if="activeLevel">
+                  <button
+                    @click="goToSections()"
+                    :class="!activeSection ? 'inactive' : ''"
+                  >
+                    <span>{{ activeLevel.level_name }}</span>
+                  </button>
+                </li>
+                <li v-if="activeSection">
+                  <button
+                    @click="goToLessons()"
+                    :class="!activeLesson ? 'inactive' : ''"
+                  >
+                    <span>{{ activeSection.section_name }}</span>
+                  </button>
+                </li>
+                <li v-if="activeLesson">
+                  <span>{{ activeLesson.lesson_name }}</span>
+                </li>
+              </ul>
+            </div>
+            <div class="col-span-12">
+              <div class="custom-grid">
+                <template v-if="activeLesson">
+                  <div class="col-span-12">
+                    <button class="btn btn-light" @click="goToLessons()">
+                      <i class="pi pi-arrow-left"></i>
+                      {{ $t("back") }}
+                    </button>
+                  </div>
+
+                  <div class="col-span-12">
+                    <h3 class="mb-2">{{ activeLesson.lesson_name }}</h3>
+                    <div class="flex flex-wrap gap-1 mb-1">
+                      <span> {{ $t("pages.tasks.count") }}: </span>
+                      <b>{{ activeLesson.tasks.length }}</b>
+                    </div>
+                  </div>
+
+                  <div class="col-span-12">
+                    <ul class="list-group nowrap">
+                      <li
+                        v-for="taskItem in activeLesson.tasks"
+                        :key="taskItem.task_id"
+                      >
+                        <div
+                          class="w-full flex items-center justify-between gap-4"
+                        >
+                          <div class="flex gap-2 items-center w-full">
+                            <i class="text-4xl" :class="taskItem.icon"></i>
+                            <div class="flex flex-col gap-y-0.5">
+                              <span class="font-medium text-left">{{
+                                taskItem.task_slug
+                              }}</span>
+                              <span class="text-inactive text-xs text-left">{{
+                                taskItem.task_type_name
+                              }}</span>
+                            </div>
+                          </div>
+
+                          <button
+                            class="btn btn-sm text-nowrap"
+                            @click="showTaskForLearners(taskItem.task_id)"
+                            :class="
+                              !tasks.length ||
+                              tasks.find((t) => t.task_id === taskItem.task_id)
+                                ? 'btn-outline-success disabled'
+                                : 'btn-success'
+                            "
+                          >
+                            <i class="pi pi-play"></i>
+                            {{
+                              !tasks.length ||
+                              tasks.find((t) => t.task_id === taskItem.task_id)
+                                ? $t("pages.tasks.launched")
+                                : $t("pages.tasks.run")
+                            }}
+                          </button>
+                        </div>
+                      </li>
+                    </ul>
+                  </div>
+                </template>
+                <template v-else-if="activeSection">
+                  <div class="col-span-12">
+                    <button class="btn btn-light" @click="goToSections()">
+                      <i class="pi pi-arrow-left"></i>
+                      {{ $t("back") }}
+                    </button>
+                  </div>
+                  <div class="col-span-12">
+                    <ul class="list-group nowrap">
+                      <li
+                        v-for="(lesson, lessonIndex) in activeSection.lessons"
+                        :key="lessonIndex"
+                      >
+                        <button class="w-full" @click="selectLesson(lesson)">
+                          <div class="flex gap-2 justify-between items-center">
+                            <div class="flex flex-col gap-y-1.5">
+                              <p class="mb-0 leading-none font-bold text-left">
+                                {{ lessonIndex + 1 }}. {{ lesson.lesson_name }}
+                                <span class="text-inactive font-normal"
+                                  >({{ lesson.lesson_type_name }})</span
+                                >
+                              </p>
+                              <span class="text-xs text-left"
+                                >{{ $t("pages.tasks.count") }}:
+                                <b>{{ lesson.tasks.length }}</b></span
+                              >
+                            </div>
+                          </div>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </template>
+                <template v-else-if="activeLevel">
+                  <div class="col-span-12">
+                    <button class="btn btn-light" @click="goToLevels()">
+                      <i class="pi pi-arrow-left"></i>
+                      {{ $t("back") }}
+                    </button>
+                  </div>
+                  <div class="col-span-12">
+                    <ul class="list-group nowrap">
+                      <li
+                        v-for="(section, sectionIndex) in activeLevel.sections"
+                        :key="sectionIndex"
+                      >
+                        <button class="w-full" @click="selectSection(section)">
+                          <div class="flex gap-2 justify-between items-center">
+                            <div class="flex flex-col gap-y-1.5">
+                              <p class="mb-0 leading-none font-bold text-left">
+                                {{ section.section_name }}
+                              </p>
+                              <span class="text-xs"
+                                >{{ $t("pages.lessons.lessons_count") }}:
+                                <b>{{ section.lessons.length }}</b></span
+                              >
+                            </div>
+                          </div>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </template>
+                <template v-else>
+                  <div
+                    v-for="(level, levelIndex) in levels"
+                    :key="levelIndex"
+                    class="col-span-12 md:col-span-4"
+                  >
+                    <button @click="selectLevel(level)">
+                      <levelCard :level="level" :showProgressBar="false" />
+                    </button>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </div>
+        </template>
+      </modal>
     </template>
   </div>
   <div v-else class="col-span-12">
@@ -997,6 +1235,8 @@ import circleProgressBar from "../../../components/ui/circleProgressBar.vue";
 import materialViewer from "../../../components/lesson/components/materialViewer.vue";
 import stickyBox from "../../../components/ui/stickyBox.vue";
 import dropdownMenu from "../../../components/ui/dropdownMenu.vue";
+import alert from "../../../components/ui/alert.vue";
+import levelCard from "../../../components/levels/levelCard.vue";
 const router = useRouter();
 const route = useRoute();
 const pendingRoute = ref(null);
@@ -1064,6 +1304,7 @@ const currentMaterial = ref(null);
 
 const task = ref(null);
 const tasks = ref([]);
+const levels = ref([]);
 const completedTasksCount = ref(0);
 const completedTasksPercent = ref(0);
 const taskInProgress = ref(false);
@@ -1073,6 +1314,7 @@ const tasksModalIsVisible = ref(false);
 const taskResultModalIsVisible = ref(false);
 const learnersTasksModalIsVisible = ref(false);
 const learnerTaskResultModalIsVisible = ref(false);
+const selectTasksModalIsVisible = ref(false);
 
 const busyLearners = ref([]);
 
@@ -1080,12 +1322,20 @@ const taskModalClass = ref("modal-lg");
 const taskModalProps = ref({});
 const currentTaskModal = shallowRef(null);
 
+const tasksSelectionModalDefaultClass = "modal-4xl";
+const tasksSelectionModalClass = ref(tasksSelectionModalDefaultClass);
+
 const pendingTasks = ref(false);
 const pendingTaskModal = ref(false);
 const pendingLearnersTasksResult = ref(false);
+const pendingTasksSelection = ref(true);
 const currentLearner = ref(null);
 
 const testIsStarted = ref(false);
+
+const activeLevel = ref(null);
+const activeSection = ref(null);
+const activeLesson = ref(null);
 
 useHead({
   title: pageTitle,
@@ -1297,6 +1547,16 @@ const closeLearnerTaskResultModal = () => {
   currentLearner.value = null;
 };
 
+const openSelectTasksModal = () => {
+  tasksModalIsVisible.value = false;
+  selectTasksModalIsVisible.value = true;
+};
+
+const closeSelectTasksModal = () => {
+  tasksModalIsVisible.value = true;
+  selectTasksModalIsVisible.value = false;
+};
+
 provide("onPending", onPending);
 provide("onStartTask", onStartTask);
 provide("onCompleteTask", onCompleteTask);
@@ -1306,19 +1566,19 @@ provide("tasks", tasks);
 provide("completedTasksCount", completedTasksCount);
 provide("openTask", openTask);
 
-const showTaskForLearners = async () => {
+const showTaskForLearners = async (task_id) => {
   pendingLearnersTasksResult.value = true;
   await $axiosPlugin
     .post(
       "conferences/run_task/" +
         conference.value.uuid +
         "/" +
-        task.value.task_id,
+        (task_id || task.value.task_id),
     )
     .then((response) => {
       getConferenceTasks();
       $socketPlugin.emit("open_task", {
-        taskId: task.value.task_id,
+        taskId: task_id || task.value.task_id,
       });
     })
     .catch((err) => {
@@ -1362,7 +1622,7 @@ const getConference = async () => {
       // }
       else {
         startStream();
-        //getConferenceTasks();
+        getConferenceTasks();
       }
 
       const confCrumbItem = document.querySelector('span[data-crumb="[id]"]');
@@ -1404,6 +1664,7 @@ const getConference = async () => {
 
 const getConferenceTasks = async () => {
   pendingTasks.value = true;
+  pendingTasksSelection.value = true;
   pendingLearnersTasksResult.value = true;
   tasksToComplete.value = 0;
   completedTasksCount.value = 0;
@@ -1413,7 +1674,12 @@ const getConferenceTasks = async () => {
     const response = await $axiosPlugin.get(
       "conferences/get_conference_tasks/" + conference.value.uuid,
     );
-    tasks.value = response.data;
+
+    if (response.data.levels) {
+      levels.value = response.data.levels;
+    }
+
+    tasks.value = response.data.tasks;
 
     if (task.value !== null) {
       task.value = tasks.value.find((t) => t.task_id === task.value.task_id);
@@ -1434,6 +1700,7 @@ const getConferenceTasks = async () => {
     }
 
     pendingTasks.value = false;
+    pendingTasksSelection.value = false;
     pendingLearnersTasksResult.value = false;
   } catch (err) {
     if (err.response) {
@@ -1449,6 +1716,54 @@ const getConferenceTasks = async () => {
       router.push("/error");
     }
   }
+};
+
+const selectLevel = (level) => {
+  pendingTasksSelection.value = true;
+
+  setTimeout(() => {
+    tasksSelectionModalClass.value = tasksSelectionModalDefaultClass;
+    activeLevel.value = level;
+    pendingTasksSelection.value = false;
+  }, 200);
+};
+
+const goToLevels = () => {
+  tasksSelectionModalClass.value = "modal-4xl";
+  activeLevel.value = null;
+  activeSection.value = null;
+  activeLesson.value = null;
+};
+
+const selectSection = (section) => {
+  pendingTasksSelection.value = true;
+
+  setTimeout(() => {
+    tasksSelectionModalClass.value = "modal-2xl";
+    activeSection.value = section;
+    pendingTasksSelection.value = false;
+  }, 200);
+};
+
+const goToSections = () => {
+  tasksSelectionModalClass.value = tasksSelectionModalDefaultClass;
+  activeSection.value = null;
+  activeLesson.value = null;
+};
+
+const selectLesson = async (lesson) => {
+  pendingTasksSelection.value = true;
+
+  setTimeout(() => {
+    tasksSelectionModalClass.value = "modal-2xl";
+    activeLesson.value = lesson;
+    pendingTasksSelection.value = false;
+  }, 200);
+};
+
+const goToLessons = () => {
+  tasksSelectionModalClass.value = tasksSelectionModalDefaultClass;
+  activeLesson.value = null;
 };
 
 const timeIsUp = () => {
