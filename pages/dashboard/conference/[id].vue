@@ -621,7 +621,7 @@
               >
                 <div class="custom-grid">
                   <div class="col-span-12">
-                    <ul class="list-group nowrap lg overflow-hidden">
+                    <ul class="list-group sm overflow-hidden" :class="conference.mentor_id === authUser.user_id ? 'nowrap' : ''">
                       <li v-for="taskItem in tasks" :key="taskItem.task_id">
                         <div class="flex items-center justify-between gap-4">
                           <div
@@ -1099,7 +1099,6 @@
                             class="btn btn-sm text-nowrap"
                             @click="showTaskForLearners(taskItem.task_id)"
                             :class="
-                              !tasks.length ||
                               tasks.find((t) => t.task_id === taskItem.task_id)
                                 ? 'btn-outline-success disabled'
                                 : 'btn-success'
@@ -1107,7 +1106,6 @@
                           >
                             <i class="pi pi-play"></i>
                             {{
-                              !tasks.length ||
                               tasks.find((t) => t.task_id === taskItem.task_id)
                                 ? $t("pages.tasks.launched")
                                 : $t("pages.tasks.run")
