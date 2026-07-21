@@ -32,7 +32,7 @@
                       addMaterial(
                         material_type.material_type_slug,
                         material_type.material_type_category,
-                        material_type.icon
+                        material_type.icon,
                       )
                     "
                   >
@@ -144,7 +144,14 @@
           v-if="currentMaterial && currentMaterial?.lesson_material_id"
           class="col-span-12"
         >
-          <materialViewer :material="currentMaterial" :showChat="currentMaterial && currentMaterial.block_material_type_slug ? true : false" />
+          <materialViewer
+            :material="currentMaterial"
+            :showChat="
+              currentMaterial && currentMaterial.block_material_type_slug
+                ? true
+                : false
+            "
+          />
         </div>
       </div>
     </template>
@@ -268,7 +275,7 @@
                   $t(
                     "file." +
                       currentMaterial.file_material_type_slug +
-                      ".select"
+                      ".select",
                   )
                 }}
               </p>
@@ -420,7 +427,7 @@ const addMaterialSubmit = async () => {
   formData.append("operation_type_id", 17);
   formData.append(
     "material_type_slug",
-    currentMaterialType.value.material_type_slug
+    currentMaterialType.value.material_type_slug,
   );
 
   await $axiosPlugin
@@ -486,7 +493,7 @@ const editMaterialSubmit = async () => {
   formData.append("operation_type_id", 24);
   formData.append(
     "material_type_slug",
-    currentMaterialType.value.material_type_slug
+    currentMaterialType.value.material_type_slug,
   );
 
   formData.append("select_other_file", selectOtherFile.value);
@@ -504,7 +511,7 @@ const editMaterialSubmit = async () => {
             uploadProgress.value = Math.round((e.loaded * 100) / e.total);
           }
         },
-      }
+      },
     )
     .then((response) => {
       closeEditModal();
@@ -541,14 +548,14 @@ const openDeleteModal = (material) => {
 const deleteMaterialSubmit = async (lesson_material_id) => {
   pendingDelete.value = true;
   await $axiosPlugin
-    .delete(
+    .post(
       "courses/delete_material/" +
         props.lessonData.lesson_id +
         "/" +
         lesson_material_id,
       {
-        params: { operation_type_id: 23 }, // Передача параметра в URL
-      }
+        operation_type_id: 23, // Передача параметра в URL
+      },
     )
     .then((response) => {
       deleteModalIsVisible.value = false;
@@ -581,7 +588,7 @@ const orderMaterials = async () => {
   const form_data = new FormData();
   form_data.append(
     "lesson_materials",
-    JSON.stringify(props.lessonData.materials)
+    JSON.stringify(props.lessonData.materials),
   );
   form_data.append("operation_type_id", 20);
   await $axiosPlugin

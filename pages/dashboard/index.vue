@@ -78,8 +78,7 @@
     </div>
 
     <div
-      class="col-span-12"
-      :class="schoolStore.isAiSchoolDomain ? 'lg:col-span-6' : ''"
+      class="col-span-12 lg:col-span-6"
     >
       <aiExplainer :explainMode="'speaking'" />
     </div>
@@ -89,7 +88,6 @@
         <div
           v-if="dashboard.current_lessons && dashboard.current_lessons.length"
           class="col-span-12"
-          :class="!schoolStore.isAiSchoolDomain ? 'lg:col-span-5' : ''"
         >
           <div class="custom-grid">
             <div class="col-span-12">
@@ -110,7 +108,6 @@
 
         <div
           class="col-span-12"
-          :class="!schoolStore.isAiSchoolDomain ? 'lg:col-span-7' : ''"
         >
           <div class="custom-grid">
             <div class="col-span-12">

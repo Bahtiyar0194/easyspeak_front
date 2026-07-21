@@ -97,10 +97,10 @@
                 v-for="e in eventsForDay(currentDate.date(d)).slice(0, 2)"
                 :key="e.uuid"
                 :class="[
-                  'py-0.5 px-1 rounded',
+                  'py-0.5 px-1 rounded bg-success text-white',
                   currentDate.date(d).isBefore(dayjs(), 'day')
-                    ? 'bg-inactive text-inactive'
-                    : 'bg-success text-white',
+                    ? 'opacity-35'
+                    : '',
                 ]"
               >
                 <div class="flex gap-1.5 text-nowrap">
@@ -167,10 +167,10 @@
                 )"
                 :key="e.uuid"
                 :class="[
-                  'py-0.5 px-1 rounded text-white',
+                  'py-0.5 px-1 rounded bg-success text-white',
                   currentDate.date(d.date()).isBefore(dayjs(), 'day')
-                    ? 'bg-inactive text-inactive'
-                    : 'bg-success text-white',
+                    ? 'opacity-35'
+                    : '',
                 ]"
               >
                 <div class="flex gap-1.5 text-nowrap">
