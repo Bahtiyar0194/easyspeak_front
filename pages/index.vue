@@ -84,7 +84,7 @@
           <div class="btn-wrap justify-center">
             <a
               href="https://easyspeak.kz/auth/register"
-              class="btn btn-lg !px-8 btn-light transition-all duration-700 ease-out delay-500"
+              class="btn btn-lg !px-8 bg-orange-500 text-white hover:!text-white transition-all duration-700 ease-out delay-500"
               :class="
                 showContent
                   ? 'opacity-100 translate-y-0'
