@@ -30,7 +30,7 @@
 import { useRouter } from "nuxt/app";
 import steps from "../../../../../ui/steps.vue";
 import selectSentences from "../../selectSentences.vue";
-import secondStep from "../../true-or-false/secondStep.vue";
+import secondStep from "../../true_or_false/secondStep.vue";
 import taskMaterialsForm from "../../taskMaterialsForm.vue";
 import taskOptionsForm from "../../taskOptionsForm.vue";
 

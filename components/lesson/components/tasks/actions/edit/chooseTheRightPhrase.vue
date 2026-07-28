@@ -1,65 +1,100 @@
 <template>
   <steps v-if="task.task_id" :currentStep="currentStep" :steps="editTaskSteps">
-    <form @submit.prevent="editTaskSubmit" class="mt-2" ref="editFormRef">
-      <div
-        v-for="(step, index) in editTaskSteps"
-        :key="index"
-        :class="currentStep === index + 1 ? 'block' : 'hidden'"
-      >
-        <component
-          v-if="step.component"
-          :is="step.component"
-          v-bind="step.props"
-        ></component>
-      </div>
-
-      <div class="btn-wrap mt-4">
-        <button
-          v-if="currentStep > 1"
-          class="btn btn-light"
-          @click="backToStep(currentStep - 1)"
-          type="button"
+    <scrollFadeContainer ref="modalScrollBox" :maxHeight="500" :fadeSize="40">
+      <form @submit.prevent="editTaskSubmit" class="mt-2" ref="editFormRef">
+        <div
+          v-for="(step, index) in editTaskSteps"
+          :key="index"
+          :class="currentStep === index + 1 ? 'block' : 'hidden'"
         >
-          <i class="pi pi-arrow-left"></i>
-          {{ $t("back") }}
-        </button>
+          <component
+            v-if="step.component"
+            :is="step.component"
+            v-bind="step.props"
+            ref="childRef"
+          ></component>
+        </div>
 
-        <button class="btn btn-primary" type="submit">
-          <template v-if="currentStep !== editTaskSteps.length">
-            <i class="pi pi-arrow-right"></i>
-            {{ $t("continue") }}
-          </template>
-          <template v-else>
-            <i class="pi pi-check"></i>
-            {{ $t("save") }}
-          </template>
-        </button>
-      </div>
-    </form>
+        <div class="btn-wrap mt-4">
+          <button
+            v-if="currentStep > 1"
+            class="btn btn-light"
+            @click="backToStep(currentStep - 1)"
+            type="button"
+          >
+            <i class="pi pi-arrow-left"></i>
+            {{ $t("back") }}
+          </button>
+
+          <button
+            v-if="currentStep === 2"
+            class="btn btn-success"
+            type="button"
+            @click="addQuestion()"
+          >
+            <i class="pi pi-plus"></i>
+            {{ $t("pages.questions.question.add") }}
+          </button>
+
+          <button class="btn btn-primary" type="submit">
+            <template v-if="currentStep !== editTaskSteps.length">
+              <i class="pi pi-arrow-right"></i>
+              {{ $t("continue") }}
+            </template>
+            <template v-else>
+              <i class="pi pi-check"></i>
+              {{ $t("save") }}
+            </template>
+          </button>
+        </div>
+      </form>
+    </scrollFadeContainer>
   </steps>
 </template>
 
 <script setup>
 import { useRouter } from "nuxt/app";
 import steps from "../../../../../ui/steps.vue";
-import selectWordsFromDictionary from "../../selectWordsFromDictionary.vue";
-import secondStep from "../../missing_letters/secondStep.vue";
+import secondStep from "../../choose_the_right_phrase/secondStep.vue";
 import editTaskMaterialsForm from "../../editTaskMaterialsForm.vue";
 import editTaskOptionsForm from "../../editTaskOptionsForm.vue";
+import scrollFadeContainer from "../../../../../ui/scrollFadeContainer.vue";
 
-const { t } = useI18n();
+const { t, localeProperties } = useI18n();
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
+const childRef = ref(null);
 const editFormRef = ref(null);
-const selectedWords = ref([]);
 const task = ref({});
 const taskOptions = ref({});
 const taskMaterials = ref([]);
+const modalScrollBox = ref(null);
+
 const errors = ref([]);
 
 const onPending = inject("onPending");
 const changeModalSize = inject("changeModalSize");
 const closeModal = inject("closeModal");
+
+const questionItem = {
+  question: "",
+  answers: [
+    {
+      title: "",
+      is_correct: false,
+    },
+    {
+      title: "",
+      is_correct: false,
+    },
+  ],
+};
+
+const questions = ref([]);
+
+const addQuestion = () => {
+  questions.value.push(structuredClone(questionItem));
+};
 
 const props = defineProps({
   task: {
@@ -69,35 +104,23 @@ const props = defineProps({
 
 const editTaskSteps = [
   {
-    title: t("pages.dictionary.select_words"),
-    component: selectWordsFromDictionary,
-    props: { errors, selectedWords },
-    modalSize: "full",
-  },
-  {
-    title: t("pages.tasks.missing_letters.select_letters"),
-    component: secondStep,
-    props: { errors, selectedWords },
-    modalSize: "3xl",
-  },
-  {
     title: t("pages.tasks.task_options.title"),
     component: editTaskOptionsForm,
     props: {
-      errors,
       task,
       taskOptions,
-      showAudioButton: true,
-      showPlayAudioAtTheBegin: true,
-      showPlayAudioWithTheCorrectAnswer: true,
-      showPlayErrorSoundWithTheInCorrectAnswer: true,
-      showImage: true,
-      showTranscription: true,
-      showTranslate: true,
-      items: selectedWords.value,
-      showSecondsPerWord: true,
+      errors,
+      showImpressionLimit: false,
+      showOptionLabel: true,
+      showSecondsPerSentence: true,
     },
     modalSize: "4xl",
+  },
+  {
+    title: t("pages.questions.title"),
+    component: secondStep,
+    props: { errors, questions },
+    modalSize: "2xl",
   },
   {
     title: t("pages.tasks.task_materials"),
@@ -110,6 +133,7 @@ const editTaskSteps = [
     modalSize: "2xl",
   },
 ];
+
 const currentStep = ref(1);
 
 const backToStep = (step) => {
@@ -122,20 +146,12 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/get/form_a_word_out_of_the_letters/" + props.task.task_id
+      "tasks/get/choose_the_right_phrase/" + props.task.task_id,
     );
     task.value = res.data.task;
     taskOptions.value = res.data.options;
     taskMaterials.value = res.data.materials;
-    selectedWords.value = res.data.words;
-    selectedWords.value.forEach((word) => {
-      if (!word.removedLetters) {
-        word.removedLetters = [];
-      }
-      word.missingLetters.forEach((letter) => {
-        word.removedLetters.push(letter - 1);
-      });
-    });
+    questions.value = res.data.questions;
   } catch (err) {
     const errorRoute = err.response
       ? {
@@ -156,33 +172,32 @@ const getTask = async () => {
 const editTaskSubmit = async () => {
   onPending(true);
   const formData = new FormData(editFormRef.value);
-  formData.append("words_count", selectedWords.value.length);
-  formData.append("words", JSON.stringify(selectedWords.value));
+  formData.append("questions_count", questions.value.length);
+  formData.append("questions", JSON.stringify(questions.value));
   formData.append("task_materials", JSON.stringify(taskMaterials.value));
-  formData.append("operation_type_id", 14);
+  formData.append("operation_type_id", 13);
+  formData.append("lang", localeProperties.value.code);
   formData.append("step", currentStep.value);
 
   await $axiosPlugin
-    .post(
-      "tasks/edit/form_a_word_out_of_the_letters/" + props.task.task_id,
-      formData
-    )
+    .post("tasks/edit/choose_the_right_phrase/" + props.task.task_id, formData)
     .then((res) => {
       onPending(false);
+      errors.value = [];
       if (res.data.step) {
         currentStep.value = res.data.step + 1;
         changeModalSize(
-          "modal-" + editTaskSteps[currentStep.value - 1].modalSize
+          "modal-" + editTaskSteps[currentStep.value - 1].modalSize,
         );
       } else {
         closeModal();
       }
-      errors.value = [];
     })
     .catch((err) => {
       if (err.response) {
         if (err.response.status == 422) {
           errors.value = err.response.data;
+          modalScrollBox.value.scrollToTop(true);
           onPending(false);
         } else {
           router.push({
@@ -202,6 +217,6 @@ const editTaskSubmit = async () => {
 
 onMounted(() => {
   getTask();
-  changeModalSize("modal-full");
+  changeModalSize("modal-4xl");
 });
 </script>

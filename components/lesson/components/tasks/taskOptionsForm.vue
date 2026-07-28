@@ -217,6 +217,28 @@
         </label>
       </div>
     </div>
+
+    <div v-if="props.showOptionLabel" class="col-span-12">
+      <div class="form-group-border select active label-active">
+        <i class="pi pi-tags"></i>
+        <select name="option_label">
+          <option selected disabled value="">
+            {{ $t("choose_your_option") }}
+          </option>
+          <option v-for="item in optionLabels" :key="item" :value="item">
+            {{ $t("pages.tasks.task_options.option_labels.options." + item) }}
+          </option>
+        </select>
+        <label :class="{ 'label-error': errors.option_label }">
+          {{
+            errors.option_label
+              ? $t("pages.tasks.task_options.option_labels.required")
+              : $t("pages.tasks.task_options.option_labels.title")
+          }}
+        </label>
+      </div>
+    </div>
+
     <div v-if="props.showOptionsNum" class="col-span-12">
       <div class="form-group-border select active label-active">
         <i class="pi pi-th-large"></i>
@@ -597,6 +619,12 @@ const props = defineProps({
     required: false,
   },
 
+  showOptionLabel: {
+    default: false,
+    type: Boolean,
+    required: false,
+  },
+
   showOptionsNum: {
     default: false,
     type: Boolean,
@@ -732,6 +760,8 @@ const missingWordOptions = [
   "with_first_letter",
   "with_options",
 ];
+
+const optionLabels = ["hidden", "with_letters", "with_numbers"];
 
 const showOnPlatformOptions = ["both", "b2b", "b2c"];
 

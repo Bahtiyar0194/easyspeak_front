@@ -107,6 +107,7 @@ export default {
     unverified_answers: "Тексерілмеген жауаптар",
     unverified_answers_count: "Тексерілмеген жауаптар саны",
     answer_options: "Жауап нұсқалары",
+    add_answer_option: "Жауап нұсқасын қосу",
     message: "Хабарлама",
     write_a_comment: "Пікір жазыңыз",
     comment: "Пікір",
@@ -1090,7 +1091,19 @@ export default {
         },
 
         questions: {
-            question: 'Сұрақ',
+            title: 'Сұрақтар мен жауаптар',
+            question: {
+                title: 'Сұрақ',
+                add: 'Сұрақ қосу',
+                delete: 'Сұрақты жою',
+                required: 'Сұрақты енгізіңіз'
+            },
+            answer: {
+                title: 'Жауап',
+                delete: 'Жауап нұсқасын жою',
+                required: 'Жауапты енгізіңіз'
+            },
+            answers: 'Жауаптар',
             answered_questions: 'Жауап берілген сұрақтар',
             unanswered_questions: 'Жауап берілмеген сұрақтар',
             number_of_answer_attempts: 'Жауап беруге арналған әрекеттер саны',
@@ -1166,6 +1179,15 @@ export default {
                 match_by_typing: 'Сөзді енгізу арқылы сәйкестендіру',
                 match_by_clicking: 'Сөзге басу арқылы сәйкестендіру',
                 match_by_drag_and_drop: 'Сүйреп апару арқылы сәйкестендіру',
+                option_labels: {
+                    title: 'Жауап нұсқаларының белгілері',
+                    required: 'Жауап нұсқалары белгілерінің бірін таңдаңыз',
+                    options: {
+                        with_letters: 'Әріп бойынша',
+                        with_numbers: 'Сан бойынша',
+                        hidden: 'Көрсетпеу',
+                    }
+                },
                 show_on_platform: {
                     title: 'Қай платформада көрсету керек?',
                     options: {

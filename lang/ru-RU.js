@@ -107,6 +107,7 @@ export default {
     unverified_answers: "Непроверенные ответы",
     unverified_answers_count: "Непроверенных ответов",
     answer_options: "Варианты ответа",
+    add_answer_option: "Добавить вариант ответа",
     message: "Сообщение",
     write_a_comment: "Напишите комментарий",
     comment: "Комментарий",
@@ -1090,7 +1091,19 @@ export default {
         },
 
         questions: {
-            question: 'Вопрос',
+            title: 'Вопросы и ответы',
+            question: {
+                title: 'Вопрос',
+                add: 'Добавить вопрос',
+                delete: 'Удалить вопрос',
+                required: 'Введите вопрос'
+            },
+            answer: {
+                title: 'Ответ',
+                delete: 'Удалить вариант ответа',
+                required: 'Введите ответ'
+            },
+            answers: 'Ответы',
             answered_questions: 'Отвеченные вопросы',
             unanswered_questions: 'Неотвеченные вопросы',
             number_of_answer_attempts: 'Количество попыток ответа на вопрос',
@@ -1166,6 +1179,15 @@ export default {
                 match_by_typing: 'Сопоставление с помощью ввода слова',
                 match_by_clicking: 'Сопоставление с помощью клика',
                 match_by_drag_and_drop: 'Сопоставление с помощью перетаскивания',
+                option_labels: {
+                    title: 'Метка вариантов ответа',
+                    required: 'Выберите метку для вариантов ответа',
+                    options: {
+                        with_letters: 'Буквенная',
+                        with_numbers: 'Цифровая',
+                        hidden: 'Не показывать',
+                    }
+                },
                 show_on_platform: {
                     title: 'На какой платформе показывать?',
                     options: {

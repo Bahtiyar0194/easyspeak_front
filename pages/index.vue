@@ -17,32 +17,83 @@
     </div>
     <div class="flex flex-col justify-center items-center text-center">
       <h1 class="mb-4"><span ref="typedElement" /></h1>
-      <div
-        ref="fadeTarget"
-        class="flex flex-col items-center"
-        :class="[
-          'transition-all duration-700 ease-out',
-          showContent
-            ? 'opacity-100 translate-y-0'
-            : 'opacity-0 -translate-y-4 pointer-events-none',
-        ]"
-      >
-        <p class="text-lg mb-6">
+      <div class="flex flex-col items-center">
+        <p
+          class="text-xl mb-12 font-medium transition-all duration-700 ease-out"
+          :class="
+            showContent
+              ? 'opacity-100 translate-y-0'
+              : 'opacity-0 -translate-y-4 pointer-events-none'
+          "
+        >
           {{ $t("pages.home.hero.description") }}
         </p>
-        <div class="btn-wrap justify-center">
-          <nuxt-link
-            :to="localePath('/courses')"
-            class="btn btn-lg !px-8 btn-primary mx-auto"
-          >
-            {{ $t("pages.courses.go_to_courses") }}
-          </nuxt-link>
-          <button
-            @click="demoModalIsVisible = true"
-            class="btn btn-primary btn-lg !px-8"
-          >
-            {{ $t("pages.home.demo.request_button") }}
-          </button>
+
+        <div class="flex flex-col gap-y-4">
+          <div class="btn-wrap justify-center">
+            <a
+              href="https://ai.easyspeak.kz/auth/login"
+              class="btn btn-lg !px-8 btn-success transition-all duration-700 ease-out delay-100"
+              :class="
+                showContent
+                  ? 'opacity-100 translate-y-0'
+                  : 'opacity-0 -translate-y-4 pointer-events-none'
+              "
+            >
+              {{ "Самостоятельное изучение с AI учителем" }}
+            </a>
+
+            <a
+              href="https://easyspeak.easyspeak.kz/auth/login"
+              class="btn btn-lg !px-8 btn-primary transition-all duration-700 ease-out delay-200"
+              :class="
+                showContent
+                  ? 'opacity-100 translate-y-0'
+                  : 'opacity-0 -translate-y-4 pointer-events-none'
+              "
+            >
+              {{ "Обучение с живым учителем от EasySpeak" }}
+            </a>
+          </div>
+
+          <div class="btn-wrap justify-center">
+            <nuxt-link
+              :to="localePath('/courses')"
+              class="btn btn-lg !px-8 btn-light transition-all duration-700 ease-out delay-300"
+              :class="
+                showContent
+                  ? 'opacity-100 translate-y-0'
+                  : 'opacity-0 -translate-y-4 pointer-events-none'
+              "
+            >
+              {{ $t("pages.courses.go_to_courses") }}
+            </nuxt-link>
+            <button
+              @click="demoModalIsVisible = true"
+              class="btn btn-light btn-lg !px-8 transition-all duration-700 ease-out delay-400"
+              :class="
+                showContent
+                  ? 'opacity-100 translate-y-0'
+                  : 'opacity-0 -translate-y-4 pointer-events-none'
+              "
+            >
+              {{ $t("pages.home.demo.request_button") }}
+            </button>
+          </div>
+
+          <div class="btn-wrap justify-center">
+            <a
+              href="https://easyspeak.kz/auth/register"
+              class="btn btn-lg !px-8 btn-light transition-all duration-700 ease-out delay-500"
+              :class="
+                showContent
+                  ? 'opacity-100 translate-y-0'
+                  : 'opacity-0 -translate-y-4 pointer-events-none'
+              "
+            >
+              {{ "Регистрация школы партнера" }}
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -281,6 +332,7 @@ import Typed from "typed.js";
 import { onMounted, onBeforeUnmount, ref } from "vue";
 import modal from "../components/ui/modal.vue";
 import videoPlayer from "../components/ui/videoPlayer.vue";
+import { isSubdomain } from "../utils/isSubdomain.js";
 const { t, localeProperties } = useI18n();
 const { $axiosPlugin, $contacts } = useNuxtApp();
 const config = useRuntimeConfig();
@@ -290,6 +342,7 @@ const requestIsSended = ref(false);
 const accept = ref(false);
 const errors = ref([]);
 const formRef = ref(null);
+const schoolStore = useSchoolStore();
 
 useHead({
   title: $contacts.name + " - " + t("pages.home.header-title"),
