@@ -40,7 +40,7 @@
                   : 'opacity-0 -translate-y-4 pointer-events-none'
               "
             >
-              {{ "Самостоятельное изучение с AI учителем" }}
+              {{ $t("pages.home.hero.btn_1") }}
             </a>
 
             <a
@@ -52,7 +52,7 @@
                   : 'opacity-0 -translate-y-4 pointer-events-none'
               "
             >
-              {{ "Обучение с живым учителем от EasySpeak" }}
+              {{ $t("pages.home.hero.btn_2") }}
             </a>
           </div>
 
@@ -91,7 +91,7 @@
                   : 'opacity-0 -translate-y-4 pointer-events-none'
               "
             >
-              {{ "Регистрация школы партнера" }}
+              {{ $t("pages.home.hero.btn_3") }}
             </a>
           </div>
         </div>
