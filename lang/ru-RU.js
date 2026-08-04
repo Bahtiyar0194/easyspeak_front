@@ -96,10 +96,14 @@ export default {
     title: "Заголовок",
     text_center: "Текст по центру",
     right: "Правильно!",
+    parthly_right: "Частично правильно",
     wrong: "Неправильно!",
     right_answer: "Правильный ответ",
     right_answers: "Правильные ответы",
     right_answers_count: "Правильных ответов",
+    partly_correct_answer: "Частично правильный ответ",
+    partly_correct_answers: "Частично правильные ответы",
+    partly_correct_answers_count: "Частично правильных ответов",
     wrong_answer: "Неправильный ответ",
     wrong_answers: "Неправильные ответы",
     wrong_answers_count: "Неправильных ответов",
@@ -1101,10 +1105,17 @@ export default {
                 delete: 'Удалить вопрос',
                 required: 'Введите вопрос'
             },
+            
+            studied_questions: 'Изученные вопросы',
+            unstudied_questions: 'Вопросы на переизучение',
+
             answer: {
                 title: 'Ответ',
                 delete: 'Удалить вариант ответа',
-                required: 'Введите ответ'
+                required: 'Введите ответ',
+
+                select_one: 'Выберите хотя бы один вариант ответа',
+                select_count: 'Количество выбранных вариантов ответа должно быть не более {count}'
             },
             answers: 'Ответы',
             answered_questions: 'Отвеченные вопросы',

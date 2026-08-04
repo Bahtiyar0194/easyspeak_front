@@ -19,6 +19,16 @@
                 props.taskResult.correct_answers_count
               }}</b>
             </p>
+
+            <template v-if="props.taskResult.partly_correct_answers_count > 0">
+              <hr />
+              <p class="mb-0">
+                {{ $t("partly_correct_answers_count") }}:
+                <b class="text-warning">{{
+                  props.taskResult.partly_correct_answers_count
+                }}</b>
+              </p>
+            </template>
             <hr />
             <p class="mb-0">
               {{ $t("wrong_answers_count") }}:
@@ -35,7 +45,8 @@
           <p
             v-if="
               props.taskResult.answers.correct_answers.length > 0 &&
-              (props.taskResult.answers.incorrect_answers.length > 0 ||
+              (props.taskResult.answers.partly_correct_answers.length > 0 ||
+                props.taskResult.answers.incorrect_answers.length > 0 ||
                 props.taskResult.answers.unverified_answers.length > 0)
             "
             class="text-xl font-medium mb-0 text-success"
@@ -66,10 +77,12 @@
                   <div class="flex flex-col gap-2">
                     <div v-if="answer.question">
                       <p class="mb-1 text-xs text-inactive font-normal">
-                        {{ $t("pages.questions.question") }}:
+                        {{ $t("pages.questions.question.title") }}:
                       </p>
                       <p class="font-medium mb-0">
-                        {{ answer.question.sentence }}
+                        {{
+                          answer.question.sentence || answer.question.question
+                        }}
                       </p>
                     </div>
                     <div>
@@ -112,12 +125,116 @@
 
         <div
           class="flex flex-col gap-y-2"
+          v-if="props.taskResult.answers.partly_correct_answers.length > 0"
+        >
+          <p
+            v-if="
+              props.taskResult.answers.partly_correct_answers.length > 0 &&
+              (props.taskResult.answers.correct_answers.length > 0 ||
+                props.taskResult.answers.incorrect_answers.length > 0 ||
+                props.taskResult.answers.unverified_answers.length > 0)
+            "
+            class="text-xl font-medium mb-0 text-warning"
+          >
+            {{ $t("partly_correct_answers") }}:
+          </p>
+          <ul class="list-group nowrap">
+            <li
+              v-for="(answer, answerIndex) in props.taskResult.answers
+                .partly_correct_answers"
+              :key="answerIndex"
+            >
+              <div class="flex gap-x-2 justify-between items-center">
+                <div class="flex gap-x-2 justify-between items-center">
+                  <div
+                    v-if="answer.word && answer.word.image_file"
+                    :key="answer.task_answer_id + '_' + answer.task_id"
+                    :style="{
+                      backgroundImage:
+                        'url(' +
+                        config.public.apiBase +
+                        '/media/get/' +
+                        (answer.word && answer.word.image_file) +
+                        ')',
+                    }"
+                    class="w-16 h-16 bg-contain bg-no-repeat bg-center border-inactive rounded-xl"
+                  ></div>
+                  <div class="flex gap-2" :class="!answer.word && 'flex-col'">
+                    <div v-if="answer.question">
+                      <p class="mb-1 text-xs text-inactive font-normal">
+                        {{ $t("pages.questions.question.title") }}:
+                      </p>
+                      <p class="font-medium mb-0">
+                        {{
+                          answer.question.sentence || answer.question.question
+                        }}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p
+                        v-if="answer.user_answer"
+                        class="mb-1 text-xs text-inactive font-normal"
+                      >
+                        {{
+                          authUser.user_id ===
+                          props.taskResult.completed_task.learner_id
+                            ? $t("your_answer")
+                            : $t("learner_answer")
+                        }}
+                      </p>
+                      <div v-html="answer.user_answer"></div>
+                    </div>
+
+                    <div v-if="answer.right_answer">
+                      <p
+                        v-if="answer.user_answer"
+                        class="mb-1 text-xs text-inactive font-normal"
+                      >
+                        {{ $t("right_answer") }}:
+                      </p>
+                      <div v-html="answer.right_answer"></div>
+                    </div>
+
+                    <div v-if="answer.comment">
+                      <p class="mb-1 text-xs text-inactive font-normal">
+                        {{ $t("comment") }}:
+                      </p>
+                      <p class="text-danger" v-html="answer.comment"></p>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center">
+                  <audioButton
+                    v-if="answer.word || answer.sentence"
+                    :key="answer.task_answer_id + '_' + answer.task_id"
+                    :src="
+                      config.public.apiBase +
+                      '/media/get/' +
+                      ((answer.word && answer.word.audio_file) ||
+                        (answer.sentence && answer.sentence.audio_file))
+                    "
+                  />
+                  <div class="step-item xs warning">
+                    <div class="step-icon">
+                      <i class="pi pi-check"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div
+          class="flex flex-col gap-y-2"
           v-if="props.taskResult.answers.incorrect_answers.length > 0"
         >
           <p
             v-if="
               props.taskResult.answers.incorrect_answers.length > 0 &&
               (props.taskResult.answers.correct_answers.length > 0 ||
+                props.taskResult.answers.partly_correct_answers.length > 0 ||
                 props.taskResult.answers.unverified_answers.length > 0)
             "
             class="text-xl font-medium mb-0 text-danger"
@@ -148,10 +265,12 @@
                   <div class="flex gap-2" :class="!answer.word && 'flex-col'">
                     <div v-if="answer.question">
                       <p class="mb-1 text-xs text-inactive font-normal">
-                        {{ $t("pages.questions.question") }}:
+                        {{ $t("pages.questions.question.title") }}:
                       </p>
                       <p class="font-medium mb-0">
-                        {{ answer.question.sentence }}
+                        {{
+                          answer.question.sentence || answer.question.question
+                        }}
                       </p>
                     </div>
 
@@ -244,10 +363,12 @@
                   >
                     <div v-if="answer.question">
                       <p class="mb-1 text-xs text-inactive font-normal">
-                        {{ $t("pages.questions.question") }}:
+                        {{ $t("pages.questions.question.title") }}:
                       </p>
                       <p class="font-medium mb-0">
-                        {{ answer.question.sentence }}
+                        {{
+                          answer.question.sentence || answer.question.question
+                        }}
                       </p>
                     </div>
 

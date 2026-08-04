@@ -1133,6 +1133,30 @@ select.error:has(option:checked:disabled) {
   @apply bg-gray-400;
 }
 
+.custom-radio-button{
+    @apply border border-inactive rounded-xl px-4 py-2 duration-200 cursor-pointer;
+}
+
+.custom-radio-button i {
+    @apply hidden;
+}
+
+.custom-radio-button:has(input:checked) {
+  @apply bg-corp border-corp text-white;
+}
+
+.custom-radio-button:has(input:checked) i {
+  @apply inline-block;
+}
+
+.custom-radio-button.success:has(input:checked) {
+  @apply bg-success border-success text-white;
+}
+
+.custom-radio-button > input {
+  @apply hidden;
+}
+
 .ios-switch {
   @apply relative inline-block;
   width: 38px;

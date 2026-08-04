@@ -96,10 +96,14 @@ export default {
     title: "Тақырып",
     text_center: "Мәтін ортада",
     right: "Дұрыс!",
+    parthly_right: "Ішінара дұрыс",
     wrong: "Дұрыс емес!",
     right_answer: "Дұрыс жауабы",
     right_answers: "Дұрыс жауаптар",
     right_answers_count: "Дұрыс жауаптар саны",
+    partly_correct_answer: "Ішінара дұрыс жауабы",
+    partly_correct_answers: "Ішінара дұрыс жауаптар",
+    partly_correct_answers_count: "Ішінара дұрыс жауаптар саны",
     wrong_answer: "Дұрыс емес жауап",
     wrong_answers: "Қате жауаптар",
     wrong_answers_count: "Қате жауаптар саны",
@@ -1101,10 +1105,17 @@ export default {
                 delete: 'Сұрақты жою',
                 required: 'Сұрақты енгізіңіз'
             },
+
+            studied_questions: 'Зерттелген сұрақтар',
+            unstudied_questions: 'Қайта зерттеуге арналған сұрақтар',
+
             answer: {
                 title: 'Жауап',
                 delete: 'Жауап нұсқасын жою',
-                required: 'Жауапты енгізіңіз'
+                required: 'Жауапты енгізіңіз',
+
+                select_one: 'Ең болмаса бір жауап нұсқасын таңдауыңыз қажет',
+                select_count: 'Таңдалған жауаптар саны {count}-ден аспауы қажет'
             },
             answers: 'Жауаптар',
             answered_questions: 'Жауап берілген сұрақтар',
