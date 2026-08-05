@@ -55,7 +55,7 @@
 <script setup>
 import { useRouter } from "nuxt/app";
 import steps from "../../../../../ui/steps.vue";
-import secondStep from "../../choose_the_right_phrase/secondStep.vue";
+import secondStep from "../../choose_the_right_answer/secondStep.vue";
 import taskMaterialsForm from "../../taskMaterialsForm.vue";
 import taskOptionsForm from "../../taskOptionsForm.vue";
 import scrollFadeContainer from "../../../../../ui/scrollFadeContainer.vue";
@@ -108,7 +108,7 @@ const newTaskSteps = [
       errors,
       showImpressionLimit: false,
       showOptionLabel: true,
-      showSecondsPerSentence: true,
+      showSecondsPerQuestion: true,
     },
     modalSize: "4xl",
   },
@@ -147,7 +147,7 @@ const createTaskSubmit = async () => {
   formData.append("step", currentStep.value);
 
   await $axiosPlugin
-    .post("tasks/create/choose_the_right_phrase/" + props.lesson_id, formData)
+    .post("tasks/create/choose_the_right_answer/" + props.lesson_id, formData)
     .then((res) => {
       onPending(false);
       errors.value = [];

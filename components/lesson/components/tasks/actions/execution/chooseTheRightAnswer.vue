@@ -75,21 +75,21 @@
         >
           <!-- 2. Что выбрал пользователь (показываем, только если он что-то выбирал и ответ не идеален) -->
           <div v-if="userSelectedAnswers.length > 0" class="mt-2">
-            {{ $t("your_answer") }}: 
+            {{ $t("your_answer") }}:
             <strong :class="isWrong ? 'text-danger' : 'text-success'">{{
               userAnswersText
             }}</strong>
           </div>
 
           <div v-else class="mt-2">
-            {{ $t("your_answer") }}: 
+            {{ $t("your_answer") }}:
             <strong class="text-danger">{{ $t("no_answer") }}</strong>
           </div>
 
           <!-- 3. Правильные ответы (показываем при частичном или неправильном ответе) -->
           <div v-if="!isPerfectMatch" class="mt-1">
-            <hr>
-            {{ $t("right_answer") }}: 
+            <hr />
+            {{ $t("right_answer") }}:
             <strong class="text-success"> {{ rightAnswersText }}</strong>
           </div>
         </div>
@@ -104,10 +104,23 @@
                 <label
                   v-for="(answer, answerIndex) in currentQuestion.answers"
                   :key="answerIndex"
-                  class="custom-radio-button"
+                  class="custom-radio-button cursor-pointer"
                   :class="selectError ? 'pulse bg-danger text-white' : ''"
                 >
-                  <input type="checkbox" v-model="answer.is_selected" />
+                  <!-- Динамический type: radio если правильный ответ 1, иначе checkbox -->
+                  <input
+                    :type="
+                      realCorrectAnswers.length === 1 ? 'radio' : 'checkbox'
+                    "
+                    :name="
+                      realCorrectAnswers.length === 1
+                        ? 'question_answers'
+                        : undefined
+                    "
+                    :checked="answer.is_selected"
+                    @change="selectAnswer(answer)"
+                  />
+
                   <div class="flex gap-1.5 font-medium">
                     <div
                       v-if="
@@ -243,12 +256,12 @@ const getTask = async () => {
     onPending(true);
 
     const res = await $axiosPlugin.get(
-      "tasks/get/choose_the_right_phrase/" + props.task.task_id,
+      "tasks/get/choose_the_right_answer/" + props.task.task_id,
     );
 
     taskData.value = res.data;
     onStartTask();
-    time.value = taskData.value.options.seconds_per_sentence;
+    time.value = taskData.value.options.seconds_per_question;
     showMaterialsOption.value = taskData.value.options.show_materials_option;
     materials.value = taskData.value.materials;
 
@@ -361,6 +374,18 @@ const setQuestion = () => {
     }
   } else {
     isFinished.value = true;
+  }
+};
+
+const selectAnswer = (selectedAnswer) => {
+  // Если верный ответ только один — сбрасываем все остальные варианты
+  if (realCorrectAnswers.value.length === 1) {
+    currentQuestion.value.answers.forEach((ans) => {
+      ans.is_selected = ans === selectedAnswer;
+    });
+  } else {
+    // Если правильных ответов несколько — переключаем (checkbox-поведение)
+    selectedAnswer.is_selected = !selectedAnswer.is_selected;
   }
 };
 

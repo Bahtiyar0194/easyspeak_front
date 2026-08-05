@@ -55,7 +55,7 @@
 <script setup>
 import { useRouter } from "nuxt/app";
 import steps from "../../../../../ui/steps.vue";
-import secondStep from "../../choose_the_right_phrase/secondStep.vue";
+import secondStep from "../../choose_the_right_answer/secondStep.vue";
 import editTaskMaterialsForm from "../../editTaskMaterialsForm.vue";
 import editTaskOptionsForm from "../../editTaskOptionsForm.vue";
 import scrollFadeContainer from "../../../../../ui/scrollFadeContainer.vue";
@@ -112,7 +112,7 @@ const editTaskSteps = [
       errors,
       showImpressionLimit: false,
       showOptionLabel: true,
-      showSecondsPerSentence: true,
+      showSecondsPerQuestion: true,
     },
     modalSize: "4xl",
   },
@@ -146,7 +146,7 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/get/choose_the_right_phrase/" + props.task.task_id,
+      "tasks/get/choose_the_right_answer/" + props.task.task_id,
     );
     task.value = res.data.task;
     taskOptions.value = res.data.options;
@@ -180,7 +180,7 @@ const editTaskSubmit = async () => {
   formData.append("step", currentStep.value);
 
   await $axiosPlugin
-    .post("tasks/edit/choose_the_right_phrase/" + props.task.task_id, formData)
+    .post("tasks/edit/choose_the_right_answer/" + props.task.task_id, formData)
     .then((res) => {
       onPending(false);
       errors.value = [];
