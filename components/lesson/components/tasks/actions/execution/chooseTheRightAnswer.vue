@@ -97,7 +97,11 @@
         <div v-if="isStarted" class="col-span-12">
           <div class="custom-grid">
             <div class="col-span-12">
-              <b>{{}}</b>
+              <p class="text-center mb-0 font-medium">{{
+                realCorrectAnswers.length === 1
+                  ? $t("pages.questions.answer.select_one_alt")
+                  : $t("pages.questions.answer.select_few")
+              }}</p>
             </div>
             <div class="col-span-12">
               <div class="flex flex-col gap-3">
@@ -105,7 +109,7 @@
                   v-for="(answer, answerIndex) in currentQuestion.answers"
                   :key="answerIndex"
                   class="custom-radio-button cursor-pointer"
-                  :class="selectError ? 'pulse bg-danger text-white' : ''"
+                  :class="selectError ? 'pulse !border-red-500' : ''"
                 >
                   <!-- Динамический type: radio если правильный ответ 1, иначе checkbox -->
                   <input
