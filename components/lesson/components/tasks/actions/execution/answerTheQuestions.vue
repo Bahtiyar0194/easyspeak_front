@@ -153,11 +153,11 @@
                         "
                       >
                         <i class="pi pi-reply"></i>
-                        <input
+                        <textarea
                           v-model="question.userInput"
-                          type="text"
+                          rows="4"
                           placeholder=" "
-                        />
+                        ></textarea>
                         <label
                           :class="
                             checkingStatus === true && !question.userInput
@@ -189,7 +189,7 @@
                           $t(
                             'file.' +
                               taskData.options.answer_the_questions_option +
-                              '.select'
+                              '.select',
                           )
                         "
                       />
@@ -371,7 +371,7 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/get/answer_the_questions/" + props.task.task_id
+      "tasks/get/answer_the_questions/" + props.task.task_id,
     );
 
     taskData.value = res.data;
@@ -462,7 +462,7 @@ const setQuestions = () => {
 const checkAnswers = () => {
   currentQuestions.value.forEach((question) => {
     questions.value = questions.value.filter(
-      (s) => s.task_question_id !== question.task_question_id
+      (s) => s.task_question_id !== question.task_question_id,
     );
 
     if (question.userInput !== "" && question.userInput !== " ") {
@@ -473,11 +473,11 @@ const checkAnswers = () => {
 
       if (
         reAnswerQuestions.value.some(
-          (q) => q.task_question_id === question.task_question_id
+          (q) => q.task_question_id === question.task_question_id,
         )
       ) {
         reAnswerQuestions.value = reAnswerQuestions.value.filter(
-          (q) => q.task_question_id !== question.task_question_id
+          (q) => q.task_question_id !== question.task_question_id,
         );
       }
     } else {
@@ -595,6 +595,6 @@ watch(
     if (newVal === taskData.value.questions.length) {
       saveTaskResult();
     }
-  }
+  },
 );
 </script>
