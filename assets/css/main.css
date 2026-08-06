@@ -1865,7 +1865,8 @@ input:disabled + .slider {
 }
 
 .steps > .progress{
-  @apply absolute my-0 top-5 border-0
+  @apply absolute my-0 border-0;
+  top: 18px;
 }
 
 .steps-wrap{
@@ -1873,7 +1874,7 @@ input:disabled + .slider {
 }
 
 .step-item{
-  @apply flex items-center justify-center flex-col gap-y-2 text-center text-xs md:text-base w-min md:w-auto z-10 bg-active text-inactive px-2;
+  @apply flex items-center justify-center flex-col gap-y-2 text-center text-xs md:text-base w-min md:w-auto z-10 text-inactive px-2;
 }
 
 .step-item.xs{

@@ -150,7 +150,7 @@
                   <i
                     v-if="
                       selectedSentences.some(
-                        (s) => s.sentence_id === sentence.sentence_id
+                        (s) => s.sentence_id === sentence.sentence_id,
                       )
                     "
                     class="text-success"
@@ -241,7 +241,7 @@
             $t(
               props.showQuestionsCount === true
                 ? "pages.questions.added_questions_count"
-                : "pages.sentences.added_sentences_count"
+                : "pages.sentences.added_sentences_count",
             )
           }}: <b>{{ selectedSentences.length }}</b></span
         >
@@ -320,6 +320,12 @@ const props = defineProps({
     default: false,
     type: Boolean,
     required: false,
+  },
+
+  addAnswerType: {
+    default: false,
+    type: Boolean,
+    requred: false,
   },
 });
 
@@ -416,23 +422,30 @@ const addToSentencesGroup = (sentence) => {
     !selectedSentences.value.some((s) => s.sentence_id === sentence.sentence_id)
   ) {
     let newArr = JSON.parse(JSON.stringify(selectedSentences.value));
+
+    if (props.addAnswerType === true) {
+      sentence.answer_type = 0;
+    }
+
     newArr.push(sentence);
     selectedSentences.value = newArr;
+
+    console.log(selectedSentences.value)
   } else {
     selectedSentences.value = selectedSentences.value.filter(
-      (s) => s.sentence_id !== sentence.sentence_id
+      (s) => s.sentence_id !== sentence.sentence_id,
     );
   }
 };
 
 const deleteFromGroup = (sentence_id) => {
   const sentenceToRemove = selectedSentences.value.find(
-    (s) => s.sentence_id === sentence_id
+    (s) => s.sentence_id === sentence_id,
   );
 
   if (sentenceToRemove) {
     selectedSentences.value = selectedSentences.value.filter(
-      (s) => s.sentence_id !== sentence_id
+      (s) => s.sentence_id !== sentence_id,
     );
   }
 };

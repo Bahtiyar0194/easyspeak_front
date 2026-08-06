@@ -1,8 +1,8 @@
 <template>
-  <steps v-if="task.task_id" :currentStep="currentStep" :steps="editTaskSteps">
-    <form @submit.prevent="editTaskSubmit" class="mt-2" ref="editFormRef">
+  <steps :currentStep="currentStep" :steps="newTaskSteps">
+    <form @submit.prevent="createTaskSubmit" class="mt-2" ref="createFormRef">
       <div
-        v-for="(step, index) in editTaskSteps"
+        v-for="(step, index) in newTaskSteps"
         :key="index"
         :class="currentStep === index + 1 ? 'block' : 'hidden'"
       >
@@ -25,7 +25,7 @@
         </button>
 
         <button class="btn btn-primary" type="submit">
-          <template v-if="currentStep !== editTaskSteps.length">
+          <template v-if="currentStep !== newTaskSteps.length">
             <i class="pi pi-arrow-right"></i>
             {{ $t("continue") }}
           </template>
@@ -43,23 +43,15 @@
 import { useRouter } from "nuxt/app";
 import steps from "../../../../../ui/steps.vue";
 import selectSentences from "../../selectSentences.vue";
-import secondStep from "../../true_or_false/secondStep.vue";
-import editTaskMaterialsForm from "../../editTaskMaterialsForm.vue";
-import editTaskOptionsForm from "../../editTaskOptionsForm.vue";
-
-const props = defineProps({
-  task: {
-    required: true,
-  },
-});
+import secondStep from "../../right_or_wrong/secondStep.vue";
+import taskMaterialsForm from "../../taskMaterialsForm.vue";
+import taskOptionsForm from "../../taskOptionsForm.vue";
 
 const { t } = useI18n();
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
-const editFormRef = ref(null);
+const createFormRef = ref(null);
 const selectedSentences = ref([]);
-const task = ref({});
-const taskOptions = ref({});
 const taskMaterials = ref([]);
 
 const errors = ref([]);
@@ -68,11 +60,17 @@ const onPending = inject("onPending");
 const changeModalSize = inject("changeModalSize");
 const closeModal = inject("closeModal");
 
-const editTaskSteps = [
+const props = defineProps({
+  lesson_id: {
+    required: true,
+  },
+});
+
+const newTaskSteps = [
   {
     title: t("pages.sentences.select_sentences"),
     component: selectSentences,
-    props: { errors, selectedSentences },
+    props: { errors, selectedSentences, addAnswerType: true },
     modalSize: "full",
   },
   {
@@ -83,10 +81,8 @@ const editTaskSteps = [
   },
   {
     title: t("pages.tasks.task_options.title"),
-    component: editTaskOptionsForm,
+    component: taskOptionsForm,
     props: {
-      task,
-      taskOptions,
       errors,
       showPlayAudioAtTheBegin: true,
       showPlayAudioWithTheCorrectAnswer: true,
@@ -98,11 +94,10 @@ const editTaskSteps = [
   },
   {
     title: t("pages.tasks.task_materials"),
-    component: editTaskMaterialsForm,
+    component: taskMaterialsForm,
     props: {
       errors,
       taskMaterials,
-      taskOptions
     },
     modalSize: "2xl",
   },
@@ -112,54 +107,26 @@ const currentStep = ref(1);
 
 const backToStep = (step) => {
   currentStep.value = step;
-  changeModalSize("modal-" + editTaskSteps[step - 1].modalSize);
+  changeModalSize("modal-" + newTaskSteps[step - 1].modalSize);
 };
 
-// Получение задачи
-const getTask = async () => {
-  try {
-    onPending(true);
-    const res = await $axiosPlugin.get(
-      "tasks/get/true_or_false/" + props.task.task_id
-    );
-    task.value = res.data.task;
-    taskOptions.value = res.data.options;
-    taskMaterials.value = res.data.materials;
-    selectedSentences.value = res.data.sentences;
-  } catch (err) {
-    const errorRoute = err.response
-      ? {
-          path: "/error",
-          query: {
-            status: err.response.status,
-            message: err.response.data.message,
-            url: err.request.responseURL,
-          },
-        }
-      : { path: "/error" };
-    router.push(errorRoute);
-  } finally {
-    onPending(false);
-  }
-};
-
-const editTaskSubmit = async () => {
+const createTaskSubmit = async () => {
   onPending(true);
-  const formData = new FormData(editFormRef.value);
+  const formData = new FormData(createFormRef.value);
   formData.append("sentences_count", selectedSentences.value.length);
   formData.append("sentences", JSON.stringify(selectedSentences.value));
   formData.append("task_materials", JSON.stringify(taskMaterials.value));
-  formData.append("operation_type_id", 14);
+  formData.append("operation_type_id", 13);
   formData.append("step", currentStep.value);
 
   await $axiosPlugin
-    .post("tasks/edit/true_or_false/" + props.task.task_id, formData)
+    .post("tasks/create/right_or_wrong/" + props.lesson_id, formData)
     .then((res) => {
       onPending(false);
       if (res.data.step) {
         currentStep.value = res.data.step + 1;
         changeModalSize(
-          "modal-" + editTaskSteps[currentStep.value - 1].modalSize
+          "modal-" + newTaskSteps[currentStep.value - 1].modalSize,
         );
       } else {
         closeModal();
@@ -188,7 +155,6 @@ const editTaskSubmit = async () => {
 };
 
 onMounted(() => {
-  getTask();
   changeModalSize("modal-full");
 });
 </script>

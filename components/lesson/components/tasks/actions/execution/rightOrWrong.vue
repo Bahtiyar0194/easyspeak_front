@@ -62,6 +62,17 @@
               <div v-if="taskData.options.show_translate" class="col-span-12">
                 <p class="mb-0">{{ currentSentence?.sentence_translate }}</p>
               </div>
+
+              <div v-if="isComplete" class="col-span-12">
+                <div class="text-center">
+                  <p class="text-inactive text-xs font-medium mb-0">
+                    {{ $t("your_answer") }}:
+                  </p>
+                  <p class="text-success font-medium mb-0">
+                    {{ currentSentence?.answer || $t("no_answer") }}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -71,7 +82,7 @@
             <div class="col-span-12 lg:col-span-6">
               <div class="card p-4 text-center">
                 <p class="text-inactive text-xs font-medium mb-0">
-                  {{ $t("your_answer") }}
+                  {{ $t("your_answer") }}:
                 </p>
                 <p class="text-danger font-medium mb-0">
                   {{ currentSentence?.userAnswer || $t("no_answer") }}
@@ -81,7 +92,7 @@
             <div class="col-span-12 lg:col-span-6">
               <div class="card p-4 text-center">
                 <p class="text-inactive text-xs font-medium mb-0">
-                  {{ $t("right_answer") }}
+                  {{ $t("right_answer") }}:
                 </p>
                 <p class="text-success font-medium mb-0">
                   {{ currentSentence?.answer }}
@@ -96,7 +107,7 @@
             <div class="col-span-12">
               <div class="btn-wrap items-center justify-center">
                 <button
-                  v-for="button in answerButtons"
+                  v-for="button in answerButtons[currentSentence.answer_type]"
                   :key="button"
                   type="button"
                   class="btn btn-light btn-sm"
@@ -139,7 +150,7 @@ import {
   playErrorSound,
   playAudio,
   stopAudio,
-} from "../../../../../../utils/playAudio";
+} from "../../../../../../utils/playAudio.js";
 import result from "../../results/sentences/result.vue";
 
 const router = useRouter();
@@ -169,7 +180,10 @@ const timeIsUp = ref(false);
 
 const isWrong = ref(false);
 
-const answerButtons = ["True", "False", "Doesn't say"];
+const answerButtons = [
+  ["True", "False", "Doesn't say"],
+  ["Yes", "No", "Not given"],
+];
 
 const sentencesLeft = computed(() => sentences.value.length);
 
@@ -205,7 +219,7 @@ const getTask = async () => {
     onPending(true);
 
     const res = await $axiosPlugin.get(
-      "tasks/get/true_or_false/" + props.task.task_id,
+      "tasks/get/right_or_wrong/" + props.task.task_id,
     );
 
     taskData.value = res.data;
