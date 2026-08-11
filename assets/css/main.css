@@ -2532,6 +2532,10 @@ input:disabled + .slider {
   @apply absolute top-0 left-0 w-full h-full pointer-events-none;
 }
 
+.mentor_comment b{
+  @apply text-danger;
+}
+
 @media (max-height: 700px) {
   .modal-body {
     height: 64vh;

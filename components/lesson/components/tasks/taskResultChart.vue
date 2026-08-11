@@ -200,7 +200,7 @@
                       <p class="mb-1 text-xs text-inactive font-normal">
                         {{ $t("comment") }}:
                       </p>
-                      <p class="text-danger" v-html="answer.comment"></p>
+                      <p class="mentor_comment" v-html="answer.comment"></p>
                     </div>
                   </div>
                 </div>
@@ -303,7 +303,7 @@
                       <p class="mb-1 text-xs text-inactive font-normal">
                         {{ $t("comment") }}:
                       </p>
-                      <p class="text-danger" v-html="answer.comment"></p>
+                      <p class="mentor_comment" v-html="answer.comment"></p>
                     </div>
                   </div>
                 </div>

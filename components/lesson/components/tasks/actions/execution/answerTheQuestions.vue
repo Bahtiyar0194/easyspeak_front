@@ -56,7 +56,7 @@
                   <div class="flex flex-col">
                     <p class="mb-1">
                       <span class="text-inactive"
-                        >{{ $t("pages.questions.question") }}:
+                        >{{ $t("pages.questions.question.title") }}:
                       </span>
                       <span class="font-medium">{{ question.sentence }}</span>
                     </p>
