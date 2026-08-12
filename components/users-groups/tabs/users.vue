@@ -685,6 +685,15 @@
                     {{ $t("back") }}
                   </button>
                 </div>
+
+                <div class="col-span-12">
+                  <progressBar
+                    :progressPercentage="activeSection.completed_percent"
+                    :wrapClass="'!my-0'"
+                    :showPercentage="true"
+                    :className="'sm success'"
+                  />
+                </div>
                 <div class="col-span-12">
                   <ul class="list-group nowrap">
                     <li
@@ -720,6 +729,15 @@
                     <i class="pi pi-arrow-left"></i>
                     {{ $t("back") }}
                   </button>
+                </div>
+
+                <div class="col-span-12">
+                  <progressBar
+                    :progressPercentage="activeLevel.completed_percent"
+                    :wrapClass="'!my-0'"
+                    :showPercentage="true"
+                    :className="'sm success'"
+                  />
                 </div>
                 <div class="col-span-12">
                   <ul class="list-group nowrap">

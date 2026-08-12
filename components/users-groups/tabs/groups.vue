@@ -358,11 +358,17 @@
         </p>
 
         <div v-if="currentGroup.group_members" class="btn-wrap">
-          <userTag
+          <template
             v-for="(member, index) in currentGroup.group_members"
             :key="index"
-            :user="member"
-          />
+          >
+            <userTag
+              :user="member"
+              :selectable="true"
+              :title="$t('pages.education-program.get_grade')"
+              @click="getGrade(member)"
+            />
+          </template>
         </div>
 
         <div class="btn-wrap">
@@ -604,6 +610,252 @@
       </div>
     </template>
   </modal>
+
+  <modal
+    :show="gradeModalIsVisible"
+    :onClose="() => closeModal('grade')"
+    :className="gradeModalClass"
+    :showLoader="pendingGrade"
+    :showPendingText="true"
+    :closeOnClickSelf="false"
+  >
+    <template v-slot:header_content>
+      <h4>{{ $t("pages.education-program.grade") }}</h4>
+    </template>
+    <template v-if="currentGroup && currentMember" v-slot:body_content>
+      <h2>{{ currentMember.last_name }} {{ currentMember.first_name }}</h2>
+
+      <template v-if="userGrade">
+        <div class="custom-grid">
+          <div class="col-span-12">
+            <ul class="breadcrumb">
+              <li>
+                <button
+                  @click="goToSections()"
+                  :class="!activeSection ? 'inactive' : ''"
+                >
+                  <span>{{ currentGroup.level.level_name }}</span>
+                </button>
+              </li>
+              <li v-if="activeSection">
+                <button
+                  @click="goToLessons()"
+                  :class="!activeLesson ? 'inactive' : ''"
+                >
+                  <span>{{ activeSection.section_name }}</span>
+                </button>
+              </li>
+              <li v-if="activeLesson">
+                <button
+                  @click="goToTasks()"
+                  :class="!activeTask ? 'inactive' : ''"
+                >
+                  <span>{{ activeLesson.lesson_name }}</span>
+                </button>
+              </li>
+              <li v-if="activeTask">
+                <span>{{ activeTask.task_slug }}</span>
+              </li>
+            </ul>
+          </div>
+          <div class="col-span-12">
+            <div class="custom-grid">
+              <template v-if="activeTask">
+                <div class="col-span-12">
+                  <button class="btn btn-light" @click="goToTasks()">
+                    <i class="pi pi-arrow-left"></i>
+                    {{ $t("back") }}
+                  </button>
+                </div>
+
+                <div class="col-span-12">
+                  <taskResultChart :taskResult="activeTask.task_result" />
+                </div>
+              </template>
+              <template v-else-if="activeLesson">
+                <div class="col-span-12">
+                  <button class="btn btn-light" @click="goToLessons()">
+                    <i class="pi pi-arrow-left"></i>
+                    {{ $t("back") }}
+                  </button>
+                </div>
+
+                <div class="col-span-12">
+                  <h3 class="mb-2">{{ activeLesson.lesson_name }}</h3>
+                  <div class="flex flex-wrap gap-1 mb-1">
+                    <span> {{ $t("pages.tasks.count") }}: </span>
+                    <b>{{ activeLesson.tasks.length }}</b>
+                  </div>
+
+                  <div class="flex flex-wrap gap-1 mb-1">
+                    <span> {{ $t("passed") }}: </span>
+                    <b>{{ activeLesson.completed_tasks_count }}</b>
+                  </div>
+
+                  <progressBar
+                    :progressPercentage="activeLesson.completed_tasks_percent"
+                    :wrapClass="'!my-0'"
+                    :showPercentage="true"
+                    :className="'sm success'"
+                  />
+                </div>
+
+                <div class="col-span-12">
+                  <ul class="list-group nowrap">
+                    <li
+                      v-for="taskItem in activeLesson.tasks"
+                      :key="taskItem.task_id"
+                    >
+                      <button
+                        class="w-full"
+                        :class="
+                          taskItem.task_result.completed === false
+                            ? 'cursor-auto'
+                            : 'cursor-pointer'
+                        "
+                        @click="
+                          taskItem.task_result.completed === true
+                            ? selectTask(taskItem)
+                            : null
+                        "
+                      >
+                        <div class="flex items-center justify-between gap-4">
+                          <div class="flex gap-2 items-center w-full">
+                            <i class="text-4xl" :class="taskItem.icon"></i>
+                            <div class="flex flex-col gap-y-0.5">
+                              <span class="font-medium text-left">{{
+                                taskItem.task_slug
+                              }}</span>
+                              <span class="text-inactive text-xs text-left">{{
+                                taskItem.task_type_name
+                              }}</span>
+                              <span
+                                v-if="
+                                  taskItem.task_result &&
+                                  taskItem.task_result.completed === true
+                                "
+                                class="text-xs text-success text-left"
+                                >{{ $t("pages.tasks.is_completed") }}</span
+                              >
+                              <span
+                                v-else-if="
+                                  taskItem.task_result &&
+                                  taskItem.task_result.answers &&
+                                  taskItem.task_result.completed === false
+                                "
+                                class="text-xs text-warning text-left"
+                                >{{ $t("pages.tasks.is_being_reviewed") }}</span
+                              >
+
+                              <span
+                                v-else
+                                class="text-xs text-danger text-left"
+                                >{{
+                                  $t("pages.tasks.not_been_completed_yet")
+                                }}</span
+                              >
+                            </div>
+                          </div>
+
+                          <circleProgressBar
+                            v-if="
+                              taskItem.task_result &&
+                              taskItem.task_result.completed === true
+                            "
+                            :progress="taskItem.task_result.percentage"
+                          />
+                        </div>
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </template>
+              <template v-else-if="activeSection">
+                <div class="col-span-12">
+                  <button class="btn btn-light" @click="goToSections()">
+                    <i class="pi pi-arrow-left"></i>
+                    {{ $t("back") }}
+                  </button>
+                </div>
+
+                <div class="col-span-12">
+                  <progressBar
+                    :progressPercentage="activeSection.completed_percent"
+                    :wrapClass="'!my-0'"
+                    :showPercentage="true"
+                    :className="'sm success'"
+                  />
+                </div>
+                <div class="col-span-12">
+                  <ul class="list-group nowrap">
+                    <li
+                      v-for="(lesson, lessonIndex) in activeSection.lessons"
+                      :key="lessonIndex"
+                    >
+                      <button class="w-full" @click="selectLesson(lesson)">
+                        <div class="flex gap-2 justify-between items-center">
+                          <div class="flex flex-col gap-y-1.5">
+                            <p class="mb-0 leading-none font-bold text-left">
+                              {{ lessonIndex + 1 }}. {{ lesson.lesson_name }}
+                              <span class="text-inactive font-normal"
+                                >({{ lesson.lesson_type_name }})</span
+                              >
+                            </p>
+                            <span class="text-xs text-left"
+                              >{{ $t("pages.tasks.count") }}:
+                              <b>{{ lesson.tasks_count }}</b></span
+                            >
+                          </div>
+                          <circleProgressBar
+                            :progress="lesson.completed_tasks_percent"
+                          />
+                        </div>
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </template>
+              <template v-else>
+                <div class="col-span-12">
+                  <progressBar
+                    :progressPercentage="userGrade.completed_percent"
+                    :wrapClass="'!my-0'"
+                    :showPercentage="true"
+                    :className="'sm success'"
+                  />
+                </div>
+                <div class="col-span-12">
+                  <ul class="list-group nowrap">
+                    <li
+                      v-for="(section, sectionIndex) in userGrade.sections"
+                      :key="sectionIndex"
+                    >
+                      <button class="w-full" @click="selectSection(section)">
+                        <div class="flex gap-2 justify-between items-center">
+                          <div class="flex flex-col gap-y-1.5">
+                            <p class="mb-0 leading-none font-bold text-left">
+                              {{ section.section_name }}
+                            </p>
+                            <span class="text-xs"
+                              >{{ $t("pages.lessons.lessons_count") }}:
+                              <b>{{ section.lessons.length }}</b></span
+                            >
+                          </div>
+                          <circleProgressBar
+                            :progress="section.completed_percent"
+                          />
+                        </div>
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div>
+      </template>
+    </template>
+  </modal>
 </template>
 <script setup>
 import { useRouter } from "nuxt/app";
@@ -629,6 +881,9 @@ import multipleSelect from "../../ui/multipleSelect.vue";
 import sortTableHead from "../../ui/sortTableHead.vue";
 import tabs from "../../ui/tabs.vue";
 import paymentsGrid from "./components/paymentsGrid.vue";
+import progressBar from "../../ui/progressBar.vue";
+import circleProgressBar from "../../ui/circleProgressBar.vue";
+import taskResultChart from "../../lesson/components/tasks/taskResultChart.vue";
 
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
@@ -639,8 +894,10 @@ const pendingGroup = ref(false);
 const pendingCreate = ref(false);
 const pendingEdit = ref(false);
 const pendingPaymentStatus = ref(false);
+const pendingGrade = ref(false);
 const newPayments = ref([]);
 const groupData = ref([]);
+const userGrade = ref(null);
 const tableRef = ref(null);
 const searchFormRef = ref(null);
 const createFormRef = ref(null);
@@ -650,6 +907,7 @@ const perPage = ref(10);
 const groups = ref([]);
 const currentGroup = ref(null);
 const groupMembers = ref([]);
+const currentMember = ref(null);
 const attributes = ref([]);
 
 const upcomingLessons = ref([]);
@@ -665,6 +923,16 @@ const editModalIsVisible = ref(false);
 const scheduleModalIsVisible = ref(false);
 const paymentsModalIsVisible = ref(false);
 const savePaymentsModalIsVisible = ref(false);
+
+const gradeModalIsVisible = ref(false);
+const gradeModalDefaultClass = "modal-lg";
+const gradeModalClass = ref(gradeModalDefaultClass);
+
+const activeCourse = ref(null);
+const activeLevel = ref(null);
+const activeSection = ref(null);
+const activeLesson = ref(null);
+const activeTask = ref(null);
 
 const sortKey = ref("groups.created_at"); // Ключ сортировки
 const sortDirection = ref("asc"); // Направление сортировки: asc или desc
@@ -1063,6 +1331,38 @@ const savePayments = async () => {
     });
 };
 
+const getGrade = async (user) => {
+  currentMember.value = user;
+  groupModalIsVisible.value = false;
+  gradeModalIsVisible.value = true;
+  pendingGrade.value = true;
+  gradeModalClass.value = gradeModalDefaultClass;
+
+  await $axiosPlugin
+    .post("courses/get_level_grade", {
+      level_id: currentGroup.value.level_id,
+      user_id: currentMember.value.user_id,
+    })
+    .then((response) => {
+      userGrade.value = response.data.level;
+      pendingGrade.value = false;
+    })
+    .catch((err) => {
+      if (err.response) {
+        router.push({
+          path: "/error",
+          query: {
+            status: err.response.status,
+            message: err.response.data.message,
+            url: err.request.responseURL,
+          },
+        });
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
 const closeModal = (action) => {
   if (action === "create") {
     createModalIsVisible.value = false;
@@ -1097,6 +1397,19 @@ const closeModal = (action) => {
     paymentsModalIsVisible.value = false;
     upcomingLessons.value = [];
     goneLessons.value = [];
+    getGroup(currentGroup.value.group_id);
+  } else if (action === "grade") {
+    gradeModalIsVisible.value = false;
+    currentMember.value = null;
+    pendingGrade.value = false;
+    userGrade.value = null;
+
+    activeCourse.value = null;
+    activeLevel.value = null;
+    activeSection.value = null;
+    activeLesson.value = null;
+    activeTask.value = null;
+
     getGroup(currentGroup.value.group_id);
   } else {
     groupModalIsVisible.value = false;
@@ -1139,6 +1452,73 @@ const selectedCourse = computed(() =>
 // Сброс значений при изменении выбора
 const onCourseChange = () => {
   debounceGroups();
+};
+
+const selectSection = (section) => {
+  pendingGrade.value = true;
+
+  setTimeout(() => {
+    gradeModalClass.value = "modal-2xl";
+    activeSection.value = section;
+    pendingGrade.value = false;
+  }, 200);
+};
+
+const goToSections = () => {
+  gradeModalClass.value = gradeModalDefaultClass;
+  activeSection.value = null;
+  activeLesson.value = null;
+  activeTask.value = null;
+};
+
+const selectLesson = async (lesson) => {
+  pendingGrade.value = true;
+
+  await $axiosPlugin
+    .post("courses/get_lesson_grade", {
+      lesson_id: lesson.lesson_id,
+      user_id: currentMember.value.user_id,
+    })
+    .then((response) => {
+      gradeModalClass.value = "modal-2xl";
+      activeLesson.value = response.data;
+      pendingGrade.value = false;
+    })
+    .catch((err) => {
+      if (err.response) {
+        router.push({
+          path: "/error",
+          query: {
+            status: err.response.status,
+            message: err.response.data.message,
+            url: err.request.responseURL,
+          },
+        });
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
+const goToLessons = () => {
+  gradeModalClass.value = gradeModalDefaultClass;
+  activeLesson.value = null;
+  activeTask.value = null;
+};
+
+const selectTask = (task) => {
+  pendingGrade.value = true;
+
+  setTimeout(() => {
+    gradeModalClass.value = "modal-2xl";
+    activeTask.value = task;
+    pendingGrade.value = false;
+  }, 200);
+};
+
+const goToTasks = () => {
+  gradeModalClass.value = "modal-2xl";
+  activeTask.value = null;
 };
 
 onMounted(() => {

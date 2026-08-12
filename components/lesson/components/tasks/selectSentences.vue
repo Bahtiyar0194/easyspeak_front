@@ -429,8 +429,6 @@ const addToSentencesGroup = (sentence) => {
 
     newArr.push(sentence);
     selectedSentences.value = newArr;
-
-    console.log(selectedSentences.value)
   } else {
     selectedSentences.value = selectedSentences.value.filter(
       (s) => s.sentence_id !== sentence.sentence_id,
