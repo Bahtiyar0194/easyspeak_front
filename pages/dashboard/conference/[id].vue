@@ -1312,7 +1312,7 @@ import { monitorNetworkAndAdjustQuality } from "../../../utils/networkQuality";
 import { useToast } from "vue-toastification";
 import Peer from "peerjs";
 import { useRuntimeConfig } from "nuxt/app";
-import { SelfieSegmentation } from "@mediapipe/selfie_segmentation";
+import SelfieSegmentationPkg from "@mediapipe/selfie_segmentation";
 import gridMode from "../../../components/conference/modes/gridMode.vue";
 import sliderMode from "../../../components/conference/modes/sliderMode.vue";
 import drawingBoard from "../../../components/conference/drawingBoard.vue";
@@ -1327,6 +1327,7 @@ import stickyBox from "../../../components/ui/stickyBox.vue";
 import dropdownMenu from "../../../components/ui/dropdownMenu.vue";
 import alert from "../../../components/ui/alert.vue";
 import levelCard from "../../../components/levels/levelCard.vue";
+
 const router = useRouter();
 const route = useRoute();
 const pendingRoute = ref(null);
@@ -1340,6 +1341,7 @@ const { $axiosPlugin, $socketPlugin } = useNuxtApp();
 const schoolStore = useSchoolStore();
 const authUser = useSanctumUser();
 const { refreshIdentity } = useSanctumAuth();
+const { SelfieSegmentation } = SelfieSegmentationPkg;
 
 const authUserInfo = {
   first_name: authUser.value.first_name,
@@ -2205,7 +2207,13 @@ const startStream = async () => {
 };
 
 const initMediaPipe = () => {
-  selfieSegmentation = new SelfieSegmentation({
+  // Защита от различий между dev и prod сборкой
+  const SelfieSegmentationClass =
+    SelfieSegmentation ||
+    SelfieSegmentationPkg.SelfieSegmentation ||
+    SelfieSegmentationPkg.default?.SelfieSegmentation;
+
+  const selfieSegmentation = new SelfieSegmentationClass({
     locateFile: (file) =>
       `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
   });
