@@ -2206,66 +2206,95 @@ const startStream = async () => {
   }
 };
 
+// Функция-хелпер, которая гарантированно найдёт именно функцию-конструктор
+const getSelfieSegmentationConstructor = () => {
+  if (typeof SelfieSegmentationPkg === "function") {
+    return SelfieSegmentationPkg;
+  }
+  if (typeof SelfieSegmentationPkg?.SelfieSegmentation === "function") {
+    return SelfieSegmentationPkg.SelfieSegmentation;
+  }
+  if (
+    typeof SelfieSegmentationPkg?.default?.SelfieSegmentation === "function"
+  ) {
+    return SelfieSegmentationPkg.default.SelfieSegmentation;
+  }
+  if (typeof SelfieSegmentationPkg?.default === "function") {
+    return SelfieSegmentationPkg.default;
+  }
+  if (
+    typeof window !== "undefined" &&
+    typeof window.SelfieSegmentation === "function"
+  ) {
+    return window.SelfieSegmentation;
+  }
+  return null;
+};
+
 const initMediaPipe = () => {
-  // Защита от различий между dev и prod сборкой
-  const SelfieSegmentationClass =
-    SelfieSegmentation ||
-    SelfieSegmentationPkg.SelfieSegmentation ||
-    SelfieSegmentationPkg.default?.SelfieSegmentation;
+  // Получаем сам конструктор
+  const SelfieSegmentationClass = getSelfieSegmentationConstructor();
 
-  const selfieSegmentation = new SelfieSegmentationClass({
-    locateFile: (file) =>
-      `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
-  });
+  if (!SelfieSegmentationClass) {
+    console.error(
+      "Не удалось найти конструктор SelfieSegmentation в модуле:",
+      SelfieSegmentationPkg,
+    );
+  } else {
+    const selfieSegmentation = new SelfieSegmentationClass({
+      locateFile: (file) =>
+        `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
+    });
 
-  selfieSegmentation.setOptions({ modelSelection: 1 });
+    selfieSegmentation.setOptions({ modelSelection: 1 });
 
-  selfieSegmentation.onResults((results) => {
-    if (!canvasRef.value) return;
-    const ctx = canvasRef.value.getContext("2d");
-    const { width, height } = canvasRef.value;
+    selfieSegmentation.onResults((results) => {
+      if (!canvasRef.value) return;
+      const ctx = canvasRef.value.getContext("2d");
+      const { width, height } = canvasRef.value;
 
-    ctx.save();
-    ctx.clearRect(0, 0, width, height);
+      ctx.save();
+      ctx.clearRect(0, 0, width, height);
 
-    if (bgMode.value !== "none") {
-      ctx.filter = "blur(4px)";
-      ctx.drawImage(results.segmentationMask, 0, 0, width, height);
-      ctx.filter = "none";
-
-      ctx.globalCompositeOperation = "source-in";
-      ctx.drawImage(results.image, 0, 0, width, height);
-
-      ctx.globalCompositeOperation = "destination-over";
-
-      if (bgMode.value === "blur") {
-        ctx.filter = "blur(12px)";
-        ctx.drawImage(results.image, 0, 0, width, height);
-      } else if (bgMode.value === "image") {
+      if (bgMode.value !== "none") {
+        ctx.filter = "blur(4px)";
+        ctx.drawImage(results.segmentationMask, 0, 0, width, height);
         ctx.filter = "none";
-        if (bgImageRef.value && bgImageRef.value.complete) {
-          ctx.drawImage(bgImageRef.value, 0, 0, width, height);
+
+        ctx.globalCompositeOperation = "source-in";
+        ctx.drawImage(results.image, 0, 0, width, height);
+
+        ctx.globalCompositeOperation = "destination-over";
+
+        if (bgMode.value === "blur") {
+          ctx.filter = "blur(12px)";
+          ctx.drawImage(results.image, 0, 0, width, height);
+        } else if (bgMode.value === "image") {
+          ctx.filter = "none";
+          if (bgImageRef.value && bgImageRef.value.complete) {
+            ctx.drawImage(bgImageRef.value, 0, 0, width, height);
+          }
         }
+      } else {
+        ctx.drawImage(results.image, 0, 0, width, height);
       }
-    } else {
-      ctx.drawImage(results.image, 0, 0, width, height);
-    }
 
-    ctx.restore();
-  });
+      ctx.restore();
+    });
 
-  const renderFrame = async () => {
-    if (
-      rawVideoRef.value &&
-      rawVideoRef.value.readyState >= 2 &&
-      bgMode.value !== "none"
-    ) {
-      await selfieSegmentation.send({ image: rawVideoRef.value });
-    }
-    animationFrameId = requestAnimationFrame(renderFrame);
-  };
+    const renderFrame = async () => {
+      if (
+        rawVideoRef.value &&
+        rawVideoRef.value.readyState >= 2 &&
+        bgMode.value !== "none"
+      ) {
+        await selfieSegmentation.send({ image: rawVideoRef.value });
+      }
+      animationFrameId = requestAnimationFrame(renderFrame);
+    };
 
-  renderFrame();
+    renderFrame();
+  }
 };
 
 const setConferenceMode = (mode) => {
