@@ -40,24 +40,35 @@
       <div class="col-span-12">
         <div class="btn-wrap justify-end">
           <button
+            v-for="(mode, modeIndex) in confModes"
+            :key="modeIndex"
             type="button"
             class="btn btn-square"
-            :class="confMode === 'grid' ? 'btn-outline-primary' : 'btn-light'"
-            @click="confMode = 'grid'"
+            :class="
+              confMode === mode.name ? 'btn-outline-primary' : 'btn-light'
+            "
+            @click="setConferenceMode(mode.name)"
           >
-            <i class="bi bi-grid-3x2"></i>
-          </button>
-          <button
-            type="button"
-            class="btn btn-square"
-            :class="confMode === 'slider' ? 'btn-outline-primary' : 'btn-light'"
-            @click="confMode = 'slider'"
-          >
-            <i class="bi bi-diagram-3"></i>
+            <i :class="mode.icon"></i>
           </button>
         </div>
       </div>
       <div class="col-span-12">
+        <video ref="rawVideoRef" class="hidden" autoplay playsinline></video>
+        <canvas
+          ref="canvasRef"
+          class="hidden"
+          width="1280"
+          height="720"
+        ></canvas>
+        <img
+          ref="bgImageRef"
+          :src="`/images/conference/${currentBgImage}.png`"
+          class="hidden"
+          alt="Virtual Background"
+          @load="onBgImageLoad"
+        />
+
         <gridMode v-if="confMode === 'grid'" :streams="streams" />
         <sliderMode v-else-if="confMode === 'slider'" :streams="streams" />
       </div>
@@ -108,25 +119,6 @@
                   }}
                 </p>
               </div>
-
-              <!-- <button
-                @click="toggleMute"
-                :title="
-                  isMuted
-                    ? $t('pages.conference.mic_turn_on')
-                    : $t('pages.conference.mic_turn_off')
-                "
-              >
-                <i v-if="isMuted" class="bi bi-mic-mute text-danger"></i>
-                <div v-else>
-                  <i v-if="volume > 50" class="bi bi-mic-fill text-success"></i>
-                  <i v-else class="bi bi-mic text-success"></i>
-                </div>
-
-                <span :class="isMuted ? 'text-danger' : 'text-success'">{{
-                  $t("pages.conference.mic")
-                }}</span>
-              </button> -->
             </li>
             <li v-if="microphones.length > 1">
               <div class="flex flex-col gap-y-2">
@@ -152,27 +144,118 @@
           </template>
         </dropdownMenu>
 
-        <button
-          @click="toggleStream"
-          :title="
-            isStream
-              ? $t('pages.conference.video_turn_off')
-              : $t('pages.conference.video_turn_on')
-          "
+        <dropdownMenu
+          :dropdownArrow="false"
+          :dropdownUp="true"
+          :position="'left'"
         >
-          <i
-            class="bi"
-            :class="
-              isStream
-                ? 'bi-camera-video text-success'
-                : 'bi-camera-video-off-fill text-danger'
-            "
-          ></i>
+          <template v-slot:btn_content>
+            <button
+              :title="
+                isStream
+                  ? $t('pages.conference.video_turned_on')
+                  : $t('pages.conference.video_turned_off')
+              "
+            >
+              <i
+                class="bi"
+                :class="
+                  isStream
+                    ? 'bi-camera-video text-success'
+                    : 'bi-camera-video-off-fill text-danger'
+                "
+              ></i>
 
-          <span :class="isStream ? 'text-success' : 'text-danger'">{{
-            $t("pages.conference.video")
-          }}</span>
-        </button>
+              <span :class="isStream ? 'text-success' : 'text-danger'">{{
+                $t("pages.conference.video")
+              }}</span>
+            </button>
+          </template>
+
+          <template v-slot:menu_content>
+            <li>
+              <div class="flex flex-col gap-4">
+                <template v-if="isStream && effects.length">
+                  <div class="flex flex-col gap-3">
+                    <p class="mb-0">
+                      {{ $t("pages.conference.effects.title") }}:
+                    </p>
+                    <div class="btn-group">
+                      <button
+                        v-for="(effect, effectIndex) in effects"
+                        :key="effectIndex"
+                        @click="switchBackgroundMode(effect.name)"
+                        class="btn btn-sm"
+                        :class="
+                          bgMode === effect.name
+                            ? 'btn-primary pointer-events-none !text-white'
+                            : 'btn-light'
+                        "
+                      >
+                        <i :class="effect.icon"></i>
+                        {{
+                          $t("pages.conference.effects.items." + effect.name)
+                        }}
+                      </button>
+                    </div>
+
+                    <template v-if="bgMode === 'image'">
+                      <p class="mb-0">
+                        {{ $t("pages.conference.effects.images.title") }}:
+                      </p>
+
+                      <div class="custom-grid !grid-cols-3">
+                        <div
+                          v-for="(image, imageIndex) in effects[2].images"
+                          :key="imageIndex"
+                          @click="selectConferenceBackgroundImage(image)"
+                          class="w-20 h-12 rounded-lg bg-cover bg-center flex justify-center items-center cursor-pointer relative overflow-hidden"
+                          :class="
+                            image === currentBgImage
+                              ? 'border-corp border'
+                              : 'border-inactive'
+                          "
+                          :style="{
+                            backgroundImage: `url('/images/conference/${image}.png')`,
+                          }"
+                        >
+                          <div
+                            class="absolute py-1 px-1.5 bg-black bg-opacity-50 z-10 text-white text-center text-xs left-0 right-0 bottom-0 top-0 flex items-center justify-center"
+                          >
+                            <b>{{
+                              $t(
+                                "pages.conference.effects.images.items." +
+                                  image,
+                              )
+                            }}</b>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+                <div class="flex gap-x-2 items-center my-1">
+                  <label class="ios-switch">
+                    <input
+                      type="checkbox"
+                      :checked="isStream"
+                      @change="toggleStream()"
+                    />
+                    <span class="slider"></span>
+                  </label>
+
+                  <p class="mb-0">
+                    {{
+                      isStream
+                        ? $t("pages.conference.video_turned_on")
+                        : $t("pages.conference.video_turned_off")
+                    }}
+                  </p>
+                </div>
+              </div>
+            </li>
+          </template>
+        </dropdownMenu>
 
         <button @click="participantsModalIsVisible = true">
           <i class="bi bi-people-fill"></i>
@@ -621,7 +704,14 @@
               >
                 <div class="custom-grid">
                   <div class="col-span-12">
-                    <ul class="list-group sm overflow-hidden" :class="conference.mentor_id === authUser.user_id ? 'nowrap' : ''">
+                    <ul
+                      class="list-group sm overflow-hidden"
+                      :class="
+                        conference.mentor_id === authUser.user_id
+                          ? 'nowrap'
+                          : ''
+                      "
+                    >
                       <li v-for="taskItem in tasks" :key="taskItem.task_id">
                         <div class="flex items-center justify-between gap-4">
                           <div
@@ -1217,10 +1307,12 @@ import {
   provide,
   shallowRef,
 } from "vue";
+import { debounceHandler } from "../../../utils/debounceHandler.js";
 import { monitorNetworkAndAdjustQuality } from "../../../utils/networkQuality";
 import { useToast } from "vue-toastification";
 import Peer from "peerjs";
 import { useRuntimeConfig } from "nuxt/app";
+import { SelfieSegmentation } from "@mediapipe/selfie_segmentation";
 import gridMode from "../../../components/conference/modes/gridMode.vue";
 import sliderMode from "../../../components/conference/modes/sliderMode.vue";
 import drawingBoard from "../../../components/conference/drawingBoard.vue";
@@ -1247,6 +1339,7 @@ const toast = useToast();
 const { $axiosPlugin, $socketPlugin } = useNuxtApp();
 const schoolStore = useSchoolStore();
 const authUser = useSanctumUser();
+const { refreshIdentity } = useSanctumAuth();
 
 const authUserInfo = {
   first_name: authUser.value.first_name,
@@ -1259,13 +1352,69 @@ const peers = {};
 
 const conference = ref(null);
 
-// grid or slider
-const confMode = ref("grid");
+const confModes = [
+  {
+    name: "grid",
+    icon: "bi bi-grid-3x2",
+  },
+  {
+    name: "slider",
+    icon: "bi bi-diagram-3",
+  },
+];
+
+const confMode = ref(authUser.value.conf_mode);
+const bgMode = ref(authUser.value.conf_bg_mode);
+const isBgImageLoaded = ref(false);
+
+const effects = [
+  {
+    name: "none",
+    icon: "bi bi-ban",
+  },
+  {
+    name: "blur",
+    icon: "bi bi-person-lines-fill",
+  },
+  {
+    name: "image",
+    icon: "bi bi-image",
+    images: [
+      "bubbles",
+      "cafe",
+      "city",
+      "clouds",
+      "night",
+      "office",
+      "palms",
+      "retro",
+      "sakura",
+      "library",
+      "cabinet",
+      "flat",
+    ],
+  },
+];
+
+const currentBgImage = ref(authUser.value.conf_bg_image);
+
+const onBgImageLoad = () => {
+  isBgImageLoaded.value = true;
+};
+
+const rawVideoRef = ref(null);
+const canvasRef = ref(null);
+const bgImageRef = ref(null);
 
 const localStream = ref(null);
 const myStream = ref(null);
-const screenStream = ref(null); // Поток экрана
+const rawStream = ref(null);
+const screenStream = ref(null);
 const streams = ref([]);
+
+let selfieSegmentation = null;
+let animationFrameId = null;
+let canvasStream = null;
 
 const microphones = ref([]);
 const dynamics = ref([]);
@@ -1273,7 +1422,7 @@ const cameras = ref([]);
 const selectedMicrophoneId = ref(null);
 
 const offlineMembers = computed(() => {
-  if (!conference.value) return []; // пока members не загружен — возвращаем пустой массив
+  if (!conference.value) return [];
   const onlineIds = new Set(streams.value.map((s) => s.user_id));
   return conference.value.members.filter((m) => !onlineIds.has(m.user_id));
 });
@@ -1281,10 +1430,10 @@ const offlineMembers = computed(() => {
 const errorMessage = ref(null);
 const pendingConference = ref(null);
 const endedConference = ref(null);
-const isMuted = ref(false); // Состояние микрофона
+const isMuted = ref(false);
 const volume = ref(0);
-const isStream = ref(false); // Состояние видео
-const isScreenSharing = ref(false); // Состояние демонстрации экрана
+const isStream = ref(false);
+const isScreenSharing = ref(false);
 
 const message = ref("");
 const messages = ref([]);
@@ -1359,7 +1508,6 @@ onBeforeRouteLeave((to, from, next) => {
   }
 });
 
-// методы модального окна
 const proceedLeave = () => {
   router.push(pendingRoute.value);
 };
@@ -1625,9 +1773,7 @@ const getConference = async () => {
 
       const confCrumbItem = document.querySelector('span[data-crumb="[id]"]');
 
-      // Проверить, найден ли элемент
       if (confCrumbItem) {
-        // Изменить текст внутри элемента
         confCrumbItem.textContent = schoolStore.isAiSchoolDomain
           ? response.data.conference.topic
           : response.data.conference.group_name +
@@ -1771,9 +1917,36 @@ const timeIsUp = () => {
   }, 1000);
 };
 
+// Возвращает поток с актуальным треком (Canvas или сырая камера)
+// Возвращает поток с актуальным треком (Canvas или сырая камера)
+const getActiveStream = () => {
+  if (isScreenSharing.value && screenStream.value) {
+    return screenStream.value;
+  }
+
+  if (!localStream.value) return null;
+
+  let activeVideoTrack = null;
+
+  // Убираем .value у canvasStream
+  if (bgMode.value !== "none" && canvasStream) {
+    activeVideoTrack = canvasStream.getVideoTracks()[0];
+  } else {
+    activeVideoTrack = localStream.value.getVideoTracks()[0];
+  }
+
+  const audioTrack = localStream.value.getAudioTracks()[0];
+
+  const streamToSend = new MediaStream();
+  if (activeVideoTrack) streamToSend.addTrack(activeVideoTrack);
+  if (audioTrack) streamToSend.addTrack(audioTrack);
+
+  return streamToSend;
+};
+
 const startStream = async () => {
   try {
-    localStream.value = await navigator.mediaDevices.getUserMedia({
+    const stream = await navigator.mediaDevices.getUserMedia({
       video: {
         width: 1280,
         height: 720,
@@ -1784,6 +1957,15 @@ const startStream = async () => {
         ? { deviceId: { exact: selectedMicrophoneId.value } }
         : true,
     });
+
+    rawStream.value = stream;
+    localStream.value = stream;
+
+    setTimeout(() => {
+      rawVideoRef.value.srcObject = stream;
+      initMediaPipe();
+      switchBackgroundMode(authUser.value.conf_bg_mode);
+    }, 1000);
 
     loadMicrophones();
 
@@ -1835,9 +2017,10 @@ const startStream = async () => {
     });
 
     myPeer.on("call", (call) => {
-      call.answer(
-        isScreenSharing.value ? screenStream.value : localStream.value,
-      );
+      // Вызываем функцию для получения актуального потока с фоном/без
+      const streamToSend = getActiveStream();
+
+      call.answer(streamToSend);
 
       call.on("stream", (remoteStream) => {
         addStream(
@@ -1936,7 +2119,7 @@ const startStream = async () => {
     $socketPlugin.on("open_task", async (data) => {
       if (authUser.value.user_id !== conference.value.mentor_id) {
         if (conference.value.is_member) {
-          await getConferenceTasks(); // теперь это точно будет дожидаться полной загрузки
+          await getConferenceTasks();
 
           const selectedTask = tasks.value.find(
             (t) => t.task_id === data.taskId,
@@ -2021,6 +2204,136 @@ const startStream = async () => {
   }
 };
 
+const initMediaPipe = () => {
+  selfieSegmentation = new SelfieSegmentation({
+    locateFile: (file) =>
+      `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
+  });
+
+  selfieSegmentation.setOptions({ modelSelection: 1 });
+
+  selfieSegmentation.onResults((results) => {
+    if (!canvasRef.value) return;
+    const ctx = canvasRef.value.getContext("2d");
+    const { width, height } = canvasRef.value;
+
+    ctx.save();
+    ctx.clearRect(0, 0, width, height);
+
+    if (bgMode.value !== "none") {
+      ctx.filter = "blur(4px)";
+      ctx.drawImage(results.segmentationMask, 0, 0, width, height);
+      ctx.filter = "none";
+
+      ctx.globalCompositeOperation = "source-in";
+      ctx.drawImage(results.image, 0, 0, width, height);
+
+      ctx.globalCompositeOperation = "destination-over";
+
+      if (bgMode.value === "blur") {
+        ctx.filter = "blur(12px)";
+        ctx.drawImage(results.image, 0, 0, width, height);
+      } else if (bgMode.value === "image") {
+        ctx.filter = "none";
+        if (bgImageRef.value && bgImageRef.value.complete) {
+          ctx.drawImage(bgImageRef.value, 0, 0, width, height);
+        }
+      }
+    } else {
+      ctx.drawImage(results.image, 0, 0, width, height);
+    }
+
+    ctx.restore();
+  });
+
+  const renderFrame = async () => {
+    if (
+      rawVideoRef.value &&
+      rawVideoRef.value.readyState >= 2 &&
+      bgMode.value !== "none"
+    ) {
+      await selfieSegmentation.send({ image: rawVideoRef.value });
+    }
+    animationFrameId = requestAnimationFrame(renderFrame);
+  };
+
+  renderFrame();
+};
+
+const setConferenceMode = (mode) => {
+  confMode.value = mode;
+  debounceConferenceSettings();
+};
+
+const switchBackgroundMode = async (mode) => {
+  if (mode === "image" && !isBgImageLoaded.value) {
+    console.warn("Background image not loaded yet.");
+    return;
+  }
+
+  bgMode.value = mode;
+
+  let newVideoTrack = null;
+
+  if (mode === "blur" || mode === "image") {
+    if (!canvasStream) {
+      canvasStream = canvasRef.value.captureStream(15);
+    }
+    newVideoTrack = canvasStream.getVideoTracks()[0];
+  } else {
+    newVideoTrack = rawStream.value.getVideoTracks()[0];
+  }
+
+  if (!newVideoTrack) return;
+
+  const localIndex = streams.value.findIndex((s) => !s.remote);
+  if (localIndex !== -1) {
+    const currentAudioTracks = rawStream.value.getAudioTracks();
+
+    const updatedStream = new MediaStream([
+      newVideoTrack,
+      ...currentAudioTracks,
+    ]);
+
+    streams.value[localIndex].stream = updatedStream;
+  }
+
+  replaceTrackInConnections(newVideoTrack, "video");
+
+  debounceConferenceSettings();
+};
+
+const selectConferenceBackgroundImage = (url) => {
+  currentBgImage.value = url;
+  debounceConferenceSettings();
+};
+
+const setUserConferenceSettings = async () => {
+  await $axiosPlugin
+    .post("conferences/save_settings", {
+      mode: confMode.value,
+      bg_mode: bgMode.value,
+      bg_image: currentBgImage.value,
+    })
+    .then((response) => {
+      refreshIdentity();
+    })
+    .catch((err) => {
+      if (err.response) {
+        router.push({
+          path: "/error",
+          query: {
+            status: err.response.status,
+            message: err.response.data.message,
+            url: err.request.responseURL,
+          },
+        });
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
 const joinToRoom = async () => {
   await $socketPlugin.connect();
 
@@ -2039,18 +2352,16 @@ const joinToRoom = async () => {
         $socketPlugin.emit("get-room-info", (roomInfo) => {
           roomInfo.forEach((user) => {
             if (user.peerId !== myPeer.id) {
-              const outgoingCall = myPeer.call(
-                user.peerId,
-                isScreenSharing.value ? screenStream.value : localStream.value,
-                {
-                  metadata: {
-                    userId: authUser.value.user_id,
-                    userInfo: authUserInfo,
-                    isStream: isStream.value,
-                    isMuted: isMuted.value,
-                  },
+              const streamToSend = getActiveStream();
+
+              const outgoingCall = myPeer.call(user.peerId, streamToSend, {
+                metadata: {
+                  userId: authUser.value.user_id,
+                  userInfo: authUserInfo,
+                  isStream: isStream.value,
+                  isMuted: isMuted.value,
                 },
-              );
+              });
 
               outgoingCall.on("stream", (remoteStream) => {
                 addStream(
@@ -2160,10 +2471,19 @@ const stopLocalStream = async () => {
   if (screenStream.value !== null) {
     screenStream.value.getTracks().forEach((track) => track.stop());
   }
+
+  if (rawStream.value !== null) {
+    rawStream.value.getTracks().forEach((track) => track.stop());
+  }
+
   localStream.value = null;
   screenStream.value = null;
+  rawStream.value = null;
   streams.value = [];
   $socketPlugin.disconnect();
+
+  if (animationFrameId) cancelAnimationFrame(animationFrameId);
+  if (selfieSegmentation) selfieSegmentation.close();
 };
 
 const removeStream = (peerId) => {
@@ -2209,35 +2529,68 @@ const toggleStream = () => {
 };
 
 const toggleMute = () => {
-  if (localStream.value) {
-    const audioTrack = localStream.value.getAudioTracks()[0];
-    audioTrack.enabled = !audioTrack.enabled;
-    isMuted.value = !audioTrack.enabled;
-
-    myStream.value.isMuted = isMuted.value;
-
-    $socketPlugin.emit("toggle-audio", {
-      peerId: myPeer.id,
-      isMuted: isMuted.value,
-    });
-  } else {
+  if (!localStream.value) {
     toast(t("errors.media.camera_error"), {
       toastClassName: ["custom-toast", "danger"],
       timeout: 10000,
     });
+    return;
   }
+
+  // 1. Инвертируем состояние
+  const newMutedState = !isMuted.value;
+  isMuted.value = newMutedState;
+
+  // 2. Управляем enabled у основного потока
+  const mainAudioTrack = localStream.value.getAudioTracks()[0];
+  if (mainAudioTrack) {
+    mainAudioTrack.enabled = !newMutedState;
+  }
+
+  // 3. Также отключаем/включаем аудиотрек во всех установленных PeerJS соединениях
+  Object.values(peers).forEach((call) => {
+    // Получаем отправщик медиаданных (RTCRtpSender)
+    const peerConnection = call.peerConnection;
+    if (peerConnection) {
+      peerConnection.getSenders().forEach((sender) => {
+        if (sender.track && sender.track.kind === "audio") {
+          sender.track.enabled = !newMutedState;
+        }
+      });
+    }
+  });
+
+  // 4. Обновляем локальное состояние и отправляем событие на сокет
+  if (myStream.value) {
+    myStream.value.isMuted = newMutedState;
+  }
+
+  $socketPlugin.emit("toggle-audio", {
+    peerId: myPeer.id,
+    isMuted: newMutedState,
+  });
 };
 
 const replaceTrackInConnections = (newTrack, kind = "video") => {
-  const activeConnections = Object.keys(myPeer.connections);
-  if (activeConnections.length > 0) {
-    const sender = myPeer.connections[activeConnections[0]][0].peerConnection
-      .getSenders()
-      .find((s) => s.track.kind === kind);
-    if (sender) {
-      sender.replaceTrack(newTrack);
+  if (!newTrack || !myPeer?.connections) return;
+
+  Object.keys(myPeer.connections).forEach((peerId) => {
+    const peerConnectionArray = myPeer.connections[peerId];
+
+    if (peerConnectionArray && peerConnectionArray.length > 0) {
+      const mediaConnection = peerConnectionArray[0];
+      const pc = mediaConnection.peerConnection;
+
+      if (pc) {
+        const sender = pc
+          .getSenders()
+          .find((s) => s.track && s.track.kind === kind);
+        if (sender) {
+          sender.replaceTrack(newTrack);
+        }
+      }
     }
-  }
+  });
 };
 
 const toggleScreenSharing = async () => {
@@ -2249,7 +2602,7 @@ const toggleScreenSharing = async () => {
           height: { max: 360 },
           frameRate: { max: 10 },
         },
-        audio: false, // ❌ не захватываем системный звук
+        audio: false,
       });
       isScreenSharing.value = true;
 
@@ -2279,21 +2632,16 @@ const stopScreenSharing = () => {
 };
 
 const loadMicrophones = async () => {
-  // ❗ гарантируем labels
   await navigator.mediaDevices.getUserMedia({ audio: true });
 
   const devices = await navigator.mediaDevices.enumerateDevices();
 
-  // ✅ ОБЯЗАТЕЛЬНО очищаем
   microphones.value = [];
 
   devices.forEach((d) => {
     if (d.kind !== "audioinput") return;
-
-    // ❌ пропускаем alias
     if (d.deviceId === "default" || d.deviceId === "communications") return;
 
-    // ✅ уникальность по groupId
     if (!microphones.value.some((m) => m.groupId === d.groupId)) {
       microphones.value.push(d);
     }
@@ -2304,7 +2652,6 @@ const loadMicrophones = async () => {
   if (savedId && microphones.value.some((m) => m.deviceId === savedId)) {
     selectedMicrophoneId.value = savedId;
   } else if (microphones.value.length > 0) {
-    // fallback
     selectedMicrophoneId.value = microphones.value[0].deviceId;
     localStorage.setItem("micdeviceid", selectedMicrophoneId.value);
   } else {
@@ -2323,10 +2670,8 @@ const switchMicrophone = async (micDeviceId) => {
 
   const newAudioTrack = audioStream.getAudioTracks()[0];
 
-  // 🔑 ВАЖНО: синхронизация mute-состояния
   newAudioTrack.enabled = !isMuted.value;
 
-  // 🔑 заменяем ТОЛЬКО sender
   Object.values(peers).forEach((call) => {
     const sender = call.peerConnection
       .getSenders()
@@ -2337,10 +2682,9 @@ const switchMicrophone = async (micDeviceId) => {
     }
   });
 
-  // 🔑 обновляем localStream БЕЗ stop/remove стрима
   const oldTrack = localStream.value.getAudioTracks()[0];
   if (oldTrack) {
-    oldTrack.stop(); // ← желательно, чтобы не висел device
+    oldTrack.stop();
     localStream.value.removeTrack(oldTrack);
   }
 
@@ -2350,7 +2694,6 @@ const switchMicrophone = async (micDeviceId) => {
 const trackMicrophone = async (stream) => {
   const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-  // Загрузка аудиоработника
   await audioContext.audioWorklet.addModule("/scripts/volume-processor.js");
 
   const microphone = audioContext.createMediaStreamSource(stream);
@@ -2383,15 +2726,13 @@ const updateVolume = (() => {
     if (findStream) {
       findStream.volume = data.volume;
 
-      // Сбрасываем предыдущий таймаут, если он есть
       if (timeoutId) {
         clearTimeout(timeoutId);
       }
 
-      // Устанавливаем новый таймаут для снижения громкости до нуля
       timeoutId = setTimeout(() => {
-        findStream.volume = 0; // Снижение громкости до нуля
-      }, 100); // Задержка перед началом снижения громкости
+        findStream.volume = 0;
+      }, 100);
     }
   };
 })();
@@ -2414,6 +2755,11 @@ const sendMessage = () => {
     message.value = "";
   }
 };
+
+const debounceConferenceSettings = debounceHandler(
+  () => setUserConferenceSettings(),
+  1000,
+);
 
 const reloadPage = () => {
   window.location.reload();

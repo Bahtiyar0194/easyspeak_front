@@ -873,7 +873,9 @@ export default {
             mic_turned_off: 'Микрофон өшірулі',
             video: 'Бейне',
             video_turn_on: 'Бейнені іске қосу',
+            video_turned_on: 'Бейне қосулы',
             video_turn_off: 'Бейнені өшіру',
+            video_turned_off: 'Бейне өшірулі',
             demo: 'Демо',
             demo_turn_on: 'Демонстрацияны іске қосу',
             demo_turn_off: 'Демонстрацияны өшіру',
@@ -895,6 +897,31 @@ export default {
             mode: {
                 grid: 'Кесте',
                 slider: 'Карусель'
+            },
+            effects: {
+                title: 'Фондық әсерлер',
+                items: {
+                    none: 'Әсерсіз',
+                    blur: 'Бұлыңғыр',
+                    image: 'Сурет'
+                },
+                images: {
+                    title: 'Фондық суреттер',
+                    items: {
+                        bubbles: 'Көпіршіктер',
+                        cafe: 'Кофехана',
+                        city: 'Қала',
+                        clouds: 'Бұлттар',
+                        night: 'Түн',
+                        office: 'Офис',
+                        palms: 'Пальмалар',
+                        retro: 'Ретро',
+                        sakura: 'Сакура',
+                        library: 'Кітапхана',
+                        cabinet: 'Кабинет',
+                        flat: 'Пәтер'
+                    }
+                }
             },
             messages: {
                 requesting_access: 'Камера мен микрофонға қолжетімділік сұралуда',

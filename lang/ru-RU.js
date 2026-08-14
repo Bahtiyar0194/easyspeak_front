@@ -873,7 +873,9 @@ export default {
             mic_turned_off: 'Микрофон отключен',
             video: 'Видео',
             video_turn_on: 'Включить видео',
+            video_turned_on: 'Видео включено',
             video_turn_off: 'Отключить видео',
+            video_turned_off: 'Видео отключено',
             demo: 'Демо',
             demo_turn_on: 'Запустить демонстрацию экрана',
             demo_turn_off: 'Остановить демонстрацию экрана',
@@ -895,6 +897,31 @@ export default {
             mode: {
                 grid: 'Сетка',
                 slider: 'Карусель'
+            },
+            effects: {
+                title: 'Фоновые эффекты',
+                items: {
+                    none: 'Без эффекта',
+                    blur: 'Размытый',
+                    image: 'Картинка'
+                },
+                images: {
+                    title: 'Фоновые картинки',
+                    items: {
+                        bubbles: 'Пузырьки',
+                        cafe: 'Кофейня',
+                        city: 'Город',
+                        clouds: 'Облака',
+                        night: 'Ночь',
+                        office: 'Офис',
+                        palms: 'Пальмы',
+                        retro: 'Ретро',
+                        sakura: 'Сакура',
+                        library: 'Библиотека',
+                        cabinet: 'Кабинет',
+                        flat: 'Квартира'
+                    }
+                }
             },
             messages: {
                 requesting_access: 'Получение доступа к камере и микрофону',
