@@ -57,9 +57,7 @@
         <video ref="rawVideoRef" class="hidden" autoplay playsinline></video>
         <canvas
           ref="canvasRef"
-          class="hidden"
-          width="1280"
-          height="720"
+          class="fixed -top-[9999px] -left-[9999px] pointer-events-none"
         ></canvas>
         <img
           ref="bgImageRef"
@@ -2269,11 +2267,11 @@ const initMediaPipe = () => {
         if (bgMode.value === "blur") {
           ctx.filter = "blur(12px)";
           ctx.drawImage(results.image, 0, 0, width, height);
-        } else if (bgMode.value === "image") {
+        } else if (bgMode.value === "image" && isBgImageLoaded.value) {
           ctx.filter = "none";
-          if (bgImageRef.value && bgImageRef.value.complete) {
-            ctx.drawImage(bgImageRef.value, 0, 0, width, height);
-          }
+          // Вместо ctx.drawImage(bgImageRef.value, 0, 0, width, height);
+          // Используем аккуратное заполнение с сохранением пропорций:
+          drawImageCover(ctx, bgImageRef.value, width, height);
         }
       } else {
         ctx.drawImage(results.image, 0, 0, width, height);
@@ -2283,18 +2281,72 @@ const initMediaPipe = () => {
     });
 
     const renderFrame = async () => {
-      if (
-        rawVideoRef.value &&
-        rawVideoRef.value.readyState >= 2 &&
-        bgMode.value !== "none"
-      ) {
-        await selfieSegmentation.send({ image: rawVideoRef.value });
+      if (rawVideoRef.value && rawVideoRef.value.readyState >= 2) {
+        // 1. Подгоняем размер Canvas под разрешение камеры (вертикальное для смартфонов, горизонтальное для ПК)
+        adjustCanvasSize();
+
+        if (bgMode.value !== "none" && selfieSegmentation) {
+          await selfieSegmentation.send({ image: rawVideoRef.value });
+        } else if (bgMode.value === "none" && canvasRef.value) {
+          const ctx = canvasRef.value.getContext("2d");
+          ctx.drawImage(
+            rawVideoRef.value,
+            0,
+            0,
+            canvasRef.value.width,
+            canvasRef.value.height,
+          );
+        }
       }
+
       animationFrameId = requestAnimationFrame(renderFrame);
     };
 
     renderFrame();
   }
+};
+
+const adjustCanvasSize = () => {
+  if (!rawVideoRef.value || !canvasRef.value) return;
+
+  const video = rawVideoRef.value;
+  const canvas = canvasRef.value;
+
+  // Берем РЕАЛЬНОЕ разрешение видеопотока с камеры устройства
+  const videoWidth = video.videoWidth;
+  const videoHeight = video.videoHeight;
+
+  // Если размеры определились и они отличаются от текущего Canvas
+  if (
+    videoWidth &&
+    videoHeight &&
+    (canvas.width !== videoWidth || canvas.height !== videoHeight)
+  ) {
+    canvas.width = videoWidth;
+    canvas.height = videoHeight;
+  }
+};
+
+// Функция отрисовывает картинку фоном с сохранением пропорций (аналог CSS object-fit: cover)
+const drawImageCover = (ctx, img, canvasWidth, canvasHeight) => {
+  const imgRatio = img.width / img.height;
+  const canvasRatio = canvasWidth / canvasHeight;
+
+  let renderWidth, renderHeight, offsetX, offsetY;
+
+  if (canvasRatio > imgRatio) {
+    renderWidth = canvasWidth;
+    renderHeight = canvasWidth / imgRatio;
+    offsetX = 0;
+    offsetY = (canvasHeight - renderHeight) / 2;
+  } else {
+    renderWidth = canvasHeight * imgRatio;
+    renderHeight = canvasHeight;
+    offsetX = (canvasWidth - renderWidth) / 2;
+    offsetY = 0;
+  }
+
+  ctx.drawImage(img, offsetX, offsetY, renderWidth, renderHeight);
 };
 
 const setConferenceMode = (mode) => {
