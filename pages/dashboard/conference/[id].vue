@@ -54,7 +54,13 @@
         </div>
       </div>
       <div class="col-span-12">
-        <video ref="rawVideoRef" class="hidden" autoplay playsinline></video>
+        <video
+          ref="rawVideoRef"
+          class="hidden"
+          autoplay
+          muted
+          playsinline
+        ></video>
         <canvas
           ref="canvasRef"
           class="fixed -top-[9999px] -left-[9999px] pointer-events-none"
@@ -1918,7 +1924,6 @@ const timeIsUp = () => {
 };
 
 // Возвращает поток с актуальным треком (Canvas или сырая камера)
-// Возвращает поток с актуальным треком (Canvas или сырая камера)
 const getActiveStream = () => {
   if (isScreenSharing.value && screenStream.value) {
     return screenStream.value;
@@ -1928,10 +1933,16 @@ const getActiveStream = () => {
 
   let activeVideoTrack = null;
 
-  // Убираем .value у canvasStream
+  // Проверяем, что canvasStream существует и его видеодорожка активна (live)
   if (bgMode.value !== "none" && canvasStream) {
-    activeVideoTrack = canvasStream.getVideoTracks()[0];
-  } else {
+    const canvasTrack = canvasStream.getVideoTracks()[0];
+    if (canvasTrack && canvasTrack.readyState === "live") {
+      activeVideoTrack = canvasTrack;
+    }
+  }
+
+  // Если canvasTrack не нашелся или не активен, берем чистый трек с камеры
+  if (!activeVideoTrack) {
     activeVideoTrack = localStream.value.getVideoTracks()[0];
   }
 
@@ -2247,34 +2258,70 @@ const initMediaPipe = () => {
     selfieSegmentation.setOptions({ modelSelection: 1 });
 
     selfieSegmentation.onResults((results) => {
-      if (!canvasRef.value) return;
-      const ctx = canvasRef.value.getContext("2d");
-      const { width, height } = canvasRef.value;
+      if (!canvasRef.value || !rawVideoRef.value) return;
+
+      const canvas = canvasRef.value;
+      const ctx = canvas.getContext("2d");
+      const { width: cWidth, height: cHeight } = canvas;
+      const { videoWidth, videoHeight } = rawVideoRef.value;
+
+      // Проверяем, является ли видео вертикальным (смартфон)
+      const isPortrait = videoWidth < videoHeight;
+
+      // Координаты отрисовки: во весь экран (ПК) или по центру (смартфон)
+      const renderRect = isPortrait
+        ? getCenteredVideoRect(videoWidth, videoHeight, cWidth, cHeight)
+        : { x: 0, y: 0, w: cWidth, h: cHeight };
 
       ctx.save();
-      ctx.clearRect(0, 0, width, height);
+      ctx.clearRect(0, 0, cWidth, cHeight);
+      ctx.filter = "none";
 
-      if (bgMode.value !== "none") {
-        ctx.filter = "blur(4px)";
-        ctx.drawImage(results.segmentationMask, 0, 0, width, height);
-        ctx.filter = "none";
+      if (bgMode.value === "none") {
+        // Если смартфон без эффекта — рисуем по центру, иначе во весь холст
+        ctx.drawImage(
+          results.image,
+          renderRect.x,
+          renderRect.y,
+          renderRect.w,
+          renderRect.h,
+        );
+      } else if (bgMode.value === "blur" || bgMode.value === "image") {
+        // 1. Маска силуэта
+        ctx.drawImage(
+          results.segmentationMask,
+          renderRect.x,
+          renderRect.y,
+          renderRect.w,
+          renderRect.h,
+        );
 
+        // 2. Вырезаем человека по маске
         ctx.globalCompositeOperation = "source-in";
-        ctx.drawImage(results.image, 0, 0, width, height);
+        ctx.drawImage(
+          results.image,
+          renderRect.x,
+          renderRect.y,
+          renderRect.w,
+          renderRect.h,
+        );
 
+        // 3. Подкладываем задний план ПОД человека
         ctx.globalCompositeOperation = "destination-over";
 
         if (bgMode.value === "blur") {
-          ctx.filter = "blur(12px)";
-          ctx.drawImage(results.image, 0, 0, width, height);
-        } else if (bgMode.value === "image" && isBgImageLoaded.value) {
+          ctx.filter = "blur(16px)";
+          // Размытый фон растягиваем на весь Canvas (заполнит боковые поля смартфона)
+          drawImageCover(ctx, results.image, cWidth, cHeight);
+        } else if (
+          bgMode.value === "image" &&
+          isBgImageLoaded.value &&
+          bgImageRef.value
+        ) {
           ctx.filter = "none";
-          // Вместо ctx.drawImage(bgImageRef.value, 0, 0, width, height);
-          // Используем аккуратное заполнение с сохранением пропорций:
-          drawImageCover(ctx, bgImageRef.value, width, height);
+          // Фоновое изображение тоже растягиваем на весь Canvas
+          drawImageCover(ctx, bgImageRef.value, cWidth, cHeight);
         }
-      } else {
-        ctx.drawImage(results.image, 0, 0, width, height);
       }
 
       ctx.restore();
@@ -2306,6 +2353,61 @@ const initMediaPipe = () => {
   }
 };
 
+const drawImageCover = (ctx, img, canvasWidth, canvasHeight) => {
+  const imgWidth = img.naturalWidth || img.videoWidth || img.width;
+  const imgHeight = img.naturalHeight || img.videoHeight || img.height;
+
+  if (!imgWidth || !imgHeight) return;
+
+  const imgRatio = imgWidth / imgHeight;
+  const canvasRatio = canvasWidth / canvasHeight;
+
+  let renderWidth, renderHeight, offsetX, offsetY;
+
+  if (canvasRatio > imgRatio) {
+    renderWidth = canvasWidth;
+    renderHeight = canvasWidth / imgRatio;
+    offsetX = 0;
+    offsetY = (canvasHeight - renderHeight) / 2;
+  } else {
+    renderWidth = canvasHeight * imgRatio;
+    renderHeight = canvasHeight;
+    offsetX = (canvasWidth - renderWidth) / 2;
+    offsetY = 0;
+  }
+
+  ctx.drawImage(img, offsetX, offsetY, renderWidth, renderHeight);
+};
+
+// Возвращает координаты для вписывания видео по центру Canvas с сохранением пропорций (Contain)
+const getCenteredVideoRect = (
+  videoWidth,
+  videoHeight,
+  canvasWidth,
+  canvasHeight,
+) => {
+  const videoRatio = videoWidth / videoHeight;
+  const canvasRatio = canvasWidth / canvasHeight;
+
+  let renderWidth, renderHeight, offsetX, offsetY;
+
+  if (videoRatio < canvasRatio) {
+    // Вертикальное видео (например, со смартфона)
+    renderHeight = canvasHeight;
+    renderWidth = canvasHeight * videoRatio;
+    offsetX = (canvasWidth - renderWidth) / 2;
+    offsetY = 0;
+  } else {
+    // Горизонтальное видео
+    renderWidth = canvasWidth;
+    renderHeight = canvasWidth / videoRatio;
+    offsetX = 0;
+    offsetY = (canvasHeight - renderHeight) / 2;
+  }
+
+  return { x: offsetX, y: offsetY, w: renderWidth, h: renderHeight };
+};
+
 const adjustCanvasSize = () => {
   if (!rawVideoRef.value || !canvasRef.value) return;
 
@@ -2325,28 +2427,6 @@ const adjustCanvasSize = () => {
     canvas.width = videoWidth;
     canvas.height = videoHeight;
   }
-};
-
-// Функция отрисовывает картинку фоном с сохранением пропорций (аналог CSS object-fit: cover)
-const drawImageCover = (ctx, img, canvasWidth, canvasHeight) => {
-  const imgRatio = img.width / img.height;
-  const canvasRatio = canvasWidth / canvasHeight;
-
-  let renderWidth, renderHeight, offsetX, offsetY;
-
-  if (canvasRatio > imgRatio) {
-    renderWidth = canvasWidth;
-    renderHeight = canvasWidth / imgRatio;
-    offsetX = 0;
-    offsetY = (canvasHeight - renderHeight) / 2;
-  } else {
-    renderWidth = canvasHeight * imgRatio;
-    renderHeight = canvasHeight;
-    offsetX = (canvasWidth - renderWidth) / 2;
-    offsetY = 0;
-  }
-
-  ctx.drawImage(img, offsetX, offsetY, renderWidth, renderHeight);
 };
 
 const setConferenceMode = (mode) => {
@@ -2666,18 +2746,28 @@ const replaceTrackInConnections = (newTrack, kind = "video") => {
   Object.keys(myPeer.connections).forEach((peerId) => {
     const peerConnectionArray = myPeer.connections[peerId];
 
-    if (peerConnectionArray && peerConnectionArray.length > 0) {
-      const mediaConnection = peerConnectionArray[0];
-      const pc = mediaConnection.peerConnection;
+    if (Array.isArray(peerConnectionArray)) {
+      peerConnectionArray.forEach((mediaConnection) => {
+        const pc = mediaConnection?.peerConnection;
 
-      if (pc) {
-        const sender = pc
-          .getSenders()
-          .find((s) => s.track && s.track.kind === kind);
-        if (sender) {
-          sender.replaceTrack(newTrack);
+        // Проверяем, что соединение существует и не закрыто
+        if (pc && pc.connectionState !== "closed") {
+          // Ищем сендер нужного типа (видео или аудио)
+          const sender = pc.getSenders().find((s) => {
+            if (s.track) {
+              return s.track.kind === kind;
+            }
+            // Если трек у сендера временно null, пытаемся определить по видео-каналу
+            return kind === "video";
+          });
+
+          if (sender) {
+            sender.replaceTrack(newTrack).catch((err) => {
+              console.error(`Ошибка замены трека для peer ${peerId}:`, err);
+            });
+          }
         }
-      }
+      });
     }
   });
 };
