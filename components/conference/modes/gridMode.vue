@@ -23,7 +23,7 @@
       </div>
       
       <video
-        class="w-full h-full aspect-square md:aspect-video object-cover"
+        class="w-full h-full"
         :srcObject="stream.stream"
         :muted="!stream.remote"
         autoplay
