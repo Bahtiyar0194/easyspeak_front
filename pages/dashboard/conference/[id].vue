@@ -1975,11 +1975,6 @@ const startStream = async () => {
 
     setTimeout(() => {
       rawVideoRef.value.srcObject = stream;
-      switchBackgroundMode(authUser.value.conf_bg_mode);
-
-      setTimeout(() => {
-        initMediaPipe();
-      }, 1000);
     }, 1000);
 
     loadMicrophones();
@@ -2665,6 +2660,15 @@ const toggleStream = () => {
     isStream.value = videoTrack.enabled;
 
     myStream.value.isStream = isStream.value;
+    if (isStream.value === true) {
+      switchBackgroundMode(authUser.value.conf_bg_mode);
+      setTimeout(() => {
+        initMediaPipe();
+      }, 500);
+    } else {
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      if (selfieSegmentation) selfieSegmentation.close();
+    }
 
     $socketPlugin.emit("toggle-video", {
       peerId: myPeer.id,

@@ -13,7 +13,7 @@
           <span class="text-xs">{{ mainStream.userInfo.first_name }}</span>
         </div>
         <video
-          class="w-full h-full"
+          class="w-full h-full aspect-[4/3] md:aspect-video object-cover"
           :srcObject="mainStream.stream"
           :muted="!mainStream.remote"
           autoplay
