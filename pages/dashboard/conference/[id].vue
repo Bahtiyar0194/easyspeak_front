@@ -1959,8 +1959,9 @@ const startStream = async () => {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
-        width: 1280,
-        height: 720,
+        // Используем ideal вместо жестких рамок
+        width: { ideal: 1280 },
+        height: { ideal: 720 },
         frameRate: { max: 15 },
         facingMode: "user",
       },
@@ -1974,8 +1975,11 @@ const startStream = async () => {
 
     setTimeout(() => {
       rawVideoRef.value.srcObject = stream;
-      initMediaPipe();
       switchBackgroundMode(authUser.value.conf_bg_mode);
+
+      setTimeout(() => {
+        initMediaPipe();
+      }, 1000);
     }, 1000);
 
     loadMicrophones();
@@ -2258,69 +2262,41 @@ const initMediaPipe = () => {
     selfieSegmentation.setOptions({ modelSelection: 1 });
 
     selfieSegmentation.onResults((results) => {
-      if (!canvasRef.value || !rawVideoRef.value) return;
+      if (!canvasRef.value) return;
 
       const canvas = canvasRef.value;
       const ctx = canvas.getContext("2d");
-      const { width: cWidth, height: cHeight } = canvas;
-      const { videoWidth, videoHeight } = rawVideoRef.value;
-
-      // Проверяем, является ли видео вертикальным (смартфон)
-      const isPortrait = videoWidth < videoHeight;
-
-      // Координаты отрисовки: во весь экран (ПК) или по центру (смартфон)
-      const renderRect = isPortrait
-        ? getCenteredVideoRect(videoWidth, videoHeight, cWidth, cHeight)
-        : { x: 0, y: 0, w: cWidth, h: cHeight };
+      const w = canvas.width;
+      const h = canvas.height;
 
       ctx.save();
-      ctx.clearRect(0, 0, cWidth, cHeight);
-      ctx.filter = "none";
+      ctx.clearRect(0, 0, w, h);
 
       if (bgMode.value === "none") {
-        // Если смартфон без эффекта — рисуем по центру, иначе во весь холст
-        ctx.drawImage(
-          results.image,
-          renderRect.x,
-          renderRect.y,
-          renderRect.w,
-          renderRect.h,
-        );
+        // Без фона
+        ctx.drawImage(results.image, 0, 0, w, h);
       } else if (bgMode.value === "blur" || bgMode.value === "image") {
-        // 1. Маска силуэта
-        ctx.drawImage(
-          results.segmentationMask,
-          renderRect.x,
-          renderRect.y,
-          renderRect.w,
-          renderRect.h,
-        );
+        // 1. Рисуем маску человека (белый силуэт)
+        ctx.drawImage(results.segmentationMask, 0, 0, w, h);
 
-        // 2. Вырезаем человека по маске
+        // 2. Оставляем ТОЛЬКО человека внутри маски
         ctx.globalCompositeOperation = "source-in";
-        ctx.drawImage(
-          results.image,
-          renderRect.x,
-          renderRect.y,
-          renderRect.w,
-          renderRect.h,
-        );
+        ctx.drawImage(results.image, 0, 0, w, h);
 
-        // 3. Подкладываем задний план ПОД человека
+        // 3. Рисуем фон ПОД человеком
         ctx.globalCompositeOperation = "destination-over";
 
         if (bgMode.value === "blur") {
           ctx.filter = "blur(16px)";
-          // Размытый фон растягиваем на весь Canvas (заполнит боковые поля смартфона)
-          drawImageCover(ctx, results.image, cWidth, cHeight);
+          ctx.drawImage(results.image, 0, 0, w, h);
         } else if (
           bgMode.value === "image" &&
           isBgImageLoaded.value &&
           bgImageRef.value
         ) {
           ctx.filter = "none";
-          // Фоновое изображение тоже растягиваем на весь Canvas
-          drawImageCover(ctx, bgImageRef.value, cWidth, cHeight);
+          // Заполняем весь Canvas фоновой картинкой (cover)
+          drawImageCover(ctx, bgImageRef.value, w, h);
         }
       }
 
@@ -2329,20 +2305,25 @@ const initMediaPipe = () => {
 
     const renderFrame = async () => {
       if (rawVideoRef.value && rawVideoRef.value.readyState >= 2) {
-        // 1. Подгоняем размер Canvas под разрешение камеры (вертикальное для смартфонов, горизонтальное для ПК)
-        adjustCanvasSize();
+        const video = rawVideoRef.value;
+        const canvas = canvasRef.value;
+
+        // Автоматически подгоняем Canvas под реальное разрешение камеры (например, 720x1280 на телефоне или 1280x720 на ноутбуке)
+        if (video.videoWidth && video.videoHeight) {
+          if (
+            canvas.width !== video.videoWidth ||
+            canvas.height !== video.videoHeight
+          ) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+          }
+        }
 
         if (bgMode.value !== "none" && selfieSegmentation) {
-          await selfieSegmentation.send({ image: rawVideoRef.value });
-        } else if (bgMode.value === "none" && canvasRef.value) {
-          const ctx = canvasRef.value.getContext("2d");
-          ctx.drawImage(
-            rawVideoRef.value,
-            0,
-            0,
-            canvasRef.value.width,
-            canvasRef.value.height,
-          );
+          await selfieSegmentation.send({ image: video });
+        } else if (bgMode.value === "none" && canvas) {
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
         }
       }
 
