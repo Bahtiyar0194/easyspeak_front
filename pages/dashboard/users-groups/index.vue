@@ -5,7 +5,10 @@
     :showPendingText="true"
   />
   <client-only>
-    <tabs :tabs="tabs_data" />
+    <tabs
+      :tabs="tabs_data"
+      :showTabHeader="schoolStore.isAiSchoolDomain === false"
+    />
   </client-only>
 </template>
 <script setup>
@@ -14,9 +17,14 @@ import users from "../../../components/users-groups/tabs/users.vue";
 import groups from "../../../components/users-groups/tabs/groups.vue";
 import loader from "../../../components/ui/loader.vue";
 const { t } = useI18n();
+const schoolStore = useSchoolStore();
 
 useHead({
-  title: t("pages.users-groups.title"),
+  title: t(
+    schoolStore.isAiSchoolDomain
+      ? "pages.users.title"
+      : "pages.users-groups.title",
+  ),
   meta: [{ name: "description", content: t("pages.home.description") }],
 });
 

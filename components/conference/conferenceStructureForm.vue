@@ -103,6 +103,13 @@
           </div>
 
           <div class="col-span-12">
+            <label class="custom-radio-checkbox">
+              <input name="is_free" type="checkbox" />
+              <span>{{ $t("pages.conference.free_conference") }}</span>
+            </label>
+          </div>
+
+          <div class="col-span-12">
             <button class="btn btn-primary" type="submit">
               <i class="pi pi-arrow-right"></i>
               {{ $t("save") }}

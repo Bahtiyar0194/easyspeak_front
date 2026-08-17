@@ -160,26 +160,57 @@
     :closeOnClickSelf="true"
   >
     <template v-slot:header_content>
-      <h4>{{ currentEvent?.lesson_name }}</h4>
+      <h4>{{ currentEvent?.lesson_name || currentEvent?.topic }}</h4>
     </template>
     <template v-if="currentEvent" v-slot:body_content>
       <div class="custom-grid">
         <div class="col-span-12">
-          <p class="text-inactive">
-            <i class="pi pi-book"></i> {{ $t("pages.courses.course") }}:
-            <b class="text-active"
-              >{{ currentEvent.course_name }} - {{ currentEvent.level_name }}</b
-            >
-          </p>
-          <p class="text-inactive">
-            <i class="pi pi-users"></i> {{ $t("pages.groups.group") }}:
-            <b class="text-active">{{ currentEvent.group_name }}</b>
-          </p>
+          <template v-if="!schoolStore.isAiSchoolDomain">
+            <p class="text-inactive">
+              <i class="pi pi-book"></i> {{ $t("pages.courses.course") }}:
+              <b class="text-active"
+                >{{ currentEvent.course_name }} -
+                {{ currentEvent.level_name }}</b
+              >
+            </p>
+            <p class="text-inactive">
+              <i class="pi pi-users"></i> {{ $t("pages.groups.group") }}:
+              <b class="text-active">{{ currentEvent.group_name }}</b>
+            </p>
+            <p class="text-inactive">
+              <i class="pi pi-users"></i> {{ $t("pages.groups.group") }}:
+              <b class="text-active">{{ currentEvent.group_name }}</b>
+            </p>
+          </template>
+          <template v-else>
+            <p class="text-inactive">
+              <i class="pi pi-book"></i> {{ $t("pages.courses.title") }}:
+              <b class="text-active">
+                <span class="text-list">
+                  <span
+                    v-for="(level, lIndex) in currentEvent.levels"
+                    :key="lIndex"
+                  >
+                    {{ level.level_name }}
+                  </span>
+                </span>
+              </b>
+            </p>
+          </template>
+
           <p class="text-inactive">
             <i class="pi pi-user"></i> {{ $t("mentor") }}:
             <b class="text-active"
-              >{{ currentEvent.mentor_last_name }}
-              {{ currentEvent.mentor_first_name }}</b
+              >{{
+                currentEvent.mentor_last_name ||
+                currentEvent.moderator_last_name ||
+                ""
+              }}
+              {{
+                currentEvent.mentor_first_name ||
+                currentEvent.moderator_first_name ||
+                ""
+              }}</b
             >
           </p>
           <p class="text-inactive">
@@ -428,6 +459,7 @@ import note from "../../../components/ui/note.vue";
 const router = useRouter();
 const errors = ref([]);
 const { $axiosPlugin } = useNuxtApp();
+const schoolStore = useSchoolStore();
 const attributes = ref([]);
 const schedule = ref([]);
 const pending = ref(true);

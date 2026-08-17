@@ -77,9 +77,7 @@
       </div>
     </div>
 
-    <div
-      class="col-span-12 lg:col-span-6"
-    >
+    <div class="col-span-12 lg:col-span-6">
       <aiExplainer :explainMode="'speaking'" />
     </div>
 
@@ -106,9 +104,7 @@
           </div>
         </div>
 
-        <div
-          class="col-span-12"
-        >
+        <div class="col-span-12">
           <div class="custom-grid">
             <div class="col-span-12">
               <h3 class="mb-0">
@@ -422,6 +418,16 @@
                 <i class="pi pi-check"></i>
                 {{ $t("pages.conference.accept.title") }}
               </button>
+            </div>
+
+            <div class="col-span-12" v-if="currentEvent.is_active === true">
+              <nuxt-link
+                class="btn btn-success"
+                :to="localePath('/dashboard/conference/' + currentEvent.uuid)"
+              >
+                <i class="pi pi-video"></i>
+                {{ $t("pages.conference.join") }}
+              </nuxt-link>
             </div>
           </template>
         </div>

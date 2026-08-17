@@ -131,7 +131,7 @@ watch(
         roles: [1, 2, 3, 4, 5],
       },
       {
-        title: "pages.users-groups.title",
+        title: schoolStore.isAiSchoolDomain ? "pages.users.title" : "pages.users-groups.title",
         icon: "pi pi-users",
         link: "/dashboard/users-groups",
         is_show: true,
@@ -141,8 +141,8 @@ watch(
         title: "pages.schedule.title",
         icon: "pi pi-calendar-clock",
         link: "/dashboard/schedule",
-        is_show: schoolStore.isAiSchoolDomain === false,
-        roles: [1, 2, 3, 4, 5],
+        is_show: true,
+        roles: [1, 2, 3, 4, 5, 6],
       },
       {
         title: "pages.conference.title",

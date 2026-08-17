@@ -213,10 +213,10 @@
                           v-for="(image, imageIndex) in effects[2].images"
                           :key="imageIndex"
                           @click="selectConferenceBackgroundImage(image)"
-                          class="w-20 h-12 rounded-lg bg-cover bg-center flex justify-center items-center cursor-pointer relative overflow-hidden"
+                          class="w-20 h-12 rounded-lg bg-cover bg-center flex justify-center items-center cursor-pointer relative overflow-hidden !border-2"
                           :class="
                             image === currentBgImage
-                              ? 'border-corp border'
+                              ? 'border-success'
                               : 'border-inactive'
                           "
                           :style="{
