@@ -2,11 +2,11 @@
   <div class="grid" :class="gridClass">
     <div
       class="border-2 relative overflow-hidden rounded-xl border-"
-      v-for="stream in props.streams"
+      v-for="stream in streams"
       :key="stream.peer_id"
       :class="[
         stream.volume > 50 ? 'border-success' : 'border-transparent',
-        props.streams.length === 1 ? 'col-span-12 md:col-span-6 md:col-start-3' : '',
+        streams.length === 1 ? 'col-span-12 md:col-span-6 md:col-start-3' : '',
       ]"
     >
       <div
@@ -22,12 +22,17 @@
         v-else
         class="bg-black text-white w-full h-full flex flex-col gap-1 justify-center items-center text-center px-2 select-none"
       >
-        <span class="text-lg md:text-2xl font-medium">{{ stream.userInfo.last_name + " " + stream.userInfo.first_name }}</span>
-        <span class="text-inactive text-xs">({{ $t("pages.conference.video_turned_off") }})</span>
+        <span class="text-lg md:text-2xl font-medium">{{
+          stream.userInfo.last_name + " " + stream.userInfo.first_name
+        }}</span>
+        <span class="text-inactive text-xs"
+          >({{ $t("pages.conference.video_turned_off") }})</span
+        >
       </div>
 
       <video
-        class="w-full h-full aspect-square md:aspect-video object-cover"
+        class="w-full h-full aspect-square md:aspect-video duration-200 object-cover"
+        :class="!stream.remote && props.reflected ? 'scale-x-[-1]' : ''"
         :srcObject="stream.stream"
         :muted="!stream.remote"
         autoplay
@@ -62,12 +67,20 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+
+  reflected: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
 });
 
 import { computed } from "vue";
 
+const { streams } = toRefs(props);
+
 const gridClass = computed(() => {
-  const count = props.streams.length;
+  const count = streams.value.length;
 
   if (count === 1) return "grid-cols-10";
   if (count === 2) return "grid-cols-2";

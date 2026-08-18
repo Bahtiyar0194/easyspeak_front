@@ -73,8 +73,16 @@
           @load="onBgImageLoad"
         />
 
-        <gridMode v-if="confMode === 'grid'" :streams="streams" />
-        <sliderMode v-else-if="confMode === 'slider'" :streams="streams" />
+        <gridMode
+          v-if="confMode === 'grid'"
+          :streams="streams"
+          :reflected="isVideoReflected"
+        />
+        <sliderMode
+          v-else-if="confMode === 'slider'"
+          :streams="streams"
+          :reflected="isVideoReflected"
+        />
       </div>
 
       <div v-if="authUser" class="db__footer__menu">
@@ -178,7 +186,7 @@
 
           <template v-slot:menu_content>
             <li>
-              <div class="flex flex-col gap-4">
+              <div class="flex flex-col gap-2">
                 <template v-if="isStream && effects.length">
                   <div class="flex flex-col gap-3">
                     <p class="mb-0">
@@ -238,6 +246,24 @@
                     </template>
                   </div>
                 </template>
+                <div v-if="isStream" class="flex gap-x-2 items-center my-1">
+                  <label class="ios-switch">
+                    <input
+                      type="checkbox"
+                      :checked="isVideoReflected"
+                      @change="reflectVideo()"
+                    />
+                    <span class="slider"></span>
+                  </label>
+
+                  <p class="mb-0">
+                    {{
+                      isVideoReflected
+                        ? $t("pages.conference.video_reflected")
+                        : $t("pages.conference.reflect_video")
+                    }}
+                  </p>
+                </div>
                 <div class="flex gap-x-2 items-center my-1">
                   <label class="ios-switch">
                     <input
@@ -1372,6 +1398,7 @@ const confModes = [
 const confMode = ref(authUser.value.conf_mode);
 const bgMode = ref(authUser.value.conf_bg_mode);
 const isBgImageLoaded = ref(false);
+const isVideoReflected = ref(authUser.value.video_reflected);
 
 const effects = [
   {
@@ -2417,6 +2444,11 @@ const setConferenceMode = (mode) => {
   debounceConferenceSettings();
 };
 
+const reflectVideo = () => {
+  isVideoReflected.value = !isVideoReflected.value;
+  debounceConferenceSettings();
+};
+
 const switchBackgroundMode = async (mode) => {
   if (mode === "image" && !isBgImageLoaded.value) {
     console.warn("Background image not loaded yet.");
@@ -2466,6 +2498,7 @@ const setUserConferenceSettings = async () => {
       mode: confMode.value,
       bg_mode: bgMode.value,
       bg_image: currentBgImage.value,
+      video_reflected: isVideoReflected.value,
     })
     .then((response) => {
       refreshIdentity();

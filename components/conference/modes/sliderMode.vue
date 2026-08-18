@@ -13,7 +13,8 @@
           <span class="text-xs">{{ mainStream.userInfo.first_name }}</span>
         </div>
         <video
-          class="w-full h-full aspect-[4/3] md:aspect-video object-cover"
+          class="w-full h-full duration-200 aspect-[4/3] md:aspect-video object-cover"
+          :class="!mainStream.remote && props.reflected ? 'scale-x-[-1]' : ''"
           :srcObject="mainStream.stream"
           :muted="!mainStream.remote"
           autoplay
@@ -46,7 +47,7 @@
       <div class="keen-slider w-full h-fit" ref="sliderRef">
         <div
           class="keen-slider__slide"
-          v-for="(stream, streamIndex) in props.streams"
+          v-for="(stream, streamIndex) in streams"
           :key="stream.peer_id"
         >
           <div
@@ -62,7 +63,8 @@
               <span class="text-xs">{{ stream.userInfo.first_name }}</span>
             </div>
             <video
-              class="w-full h-full aspect-[4/3] md:aspect-video object-cover"
+              class="w-full h-full duration-200 aspect-[4/3] md:aspect-video object-cover"
+              :class="!stream.remote && props.reflected ? 'scale-x-[-1]' : ''"
               :srcObject="stream.stream"
               :muted="!stream.remote"
               autoplay
@@ -104,6 +106,12 @@ const props = defineProps({
     type: Array,
     required: true,
   },
+
+  reflected: {
+    type: Boolean,
+    required: false,
+    default: false,
+  },
 });
 
 const sliderRef = ref(null);
@@ -128,7 +136,7 @@ onMounted(() => {
       "(max-width: 768px)": {
         vertical: false,
         slides: {
-          perView: 2.5
+          perView: 2.5,
         },
       },
     },
@@ -144,6 +152,6 @@ watch(
       mainStream.value = null;
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 </script>

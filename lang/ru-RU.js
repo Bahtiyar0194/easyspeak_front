@@ -876,6 +876,8 @@ export default {
             video_turned_on: 'Видео включено',
             video_turn_off: 'Отключить видео',
             video_turned_off: 'Видео отключено',
+            reflect_video: 'Отразить видео',
+            video_reflected: 'Видео отражено',
             demo: 'Демо',
             demo_turn_on: 'Запустить демонстрацию экрана',
             demo_turn_off: 'Остановить демонстрацию экрана',

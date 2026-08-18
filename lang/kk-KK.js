@@ -876,6 +876,8 @@ export default {
             video_turned_on: 'Бейне қосулы',
             video_turn_off: 'Бейнені өшіру',
             video_turned_off: 'Бейне өшірулі',
+            reflect_video: 'Бейнені шағылыстыру',
+            video_reflected: 'Бейне шағылысты',
             demo: 'Демо',
             demo_turn_on: 'Демонстрацияны іске қосу',
             demo_turn_off: 'Демонстрацияны өшіру',
