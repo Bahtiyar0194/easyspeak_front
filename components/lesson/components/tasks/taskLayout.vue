@@ -1,16 +1,23 @@
 <template>
   <countdownTaskTimer v-if="props.showTaskTimer" />
-  <div v-if="props.showMaterialsBeforeTask" class="custom-grid">
-    <materialsList :materials="props.materials" />
-    <div class="col-span-12">
-      <div class="btn-wrap justify-end">
-        <button class="btn btn-light" @click="props.startTask()">
-          <i class="pi pi-arrow-right"></i>
-          {{ $t("pages.tasks.start_the_task") }}
-        </button>
+  <scrollFadeContainer
+    v-if="props.showMaterialsBeforeTask"
+    :maxHeight="500"
+    :fadeSize="60"
+  >
+    <div class="custom-grid">
+      <materialsList :materials="props.materials" />
+      <div class="col-span-12">
+        <div class="btn-wrap justify-end">
+          <button class="btn btn-light" @click="props.startTask()">
+            <i class="pi pi-arrow-right"></i>
+            {{ $t("pages.tasks.start_the_task") }}
+          </button>
+        </div>
       </div>
     </div>
-  </div>
+  </scrollFadeContainer>
+
   <div v-else class="custom-grid">
     <div v-if="props.isFinished === false" class="col-span-12">
       <div class="custom-grid">
@@ -22,7 +29,7 @@
           v-if="props.task.task_example"
           :htmlData="props.task.task_example"
           :title="$t('pages.tasks.task_options.task_example')"
-          :className="'bg-inactive border-inactive px-3 py-2 rounded-lg card p-4'"
+          :className="'bg-inactive border-inactive p-3 rounded-xl'"
         />
 
         <div class="col-span-12">
@@ -35,7 +42,11 @@
               "
               class="col-span-12 lg:col-span-6"
             >
-              <materialsList :materials="props.materials" />
+              <scrollFadeContainer :maxHeight="400" :fadeSize="60">
+                <div class="custom-grid">
+                  <materialsList :materials="props.materials" />
+                </div>
+              </scrollFadeContainer>
             </div>
             <div
               :class="
@@ -76,9 +87,7 @@
                       completedTasksCount < tasks.length
                     "
                     class="btn btn-outline-primary"
-                    @click="
-                      openTask(tasks[props.task.taskIndex + 1])
-                    "
+                    @click="openTask(tasks[props.task.taskIndex + 1])"
                   >
                     <i class="pi pi-arrow-right"></i>
                     {{ $t("pages.tasks.next_task") }}
@@ -122,6 +131,7 @@ import countdownTaskTimer from "../../../ui/countdownTaskTimer.vue";
 import materialsList from "../materialsList.vue";
 import progressBar from "../../../ui/progressBar.vue";
 import taskResultChart from "./taskResultChart.vue";
+import scrollFadeContainer from "../../../ui/scrollFadeContainer.vue";
 
 const changeModalSize = inject("changeModalSize");
 const showTaskResult = ref(false);
@@ -174,9 +184,9 @@ const props = defineProps({
   },
 });
 
-const tasks = inject('tasks');
-const completedTasksCount = inject('completedTasksCount');
-const openTask = inject('openTask');
+const tasks = inject("tasks");
+const completedTasksCount = inject("completedTasksCount");
+const openTask = inject("openTask");
 
 const showConfetti = (items) => {
   if (items && items.length === 0) {
@@ -191,7 +201,7 @@ watch(
       changeModalSize("modal-2xl");
       showConfetti(props.reStudyItems);
     }
-  }
+  },
 );
 
 onBeforeUnmount(() => {

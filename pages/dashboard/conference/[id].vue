@@ -1798,14 +1798,21 @@ const getConference = async () => {
     })
     .catch((err) => {
       if (err.response) {
-        router.push({
-          path: "/error",
-          query: {
-            status: err.response.status,
-            message: err.response.data.message,
-            url: err.request.responseURL,
-          },
-        });
+        if (err.response.status == 403) {
+          errorMessage.value = {
+            message: t("pages.conference.messages.access_denied"),
+            pending: false,
+          };
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
       } else {
         router.push("/error");
       }
