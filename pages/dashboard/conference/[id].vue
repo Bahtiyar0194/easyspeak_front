@@ -2022,7 +2022,11 @@ const startStream = async () => {
         iceServers: [
           { urls: config.public.stunURL },
           {
-            urls: config.public.turnURL,
+            urls: [
+              `turn:${config.public.turnURL}:3478?transport=udp`,
+              `turn:${config.public.turnURL}:3478?transport=tcp`,
+              `turns:${config.public.turnURL}:443?transport=tcp`, // Пробьет мобильные данные 3G/4G/5G
+            ],
             username: config.public.turnUSERNAME,
             credential: config.public.turnPASSWORD,
           },
