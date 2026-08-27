@@ -76,11 +76,13 @@
         <gridMode
           v-if="confMode === 'grid'"
           :streams="streams"
+          :peersStats="peersStats"
           :reflected="isVideoReflected"
         />
         <sliderMode
           v-else-if="confMode === 'slider'"
           :streams="streams"
+          :peersStats="peersStats"
           :reflected="isVideoReflected"
         />
       </div>
@@ -1339,6 +1341,7 @@ import {
 } from "vue";
 import { debounceHandler } from "../../../utils/debounceHandler.js";
 import { monitorNetworkAndAdjustQuality } from "../../../utils/networkQuality";
+import { startNetworkMonitoring } from "../../../composables/usePeerStats.js";
 import { useToast } from "vue-toastification";
 import Peer from "peerjs";
 import { useRuntimeConfig } from "nuxt/app";
@@ -1467,6 +1470,12 @@ const isMuted = ref(false);
 const volume = ref(0);
 const isStream = ref(false);
 const isScreenSharing = ref(false);
+
+// Храним метрики всех подключенных участников: { peerId: { rtt, lossPercentage, bitrate, quality } }
+const peersStats = reactive({});
+
+// Храним функции остановки таймеров
+const activeMonitors = new Map();
 
 const message = ref("");
 const messages = ref([]);
@@ -2013,22 +2022,36 @@ const startStream = async () => {
 
     loadMicrophones();
 
+    // Очищаем хост от протоколов, портов и пробелов
+    const turnDomain = (config.public.turnURL || "turn.easyspeak.kz")
+      .replace(/^https?:\/\//, "")
+      .split(":")[0]
+      .trim();
+
+    const username = (config.public.turnUSERNAME || "").trim();
+    const credential = (config.public.turnPASSWORD || "").trim();
+
     myPeer = new Peer(undefined, {
       host: config.public.peerBase,
       port: process.env.NODE_ENV === "development" ? 3002 : "",
       path: "/peerjs/myapp",
       secure: process.env.NODE_ENV === "development" ? false : true,
       config: {
+        iceCandidatePoolSize: 10,
         iceServers: [
-          { urls: config.public.stunURL },
+          {
+            urls: (
+              config.public.stunURL || "stun:stun.l.google.com:19302"
+            ).trim(),
+          },
           {
             urls: [
-              `turn:${config.public.turnURL}:3478?transport=udp`,
-              `turn:${config.public.turnURL}:3478?transport=tcp`,
-              `turns:${config.public.turnURL}:443?transport=tcp`, // Пробьет мобильные данные 3G/4G/5G
+              `turn:${turnDomain}:3478?transport=udp`,
+              `turn:${turnDomain}:3478?transport=tcp`,
+              `turns:${turnDomain}:443?transport=tcp`,
             ],
-            username: config.public.turnUSERNAME,
-            credential: config.public.turnPASSWORD,
+            username: username,
+            credential: credential,
           },
         ],
       },
@@ -2057,11 +2080,16 @@ const startStream = async () => {
       joinToRoom();
     });
 
-    myPeer.on("error", () => {
+    myPeer.on("error", (err) => {
       toast(t("errors.server.peer_error"), {
         toastClassName: ["custom-toast", "danger"],
         timeout: 10000,
       });
+
+      errorMessage.value = {
+        message: err?.message,
+        pending: false,
+      };
     });
 
     myPeer.on("call", (call) => {
@@ -2069,6 +2097,39 @@ const startStream = async () => {
       const streamToSend = getActiveStream();
 
       call.answer(streamToSend);
+
+      // === ИНТЕГРАЦИЯ МОНИТОРИНГА ICE-СОЕДИНЕНИЯ ===
+      const pc = call.peerConnection;
+
+      if (pc) {
+        pc.oniceconnectionstatechange = () => {
+          if (pc.iceConnectionState === "disconnected") {
+            toast(
+              t("errors.server.other_user_network_error", {
+                name: call.metadata.userInfo.first_name,
+              }),
+              {
+                toastClassName: ["custom-toast", "warning"],
+                timeout: 20000,
+              },
+            );
+          } else if (pc.iceConnectionState === "failed") {
+            toast(
+              t("errors.server.other_user_disconnect", {
+                name: call.metadata.userInfo.first_name,
+              }),
+              {
+                toastClassName: ["custom-toast", "danger"],
+                timeout: 20000,
+              },
+            );
+          }
+        };
+      }
+      // ============================================
+
+      // === ЗАПУСК МОНИТОРИНГА СЕТИ ===
+      attachMonitoring(call);
 
       call.on("stream", (remoteStream) => {
         addStream(
@@ -2552,6 +2613,29 @@ const joinToRoom = async () => {
                 },
               });
 
+              // === ИНТЕГРАЦИЯ МОНИТОРИНГА ICE-СОЕДИНЕНИЯ ===
+              const pc = outgoingCall.peerConnection;
+
+              if (pc) {
+                pc.oniceconnectionstatechange = () => {
+                  if (pc.iceConnectionState === "disconnected") {
+                    toast(t("errors.server.user_network_error"), {
+                      toastClassName: ["custom-toast", "warning"],
+                      timeout: 20000,
+                    });
+                  } else if (pc.iceConnectionState === "failed") {
+                    toast(t("errors.server.user_disconnect"), {
+                      toastClassName: ["custom-toast", "danger"],
+                      timeout: 20000,
+                    });
+                  }
+                };
+              }
+              // ============================================
+
+              // === ЗАПУСК МОНИТОРИНГА СЕТИ ===
+              attachMonitoring(outgoingCall);
+
               outgoingCall.on("stream", (remoteStream) => {
                 addStream(
                   true,
@@ -2801,6 +2885,31 @@ const replaceTrackInConnections = (newTrack, kind = "video") => {
   });
 };
 
+const attachMonitoring = (mediaConnection) => {
+  const peerId = mediaConnection.peer;
+
+  // Если для этого участника уже был мониторинг — сбрасываем старый
+  if (activeMonitors.has(peerId)) {
+    activeMonitors.get(peerId)();
+  }
+
+  // Запускаем мониторинг для конкретного peerId
+  const stop = startNetworkMonitoring(mediaConnection, (stats) => {
+    peersStats[peerId] = stats; // Записываем метрики именно этого участника
+  });
+
+  activeMonitors.set(peerId, stop);
+
+  // Когда звонок закрывается — удаляем его метрики
+  mediaConnection.on("close", () => {
+    if (activeMonitors.has(peerId)) {
+      activeMonitors.get(peerId)();
+      activeMonitors.delete(peerId);
+    }
+    delete peersStats[peerId];
+  });
+};
+
 const toggleScreenSharing = async () => {
   if (!isScreenSharing.value) {
     try {
@@ -2990,6 +3099,10 @@ onMounted(() => {
 
   onUnmounted(() => {
     window.removeEventListener("beforeunload", handleBeforeUnload);
+
+    // Очищаем все таймеры при уходе со страницы
+    activeMonitors.forEach((stop) => stop());
+    activeMonitors.clear();
   });
 });
 

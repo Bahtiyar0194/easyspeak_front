@@ -131,7 +131,9 @@ watch(
         roles: [1, 2, 3, 4, 5],
       },
       {
-        title: schoolStore.isAiSchoolDomain ? "pages.users.title" : "pages.users-groups.title",
+        title: schoolStore.isAiSchoolDomain
+          ? "pages.users.title"
+          : "pages.users-groups.title",
         icon: "pi pi-users",
         link: "/dashboard/users-groups",
         is_show: true,

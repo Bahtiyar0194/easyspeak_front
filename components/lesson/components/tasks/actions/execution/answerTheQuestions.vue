@@ -157,6 +157,8 @@
                           v-model="question.userInput"
                           rows="4"
                           placeholder=" "
+                          @paste="handlePaste()"
+                          @drop="handlePaste()"
                         ></textarea>
                         <label
                           :class="
@@ -306,6 +308,7 @@
 import alert from "../../../../../ui/alert.vue";
 import { ref, onMounted, inject, watch } from "vue";
 import { useRouter } from "nuxt/app";
+import { useToast } from "vue-toastification";
 import taskLayout from "../../taskLayout.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import fileUploadButton from "../../../../../ui/fileUploadButton.vue";
@@ -314,6 +317,7 @@ import audioButton from "../../../../../ui/audioButton.vue";
 const router = useRouter();
 const config = useRuntimeConfig();
 const { $axiosPlugin } = useNuxtApp();
+const toast = useToast();
 const errors = ref([]);
 
 const showTaskTimer = ref(false);
@@ -542,6 +546,18 @@ const handleKeyPress = (event) => {
       }
     }
   }
+};
+
+const handlePaste = (event) => {
+  event.preventDefault();
+
+  toast(
+    t("pages.tasks.answer_the_questions.paste_prohibited"),
+    {
+      toastClassName: ["custom-toast", "warning"],
+      timeout: 10000,
+    },
+  );
 };
 
 const saveTaskResult = async () => {

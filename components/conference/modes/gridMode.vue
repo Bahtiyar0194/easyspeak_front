@@ -11,7 +11,7 @@
     >
       <div
         v-if="stream.isStream"
-        class="absolute py-1 px-1.5 md:px-2 bg-black bg-opacity-50 z-10 text-white rounded-md left-2 top-2 flex"
+        class="absolute py-1 px-1.5 md:px-2 bg-black bg-opacity-50 text-white rounded-md left-2 top-2 flex"
       >
         <span class="text-xs md:text-base">{{
           stream.userInfo.first_name
@@ -40,7 +40,7 @@
       ></video>
 
       <div
-        class="absolute py-1 px-1.5 md:px-2 bg-black bg-opacity-50 z-10 text-white rounded-md right-2 top-2 flex gap-1 md:gap-2"
+        class="absolute py-1 px-1.5 md:px-2 bg-black bg-opacity-50 text-white rounded-md right-2 top-2 flex gap-1 md:gap-2"
       >
         <i
           class="bi text-xs md:text-base"
@@ -57,6 +57,43 @@
           "
         ></i>
       </div>
+
+      <!-- Показываем блок со статистикой ТОЛЬКО для удаленных участников -->
+      <div
+        v-if="stream.remote && props.peersStats[stream.peer_id]"
+        class="absolute py-1 px-1.5 md:px-2 bg-black bg-opacity-50 text-white select-none rounded-md left-2 bottom-2 flex gap-1 md:gap-2"
+      >
+        <div
+          class="flex items-center gap-1.5"
+          :class="props.peersStats[stream.peer_id].quality"
+        >
+          <div
+            class="w-2 h-2 rounded-full transition-colors duration-300"
+            :class="{
+              'bg-success':
+                props.peersStats[stream.peer_id].quality === 'excellent',
+              'bg-warning': ['good', 'poor'].includes(
+                props.peersStats[stream.peer_id].quality,
+              ),
+              'bg-danger': props.peersStats[stream.peer_id].quality === 'bad',
+            }"
+          ></div>
+          <div class="text-xs flex gap-2">
+            <span
+              ><span class="max-md:hidden">{{ $t("ping") }}: </span
+              ><span class="md:font-medium">{{ props.peersStats[stream.peer_id].rtt }} {{ $t("time.millisecond.short") }}</span></span
+            >
+            <!-- <span
+              >Loss:
+              {{ props.peersStats[stream.peer_id].lossPercentage }}%</span
+            > -->
+            <span
+              ><span class="max-md:hidden">{{ $t("file.video.player.speed") }}: </span
+              ><span class="md:font-medium">{{ props.peersStats[stream.peer_id].bitrate }} {{ $t("file.kilobyte_sec") }}</span></span
+            >
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -65,6 +102,11 @@
 const props = defineProps({
   streams: {
     type: Array,
+    required: true,
+  },
+
+  peersStats: {
+    type: Object,
     required: true,
   },
 

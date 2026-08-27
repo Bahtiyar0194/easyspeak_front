@@ -51,10 +51,11 @@ export default {
     generate: "Cгенерировать",
     restart: 'Перезагрузить',
     edit: "Редактировать",
-    welcome: 'Добро пожаловать!',
+    welcome: 'добро пожаловать в EasySpeak!',
     you_are_on_the_main_page: 'Мы рады видеть вас на главной странице нашего сайта.',
     online: 'В сети',
     offline: 'Не в сети',
+    ping: 'Пинг',
     or: 'Или',
     back: 'Назад',
     close: 'Закрыть',
@@ -159,6 +160,25 @@ export default {
     add_to_calendar: 'Добавить в календарь',
     yet_another: 'Ещё',
 
+    time: {
+        millisecond: {
+            title: 'Милисекунд',
+            short: 'мс'
+        },
+        second: {
+            title: 'Секунд',
+            short: 'с'
+        },
+        minute: {
+            title: 'Минут',
+            short: 'м'
+        },
+        hour: {
+            title: 'Час',
+            short: 'ч'
+        },
+    },
+
     documents: 'Документы',
     check_your_data: 'Проверьте ваши данные',
     contacts: 'Контакты',
@@ -207,8 +227,11 @@ export default {
         deleting_a_file: "Удаление файла",
         file_delete_confirm: "Вы действительно хотите удалить данный файл? Все связанное с ним будет также удалено.",
         kilobyte: "КБ",
+        kilobyte_sec: "кб/с",
         megabyte: "МБ",
+        megabyte_sec: "мб/с",
         gigabyte: "ГБ",
+        gigabyte_sec: "гб/с",
         total_space: "Общее пространство",
         free_space: "Свободно",
         used_space: "Занято",
@@ -381,7 +404,11 @@ export default {
         server: {
             error: 'Невозможно подключиться к серверу. Проверьте соединение с интернетом.',
             room_error: 'Не удается войти в конференцию. Попробуйте перезагрузить страницу.',
-            peer_error: 'Не удается установить P2P соединение.  Проверьте соединение с интернетом.'
+            peer_error: 'Не удается установить P2P соединение.  Проверьте соединение с интернетом.',
+            user_network_error: 'У вас проблемы со связью, пытаемся восстановить...',
+            other_user_network_error: 'У пользователя {name} есть проблемы со связью, пытаемся восстановить...',
+            user_disconnect: 'Соединение потеряно.',
+            other_user_disconnect: 'Соединение с пользователем {name} потеряно.'
         },
         statuses: {
             status_undefined: "Неизвестная ошибка!",
@@ -1289,6 +1316,7 @@ export default {
             },
             answer_the_questions: {
                 answer_type: 'Выберите метод ответа на вопрос',
+                paste_prohibited: 'Пожалуйста, напишите ответ самостоятельно. Вставка скопированного текста запрещена правилами тестирования.',
                 options: {
                     option_1: 'Текстовый ответ',
                     option_2: 'Ответ с помощью видео',

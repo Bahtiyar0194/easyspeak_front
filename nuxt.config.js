@@ -159,8 +159,9 @@ export default defineNuxtConfig({
       apiBase: process.env.NODE_ENV === 'development' ? process.env.DEV_API_URL : process.env.PROD_API_URL,
       socketBase: process.env.NODE_ENV === 'development' ? process.env.DEV_SOCKET_URL : process.env.PROD_SOCKET_URL,
       peerBase: process.env.NODE_ENV === 'development' ? process.env.DEV_PEER_URL : process.env.PROD_PEER_URL,
-      stunURL: process.env.STUN_URL,
-      turnURL: process.env.TURN_URL,
+      // Добавляем значение по умолчанию, если .env не прочитался
+      stunURL: process.env.STUN_URL || 'stun:stun.l.google.com:19302',
+      turnURL: process.env.TURN_URL || 'turn.easyspeak.kz',
       turnUSERNAME: process.env.TURN_USERNAME,
       turnPASSWORD: process.env.TURN_PASSWORD,
       telegramBotName: process.env.TELEGRAM_BOT_NAME,

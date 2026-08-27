@@ -1,14 +1,120 @@
 <template>
   <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
   <client-only v-if="dashboard">
-    <!-- <div class="col-span-12">
+    <template v-if="dashboard.quiz">
+      <div class="col-span-12">
+        <div class="custom-grid">
+          <div class="col-span-12 md:col-span-4 md:col-start-5">
+            <div
+              style="
+                background-image: linear-gradient(
+                  225deg,
+                  #3c8ce7 10%,
+                  #00eaff 100%
+                );
+              "
+              class="rounded-2xl py-12 px-4 mt-12 flex flex-col justify-center items-center gap-4 text-center min-h-[480px] duration-200"
+            >
+              <template v-if="currentStep === 1">
+                <h3
+                  class="mb-0 delay-100 duration-300 text-white"
+                  :class="
+                    animated
+                      ? 'opacity-[100ms] translate-y-0'
+                      : 'opacity-0 -translate-y-6'
+                  "
+                >
+                  {{ authUser.first_name }}, {{ $t("welcome") }} 👋
+                </h3>
+
+                <p
+                  class="mb-0 text-lg text-white delay-[300ms] duration-300"
+                  :class="
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 -translate-y-6'
+                  "
+                >
+                  Хочешь узнать свой уровень английского?
+                </p>
+              </template>
+
+              <template v-else-if="currentStep === 2">
+                <h4
+                  class="text-white delay-[300ms] duration-300"
+                  :class="
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 -translate-y-6'
+                  "
+                >
+                  Как Вы думаете какой у Вас уровень английского?
+                </h4>
+
+                <div
+                  v-for="(l, lessonIndex) in dashboard.quiz"
+                  :key="lessonIndex"
+                  class="w-full duration-300"
+                  :class="[
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 !-translate-y-6',
+                  ]"
+                  :style="{ transitionDelay: `${400 + lessonIndex * 200}ms` }"
+                >
+                  <button
+                    @click="selectLevel(l.lesson_id)"
+                    class="!w-full !py-5 !rounded-2xl duration-300 hover:scale-[1.03]"
+                    :class="
+                      selectedLevel === l.lesson_id
+                        ? 'bg-yellow-300 pointer-events-none'
+                        : 'bg-white'
+                    "
+                  >
+                    <b class="text-lg">{{ l.lesson_name }}</b>
+                  </button>
+                </div>
+              </template>
+
+              <div
+                class="delay-[500ms] duration-300"
+                :class="
+                  animated
+                    ? 'opacity-100 translate-y-0'
+                    : 'opacity-0 !-translate-y-6'
+                "
+                :style="{
+                  transitionDelay: `${currentStep === 2 ? 400 + dashboard.quiz.length * 200 : 600}ms`,
+                }"
+              >
+                <button
+                  class="btn btn-lg btn-light btn-circle !py-6 !px-8"
+                  :class="
+                    currentStep === 2 && selectedLevel === null
+                      ? 'disabled'
+                      : ''
+                  "
+                  @click="nextStep()"
+                >
+                  <i class="pi pi-arrow-right"></i>
+                  {{ $t("continue") }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <template v-else>
+      <!-- <div class="col-span-12">
       <h2 class="mb-0">
         🚀 {{ authUser?.first_name }},
         <span class="lowercase">{{ $t("welcome") }}</span>
       </h2>
     </div> -->
 
-    <!-- <roleProvider :roles="[1, 2, 3]">
+      <!-- <roleProvider :roles="[1, 2, 3]">
       <div
         v-if="schoolStore.schoolData && schoolStore.schoolData.all_users_count"
         class="col-span-12 md:col-span-6 lg:col-span-3"
@@ -39,121 +145,128 @@
       </div>
     </roleProvider> -->
 
-    <div
-      v-if="
-        dashboard &&
-        authUser &&
-        !authUser.telegram &&
-        !schoolStore.isAiSchoolDomain
-      "
-      class="col-span-12"
-    >
       <div
-        style="
-          background-image: linear-gradient(225deg, #3c8ce7 10%, #00eaff 100%);
+        v-if="
+          dashboard &&
+          authUser &&
+          !authUser.telegram &&
+          !schoolStore.isAiSchoolDomain
         "
-        class="p-6 rounded-xl overflow-hidden relative"
+        class="col-span-12"
       >
-        <div class="z-10 relative pr-32">
-          <h3 class="text-white mb-2">{{ $t("telegram.banner.title") }}</h3>
-          <p class="text-white mb-4 font-medium">
-            {{ $t("telegram.banner.description") }}
-          </p>
-
-          <a
-            class="btn btn-white"
-            target="_blank"
-            :href="`https://t.me/${config.public.telegramBotName}?start=${localeProperties.code}`"
-          >
-            <i class="pi pi-telegram"></i>
-            {{ $t("telegram.connect.connect") }}</a
-          >
-        </div>
-
-        <img
-          class="absolute opacity-30 w-40 top-1/2 -translate-y-1/2 right-4 z-0"
-          src="~/public/images/telegram/telegram.png"
-        />
-      </div>
-    </div>
-
-    <div class="col-span-12 lg:col-span-6">
-      <aiExplainer :explainMode="'speaking'" />
-    </div>
-
-    <div v-if="dashboard" class="col-span-12 lg:col-span-6">
-      <div class="custom-grid">
         <div
-          v-if="dashboard.current_lessons && dashboard.current_lessons.length"
-          class="col-span-12"
+          style="
+            background-image: linear-gradient(
+              225deg,
+              #3c8ce7 10%,
+              #00eaff 100%
+            );
+          "
+          class="p-6 rounded-xl overflow-hidden relative"
         >
-          <div class="custom-grid">
-            <div class="col-span-12">
-              <h3 class="mb-0">📖 {{ $t("pages.lessons.current_lessons") }}</h3>
-            </div>
-            <div
-              v-for="conference in dashboard.current_lessons"
-              :key="conference.uuid"
-              class="col-span-12"
+          <div class="z-10 relative pr-32">
+            <h3 class="text-white mb-2">{{ $t("telegram.banner.title") }}</h3>
+            <p class="text-white mb-4 font-medium">
+              {{ $t("telegram.banner.description") }}
+            </p>
+
+            <a
+              class="btn btn-white"
+              target="_blank"
+              :href="`https://t.me/${config.public.telegramBotName}?start=${localeProperties.code}`"
             >
-              <currentConferenceCard
-                :conference="conference"
-                :timeIsUp="timeIsUp"
-              />
+              <i class="pi pi-telegram"></i>
+              {{ $t("telegram.connect.connect") }}</a
+            >
+          </div>
+
+          <img
+            class="absolute opacity-30 w-40 top-1/2 -translate-y-1/2 right-4 z-0"
+            src="~/public/images/telegram/telegram.png"
+          />
+        </div>
+      </div>
+
+      <div class="col-span-12 lg:col-span-6">
+        <aiExplainer :explainMode="'speaking'" />
+      </div>
+
+      <div v-if="dashboard" class="col-span-12 lg:col-span-6">
+        <div class="custom-grid">
+          <div
+            v-if="dashboard.current_lessons && dashboard.current_lessons.length"
+            class="col-span-12"
+          >
+            <div class="custom-grid">
+              <div class="col-span-12">
+                <h3 class="mb-0">
+                  📖 {{ $t("pages.lessons.current_lessons") }}
+                </h3>
+              </div>
+              <div
+                v-for="conference in dashboard.current_lessons"
+                :key="conference.uuid"
+                class="col-span-12"
+              >
+                <currentConferenceCard
+                  :conference="conference"
+                  :timeIsUp="timeIsUp"
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="col-span-12">
-          <div class="custom-grid">
-            <div class="col-span-12">
-              <h3 class="mb-0">
-                📅 {{ $t("pages.lessons.upcoming_lessons") }}
-              </h3>
-            </div>
-
-            <template
-              v-if="
-                dashboard.upcoming_lessons && dashboard.upcoming_lessons.length
-              "
-            >
+          <div class="col-span-12">
+            <div class="custom-grid">
               <div class="col-span-12">
-                <scrollFadeContainer :maxHeight="300" :fadeSize="120">
-                  <div class="table table-striped table-sm selectable">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>{{ $t("start_time") }}</th>
-                          <th>{{ $t("pages.lessons.lesson_name") }}</th>
-                          <template v-if="!schoolStore.isAiSchoolDomain">
-                            <roleProvider :roles="[1, 2, 3, 4]">
-                              <th>{{ $t("pages.lessons.lesson_type") }}</th>
-                              <th>{{ $t("pages.groups.group") }}</th>
-                              <th>{{ $t("pages.courses.course") }}</th>
-                              <th>{{ $t("pages.groups.group_category") }}</th>
-                            </roleProvider>
-                          </template>
-                          <template v-else>
-                            <th>{{ $t("pages.courses.title") }}</th>
-                          </template>
-                          <th>{{ $t("mentor") }}</th>
-                        </tr>
-                      </thead>
+                <h3 class="mb-0">
+                  📅 {{ $t("pages.lessons.upcoming_lessons") }}
+                </h3>
+              </div>
 
-                      <tbody>
-                        <tr
-                          v-for="e in dashboard.upcoming_lessons"
-                          :key="e.uuid"
-                          @click="openEventModal(e.uuid)"
-                          :class="e.is_active === true ? 'success' : ''"
-                        >
-                          <td>
-                            <b class="text-nowrap">{{
-                              e.is_active === true
-                                ? $t("already_started")
-                                : e.start_time_formatted
-                            }}</b>
-                            <!-- <br />
+              <template
+                v-if="
+                  dashboard.upcoming_lessons &&
+                  dashboard.upcoming_lessons.length
+                "
+              >
+                <div class="col-span-12">
+                  <scrollFadeContainer :maxHeight="300" :fadeSize="120">
+                    <div class="table table-striped table-sm selectable">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>{{ $t("start_time") }}</th>
+                            <th>{{ $t("pages.lessons.lesson_name") }}</th>
+                            <template v-if="!schoolStore.isAiSchoolDomain">
+                              <roleProvider :roles="[1, 2, 3, 4]">
+                                <th>{{ $t("pages.lessons.lesson_type") }}</th>
+                                <th>{{ $t("pages.groups.group") }}</th>
+                                <th>{{ $t("pages.courses.course") }}</th>
+                                <th>{{ $t("pages.groups.group_category") }}</th>
+                              </roleProvider>
+                            </template>
+                            <template v-else>
+                              <th>{{ $t("pages.courses.title") }}</th>
+                            </template>
+                            <th>{{ $t("mentor") }}</th>
+                          </tr>
+                        </thead>
+
+                        <tbody>
+                          <tr
+                            v-for="e in dashboard.upcoming_lessons"
+                            :key="e.uuid"
+                            @click="openEventModal(e.uuid)"
+                            :class="e.is_active === true ? 'success' : ''"
+                          >
+                            <td>
+                              <b class="text-nowrap">{{
+                                e.is_active === true
+                                  ? $t("already_started")
+                                  : e.start_time_formatted
+                              }}</b>
+                              <!-- <br />
                           <b
                             v-if="e.is_bought_status != null"
                             class="text-xs"
@@ -170,73 +283,75 @@
                                 : $t("pages.payment-result.fail_alt_2")
                             }}</b
                           > -->
-                          </td>
-                          <td v-if="e.lesson_name">
-                            {{ e.lesson_name }}
-                          </td>
-                          <td v-if="e.topic">{{ e.topic }}</td>
-                          <template v-if="!schoolStore.isAiSchoolDomain">
-                            <roleProvider :roles="[1, 2, 3, 4]">
-                              <td>{{ e.lesson_type_name }}</td>
-                              <td>{{ e.group_name }}</td>
-                              <td>{{ e.course_name }}</td>
-                              <td>{{ e.level_name }}</td>
-                            </roleProvider>
-                          </template>
-                          <template v-else>
-                            <td>
-                              <div class="text-list text-nowrap">
-                                <span
-                                  v-for="(level, lIndex) in e.levels"
-                                  :key="lIndex"
-                                >
-                                  {{ level.level_name }}
-                                </span>
-                              </div>
                             </td>
-                          </template>
-                          <td>
-                            <div class="flex gap-x-1 items-center">
-                              <userAvatar
-                                :padding="0.5"
-                                :className="'w-6 h-6'"
-                                :user="{
-                                  last_name:
+                            <td v-if="e.lesson_name">
+                              {{ e.lesson_name }}
+                            </td>
+                            <td v-if="e.topic">{{ e.topic }}</td>
+                            <template v-if="!schoolStore.isAiSchoolDomain">
+                              <roleProvider :roles="[1, 2, 3, 4]">
+                                <td>{{ e.lesson_type_name }}</td>
+                                <td>{{ e.group_name }}</td>
+                                <td>{{ e.course_name }}</td>
+                                <td>{{ e.level_name }}</td>
+                              </roleProvider>
+                            </template>
+                            <template v-else>
+                              <td>
+                                <div class="text-list text-nowrap">
+                                  <span
+                                    v-for="(level, lIndex) in e.levels"
+                                    :key="lIndex"
+                                  >
+                                    {{ level.level_name }}
+                                  </span>
+                                </div>
+                              </td>
+                            </template>
+                            <td>
+                              <div class="flex gap-x-1 items-center">
+                                <userAvatar
+                                  :padding="0.5"
+                                  :className="'w-6 h-6'"
+                                  :user="{
+                                    last_name:
+                                      e.mentor_last_name ||
+                                      e.moderator_last_name ||
+                                      '',
+                                    first_name:
+                                      e.mentor_first_name ||
+                                      e.moderator_first_name ||
+                                      '',
+                                    avatar:
+                                      e.mentor_avatar ||
+                                      e.moderator_avatar ||
+                                      '',
+                                  }"
+                                />
+                                <span class="text-nowrap">
+                                  {{
                                     e.mentor_last_name ||
                                     e.moderator_last_name ||
-                                    '',
-                                  first_name:
+                                    ""
+                                  }}
+                                  {{
                                     e.mentor_first_name ||
                                     e.moderator_first_name ||
-                                    '',
-                                  avatar:
-                                    e.mentor_avatar || e.moderator_avatar || '',
-                                }"
-                              />
-                              <span class="text-nowrap">
-                                {{
-                                  e.mentor_last_name ||
-                                  e.moderator_last_name ||
-                                  ""
-                                }}
-                                {{
-                                  e.mentor_first_name ||
-                                  e.moderator_first_name ||
-                                  ""
-                                }}</span
-                              >
-                            </div>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </scrollFadeContainer>
-              </div>
+                                    ""
+                                  }}</span
+                                >
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </scrollFadeContainer>
+                </div>
 
-              <div class="col-span-12">
-                <div class="btn-wrap justify-end">
-                  <!-- <button
+                <div class="col-span-12">
+                  <div class="btn-wrap justify-end">
+                    <!-- <button
                     v-if="paymentLessons.length > 0"
                     @click="openPaymentModal()"
                     class="btn btn-primary"
@@ -244,32 +359,33 @@
                     <i class="pi pi-credit-card"></i>
                     {{ $t("pages.lessons.pay_for_lessons") }}
                   </button> -->
-                  <nuxt-link
-                    v-if="!schoolStore.isAiSchoolDomain"
-                    class="btn btn-light"
-                    :to="localePath('/dashboard/schedule')"
-                  >
-                    <i class="pi pi-calendar-clock"></i>
-                    {{ $t("pages.schedule.show_entire_schedule") }}
-                  </nuxt-link>
+                    <nuxt-link
+                      v-if="!schoolStore.isAiSchoolDomain"
+                      class="btn btn-light"
+                      :to="localePath('/dashboard/schedule')"
+                    >
+                      <i class="pi pi-calendar-clock"></i>
+                      {{ $t("pages.schedule.show_entire_schedule") }}
+                    </nuxt-link>
+                  </div>
                 </div>
+              </template>
+              <div v-else class="col-span-12">
+                <alert :className="'light'">
+                  <img
+                    class="w-24 mx-auto mb-2"
+                    src="~/public/images/calendar-search.svg"
+                  />
+                  <p class="mb-0">
+                    <b>{{ $t("pages.lessons.no_upcoming_lessons") }}</b>
+                  </p>
+                </alert>
               </div>
-            </template>
-            <div v-else class="col-span-12">
-              <alert :className="'light'">
-                <img
-                  class="w-24 mx-auto mb-2"
-                  src="~/public/images/calendar-search.svg"
-                />
-                <p class="mb-0">
-                  <b>{{ $t("pages.lessons.no_upcoming_lessons") }}</b>
-                </p>
-              </alert>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </template>
 
     <modal
       :show="eventModalIsVisible"
@@ -542,6 +658,9 @@ const cryptogram = ref("");
 const acceptedConference = ref(false);
 const errors = ref([]);
 
+const animated = ref(false);
+const selectedLevel = ref(null);
+
 useHead({
   title: t("pages.dashboard.title"),
   meta: [{ name: "description", content: t("pages.home.description") }],
@@ -804,11 +923,32 @@ const timeIsUp = () => {
   }, 1000);
 };
 
+const nextStep = () => {
+  animated.value = false;
+
+  if (currentStep.value === 1) {
+    setTimeout(() => {
+      currentStep.value = 2;
+      setTimeout(() => {
+        animated.value = true;
+      }, 200);
+    }, 1000);
+  }
+};
+
+const selectLevel = (lesson_id) => {
+  selectedLevel.value = lesson_id;
+};
+
 onMounted(async () => {
   getDashboard();
 
   // Импортируем библиотеку только на стороне клиента (в браузере)
   await import("add-to-calendar-button");
+
+  setTimeout(() => {
+    animated.value = true;
+  }, 1000);
 });
 
 onBeforeUnmount(() => {

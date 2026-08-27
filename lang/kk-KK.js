@@ -51,10 +51,11 @@ export default {
     generate: "Генерациялау",
     restart: 'Қайта жүктеу',
     edit: "Қайта өңдеу",
-    welcome: 'Қош келдіңіз!',
+    welcome: 'EasySpeak платформасына қош келдіңіз!',
     you_are_on_the_main_page: 'Біз сізді сайтымыздың басты бетінде көргенімізге қуаныштымыз.',
     online: 'Желіде',
     offline: 'Желіде емес',
+    ping: 'Пинг',
     or: 'Немесе',
     back: 'Артқа',
     close: 'Жабу',
@@ -159,6 +160,25 @@ export default {
     add_to_calendar: 'Күнтізбеге қосу',
     yet_another: 'Тағы',
 
+    time: {
+        millisecond: {
+            title: 'Милисекунд',
+            short: 'мс'
+        },
+        second: {
+            title: 'Секунд',
+            short: 'сек'
+        },
+        minute: {
+            title: 'Минут',
+            short: 'мин'
+        },
+        hour: {
+            title: 'Сағат',
+            short: 'сағ'
+        },
+    },
+
     documents: 'Құжаттар',
     check_your_data: 'Деректемелеріңізді тексеріп алыңыз',
     contacts: 'Байланыс',
@@ -207,8 +227,11 @@ export default {
         deleting_a_file: "Файлды жою",
         file_delete_confirm: "Сіз расыменде бұл файлды жойғыңыз келе ме? Осы файлға байланысты барлық нәрсе де сонымен бірге жойылады.",
         kilobyte: "КБ",
+        kilobyte_sec: "кб/с",
         megabyte: "МБ",
+        megabyte_sec: "мб/с",
         gigabyte: "ГБ",
+        gigabyte_sec: "гб/с",
         total_space: "Жалпы орын",
         free_space: "Бос орын",
         used_space: "Толған орын",
@@ -380,7 +403,11 @@ export default {
         server: {
             error: 'Сервермен байланыс орнатылмады. Интернет байланысын тексеруіңізді өтінеміз.',
             room_error: 'Конференцияға кіру мүмкін емес. Бетті қайта жүктеп көріңіз.',
-            peer_error: 'P2P байланыс орнатылмады.  Интернет байланысын тексеруіңізді өтінеміз.'
+            peer_error: 'P2P байланыс орнатылмады.  Интернет байланысын тексеруіңізді өтінеміз.',
+            user_network_error: 'Байланыс нашар, қайта орнату жүріп жатыр...',
+            other_user_network_error: '{name} пайдаланушысының байланысы нашар, қайта орнату жүріп жатыр...',
+            user_disconnect: 'Байланыс үзілді.',
+            other_user_disconnect: '{name} пайдаланушысымен байланыс үзілді.'
         },
         statuses: {
             status_undefined: "Белгісіз қате орын алды!",
@@ -1289,6 +1316,7 @@ export default {
             },
             answer_the_questions: {
                 answer_type: 'Сұраққа жауап беру әдісін таңдаңыз',
+                paste_prohibited: 'Өтінеміз жауапты өзіңіз жазыңыз. Көшірілген мәтінді тестілеу ережелеріне тыйым салынады.',
                 options: {
                     option_1: 'Мәтін ретіндегі жауап',
                     option_2: 'Бейне ретіндегі жауап',

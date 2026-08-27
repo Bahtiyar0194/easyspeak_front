@@ -8,7 +8,7 @@
         "
       >
         <div
-          class="absolute py-1 px-1.5 bg-black bg-opacity-50 z-10 text-white rounded-md left-1 md:left-2 top-1 md:top-2 flex gap-1"
+          class="absolute py-1 px-1.5 bg-black bg-opacity-50 text-white rounded-md left-1 md:left-2 top-1 md:top-2 flex gap-1"
         >
           <span class="text-xs">{{ mainStream.userInfo.first_name }}</span>
         </div>
@@ -22,7 +22,7 @@
         ></video>
 
         <div
-          class="absolute py-1 px-1.5 md:px-2 bg-black bg-opacity-50 z-10 text-white rounded-md right-2 top-2 flex gap-1 md:gap-2"
+          class="absolute py-1 px-1.5 md:px-2 bg-black bg-opacity-50 text-white rounded-md right-2 top-2 flex gap-1 md:gap-2"
         >
           <i
             class="bi text-xs"
@@ -58,7 +58,7 @@
             @click="setMainStream(streamIndex)"
           >
             <div
-              class="absolute py-1 px-1.5 bg-black bg-opacity-50 z-10 text-white rounded-md left-1 md:left-2 top-1 md:top-2 flex gap-1"
+              class="absolute py-1 px-1.5 bg-black bg-opacity-50 text-white rounded-md left-1 md:left-2 top-1 md:top-2 flex gap-1"
             >
               <span class="text-xs">{{ stream.userInfo.first_name }}</span>
             </div>
@@ -72,7 +72,7 @@
             ></video>
 
             <div
-              class="absolute py-1 px-1.5 md:px-2 bg-black bg-opacity-50 z-10 text-white rounded-md right-2 bottom-2 flex gap-1 md:gap-2"
+              class="absolute py-1 px-1.5 md:px-2 bg-black bg-opacity-50 text-white rounded-md right-2 bottom-2 flex gap-1 md:gap-2"
             >
               <i
                 class="bi text-xs"
@@ -91,6 +91,44 @@
                 "
               ></i>
             </div>
+
+            <!-- Показываем блок со статистикой ТОЛЬКО для удаленных участников -->
+            <div
+              v-if="stream.remote && props.peersStats[stream.peer_id]"
+              class="absolute py-1 px-1.5 md:px-2 bg-black bg-opacity-50 text-white rounded-md select-none left-2 bottom-2 flex gap-1 md:gap-2"
+            >
+              <div
+                class="flex items-center gap-1"
+                :class="props.peersStats[stream.peer_id].quality"
+              >
+                <div
+                  class="w-2 h-2 rounded-full transition-colors duration-300"
+                  :class="{
+                    'bg-success':
+                      props.peersStats[stream.peer_id].quality === 'excellent',
+                    'bg-warning': ['good', 'poor'].includes(
+                      props.peersStats[stream.peer_id].quality,
+                    ),
+                    'bg-danger':
+                      props.peersStats[stream.peer_id].quality === 'bad',
+                  }"
+                ></div>
+                <div class="text-[10px] flex gap-1">
+                  <span>
+                    {{ props.peersStats[stream.peer_id].rtt }}
+                    {{ $t("time.millisecond.short") }}</span
+                  >
+                  <!-- <span
+              >Loss:
+              {{ props.peersStats[stream.peer_id].lossPercentage }}%</span
+            > -->
+                  <span>
+                    {{ props.peersStats[stream.peer_id].bitrate }}
+                    {{ $t("file.kilobyte_sec") }}</span
+                  >
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -104,6 +142,11 @@ import KeenSlider from "keen-slider";
 const props = defineProps({
   streams: {
     type: Array,
+    required: true,
+  },
+
+  peersStats: {
+    type: Object,
     required: true,
   },
 
@@ -136,7 +179,7 @@ onMounted(() => {
       "(max-width: 768px)": {
         vertical: false,
         slides: {
-          perView: 2.5,
+          perView: 2.2,
         },
       },
     },
