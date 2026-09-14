@@ -1,26 +1,25 @@
 <template>
   <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
   <client-only v-if="dashboard">
-    <template v-if="dashboard.quiz">
-      <div class="col-span-12">
+    <template v-if="showQuiz && dashboard.quiz">
+      <div class="col-span-12 relative">
         <div class="custom-grid">
           <div class="col-span-12 md:col-span-4 md:col-start-5">
             <div
-              style="
-                background-image: linear-gradient(
-                  225deg,
-                  #3c8ce7 10%,
-                  #00eaff 100%
-                );
-              "
-              class="rounded-2xl py-12 px-4 mt-12 flex flex-col justify-center items-center gap-4 text-center min-h-[480px] duration-200"
+              class="bg-active border-inactive rounded-2xl py-8 px-6 relative overflow-hidden flex flex-col justify-center items-center gap-4 text-center min-h-[480px] duration-300"
             >
+              <loader
+                v-if="pendingQuiz"
+                :className="'overlay'"
+                :showPendingText="true"
+              />
+              <canvas id="confetti-canvas"></canvas>
               <template v-if="currentStep === 1">
                 <h3
-                  class="mb-0 delay-100 duration-300 text-white"
+                  class="mb-0 duration-300 select-none"
                   :class="
                     animated
-                      ? 'opacity-[100ms] translate-y-0'
+                      ? 'opacity-100 translate-y-0'
                       : 'opacity-0 -translate-y-6'
                   "
                 >
@@ -28,31 +27,31 @@
                 </h3>
 
                 <p
-                  class="mb-0 text-lg text-white delay-[300ms] duration-300"
+                  class="mb-0 text-lg delay-[200ms] duration-300 select-none"
                   :class="
                     animated
                       ? 'opacity-100 translate-y-0'
                       : 'opacity-0 -translate-y-6'
                   "
                 >
-                  Хочешь узнать свой уровень английского?
+                  {{ $t("pages.quiz.do_you_want_to_know_your_level") }}
                 </p>
               </template>
 
               <template v-else-if="currentStep === 2">
-                <h4
-                  class="text-white delay-[300ms] duration-300"
+                <h3
+                  class="duration-300 select-none"
                   :class="
                     animated
                       ? 'opacity-100 translate-y-0'
                       : 'opacity-0 -translate-y-6'
                   "
                 >
-                  Как Вы думаете какой у Вас уровень английского?
-                </h4>
+                  {{ $t("pages.quiz.what_is_your_level") }}
+                </h3>
 
                 <div
-                  v-for="(l, lessonIndex) in dashboard.quiz"
+                  v-for="(l, lessonIndex) in dashboard.quiz.lessons"
                   :key="lessonIndex"
                   class="w-full duration-300"
                   :class="[
@@ -60,44 +59,387 @@
                       ? 'opacity-100 translate-y-0'
                       : 'opacity-0 !-translate-y-6',
                   ]"
-                  :style="{ transitionDelay: `${400 + lessonIndex * 200}ms` }"
+                  :style="{ transitionDelay: `${300 + lessonIndex * 200}ms` }"
                 >
                   <button
                     @click="selectLevel(l.lesson_id)"
                     class="!w-full !py-5 !rounded-2xl duration-300 hover:scale-[1.03]"
                     :class="
                       selectedLevel === l.lesson_id
-                        ? 'bg-yellow-300 pointer-events-none'
-                        : 'bg-white'
+                        ? 'btn-primary pointer-events-none'
+                        : 'btn-light'
                     "
                   >
-                    <b class="text-lg">{{ l.lesson_name }}</b>
+                    <div class="flex flex-col">
+                      <b class="text-lg">{{ l.lesson_name }}</b>
+                      <span class="text-xs">({{ l.quiz_level_name }})</span>
+                    </div>
+                  </button>
+                </div>
+
+                <div
+                  class="w-full duration-300"
+                  :class="[
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 !-translate-y-6',
+                  ]"
+                  :style="{
+                    transitionDelay: `${400 + dashboard.quiz.lessons.length * 200}ms`,
+                  }"
+                >
+                  <button
+                    @click="selectLevel(0)"
+                    class="!w-full !py-5 !rounded-2xl duration-300 hover:scale-[1.03]"
+                    :class="
+                      selectedLevel === 0
+                        ? 'btn-primary pointer-events-none'
+                        : 'btn-light'
+                    "
+                  >
+                    <div class="flex flex-col">
+                      <b class="text-lg">{{ $t("i_dont_know") }}</b>
+                    </div>
                   </button>
                 </div>
               </template>
 
+              <template v-else-if="currentStep === 3">
+                <div
+                  class="w-full duration-300"
+                  :class="[
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 !-translate-y-6',
+                  ]"
+                >
+                  <p class="select-none mb-0">
+                    <b>{{ $t("pages.tasks.language_proficiency_test") }}</b>
+                  </p>
+                </div>
+
+                <div
+                  class="w-full duration-300 delay-[300ms]"
+                  :class="[
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 !-translate-y-6',
+                  ]"
+                >
+                  <p class="text-2xl select-none mb-0">
+                    <b
+                      >{{ $t("your_choice") }}:
+                      <span class="text-success">{{
+                        selectedLevel === 0
+                          ? $t("i_dont_know")
+                          : dashboard.quiz.lessons.find(
+                              (l) => l.lesson_id === selectedLevel,
+                            ).quiz_level_name
+                      }}</span></b
+                    >
+                  </p>
+                </div>
+
+                <div
+                  class="w-full duration-300 delay-[500ms]"
+                  :class="[
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 !-translate-y-6',
+                  ]"
+                >
+                  <p class="select-none mb-0">
+                    {{ $t("pages.tasks.count") }}: <b>{{ tasks.length }}</b>
+                  </p>
+                </div>
+
+                <div
+                  class="w-full duration-300 delay-[700ms]"
+                  :class="[
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 !-translate-y-6',
+                  ]"
+                >
+                  <p class="select-none mb-0">
+                    {{ $t("pages.tasks.completed_tasks") }}:
+                    <b>{{ completedTasksCount }}</b>
+                  </p>
+                </div>
+
+                <div
+                  class="w-full duration-300 delay-[800ms]"
+                  :class="[
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 !-translate-y-6',
+                  ]"
+                >
+                  <progressBar
+                    v-if="tasks.length > 0 && completedTasksCount > 0"
+                    :progressPercentage="
+                      (completedTasksCount / tasks.length) * 100
+                    "
+                    :wrapClass="'!my-4'"
+                    :showPercentage="true"
+                    :className="'sm success'"
+                  />
+                </div>
+              </template>
+
+              <template v-if="currentStep === 4">
+                <div
+                  class="w-full duration-300"
+                  :class="[
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 !-translate-y-6',
+                  ]"
+                >
+                  <p class="font-medium text-xl select-none mb-0">
+                    {{ $t("pages.tasks.your_result") }}:
+                  </p>
+                </div>
+                <div
+                  class="w-full flex justify-center duration-300 delay-[300ms]"
+                  :class="[
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 !-translate-y-6',
+                  ]"
+                >
+                  <circleProgressBar
+                    :progress="totalCompletedTasksPercent"
+                    :className="'w-24 h-24'"
+                    :textClass="'text-normal text-xl'"
+                    :duration="3000"
+                  />
+                </div>
+
+                <!-- <div
+                  class="w-full duration-300 delay-[500ms]"
+                  :class="[
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 !-translate-y-6',
+                  ]"
+                >
+                  <p class="text-xl mb-0">
+                    {{
+                      totalCompletedTasksPercent >=
+                      currentLevel.next_level_threshold
+                        ? $t("pages.courses.next_recommend_level")
+                        : $t("pages.courses.recommend_level")
+                    }}
+                    <b class="text-success">{{
+                      recommendRoute.target.lesson_name
+                    }}</b>
+                  </p>
+                </div> -->
+
+                <div
+                  class="w-full duration-300 delay-[500ms]"
+                  :class="[
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 !-translate-y-6',
+                  ]"
+                >
+                  <p
+                    v-html="
+                      sanitize(
+                        totalCompletedTasksPercent >=
+                          currentLevel.next_level_threshold
+                          ? currentLevel.next_level_recommendation
+                          : currentLevel.current_level_recommendation,
+                      )
+                    "
+                    class="mb-0"
+                  ></p>
+                </div>
+
+                <div
+                  class="w-full duration-300 delay-[700ms]"
+                  :class="[
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 !-translate-y-6',
+                  ]"
+                >
+                  <div class="flex flex-col gap-2">
+                    <p class="mb-0 font-medium">
+                      {{ $t("pages.quiz.recommend_route") }}:
+                    </p>
+
+                    <div
+                      class="flex items-center justify-center gap-4 flex-wrap select-none"
+                    >
+                      <!-- 1. Пройденные уровни -->
+                      <span
+                        v-for="passedItem in recommendRoute.passed"
+                        :key="passedItem.lesson_id"
+                        class="text-success font-medium"
+                      >
+                        <span class="line-through">{{
+                          passedItem.lesson_name
+                        }}</span>
+                        ✓
+                        <span>→</span>
+                      </span>
+
+                      <!-- 2. Целевой (Рекомендуемый) уровень -->
+                      <span
+                        class="rounded-2xl px-4 py-0.5 bg-success text-white font-medium"
+                      >
+                        <template v-if="recommendRoute.target === 'ielts'"
+                          >IELTS</template
+                        >
+                        <template v-else>{{
+                          recommendRoute.target.lesson_name
+                        }}</template>
+                      </span>
+
+                      <!-- 3. Следующий уровень (если есть) -->
+                      <template v-if="recommendRoute.next">
+                        <span>→</span>
+                        <span class="text-inactive font-medium">
+                          <template v-if="recommendRoute.next === 'ielts'"
+                            >IELTS</template
+                          >
+                          <template v-else>{{
+                            recommendRoute.next.lesson_name
+                          }}</template>
+                        </span>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </template>
+
+              <template v-if="currentStep === 5">
+                <h3
+                  class="duration-300 select-none mb-0"
+                  :class="
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 -translate-y-6'
+                  "
+                >
+                  🎁 {{ $t("pages.quiz.marketing.you_have_gift") }}
+                </h3>
+
+                <div
+                  class="w-full duration-300 delay-[200ms]"
+                  :class="[
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 !-translate-y-6',
+                  ]"
+                >
+                  <p
+                    v-html="
+                      $t('pages.quiz.marketing.available_gift', {
+                        count: dashboard.quiz.free_club_lessons_count,
+                      })
+                    "
+                    class="select-none"
+                  ></p>
+                </div>
+
+                <div
+                  class="w-full duration-300 delay-[400ms]"
+                  :class="[
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 !-translate-y-6',
+                  ]"
+                >
+                  <p class="mb-0 font-medium select-none">
+                    {{ $t("pages.quiz.marketing.choose_the_days") }}
+                  </p>
+                </div>
+
+                <div
+                  class="w-full duration-300 delay-[600ms]"
+                  :class="[
+                    animated
+                      ? 'opacity-100 translate-y-0'
+                      : 'opacity-0 !-translate-y-6',
+                  ]"
+                >
+                  <scrollFadeContainer :maxHeight="300" :fadeSize="60">
+                    <scheduleTable
+                      :schedule="dashboard.upcoming_lessons"
+                      :miniTable="true"
+                      :openEventModal="openEventModal"
+                      :acceptConference="acceptConference"
+                      :mode="'stack'"
+                    />
+                    <button
+                      class="btn btn-primary btn-sm mt-4"
+                      @click="goToDashboard(false)"
+                    >
+                      🚀 {{ $t("pages.dashboard.go_to_dashboard") }}
+                    </button>
+                  </scrollFadeContainer>
+                </div>
+              </template>
+
               <div
-                class="delay-[500ms] duration-300"
+                class="duration-300"
                 :class="
                   animated
                     ? 'opacity-100 translate-y-0'
                     : 'opacity-0 !-translate-y-6'
                 "
                 :style="{
-                  transitionDelay: `${currentStep === 2 ? 400 + dashboard.quiz.length * 200 : 600}ms`,
+                  transitionDelay: `${currentStep === 2 ? 400 + dashboard.quiz.lessons.length * 200 : 800}ms`,
                 }"
               >
                 <button
-                  class="btn btn-lg btn-light btn-circle !py-6 !px-8"
-                  :class="
-                    currentStep === 2 && selectedLevel === null
-                      ? 'disabled'
-                      : ''
+                  v-if="currentStep < 5"
+                  class="btn !rounded-3xl !px-6"
+                  :class="[
+                    currentStep === 4 && freeLessons > 0
+                      ? 'bg-yellow-300 !text-yellow-700'
+                      : 'btn-primary',
+                    {
+                      disabled:
+                        (currentStep === 2 && selectedLevel === null) ||
+                        disabledButton === true,
+                    },
+                  ]"
+                  @click="
+                    currentStep === 3
+                      ? completedTasksCount === tasks.length
+                        ? nextStep()
+                        : startTheTest()
+                      : currentStep === 4 && freeLessons === 0
+                        ? goToDashboard(true)
+                        : nextStep()
                   "
-                  @click="nextStep()"
                 >
-                  <i class="pi pi-arrow-right"></i>
-                  {{ $t("continue") }}
+                  <template v-if="currentStep === 4 && freeLessons > 0"
+                    >🎁</template
+                  >
+                  <i
+                    v-else-if="currentStep === 4 && freeLessons === 0"
+                    class="pi pi-flag"
+                  ></i>
+                  <i v-else class="pi pi-arrow-right"></i>
+                  {{
+                    currentStep === 3
+                      ? completedTasksCount === tasks.length
+                        ? $t("pages.tasks.find_out_the_result")
+                        : completedTasksCount > 0
+                          ? $t("pages.tasks.continue_the_test")
+                          : $t("pages.tasks.start_the_test")
+                      : currentStep === 4
+                        ? freeLessons > 0
+                          ? $t("pages.quiz.marketing.get_gift")
+                          : $t("pages.tasks.finish_the_test")
+                        : $t("continue")
+                  }}
                 </button>
               </div>
             </div>
@@ -231,121 +573,13 @@
                 "
               >
                 <div class="col-span-12">
-                  <scrollFadeContainer :maxHeight="300" :fadeSize="120">
-                    <div class="table table-striped table-sm selectable">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>{{ $t("start_time") }}</th>
-                            <th>{{ $t("pages.lessons.lesson_name") }}</th>
-                            <template v-if="!schoolStore.isAiSchoolDomain">
-                              <roleProvider :roles="[1, 2, 3, 4]">
-                                <th>{{ $t("pages.lessons.lesson_type") }}</th>
-                                <th>{{ $t("pages.groups.group") }}</th>
-                                <th>{{ $t("pages.courses.course") }}</th>
-                                <th>{{ $t("pages.groups.group_category") }}</th>
-                              </roleProvider>
-                            </template>
-                            <template v-else>
-                              <th>{{ $t("pages.courses.title") }}</th>
-                            </template>
-                            <th>{{ $t("mentor") }}</th>
-                          </tr>
-                        </thead>
-
-                        <tbody>
-                          <tr
-                            v-for="e in dashboard.upcoming_lessons"
-                            :key="e.uuid"
-                            @click="openEventModal(e.uuid)"
-                            :class="e.is_active === true ? 'success' : ''"
-                          >
-                            <td>
-                              <b class="text-nowrap">{{
-                                e.is_active === true
-                                  ? $t("already_started")
-                                  : e.start_time_formatted
-                              }}</b>
-                              <!-- <br />
-                          <b
-                            v-if="e.is_bought_status != null"
-                            class="text-xs"
-                            :class="
-                              e.is_bought_status.is_bought === true
-                                ? 'text-success'
-                                : 'text-danger'
-                            "
-                            >{{
-                              e.is_bought_status.is_bought === true
-                                ? e.is_bought_status.is_free
-                                  ? $t("pages.lessons.free_lesson")
-                                  : $t("pages.payment-result.success_alt")
-                                : $t("pages.payment-result.fail_alt_2")
-                            }}</b
-                          > -->
-                            </td>
-                            <td v-if="e.lesson_name">
-                              {{ e.lesson_name }}
-                            </td>
-                            <td v-if="e.topic">{{ e.topic }}</td>
-                            <template v-if="!schoolStore.isAiSchoolDomain">
-                              <roleProvider :roles="[1, 2, 3, 4]">
-                                <td>{{ e.lesson_type_name }}</td>
-                                <td>{{ e.group_name }}</td>
-                                <td>{{ e.course_name }}</td>
-                                <td>{{ e.level_name }}</td>
-                              </roleProvider>
-                            </template>
-                            <template v-else>
-                              <td>
-                                <div class="text-list text-nowrap">
-                                  <span
-                                    v-for="(level, lIndex) in e.levels"
-                                    :key="lIndex"
-                                  >
-                                    {{ level.level_name }}
-                                  </span>
-                                </div>
-                              </td>
-                            </template>
-                            <td>
-                              <div class="flex gap-x-1 items-center">
-                                <userAvatar
-                                  :padding="0.5"
-                                  :className="'w-6 h-6'"
-                                  :user="{
-                                    last_name:
-                                      e.mentor_last_name ||
-                                      e.moderator_last_name ||
-                                      '',
-                                    first_name:
-                                      e.mentor_first_name ||
-                                      e.moderator_first_name ||
-                                      '',
-                                    avatar:
-                                      e.mentor_avatar ||
-                                      e.moderator_avatar ||
-                                      '',
-                                  }"
-                                />
-                                <span class="text-nowrap">
-                                  {{
-                                    e.mentor_last_name ||
-                                    e.moderator_last_name ||
-                                    ""
-                                  }}
-                                  {{
-                                    e.mentor_first_name ||
-                                    e.moderator_first_name ||
-                                    ""
-                                  }}</span
-                                >
-                              </div>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                  <scrollFadeContainer :maxHeight="400" :fadeSize="120">
+                    <scheduleTable
+                      :schedule="dashboard.upcoming_lessons"
+                      :openEventModal="openEventModal"
+                      :acceptConference="acceptConference"
+                      :mode="'stack'"
+                    />
                   </scrollFadeContainer>
                 </div>
 
@@ -436,7 +670,10 @@
             <div class="col-span-12"></div>
           </template>
           <template v-else>
-            <div class="col-span-12" v-if="schoolStore.isAiSchoolDomain">
+            <div
+              class="col-span-12"
+              v-if="schoolStore.isAiSchoolDomain && currentEvent.poster_file"
+            >
               <img
                 class="w-full rounded-xl"
                 :src="
@@ -477,21 +714,30 @@
                   </b>
                 </p>
               </template>
-              <p class="text-inactive">
-                <i class="pi pi-user"></i> {{ $t("mentor") }}:
-                <b class="text-active"
-                  >{{
-                    currentEvent.mentor_last_name ||
-                    currentEvent.moderator_last_name ||
-                    ""
-                  }}
-                  {{
-                    currentEvent.mentor_first_name ||
-                    currentEvent.moderator_first_name ||
-                    ""
-                  }}</b
+
+              <div class="flex gap-x-1 items-center mb-2">
+                <span class="text-inactive"
+                  ><i class="pi pi-user"></i> {{ $t("mentor") }}:</span
                 >
-              </p>
+
+                <userTag
+                  :user="{
+                    last_name:
+                      currentEvent.mentor_last_name ||
+                      currentEvent.moderator_last_name ||
+                      '',
+                    first_name:
+                      currentEvent.mentor_first_name ||
+                      currentEvent.moderator_first_name ||
+                      '',
+                    avatar:
+                      currentEvent.mentor_avatar ||
+                      currentEvent.moderator_avatar ||
+                      '',
+                  }"
+                  :closable="false"
+                />
+              </div>
               <p class="text-inactive">
                 <i class="pi pi-clock"></i> {{ $t("start_time") }}:
                 <b class="text-active">{{
@@ -530,13 +776,24 @@
               <button
                 @click="acceptConference(currentEvent.uuid)"
                 class="btn btn-success"
+                :class="currentEvent.is_member === true ? 'disabled' : ''"
               >
                 <i class="pi pi-check"></i>
-                {{ $t("pages.conference.accept.title") }}
+                {{
+                  currentEvent.is_member === true
+                    ? $t("pages.conference.accept.already_exists_alt")
+                    : $t("pages.conference.accept.title")
+                }}
               </button>
             </div>
 
-            <div class="col-span-12" v-if="currentEvent.is_active === true">
+            <div
+              class="col-span-12"
+              v-if="
+                (currentEvent.is_free === 1 || currentEvent.is_member) &&
+                currentEvent.is_active === true
+              "
+            >
               <nuxt-link
                 class="btn btn-success"
                 :to="localePath('/dashboard/conference/' + currentEvent.uuid)"
@@ -614,6 +871,23 @@
         </form>
       </template>
     </modal>
+
+    <modal
+      :show="taskModalIsVisible"
+      :onClose="() => closeModalByUser()"
+      :className="taskModalClass + ' min-h-60 select-none'"
+      :showLoader="pendingTaskModal"
+      :showPendingText="true"
+      :loaderOpacityFull="true"
+      :closeOnClickSelf="false"
+    >
+      <template v-slot:header_content>
+        <h5>{{ task ? task.task_slug : "" }}</h5>
+      </template>
+      <template v-slot:body_content>
+        <component :is="currentTaskModal" v-bind="taskModalProps" />
+      </template>
+    </modal>
   </client-only>
 </template>
 
@@ -624,6 +898,8 @@ import steps from "../../components/ui/steps.vue";
 import firstStep from "../../components/payment/lesson/firstStep.vue";
 import secondStep from "../../components/payment/lesson/secondStep.vue";
 import modal from "../../components/ui/modal.vue";
+import progressBar from "../../components/ui/progressBar.vue";
+import circleProgressBar from "../../components/ui/circleProgressBar.vue";
 import userTag from "../../components/ui/userTag.vue";
 import animatedNumber from "../../components/ui/animatedNumber.vue";
 import currentConferenceCard from "../../components/conference/currentConferenceCard.vue";
@@ -633,6 +909,7 @@ import loader from "../../components/ui/loader.vue";
 import alert from "../../components/ui/alert.vue";
 import scrollFadeContainer from "../../components/ui/scrollFadeContainer.vue";
 import aiExplainer from "../../components/lesson/components/ai/aiExplainer.vue";
+import scheduleTable from "../../components/schedule/scheduleTable.vue";
 import { useToast } from "vue-toastification";
 import { startConfetti, stopConfetti } from "../../utils/confetti.js";
 
@@ -646,11 +923,14 @@ const { t, localeProperties } = useI18n();
 const authUser = useSanctumUser();
 const dashboard = ref([]);
 const paymentLessons = ref([]);
+
 const currentEvent = ref(null);
 const pendingEvent = ref(false);
 const eventModalIsVisible = ref(false);
+
 const paymentModalIsVisible = ref(false);
 const paymentModalSize = ref("modal-4xl");
+
 const checkout = ref(null);
 const pendingPayment = ref(false);
 const paymentFormRef = ref(null);
@@ -660,10 +940,187 @@ const errors = ref([]);
 
 const animated = ref(false);
 const selectedLevel = ref(null);
+const disabledButton = ref(false);
+
+const firstEntry = ref(true);
+const showQuiz = ref(false);
+const pendingQuiz = ref(false);
+
+const currentLevel = computed(() => {
+  if (selectedLevel.value === null || !dashboard.value?.quiz?.lessons?.length) {
+    return null;
+  }
+
+  // Если выбран 0, берем первый уровень массива, иначе ищем по lesson_id
+  return selectedLevel.value === 0
+    ? dashboard.value.quiz.lessons[0]
+    : (dashboard.value.quiz.lessons.find(
+        (l) => l.lesson_id === selectedLevel.value,
+      ) ?? null);
+});
+
+const recommendLevel = computed(() => {
+  const level = currentLevel.value;
+  const quiz = dashboard.value?.quiz;
+
+  if (!level || !quiz) return null;
+
+  // Если порог набран — ищем следующий уровень
+  if (totalCompletedTasksPercent.value >= level.next_level_threshold) {
+    const currentIndex = quiz.findIndex((l) => l.lesson_id === level.lesson_id);
+    const nextLevel = quiz[currentIndex + 1];
+
+    // Если следующий уровень существует — предлагаем его, иначе — 'ielts'
+    return nextLevel ?? "ielts";
+  }
+
+  // Если порог НЕ набран — остаемся на текущем уровне
+  return level;
+});
+
+const recommendRoute = computed(() => {
+  const level = currentLevel.value;
+  const quiz = dashboard.value?.quiz?.lessons;
+
+  if (!level || !quiz) return null;
+
+  const currentIndex = quiz.findIndex((l) => l.lesson_id === level.lesson_id);
+  const isPassed =
+    totalCompletedTasksPercent.value >= level.next_level_threshold;
+
+  // 1. Определяем индекс рекомендуемого уровня
+  // Если порог сдан — рекомендуем следующий, иначе — текущий
+  const targetIndex = isPassed ? currentIndex + 1 : currentIndex;
+
+  // 2. Ищем рекомендуемый уровень в массиве (или назначаем IELTS, если вышли за пределы)
+  const targetLevel =
+    quiz[targetIndex] ?? (targetIndex >= quiz.length ? "ielts" : null);
+
+  // 3. Формируем массив пройденных уровней (все, что строго до targetIndex)
+  const passedLevels = quiz.slice(0, targetIndex);
+
+  // 4. Формируем следующий уровень после рекомендуемого (для перспективы)
+  const nextLevel =
+    quiz[targetIndex + 1] ?? (targetIndex + 1 === quiz.length ? "ielts" : null);
+
+  return {
+    passed: passedLevels, // Список пройденных уровней (массив)
+    target: targetLevel, // Текущий рекомендуемый уровень (объект или 'ielts')
+    next: nextLevel, // Следующий уровень после рекомендуемого (объект, 'ielts' или null)
+    isPassedCurrent: isPassed, // Флаг: набрал ли порог на текущем тесте
+  };
+});
+
+const freeLessons = computed(() => {
+  const lessons = dashboard.value?.upcoming_lessons;
+
+  if (lessons && lessons.length) {
+    // filter создает новый массив из подходящих элементов, у которого берем length
+    return lessons.filter((l) => Boolean(l.is_free)).length;
+  }
+
+  return 0; // или null, в зависимости от логики вашего UI
+});
+
+const tasks = ref([]);
+const task = ref(null);
+
+const completedTasksCount = ref(0);
+const completedTasksPercent = ref(0);
+
+const totalCompletedTasksPercent = computed(() => {
+  if (completedTasksCount.value > 0 && tasks.value.length > 0) {
+    return completedTasksPercent.value / tasks.value.length;
+  }
+
+  return 0;
+});
+
+const pendingTaskModal = ref(false);
+const taskModalClass = ref("modal-lg");
+const taskModalProps = ref({});
+const taskModalIsVisible = ref(false);
+const currentTaskModal = shallowRef(null);
+
+const onPending = (state) => {
+  pendingTaskModal.value = state;
+};
+
+const onStartTask = () => {
+  console.log("task is started");
+};
+
+const onCompleteTask = () => {
+  getDashboard();
+  saveQuizResult(false);
+};
+
+const changeModalSize = (size) => {
+  taskModalClass.value = size;
+};
+
+const closeModal = () => {
+  taskModalIsVisible.value = false;
+  pendingTaskModal.value = false;
+  task.value = null;
+};
+
+const closeModalByUser = () => {
+  taskModalIsVisible.value = false;
+  pendingTaskModal.value = false;
+  currentTaskModal.value = null;
+  task.value = null;
+};
+
+const openTask = (currentTask) => {
+  task.value = currentTask;
+  //taskResultModalIsVisible.value = false;
+  openTaskModal(task.value.task_type_component, "execution", {
+    task: currentTask,
+    lessonType: currentLevel.value.lesson_type_slug,
+  });
+};
+
+const openTaskModal = (component, action, props = {}) => {
+  taskModalIsVisible.value = true;
+  currentTaskModal.value = defineAsyncComponent(
+    () =>
+      import(
+        `../../components/lesson/components/tasks/actions/${action}/${component}.vue`
+      ),
+  );
+  taskModalProps.value = props;
+};
+
+const startTheTest = () => {
+  for (let index = 0; index < tasks.value.length; index++) {
+    const task = tasks.value[index];
+    if (task.task_result && !task.task_result.answers) {
+      openTask(task);
+      break;
+    }
+  }
+};
+
+provide("onPending", onPending);
+provide("onStartTask", onStartTask);
+provide("onCompleteTask", onCompleteTask);
+provide("changeModalSize", changeModalSize);
+provide("closeModal", closeModal);
+
+provide("tasks", tasks);
+provide("completedTasksCount", completedTasksCount);
+provide("openTask", openTask);
 
 useHead({
   title: t("pages.dashboard.title"),
   meta: [{ name: "description", content: t("pages.home.description") }],
+  script: [
+    {
+      src: `${config.public.tiptopPayCheckoutURL}?_nc=${Date.now()}`,
+      defer: true,
+    },
+  ],
 });
 
 definePageMeta({
@@ -698,6 +1155,8 @@ const backToStep = (step) => {
 
 const getDashboard = async () => {
   pending.value = true;
+  pendingQuiz.value = true;
+
   await $axiosPlugin
     .get("dashboard/get")
     .then((response) => {
@@ -711,7 +1170,74 @@ const getDashboard = async () => {
           l.is_bought_status.is_bought === false,
       );
 
+      if (dashboard.value.quiz && dashboard.value.quiz.lessons.length) {
+        if (dashboard.value.quiz) {
+          selectLevel(selectedLevel.value);
+
+          if (firstEntry.value === true) {
+            showQuiz.value = true;
+            firstEntry.value = false;
+
+            if (
+              dashboard.value.quiz.result &&
+              dashboard.value.quiz.result.is_completed === 0
+            ) {
+              selectLevel(dashboard.value.quiz.result.lesson_id);
+              currentStep.value = 3;
+            }
+          }
+        }
+      }
+
       pending.value = false;
+      pendingQuiz.value = false;
+    })
+    .catch((err) => {
+      if (err.response) {
+        router.push({
+          path: "/error",
+          query: {
+            status: err.response.status,
+            message: err.response.data.message,
+            url: err.request.responseURL,
+          },
+        });
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
+const goToDashboard = (forced) => {
+  if (forced === true) {
+    saveQuizResult(true);
+    showQuiz.value = false;
+  } else {
+    if (
+      dashboard.value?.upcoming_lessons?.some(
+        (l) => l.is_free === 1 && l.is_member,
+      )
+    ) {
+      showQuiz.value = false;
+    } else {
+      toast(t("pages.quiz.marketing.choose_the_one"), {
+        toastClassName: ["custom-toast", "danger"],
+        timeout: 10000,
+      });
+    }
+  }
+};
+
+const saveQuizResult = async (completed) => {
+  pendingQuiz.value = true;
+
+  await $axiosPlugin
+    .post("/dashboard/save_quiz_result", {
+      lesson_id: currentLevel.value.lesson_id,
+      is_completed: completed,
+    })
+    .then((response) => {
+      pendingQuiz.value = false;
     })
     .catch((err) => {
       if (err.response) {
@@ -861,12 +1387,21 @@ const handlePayment = async () => {
 const acceptConference = async (uuid) => {
   pendingEvent.value = true;
 
+  if (!currentEvent.value) {
+    openEventModal(uuid);
+  }
+
   await $axiosPlugin
     .post("conferences/accept/" + uuid)
     .then((response) => {
       pendingEvent.value = false;
       acceptedConference.value = true;
       startConfetti("confetti-canvas");
+      getDashboard();
+
+      if (currentLevel.value) {
+        saveQuizResult(true);
+      }
     })
     .catch((err) => {
       if (err.response) {
@@ -904,12 +1439,9 @@ const acceptConference = async (uuid) => {
     });
 };
 
-// 1. Получаем объект текущего запроса/URL
 const requestUrl = useRequestURL();
 
-// 2. Собираем корневой URL (протокол + домен) и добавляем нужный роут с UUID
 const conferenceUrl = computed(() => {
-  // requestUrl.origin вернет строку вида "https://my-site.kz" или "http://localhost:3000"
   if (currentEvent.value) {
     return `${requestUrl.origin}/dashboard/conference/${currentEvent.value.uuid}`;
   }
@@ -925,19 +1457,53 @@ const timeIsUp = () => {
 
 const nextStep = () => {
   animated.value = false;
+  disabledButton.value = true;
 
-  if (currentStep.value === 1) {
+  setTimeout(() => {
+    disabledButton.value = false;
+    currentStep.value++;
     setTimeout(() => {
-      currentStep.value = 2;
-      setTimeout(() => {
-        animated.value = true;
-      }, 200);
-    }, 1000);
-  }
+      animated.value = true;
+
+      if (currentStep.value === 4) {
+        const threshold = currentLevel.value.next_level_threshold;
+
+        if (totalCompletedTasksPercent.value >= threshold) {
+          setTimeout(() => {
+            startConfetti("confetti-canvas");
+          }, 300);
+        }
+      }
+    }, 200);
+  }, 1200);
 };
 
 const selectLevel = (lesson_id) => {
-  selectedLevel.value = lesson_id;
+  if (lesson_id !== null) {
+    selectedLevel.value = lesson_id;
+
+    completedTasksCount.value = 0;
+    completedTasksPercent.value = 0;
+
+    if (lesson_id === 0) {
+      tasks.value = dashboard.value.quiz.lessons[0].tasks;
+    } else {
+      tasks.value = dashboard.value.quiz.lessons.find(
+        (l) => l.lesson_id === lesson_id,
+      ).tasks;
+    }
+
+    if (tasks.value.length > 0) {
+      for (let taskIndex = 0; taskIndex < tasks.value.length; taskIndex++) {
+        const task = tasks.value[taskIndex];
+        task.taskIndex = taskIndex;
+        if (task.task_result && task.task_result.completed === true) {
+          completedTasksCount.value++;
+          completedTasksPercent.value += task.task_result.percentage;
+        }
+      }
+    }
+  }
 };
 
 onMounted(async () => {

@@ -412,6 +412,12 @@ const promoCode = ref("");
 useHead(() => ({
   title: pageTitle.value,
   meta: [{ name: "description", content: "Section" }],
+  script: [
+    {
+      src: `${config.public.tiptopPayCheckoutURL}?_nc=${Date.now()}`,
+      defer: true,
+    },
+  ],
 }));
 
 definePageMeta({

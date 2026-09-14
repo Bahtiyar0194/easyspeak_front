@@ -2,6 +2,8 @@ export default {
     all: 'Барлығы',
     yes: 'Иә',
     no: 'Жоқ',
+    more: 'Толығырақ',
+    i_dont_know: 'Білмеймін',
     you: 'Бұл сіз',
     start: 'Бастау',
     finish: 'Аяқтау',
@@ -24,6 +26,7 @@ export default {
     verified: 'Тексерілді',
     not_verified: 'Тексерілмеген',
     passed: 'Орындалды',
+    your_choice: "Сіздің таңдау",
     choose: "Таңдау",
     choose_an_option: "Нұсқаны таңдаңыз",
     choose_your_option: "Өз нұсқаңызды таңдаңыз",
@@ -65,6 +68,7 @@ export default {
     nothing_was_found_for_your_query: "Сіздің сұранымыңыз бойынша ештеңе табылған жоқ",
     time_is_up: "Уақыт бітті!",
     remaining_time: "Қалған уақыт",
+    ready: "Дайын",
     already_started: "Басталып кетті",
     write_here_and_press_add: "Осы жерге енгізіңіз кейін 'Қосу' батырмасын басыңыз",
 
@@ -684,6 +688,10 @@ export default {
             forgot_password: "Құпиясөзді ұмыттыңыз ба?",
             password_recovery: "Қалпына келтіру",
             sign_out: 'Аккаунттан шығу',
+
+            methods: {
+                google: 'Google арқылы кіру'
+            }
         },
 
         logout: {
@@ -986,7 +994,9 @@ export default {
                     url_desc_2: 'осы сілтемені басыңыз'
                 },
                 already_exists: 'Сіз бұл конференцияға жазулы тұрсыз',
-                limit_has_been_reached: 'Конференцияға қатысу шегі таусылды'
+                already_exists_alt: 'Сіз жазулысыз',
+                limit_has_been_reached: 'Конференцияға қатысу шегі таусылды',
+                free_limit_has_been_reached: 'Тегін конференцияларға қатысу шегі таусылды'
             }
         },
 
@@ -1024,6 +1034,8 @@ export default {
             choose_a_course_levels: 'Курстың деңгей(-лерін) таңдаңыз',
             level_overall_progress: 'Деңгей бойынша жалпы прогресс',
             section_overall_progress: 'Бөлім бойынша жалпы прогресс',
+            recommend_level: 'Ұсынылатын деңгей',
+            next_recommend_level: 'Керемет нәтиже! Ұсынылатын деңгей',
             course_section: 'Тарау',
             choose_a_course_section: 'Тарауды таңдаңыз',
             course_is_not_available: 'Курс қолжетімсіз. Курс қолжетімді болу үшін әкімшілікпен хабарласуыңызды өтінеміз.',
@@ -1090,6 +1102,19 @@ export default {
             title: 'Оқу бағдарламасы',
             grade: 'Оқушының үлгерімі',
             get_grade: 'Үлгерімді тексеру'
+        },
+
+        quiz: {
+            do_you_want_to_know_your_level: 'Ағылшын тіліңіздің деңгейін білгіңіз келе ме?',
+            what_is_your_level: 'Ағылшын тілін білу деңгейіңіз қандай деп ойлайсыз?',
+            recommend_route: 'Сізге ұсынылған бағыт',
+            marketing: {
+                get_gift: 'Сыйлық алу',
+                you_have_gift: 'Сізге сыйлық берілді',
+                available_gift: "Сізге EasySpeak оқытушыларымен <b>Speaking Club-та {count} тегін онлайн-сабақ</b> қолжетімді.",
+                choose_the_days: 'Қатысу үшін Сізге ыңғайлы күндер мен уақытты таңдаңыз.',
+                choose_the_one: 'Кем дегенде бір сабаққа жазылуыңыз қажет'
+            }
         },
 
         dictionary: {
@@ -1209,6 +1234,9 @@ export default {
             test_is_started: 'Тестілеу басталды',
             test_is_started_for_learners: 'Тестілеу басталды. Оқушылар дәл қазір тапсырмаларды орындауға кірісті.',
             continue_the_test: 'Тестілеуді жалғастыру',
+            finish_the_test: 'Тестілеуді аяқтау',
+            find_out_the_result: 'Нәтижесін білу',
+            language_proficiency_test: 'Тіл білімінің деңгейін анықтауға арналған тест',
             count: 'Тапсырмалар саны',
             tasks_count: 'Тапсырмалар',
             there_are_no_tasks: 'Бұл сабаққа әзірше тапсырмалар қосылмаған.',
@@ -1227,6 +1255,7 @@ export default {
             allowed_only_participants: 'Доступ к заданиям разрешён только участникам этой конференции.',
             completed_the_task: '{name} "{taskName}" тапсырмасын орындап болды.',
             new_task_is_available: 'Сізге "{taskName}" тапсырмасы қолжетімді. Оны төмендегі "Тапсырмалар" қойындысынан аша аласыз.',
+            completed_tasks: 'Орындалған тапсырмалар саны',
             is_completed: 'Тапсырма орындалды',
             in_process: 'Тапсырма орындап жатыр',
             in_process_this: 'Осы тапсырманы орындап жатыр',
@@ -1235,6 +1264,7 @@ export default {
             show_task_result: 'Нәтижесін көру',
             show_learner_task_result: 'Оқушы тапсырмасының нәтижесін көру',
             you_can_see_the_result: 'Оқушы тапсырмасының нәтижесін ол орындалғаннан кейін көре аласыз',
+            your_result: 'Сіздің нәтижеңіз',
             warning_1: 'Кейбір оқушылар әлі де тапсырма орындап жатыр. Өтінеміз, олардың тапсырманы аяқтауын күтіңіз немесе олардан тапсырманы жабуды сұраңыз.',
             task_options: {
                 title: 'Тапсырманың баптаулары',

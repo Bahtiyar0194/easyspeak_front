@@ -249,7 +249,7 @@
 }
 
 .bg-warning{
-  @apply bg-yellow-500;
+  @apply bg-yellow-300;
 }
 
 .bg-orange{
@@ -325,7 +325,7 @@
 }
 
 .border-warning{
-  @apply border-yellow-500;
+  @apply border-yellow-300;
 }
 
 .text-active {
@@ -349,7 +349,7 @@
 }
 
 .text-warning{
-  @apply text-yellow-500;
+  @apply text-yellow-300;
 }
 
 .text-inactive {
@@ -381,7 +381,7 @@
 }
 
 .stroke-warning{
-  @apply stroke-yellow-500;
+  @apply stroke-yellow-300;
 }
 
 .stroke-danger{
@@ -436,7 +436,7 @@
 
 .scroll-fade {
   overflow-y: auto;
-  scrollbar-width: none;
+
 }
 
 /* обе стороны */
@@ -1098,7 +1098,7 @@ select.error:has(option:checked:disabled) {
 }
 
 .rating-radio > svg{
-  @apply text-2xl text-yellow-500;
+  @apply text-2xl text-yellow-300;
 }
 
 .dark .custom-radio > input:checked + span::before {
@@ -1395,6 +1395,7 @@ input:disabled + .slider {
 .btn-outline-primary:hover{
   @apply bg-corp border border-corp text-white;
 }
+
 
 .btn-light{
   @apply bg-active text-active border-inactive border;
@@ -1996,7 +1997,7 @@ input:disabled + .slider {
 }
 
 .modal-header{
-  @apply pr-6;
+  @apply pr-7;
 }
 
 .modal-body{
@@ -2009,7 +2010,11 @@ input:disabled + .slider {
 }
 
 .modal-close-button{
-  @apply absolute right-5 top-6 text-3xl cursor-pointer text-active leading-none;
+  @apply absolute right-5 top-6 text-3xl cursor-pointer text-active flex justify-center items-center leading-none bg-inactive border-inactive rounded-lg duration-300;
+}
+
+.modal-close-button:hover{
+  @apply bg-danger text-white border-danger;
 }
 
 .full-overlay {
@@ -2276,7 +2281,7 @@ input:disabled + .slider {
 }
 
 .progress-bar.warning{
-  @apply bg-warning;
+  @apply bg-warning text-black;
 }
 
 .progress-bar.orange{

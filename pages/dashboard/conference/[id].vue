@@ -868,7 +868,10 @@
 
                       <button
                         @click="openSelectTasksModal()"
-                        v-if="conference.mentor_id === authUser.user_id"
+                        v-if="
+                          schoolStore.isAiSchoolDomain &&
+                          conference.mentor_id === authUser.user_id
+                        "
                         class="btn btn-success"
                       >
                         <i class="pi pi-play"></i>
@@ -1749,6 +1752,7 @@ provide("onPending", onPending);
 provide("onStartTask", onStartTask);
 provide("onCompleteTask", onCompleteTask);
 provide("changeModalSize", changeModalSize);
+provide("closeModal", closeTaskModal);
 
 provide("tasks", tasks);
 provide("completedTasksCount", completedTasksCount);

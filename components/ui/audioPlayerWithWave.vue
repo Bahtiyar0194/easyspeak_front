@@ -43,6 +43,7 @@ import {
   setCurrentWave,
   clearCurrentWave,
 } from "../../utils/waveSurferManager";
+import { stopAllAudios } from "../../utils/audioTracker";
 import { ref, onMounted, onBeforeUnmount } from "vue";
 const props = defineProps({
   src: {
@@ -107,6 +108,7 @@ const toggleAudio = () => {
     clearCurrentWave(waveSurferInstance);
   } else {
     setCurrentWave(waveSurferInstance); // 👈 останавливает другие
+    stopAllAudios();
     waveSurferInstance.play();
     isPlaying.value = true;
   }

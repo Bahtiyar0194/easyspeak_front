@@ -2,6 +2,8 @@ export default {
     all: 'Все',
     yes: 'Да',
     no: 'Нет',
+    more: 'Подробнее',
+    i_dont_know: 'Не знаю',
     you: 'Это вы',
     start: 'Начать',
     finish: 'Закончить',
@@ -24,6 +26,7 @@ export default {
     verified: 'Проверено',
     not_verified: 'Не проверено',
     passed: 'Выполнено',
+    your_choice: "Ваш выбор",
     choose: "Выбрать",
     choose_an_option: "Выберите вариант",
     choose_your_option: "Выберите свой вариант",
@@ -65,6 +68,7 @@ export default {
     nothing_was_found_for_your_query: "По вашему запросу ничего не найдено",
     time_is_up: "Время вышло!",
     remaining_time: "Оставшееся время",
+    ready: "Готово",
     already_started: "Уже началась",
     write_here_and_press_add: "Напишите здесь и затем нажмите на кнопку 'Добавить'",
 
@@ -684,6 +688,10 @@ export default {
             forgot_password: "Забыли пароль?",
             password_recovery: "Восстановить",
             sign_out: 'Выйти из аккаунта',
+
+            methods: {
+                google: 'Войти через Google'
+            }
         },
 
         logout: {
@@ -986,7 +994,9 @@ export default {
                     url_desc_2: 'нажмите по данной ссылке'
                 },
                 already_exists: 'Вы уже записаны на эту конференцию',
-                limit_has_been_reached: 'Лимит участия в конференции исчерпан'
+                already_exists_alt: 'Вы записаны',
+                limit_has_been_reached: 'Лимит участия в конференции исчерпан',
+                free_limit_has_been_reached: 'Лимит участия в бесплатных конференциях исчерпан'
             }
         },
 
@@ -1024,6 +1034,8 @@ export default {
             choose_a_course_levels: 'Выберите уровень(-ни) курса',
             level_overall_progress: 'Общий прогресс по уровню',
             section_overall_progress: 'Общий прогресс по главе',
+            recommend_level: 'Рекомендуемый уровень',
+            next_recommend_level: 'Отличный результат! Рекомендуем начать с',
             course_section: 'Глава',
             choose_a_course_section: 'Выберите главу',
             course_is_not_available: 'Курс недоступен. Пожалуйста, свяжитесь с администратором для получения доступа к курсу.',
@@ -1090,6 +1102,20 @@ export default {
             title: 'Учебная программа',
             grade: 'Успеваемость ученика',
             get_grade: 'Проверить успеваемость'
+        },
+
+        quiz: {
+            do_you_want_to_know_your_level: 'Хотите узнать свой уровень английского?',
+            what_is_your_level: 'Как Вы думаете какой у Вас уровень владения английским?',
+            recommend_route: 'Ваш рекомендуемый маршрут',
+
+            marketing: {
+                get_gift: 'Получить подарок',
+                you_have_gift: 'Вы получили подарок',
+                available_gift: "Вам доступны <b>{count} бесплатных онлайн-занятия в Speaking Club</b> с преподавателями EasySpeak.",
+                choose_the_days: 'Выберите наиболее удобные для вас дни и время занятий, чтобы принять участие.',
+                choose_the_one: 'Запишитесь хотя бы на один урок'
+            }
         },
 
         dictionary: {
@@ -1209,6 +1235,9 @@ export default {
             test_is_started: 'Тестирование запущено',
             test_is_started_for_learners: 'Тестирование запущено. Ученики только что приступили к выполнению задании.',
             continue_the_test: 'Продолжить тестирование',
+            finish_the_test: 'Завершить тестирование',
+            find_out_the_result: 'Узнать результат',
+            language_proficiency_test: 'Тест на определение уровня знаний языка',
             count: 'Количество задании',
             tasks_count: 'Задании',
             there_are_no_tasks: 'Для этого урока пока не добавлены задания.',
@@ -1227,6 +1256,7 @@ export default {
             allowed_only_participants: 'Доступ к заданиям разрешён только участникам этой конференции.',
             completed_the_task: '{name} выполнил(-а) задание "{taskName}".',
             new_task_is_available: 'Вам доступно задание "{taskName}". Вы можете открыть его внизу во вкладке "Задания".',
+            completed_tasks: 'Количество выполненных задании',
             is_completed: 'Задание выполнено',
             in_process: 'Выполняет задание',
             in_process_this: 'Выполняет данное задание',
@@ -1235,6 +1265,7 @@ export default {
             show_task_result: 'Показать результат',
             show_learner_task_result: 'Просмотреть результат задания ученика',
             you_can_see_the_result: 'Вы можете увидеть результат задания ученика как только оно будет выполнено',
+            your_result: 'Ваш результат',
             warning_1: 'Некоторые ученики все еще выполняют задание. Пожалуйста, дождитесь, пока они завершат выполнение, либо попросите их закрыть задание вручную.',
             task_options: {
                 title: 'Настройки задания',

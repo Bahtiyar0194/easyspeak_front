@@ -86,15 +86,28 @@
                       props.lessonType === 'file_test' &&
                       completedTasksCount < tasks.length
                     "
-                    class="btn btn-outline-primary"
+                    class="btn btn-primary"
                     @click="openTask(tasks[props.task.taskIndex + 1])"
                   >
                     <i class="pi pi-arrow-right"></i>
                     {{ $t("pages.tasks.next_task") }}
                   </button>
+
+                  <button
+                    v-if="
+                      props.lessonType === 'file_test' &&
+                      completedTasksCount === tasks.length
+                    "
+                    class="btn btn-primary"
+                    @click="closeModal()"
+                  >
+                    <i class="pi pi-flag"></i>
+                    {{ $t("pages.tasks.finish_the_test") }}
+                  </button>
+
                   <button
                     v-if="props.lessonType !== 'file_test'"
-                    class="btn btn-outline-primary"
+                    class="btn btn-primary"
                     @click="openTask(props.task)"
                   >
                     <i class="pi pi-replay"></i>
@@ -111,7 +124,7 @@
         <div class="col-span-12">
           <div class="btn-wrap justify-end">
             <button
-              class="btn btn-outline-primary"
+              class="btn btn-primary"
               @click="showTaskResult = true"
             >
               <i class="pi pi-chart-bar"></i>
@@ -187,6 +200,7 @@ const props = defineProps({
 const tasks = inject("tasks");
 const completedTasksCount = inject("completedTasksCount");
 const openTask = inject("openTask");
+const closeModal = inject("closeModal");
 
 const showConfetti = (items) => {
   if (items && items.length === 0) {

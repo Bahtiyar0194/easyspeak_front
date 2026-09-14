@@ -13,14 +13,13 @@
     </template>
     <template v-else>
       <div
-        v-if="user.avatar"
+        v-if="props.user.avatar"
         :style="{
-          backgroundImage:
-            'url(' +
-            config.public.apiBase +
-            '/auth/get_avatar/' +
-            props.user.avatar +
-            ')',
+          backgroundImage: `url(${
+            props.user.avatar.startsWith('http')
+              ? props.user.avatar
+              : config.public.apiBase + '/auth/get_avatar/' + props.user.avatar
+          })`,
         }"
         class="bg-cover bg-no-repeat bg-center rounded-full"
         :class="props.className ? props.className : ''"

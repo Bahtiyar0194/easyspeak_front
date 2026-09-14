@@ -22,10 +22,6 @@ export default defineNuxtConfig({
       ],
       script: [
         {
-          src: "https://checkout.tiptoppay.kz/checkout.js",
-          defer: true
-        },
-        {
           children: `
             (function() {
               const savedTheme = document.cookie.match(new RegExp('(^| )theme=([^;]+)'))?.[2];
@@ -165,6 +161,7 @@ export default defineNuxtConfig({
       turnUSERNAME: process.env.TURN_USERNAME,
       turnPASSWORD: process.env.TURN_PASSWORD,
       telegramBotName: process.env.TELEGRAM_BOT_NAME,
+      tiptopPayCheckoutURL: process.env.TIPTOPPAY_CHECKOUT_URL,
 
       sanctum: {
         mode: 'token',
@@ -203,6 +200,9 @@ export default defineNuxtConfig({
   },
 
   i18n: {
+    compilation: {
+      strictMessage: false,
+    },
     detectBrowserLanguage: {
       useCookie: true,
       cookieKey: 'lang',

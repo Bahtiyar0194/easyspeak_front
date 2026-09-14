@@ -53,6 +53,12 @@ const props = defineProps({
     required: false,
     default: "text-xs",
   },
+
+  duration: {
+    type: Number,
+    required: false,
+    default: 1000,
+  },
 });
 
 const displayedProgress = ref(0); // текущий отображаемый процент
@@ -62,9 +68,8 @@ watch(
   (newVal, oldVal) => {
     const start = displayedProgress.value;
     const end = Math.min(Math.max(Number(newVal), 0), 100);
-    const duration = 1000; // продолжительность анимации в мс
     const frameRate = 30;
-    const totalFrames = Math.round(duration / (1000 / frameRate));
+    const totalFrames = Math.round(props.duration / (1000 / frameRate));
     let currentFrame = 0;
 
     const step = () => {

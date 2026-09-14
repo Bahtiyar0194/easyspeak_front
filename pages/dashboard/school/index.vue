@@ -320,6 +320,13 @@ const backToStep = (step) => {
 useHead({
   title: schoolStore.schoolData?.full_school_name,
   meta: [{ name: "description", content: t("pages.home.description") }],
+
+  script: [
+    {
+      src: `${config.public.tiptopPayCheckoutURL}?_nc=${Date.now()}`,
+      defer: true,
+    },
+  ],
 });
 
 definePageMeta({

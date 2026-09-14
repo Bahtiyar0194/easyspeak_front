@@ -169,12 +169,6 @@ const register = async () => {
   formData.append("lang", localeProperties.value.code);
   formData.append("step", currentStep.value);
 
-  const course = route.query.course || null;
-
-  if (course) {
-    formData.append("course", course);
-  }
-
   if (schoolStore.schoolData) {
     formData.append("first_registration", false);
     formData.append("school_domain", schoolStore.schoolData.school_domain);
@@ -196,13 +190,7 @@ const register = async () => {
         });
 
         if (schoolStore.schoolData) {
-          if (course && res.data.level.level_slug) {
-            router.push(
-              "/dashboard/courses/" + course + "/" + res.data.level.level_slug,
-            );
-          } else {
             router.push("/dashboard");
-          }
         } else {
           window.location.replace(
             "http://" +
