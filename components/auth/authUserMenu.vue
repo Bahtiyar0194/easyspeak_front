@@ -34,7 +34,7 @@
                 <p class="text-active font-medium text-base mb-0">
                   {{ authUser.last_name }} {{ authUser.first_name }}
                 </p>
-                <p class="text-inactive text-xs mb-0">{{ authUser.email }}</p>
+                <p v-if="authUser.email || authUser.telegram_username" class="text-inactive text-xs mb-0">{{ authUser.email || authUser.telegram_username }}</p>
               </div>
             </div>
           </div>
