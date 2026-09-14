@@ -161,6 +161,7 @@ export default defineNuxtConfig({
       turnUSERNAME: process.env.TURN_USERNAME,
       turnPASSWORD: process.env.TURN_PASSWORD,
       telegramBotName: process.env.TELEGRAM_BOT_NAME,
+      telegramBotId: process.env.TELEGRAM_BOT_ID,
       tiptopPayCheckoutURL: process.env.TIPTOPPAY_CHECKOUT_URL,
 
       sanctum: {

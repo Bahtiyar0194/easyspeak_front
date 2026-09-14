@@ -690,7 +690,13 @@ export default {
             sign_out: 'Выйти из аккаунта',
 
             methods: {
-                google: 'Войти через Google'
+                google: {
+                    title: 'Войти через Google'
+                },
+                telegram: {
+                    title: 'Войти через Telegram',
+                    sdk_error: 'Telegram SDK пока еще не загружен. Повторите попытку позднее.'
+                }
             }
         },
 

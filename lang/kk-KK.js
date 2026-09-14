@@ -690,7 +690,13 @@ export default {
             sign_out: 'Аккаунттан шығу',
 
             methods: {
-                google: 'Google арқылы кіру'
+                google: {
+                    title: 'Google арқылы кіру'
+                },
+                telegram: {
+                    title: 'Telegram арқылы кіру',
+                    sdk_error: 'Telegram SDK әзірше жүктелмеген. Кейінірек қайталап көріңіз.'
+                }
             }
         },
 

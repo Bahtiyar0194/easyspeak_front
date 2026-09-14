@@ -115,14 +115,23 @@
             <div class="flex-1 !border-t-0 border-inactive"></div>
           </div>
 
-          <div class="btn-wrap">
+          <div class="flex gap-x-2">
             <button
               type="button"
-              class="btn btn-lg btn-light !w-full"
-              @click="redirectToGoogle"
+              class="btn btn-light max-md:flex-col max-md:gap-y-2"
+              @click="signBy('google')"
             >
-              <img :src="'/images/google/google-icon-logo.svg'" class="w-4 mr-0.5" />
-              {{ $t("pages.login.methods.google") }}
+              <img :src="'/images/google/logo.svg'" class="w-5 max-md:w-6" />
+              {{ $t("pages.login.methods.google.title") }}
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-light max-md:flex-col max-md:gap-y-2"
+              @click="signBy('telegram')"
+            >
+              <img :src="'/images/telegram/logo.svg'" class="w-5 max-md:w-6" />
+              {{ $t("pages.login.methods.telegram.title") }}
             </button>
           </div>
         </form>
@@ -134,6 +143,7 @@
 <script setup>
 import authCard from "../../components/auth/authCard.vue";
 import { useCookie, useRoute, useRouter } from "nuxt/app";
+import { useToast } from "vue-toastification";
 import { useRuntimeConfig } from "nuxt/app";
 import { isSubdomain } from "../../utils/isSubdomain";
 
@@ -143,6 +153,7 @@ const { login } = useSanctumAuth();
 const route = useRoute();
 const router = useRouter();
 const config = useRuntimeConfig();
+const toast = useToast();
 
 const gtm = ref(null);
 
@@ -171,6 +182,14 @@ onMounted(() => {
 
   if (route.query.gcode) {
     exchangeGoogleCode();
+  }
+
+  if (!document.getElementById("telegram-widget-script")) {
+    const script = document.createElement("script");
+    script.id = "telegram-widget-script";
+    script.src = "https://telegram.org/js/telegram-widget.js?22";
+    script.async = true;
+    document.head.appendChild(script);
   }
 });
 
@@ -221,25 +240,53 @@ async function signIn() {
   }
 }
 
-const redirectToGoogle = async () => {
+const signBy = async (method) => {
   pending.value = true;
 
-  schoolStore.getSchool();
+  await schoolStore.getSchool();
 
   await $axiosPlugin
     .post("/school/get_school_by_domain", {
-      school_domain: schoolStore.schoolData ? schoolStore.schoolData.school_domain : schoolDomain.value,
+      school_domain: schoolStore.schoolData
+        ? schoolStore.schoolData.school_domain
+        : schoolDomain.value,
       lang: localeProperties.value.code,
     })
     .then((res) => {
       errors.value = [];
 
-      const currentOrigin = window.location.origin;
+      if (method === "google") {
+        const currentOrigin = window.location.origin;
 
-      // Формируем URL к роуту Laravel
-      const backendUrl = `${config.public.apiBase}/auth/google/redirect?return_url=${encodeURIComponent(currentOrigin)}&school_id=${res.data.school_id}&lang_tag=${localeProperties.value.code}`;
+        // Формируем URL к роуту Laravel
+        const backendUrl = `${config.public.apiBase}/auth/google/redirect?return_url=${encodeURIComponent(currentOrigin)}&school_id=${res.data.school_id}&lang_tag=${localeProperties.value.code}`;
 
-      window.location.href = backendUrl;
+        window.location.href = backendUrl;
+      } else if (method === "telegram") {
+        if (!window.Telegram?.Login) {
+          toast(t("pages.login.methods.telegram.sdk_error"), {
+            toastClassName: ["custom-toast", "info"],
+            timeout: 10000,
+          });
+          return;
+        }
+
+        // Вызываем окно авторизации Telegram
+        window.Telegram.Login.auth(
+          {
+            bot_id: config.public.telegramBotId,
+            request_access: "write",
+          },
+          async (data) => {
+            if (!data) {
+              // Пользователь закрыл окно или отклонил вход
+              return;
+            }
+
+            handleTelegramData(data, res.data.school_id);
+          },
+        );
+      }
     })
     .catch((err) => {
       errors.value = err.response.data;
@@ -280,6 +327,51 @@ const exchangeGoogleCode = async () => {
       gtm.value?.push({
         event: "sign_in",
         method: "gmail",
+        user_type: "student",
+      });
+
+      window.location.href = "/dashboard";
+    })
+    .catch((err) => {
+      errors.value = err.response.data;
+      pending.value = false;
+      return;
+    });
+};
+
+const handleTelegramData = async (data, school_id) => {
+  pending.value = true;
+
+  await $axiosPlugin
+    .post("/auth/telegram/callback", {
+      data: data,
+      school_id: school_id,
+      lang: localeProperties.value.code,
+    })
+    .then((res) => {
+      errors.value = [];
+
+      localStorage.setItem(
+        "subdomain",
+        schoolStore.schoolData
+          ? schoolStore.schoolData.school_domain
+          : res.data.school_domain,
+      );
+
+      schoolStore.getSchool();
+
+      const sanctumToken = useCookie("sanctum.token.cookie");
+
+      sanctumToken.value = res.data.token;
+
+      if (sanctumToken.value) {
+        $axiosPlugin.defaults.headers.common["Authorization"] =
+          "Bearer " + sanctumToken.value;
+      }
+
+      gtm.value?.push({
+        event: "sign_in",
+        method: "telegram",
         user_type: "student",
       });
 
