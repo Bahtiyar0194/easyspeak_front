@@ -180,8 +180,8 @@ onMounted(() => {
   pending.value = false;
   gtm.value = window.dataLayer;
 
-  if (route.query.gcode) {
-    exchangeGoogleCode();
+  if (route.query.otc) {
+    otCodeHandle();
   }
 
   if (!document.getElementById("telegram-widget-script")) {
@@ -255,38 +255,12 @@ const signBy = async (method) => {
     .then((res) => {
       errors.value = [];
 
-      if (method === "google") {
-        const currentOrigin = window.location.origin;
+      const currentOrigin = window.location.origin;
 
-        // Формируем URL к роуту Laravel
-        const backendUrl = `${config.public.apiBase}/auth/google/redirect?return_url=${encodeURIComponent(currentOrigin)}&school_id=${res.data.school_id}&lang_tag=${localeProperties.value.code}`;
+      const backendUrl = `${config.public.apiBase}/auth/${method}/redirect?return_url=${encodeURIComponent(currentOrigin)}&school_id=${res.data.school_id}&lang_tag=${localeProperties.value.code}`;
 
-        window.location.href = backendUrl;
-      } else if (method === "telegram") {
-        if (!window.Telegram?.Login) {
-          toast(t("pages.login.methods.telegram.sdk_error"), {
-            toastClassName: ["custom-toast", "info"],
-            timeout: 10000,
-          });
-          return;
-        }
-
-        // Вызываем окно авторизации Telegram
-        window.Telegram.Login.auth(
-          {
-            bot_id: config.public.telegramBotId,
-            request_access: "write",
-          },
-          async (data) => {
-            if (!data) {
-              // Пользователь закрыл окно или отклонил вход
-              return;
-            }
-
-            handleTelegramData(data, res.data.school_id);
-          },
-        );
-      }
+      window.location.href = backendUrl;
+      
     })
     .catch((err) => {
       errors.value = err.response.data;
@@ -295,12 +269,12 @@ const signBy = async (method) => {
     });
 };
 
-const exchangeGoogleCode = async () => {
+const otCodeHandle = async () => {
   pending.value = true;
 
   await $axiosPlugin
-    .post("/auth/google/exchange", {
-      code: route.query.gcode,
+    .post("/auth/one_time_code", {
+      code: route.query.otc,
       lang: localeProperties.value.code,
     })
     .then((res) => {
