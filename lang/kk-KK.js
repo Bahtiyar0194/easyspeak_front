@@ -1072,6 +1072,7 @@ export default {
             lesson_name: 'Сабақтың атауы',
             free_lesson: 'Тегін сабақ',
             first_lesson_free: 'Бірінші сабақ тегін',
+            all_lessons_is_conference: 'Курстың барлық сабақтары мұғаліммен өтеді',
             bought_by_learner: 'Оқушы өзі сатып алды',
             current_lessons: 'Қазір өтіп жатырған сабақтар',
             no_current_lessons: 'Әзірше өтіп жатырған сабақтар жоқ',

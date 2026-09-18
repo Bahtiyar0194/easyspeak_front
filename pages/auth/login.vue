@@ -115,10 +115,10 @@
             <div class="flex-1 !border-t-0 border-inactive"></div>
           </div>
 
-          <div class="flex gap-x-2">
+          <div class="flex flex-col gap-2">
             <button
               type="button"
-              class="btn btn-light max-md:flex-col max-md:gap-y-2"
+              class="btn btn-light !w-full"
               @click="signBy('google')"
             >
               <img :src="'/images/google/logo.svg'" class="w-5 max-md:w-6" />
@@ -127,7 +127,7 @@
 
             <button
               type="button"
-              class="btn btn-light max-md:flex-col max-md:gap-y-2"
+              class="btn btn-light !w-full"
               @click="signBy('telegram')"
             >
               <img :src="'/images/telegram/logo.svg'" class="w-5 max-md:w-6" />
@@ -260,7 +260,7 @@ const signBy = async (method) => {
       const backendUrl = `${config.public.apiBase}/auth/${method}/redirect?return_url=${encodeURIComponent(currentOrigin)}&school_id=${res.data.school_id}&lang_tag=${localeProperties.value.code}`;
 
       window.location.href = backendUrl;
-      
+
     })
     .catch((err) => {
       errors.value = err.response.data;

@@ -1,7 +1,7 @@
 <template>
   <div class="custom-grid">
     <!-- Переключатель режима -->
-    <div class="col-span-12">
+    <div class="col-span-12 mt-1">
       <div class="flex justify-between gap-x-1">
         <button
           v-for="m in modes"

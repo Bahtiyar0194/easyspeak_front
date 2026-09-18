@@ -62,7 +62,7 @@
                     props.lessonData.lesson_type_slug === 'file_test' &&
                     completedTasksCount < tasks.length
                   "
-                  class="btn btn-outline-primary mt-4"
+                  class="btn btn-primary mt-4"
                   @click="startTheTest()"
                 >
                   <i class="pi pi-arrow-right"></i>
@@ -243,7 +243,7 @@
                   props.lessonData.lesson_type_slug === 'file_test' &&
                   completedTasksCount < tasks.length
                 "
-                class="btn btn-outline-primary"
+                class="btn btn-primary"
                 @click="openTask(tasks[task.taskIndex + 1])"
               >
                 <i class="pi pi-arrow-right"></i>
@@ -251,7 +251,7 @@
               </button>
               <button
                 v-if="props.lessonData.lesson_type_slug !== 'file_test'"
-                class="btn btn-outline-primary"
+                class="btn btn-primary"
                 @click="openTask(task)"
               >
                 <i class="pi pi-replay"></i>

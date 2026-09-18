@@ -710,7 +710,7 @@
                           conference.lesson_type_slug === 'file_test' &&
                           completedTasksCount < tasks.length
                         "
-                        class="btn btn-outline-primary mt-4"
+                        class="btn btn-primary mt-4"
                         @click="startTheTest()"
                       >
                         <i class="pi pi-arrow-right"></i>
@@ -1044,7 +1044,7 @@
                 class="col-span-12"
               >
                 <button
-                  class="btn btn-outline-success"
+                  class="btn btn-success"
                   :class="task.launched ? 'disabled' : ''"
                   @click="showTaskForLearners()"
                 >

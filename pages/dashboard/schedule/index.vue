@@ -254,10 +254,10 @@
     :onClose="() => closeEditModal()"
     :className="'modal-2xl'"
     :showLoader="pendingEdit"
-    :closeOnClickSelf="true"
+    :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
-      <h4>{{ currentEvent?.lesson_name }}</h4>
+      <h4>{{ currentEvent?.lesson_name || currentEvent?.topic }}</h4>
     </template>
     <template v-if="currentEvent" v-slot:body_content>
       <form @submit.prevent="editEventSubmit" class="mt-2" ref="editFormRef">
@@ -266,7 +266,7 @@
             <div class="form-group-border select active">
               <i class="pi pi-user"></i>
               <select name="mentor_id" v-model="currentEvent.mentor_id">
-                <option selected disabled value="">
+                <option disabled value="">
                   {{ $t("choose_a_mentor") }}
                 </option>
                 <option
@@ -283,7 +283,7 @@
             </div>
           </div>
 
-          <div class="col-span-12">
+          <div class="col-span-12" v-if="!schoolStore.isAiSchoolDomain">
             <div class="flex flex-col gap-y-2">
               <label class="custom-radio">
                 <input
@@ -322,6 +322,39 @@
             </div>
           </div>
 
+          <template v-else>
+            <div class="col-span-12">
+              <div class="form-group-border active">
+                <i class="pi pi-pencil"></i>
+                <input
+                  type="text"
+                  name="conf_topic"
+                  :value="currentEvent?.topic"
+                  placeholder=" "
+                />
+                <label :class="{ 'label-error': errors.conf_topic }">
+                  {{
+                    errors.conf_topic
+                      ? errors.conf_topic[0]
+                      : $t("pages.conference.topic.title")
+                  }}
+                </label>
+              </div>
+            </div>
+
+            <div class="col-span-12">
+              <div class="form-group-border active">
+                <i class="pi pi-pencil"></i>
+                <textarea
+                  name="conf_topic_description"
+                  :value="currentEvent?.topic_description"
+                  placeholder=" "
+                ></textarea>
+                <label>{{ $t("pages.conference.topic.description") }}</label>
+              </div>
+            </div>
+          </template>
+
           <div class="col-span-12">
             <div class="form-group-border active">
               <i class="pi pi-calendar"></i>
@@ -340,7 +373,7 @@
             </div>
           </div>
 
-          <div class="col-span-12">
+          <div class="col-span-12" v-if="!schoolStore.isAiSchoolDomain">
             <div class="flex flex-col gap-y-2">
               <label class="custom-radio">
                 <input
@@ -386,6 +419,17 @@
                 }}
               </label>
             </div>
+          </div>
+
+          <div v-if="schoolStore.isAiSchoolDomain" class="col-span-12">
+            <label class="custom-radio-checkbox">
+              <input
+                name="is_free"
+                type="checkbox"
+                :checked="currentEvent.is_free === 1"
+              />
+              <span>{{ $t("pages.conference.free_conference") }}</span>
+            </label>
           </div>
 
           <div class="col-span-12">

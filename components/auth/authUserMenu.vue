@@ -34,19 +34,29 @@
                 <p class="text-active font-medium text-base mb-0">
                   {{ authUser.last_name }} {{ authUser.first_name }}
                 </p>
-                <p v-if="authUser.email || authUser.telegram_username" class="text-inactive text-xs mb-0">{{ authUser.email || authUser.telegram_username }}</p>
+                <p
+                  v-if="authUser.email || authUser.telegram_username"
+                  class="text-inactive text-xs mb-0"
+                >
+                  {{ authUser.email || authUser.telegram_username }}
+                </p>
               </div>
             </div>
           </div>
 
           <client-only>
-            <template v-if="schoolStore.schoolData">
+            <template v-if="schoolStore.schoolData && !schoolStore.isAiSchoolDomain">
               <roleProvider :roles="[1, 2, 3]">
                 <nuxt-link to="/dashboard/school">
                   <div class="bg-corp text-white rounded-lg p-2 mt-2">
                     <p class="mb-1">
                       <b v-html="schoolStore.schoolData.full_school_name"></b>
                     </p>
+
+                    <!-- <p class="mb-1">
+                      <b>{{ schoolStore.schoolData.school_domain }}.easyspeak.kz</b>
+                      
+                    </p> -->
 
                     <p class="mb-0 text-xs">
                       {{ $t("pages.subscription.expired_at") }}:

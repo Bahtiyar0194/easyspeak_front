@@ -1072,6 +1072,7 @@ export default {
             lesson_name: 'Название урока',
             free_lesson: 'Бесплатный урок',
             first_lesson_free: 'Первый урок бесплатный',
+            all_lessons_is_conference: 'Все уроки курса проходят с учителем',
             bought_by_learner: 'Оплачено учеником',
             current_lessons: 'Текущие уроки',
             no_current_lessons: 'Пока нет текущих уроков на данный момент',

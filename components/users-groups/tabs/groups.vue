@@ -3,10 +3,7 @@
     <div class="col-span-12">
       <div class="btn-wrap">
         <roleProvider :roles="[1, 2, 3]">
-          <button
-            @click="createModalIsVisible = true"
-            class="btn btn-outline-primary"
-          >
+          <button @click="openCreateModal()" class="btn btn-outline-primary">
             <i class="pi pi-plus"></i>
             {{ $t("pages.groups.create_group") }}
           </button>
@@ -238,9 +235,6 @@
                       year: "numeric",
                       month: "2-digit",
                       day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: false, // можно убрать или поставить true, если нужен 12-часовой формат
                     })
                   }}
                 </td>
@@ -937,22 +931,22 @@ const activeTask = ref(null);
 const sortKey = ref("groups.created_at"); // Ключ сортировки
 const sortDirection = ref("asc"); // Направление сортировки: asc или desc
 
-const daysOfWeek = [
-  { id: 1, name: t("weekdays.monday.even") },
-  { id: 2, name: t("weekdays.tuesday.even") },
-  { id: 3, name: t("weekdays.wednesday.even") },
-  { id: 4, name: t("weekdays.thursday.even") },
-  { id: 5, name: t("weekdays.friday.even") },
-  { id: 6, name: t("weekdays.saturday.even") },
-  { id: 7, name: t("weekdays.sunday.even") },
+const daysArray = [
+  { id: 1, name: t("weekdays.monday.even"), start_time: "", selected: false },
+  { id: 2, name: t("weekdays.tuesday.even"), start_time: "", selected: false },
+  {
+    id: 3,
+    name: t("weekdays.wednesday.even"),
+    start_time: "",
+    selected: false,
+  },
+  { id: 4, name: t("weekdays.thursday.even"), start_time: "", selected: false },
+  { id: 5, name: t("weekdays.friday.even"), start_time: "", selected: false },
+  { id: 6, name: t("weekdays.saturday.even"), start_time: "", selected: false },
+  { id: 7, name: t("weekdays.sunday.even"), start_time: "", selected: false },
 ];
 
-// выбранные дни
-const selectedDays = ref([]); // массив чисел, например [2,5]
-
-const sortedDays = computed(() => {
-  return [...selectedDays.value].sort((a, b) => a - b);
-});
+const selectedDays = ref([]);
 
 const groupsTableHeads = [
   {
@@ -1011,7 +1005,7 @@ const newGroupSteps = [
   {
     title: t("pages.schedule.title"),
     component: createSecondStep,
-    props: { errors, daysOfWeek, selectedDays },
+    props: { errors, selectedDays },
   },
   {
     title: t("pages.groups.add_members_to_group"),
@@ -1034,7 +1028,7 @@ const editGroupSteps = [
   {
     title: t("pages.schedule.title"),
     component: editSecondStep,
-    props: { errors, currentGroup, daysOfWeek, selectedDays },
+    props: { errors, currentGroup, selectedDays },
   },
   {
     title: t("pages.groups.edit_group_members"),
@@ -1120,8 +1114,18 @@ const getGroup = async (group_id) => {
       errors.value = [];
       currentGroup.value = response.data;
       groupMembers.value = response.data.group_members;
-      selectedDays.value = response.data.days;
-      pendingGroup.value = false;
+
+      selectedDays.value = [];
+
+      setTimeout(() => {
+        selectedDays.value = response.data.days.map((day) => ({
+          ...day,
+          // Применяем локализацию t() к ключам, полученным с сервера
+          name: t(day.name),
+        }));
+
+        pendingGroup.value = false;
+      }, 300);
     })
     .catch((err) => {
       if (err.response) {
@@ -1173,7 +1177,7 @@ const createGroupSubmit = async () => {
   const formData = new FormData(createFormRef.value);
   formData.append("members_count", groupMembers.value.length);
   formData.append("members", JSON.stringify(groupMembers.value));
-  formData.append("selected_days", JSON.stringify(sortedDays.value));
+  formData.append("selected_days", JSON.stringify(selectedDays.value));
   formData.append("operation_type_id", 3);
   formData.append("step", currentStep.value);
 
@@ -1218,7 +1222,7 @@ const editGroupSubmit = async () => {
   const formData = new FormData(editFormRef.value);
   formData.append("members_count", groupMembers.value.length);
   formData.append("members", JSON.stringify(groupMembers.value));
-  formData.append("selected_days", JSON.stringify(sortedDays.value));
+  formData.append("selected_days", JSON.stringify(selectedDays.value));
   formData.append("operation_type_id", 4);
   formData.append("step", currentStep.value);
 
@@ -1363,6 +1367,14 @@ const getGrade = async (user) => {
     });
 };
 
+const openCreateModal = () => {
+  createModalIsVisible.value = true;
+  selectedDays.value = [];
+  setTimeout(() => {
+    selectedDays.value = structuredClone(daysArray);
+  }, 300);
+};
+
 const closeModal = (action) => {
   if (action === "create") {
     createModalIsVisible.value = false;
@@ -1413,10 +1425,10 @@ const closeModal = (action) => {
     getGroup(currentGroup.value.group_id);
   } else {
     groupModalIsVisible.value = false;
-    selectedDays.value = [];
     groupData.value = [];
     groupMembers.value = [];
   }
+
   currentStep.value = 1;
   errors.value = [];
 };
