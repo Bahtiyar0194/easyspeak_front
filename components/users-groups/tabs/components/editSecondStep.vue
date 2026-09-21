@@ -70,6 +70,16 @@
     </div>
 
     <div class="col-span-12">
+      <label
+        class="custom-radio-checkbox text-nowrap mt-4"
+        :title="$t('pages.schedule.only_future.description')"
+      >
+        <input type="checkbox" name="only_future" checked />
+        <span>{{ $t("pages.schedule.only_future.title") }}</span>
+      </label>
+    </div>
+
+    <div class="col-span-12">
       <label class="custom-radio-checkbox text-nowrap">
         <input
           type="checkbox"
