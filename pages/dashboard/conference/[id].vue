@@ -787,7 +787,7 @@
                                 {{
                                   taskItem.launched
                                     ? conference.mentor_id === authUser.user_id
-                                      ? $t("pages.tasks.launched")
+                                      ? $t("pages.tasks.launched.title")
                                       : taskItem.task_result.completed === false
                                         ? $t("pages.tasks.is_available")
                                         : $t("pages.tasks.is_completed")
@@ -954,7 +954,10 @@
         <template v-slot:body_content v-if="task">
           <div class="custom-grid">
             <div class="col-span-12">
-              <ul class="list-group nowrap">
+              <ul
+                v-if="task && task.learners && task.learners.length"
+                class="list-group nowrap"
+              >
                 <li v-for="learner in task.learners" :key="learner.user_id">
                   <div
                     class="flex items-center justify-between gap-4"
@@ -1037,24 +1040,39 @@
                   </div>
                 </li>
               </ul>
+
+              <p class="mb-0 font-medium" v-else>
+                {{ $t("pages.tasks.not_completed.learner") }}
+              </p>
             </div>
             <template v-if="!schoolStore.isAiSchoolDomain">
               <div
                 v-if="conference.lesson_type_slug !== 'file_test'"
                 class="col-span-12"
               >
-                <button
-                  class="btn btn-success"
-                  :class="task.launched ? 'disabled' : ''"
-                  @click="showTaskForLearners()"
-                >
-                  <i class="pi pi-play"></i>
-                  {{
-                    task.launched
-                      ? $t("pages.tasks.launched")
-                      : $t("pages.tasks.run")
-                  }}
-                </button>
+                <div class="btn-wrap">
+                  <button
+                    class="btn btn-success"
+                    :class="task.launched ? 'disabled' : ''"
+                    @click="showTaskForLearners()"
+                  >
+                    <i class="pi pi-play"></i>
+                    {{
+                      task.launched
+                        ? $t("pages.tasks.launched.learner")
+                        : $t("pages.tasks.run.learner")
+                    }}
+                  </button>
+
+                  <button
+                    v-if="authUser.user_id === conference.mentor_id"
+                    class="btn btn-success"
+                    @click="openTask(task)"
+                  >
+                    <i class="pi pi-play"></i>
+                    {{ $t("pages.tasks.run.self") }}
+                  </button>
+                </div>
               </div>
             </template>
           </div>
@@ -1206,9 +1224,9 @@
                         :key="taskItem.task_id"
                       >
                         <div
-                          class="w-full flex items-center justify-between gap-4"
+                          class="w-full flex flex-wrap justify-between items-center gap-4"
                         >
-                          <div class="flex gap-2 items-center w-full">
+                          <div class="flex gap-2 items-center">
                             <i class="text-4xl" :class="taskItem.icon"></i>
                             <div class="flex flex-col gap-y-0.5">
                               <span class="font-medium text-left">{{
@@ -1220,22 +1238,37 @@
                             </div>
                           </div>
 
-                          <button
-                            class="btn btn-sm text-nowrap"
-                            @click="showTaskForLearners(taskItem.task_id)"
-                            :class="
-                              tasks.find((t) => t.task_id === taskItem.task_id)
-                                ? 'btn-outline-success disabled'
-                                : 'btn-success'
-                            "
-                          >
-                            <i class="pi pi-play"></i>
-                            {{
-                              tasks.find((t) => t.task_id === taskItem.task_id)
-                                ? $t("pages.tasks.launched")
-                                : $t("pages.tasks.run")
-                            }}
-                          </button>
+                          <div class="btn-wrap">
+                            <button
+                              class="btn btn-sm text-nowrap"
+                              @click="showTaskForLearners(taskItem.task_id)"
+                              :class="
+                                tasks.find(
+                                  (t) => t.task_id === taskItem.task_id,
+                                )
+                                  ? 'btn-outline-success disabled'
+                                  : 'btn-success'
+                              "
+                            >
+                              <i class="pi pi-play"></i>
+                              {{
+                                tasks.find(
+                                  (t) => t.task_id === taskItem.task_id,
+                                )
+                                  ? $t("pages.tasks.launched.learner")
+                                  : $t("pages.tasks.run.learner")
+                              }}
+                            </button>
+
+                            <button
+                              v-if="authUser.user_id === conference.mentor_id"
+                              class="btn btn-sm btn-success text-nowrap"
+                              @click="openTask(taskItem)"
+                            >
+                              <i class="pi pi-play"></i>
+                              {{ $t("pages.tasks.run.self") }}
+                            </button>
+                          </div>
                         </div>
                       </li>
                     </ul>
@@ -1681,6 +1714,8 @@ const closeAllModals = () => {
   participantsModalIsVisible.value = false;
   drawingBoardModalIsVisible.value = false;
   messagesModalIsVisible.value = false;
+
+  closeSelectTasksModal();
 };
 
 const closeTaskModal = async () => {
@@ -1936,7 +1971,7 @@ const selectSection = (section) => {
   pendingTasksSelection.value = true;
 
   setTimeout(() => {
-    tasksSelectionModalClass.value = "modal-2xl";
+    tasksSelectionModalClass.value = "modal-4xl";
     activeSection.value = section;
     pendingTasksSelection.value = false;
   }, 200);
@@ -1952,7 +1987,7 @@ const selectLesson = async (lesson) => {
   pendingTasksSelection.value = true;
 
   setTimeout(() => {
-    tasksSelectionModalClass.value = "modal-2xl";
+    tasksSelectionModalClass.value = "modal-4xl";
     activeLesson.value = lesson;
     pendingTasksSelection.value = false;
   }, 200);
