@@ -1420,6 +1420,7 @@ const authUserInfo = {
 
 let myPeer;
 const peers = {};
+let pingIntervalId = null;
 
 const conference = ref(null);
 
@@ -2167,23 +2168,35 @@ const startStream = async () => {
       }
       // ============================================
 
-      // === ЗАПУСК МОНИТОРИНГА СЕТИ ===
-      attachMonitoring(call);
+      startPeerHeartbeat(myPeer);
+
+      peers[call.peer] = call;
 
       call.on("stream", (remoteStream) => {
-        addStream(
-          true,
-          remoteStream,
-          call.peer,
-          call.metadata.userId,
-          call.metadata.userInfo,
-          call.metadata.isStream,
-          call.metadata.isMuted,
-        );
+        // Функция вызова с актуальными метаданными
+        const pushOrUpdate = () => {
+          addStream(
+            true,
+            remoteStream,
+            call.peer,
+            call.metadata?.userId,
+            call.metadata?.userInfo,
+            call.metadata?.isStream,
+            call.metadata?.isMuted,
+          );
+        };
+
+        // 1. Вызываем сразу при получении потока
+        pushOrUpdate();
+
+        // 2. Если видео-трек прилетел чуть позже аудио (или камера включилась с задержкой)
+        remoteStream.onaddtrack = () => {
+          pushOrUpdate();
+        };
       });
 
       call.on("close", () => {
-        delete peers[call.peer];
+        removeStream(call.peer);
       });
 
       call.on("error", (error) => {
@@ -2192,10 +2205,11 @@ const startStream = async () => {
           pending: false,
         };
 
-        delete peers[call.peer];
+        removeStream(call.peer);
       });
 
-      peers[call.peer] = call;
+      // === ЗАПУСК МОНИТОРИНГА СЕТИ ===
+      attachMonitoring(call);
     });
 
     $socketPlugin.off("user-connected");
@@ -2350,6 +2364,22 @@ const startStream = async () => {
       timeout: 10000,
     });
   }
+};
+
+const startPeerHeartbeat = (myPeer) => {
+  // На всякий случай очищаем предыдущий таймер, если он был
+  if (pingIntervalId) clearInterval(pingIntervalId);
+
+  pingIntervalId = setInterval(() => {
+    // Проверяем, что сокет существует и находится в открытом состоянии (OPEN = 1)
+    if (
+      myPeer &&
+      !myPeer.destroyed &&
+      myPeer.socket?.ws?.readyState === WebSocket.OPEN
+    ) {
+      myPeer.socket.send({ type: "PING" });
+    }
+  }, 25000);
 };
 
 // Функция-хелпер, которая гарантированно найдёт именно функцию-конструктор
@@ -2670,25 +2700,34 @@ const joinToRoom = async () => {
                   }
                 };
               }
-              // ============================================
-
-              // === ЗАПУСК МОНИТОРИНГА СЕТИ ===
-              attachMonitoring(outgoingCall);
+              
+              peers[user.peerId] = outgoingCall;
 
               outgoingCall.on("stream", (remoteStream) => {
-                addStream(
-                  true,
-                  remoteStream,
-                  outgoingCall.peer,
-                  user.userId,
-                  user.userInfo,
-                  user.isStream,
-                  user.isMuted,
-                );
+                const pushOrUpdate = () => {
+                  addStream(
+                    true,
+                    remoteStream,
+                    outgoingCall.peer,
+                    user.userId,
+                    user.userInfo,
+                    user.isStream,
+                    user.isMuted,
+                  );
+                };
+
+                // 1. Добавляем/обновляем поток сразу
+                pushOrUpdate();
+
+                // 2. Слушаем отложенное появление видео-трека
+                remoteStream.onaddtrack = () => {
+                  pushOrUpdate();
+                };
               });
 
+              // 3. Используем централизованный removeStream для закрытия и ошибок
               outgoingCall.on("close", () => {
-                delete peers[outgoingCall.peer];
+                removeStream(outgoingCall.peer);
               });
 
               outgoingCall.on("error", (error) => {
@@ -2697,10 +2736,11 @@ const joinToRoom = async () => {
                   pending: false,
                 };
 
-                delete peers[outgoingCall.peer];
+                removeStream(outgoingCall.peer);
               });
 
-              peers[user.peerId] = outgoingCall;
+              // === ЗАПУСК МОНИТОРИНГА СЕТИ ===
+              attachMonitoring(outgoingCall);
             }
           });
         });
@@ -2730,7 +2770,11 @@ const addStream = (
   isStream,
   isMuted,
 ) => {
-  if (!streams.value.some((stream) => stream.peer_id === peer_id)) {
+  // Ищем индекс уже существующего участника по peer_id
+  const index = streams.value.findIndex((item) => item.peer_id === peer_id);
+
+  if (index === -1) {
+    // 1. Если участника нет — добавляем нового
     streams.value.push({
       remote,
       stream,
@@ -2741,6 +2785,7 @@ const addStream = (
       isMuted,
     });
 
+    // Логика запуска таска
     if (
       taskInProgress.value === true &&
       conference.value.mentor_id === user_id
@@ -2752,6 +2797,13 @@ const addStream = (
         taskName: task.value.task_slug,
       });
     }
+  } else {
+    // 2. ЕСЛИ УЧАСТНИК УЖЕ ЕСТЬ — ОБНОВЛЯЕМ ЕГО ДАННЫЕ И СТРИМ
+    streams.value[index].stream = stream;
+    streams.value[index].isStream = isStream;
+    streams.value[index].isMuted = isMuted;
+    streams.value[index].remote = remote;
+    if (userInfo) streams.value[index].userInfo = userInfo;
   }
 };
 
@@ -2770,6 +2822,11 @@ const stopLocalStream = async () => {
   $socketPlugin.off("complete_task");
   $socketPlugin.off("show_material");
   $socketPlugin.off("start_test");
+
+  if (pingIntervalId) {
+    clearInterval(pingIntervalId);
+    pingIntervalId = null;
+  }
 
   if (myPeer) {
     myPeer.destroy();
@@ -2799,23 +2856,46 @@ const stopLocalStream = async () => {
 };
 
 const removeStream = (peerId) => {
+  if (!peerId) return;
+
+  // 1. Находим участника
   const streamToRemove = streams.value.find((s) => s.peer_id === peerId);
 
   if (streamToRemove) {
+    // Удаляем карточку из массива streams.value
     streams.value = streams.value.filter((s) => s.peer_id !== peerId);
 
+    // Логика ментора
     if (authUser.value.user_id === conference.value.mentor_id) {
       busyLearners.value = busyLearners.value.filter(
         (l) => l.userId !== streamToRemove.user_id,
       );
     }
+  }
 
-    if (peers[peerId]) {
-      peers[peerId].close();
+  // 2. Закрываем WebRTC звонок и удаляем из объекта peers
+  if (peers[peerId]) {
+    const call = peers[peerId];
+    delete peers[peerId]; // Сначала удаляем из объекта, чтобы избежать рекурсии
+    try {
+      call.close(); // Закрываем соединение
+    } catch (e) {
+      console.error("Ошибка при закрытии call:", e);
     }
   }
 
-  if (peerId === myPeer.id) {
+  // 3. ОЧИСТКА МОНИТОРИНГА СЕТИ (важно!)
+  if (activeMonitors?.has(peerId)) {
+    const stopMonitor = activeMonitors.get(peerId);
+    stopMonitor(); // Очищает setInterval
+    activeMonitors.delete(peerId);
+  }
+  if (peersStats[peerId]) {
+    delete peersStats[peerId]; // Удаляем плашку со статистикой
+  }
+
+  // 4. Остановка локального стрима
+  if (peerId === myPeer?.id) {
     stopLocalStream();
   }
 };
