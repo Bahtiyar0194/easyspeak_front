@@ -2132,21 +2132,21 @@ const startStream = async () => {
       };
     });
 
-    myPeer.on("call", (call) => {
+    myPeer.on("call", (incomingCall) => {
       // Вызываем функцию для получения актуального потока с фоном/без
       const streamToSend = getActiveStream();
 
-      call.answer(streamToSend);
+      incomingCall.answer(streamToSend);
 
       // === ИНТЕГРАЦИЯ МОНИТОРИНГА ICE-СОЕДИНЕНИЯ ===
-      const pc = call.peerConnection;
+      const pc = incomingCall.peerConnection;
 
       if (pc) {
         pc.oniceconnectionstatechange = () => {
           if (pc.iceConnectionState === "disconnected") {
             toast(
               t("errors.server.other_user_network_error", {
-                name: call.metadata.userInfo.first_name,
+                name: incomingCall.metadata.userInfo.first_name,
               }),
               {
                 toastClassName: ["custom-toast", "warning"],
@@ -2156,7 +2156,7 @@ const startStream = async () => {
           } else if (pc.iceConnectionState === "failed") {
             toast(
               t("errors.server.other_user_disconnect", {
-                name: call.metadata.userInfo.first_name,
+                name: incomingCall.metadata.userInfo.first_name,
               }),
               {
                 toastClassName: ["custom-toast", "danger"],
@@ -2170,46 +2170,9 @@ const startStream = async () => {
 
       startPeerHeartbeat(myPeer);
 
-      peers[call.peer] = call;
+      peers[incomingCall.peer] = incomingCall;
 
-      call.on("stream", (remoteStream) => {
-        // Функция вызова с актуальными метаданными
-        const pushOrUpdate = () => {
-          addStream(
-            true,
-            remoteStream,
-            call.peer,
-            call.metadata?.userId,
-            call.metadata?.userInfo,
-            call.metadata?.isStream,
-            call.metadata?.isMuted,
-          );
-        };
-
-        // 1. Вызываем сразу при получении потока
-        pushOrUpdate();
-
-        // 2. Если видео-трек прилетел чуть позже аудио (или камера включилась с задержкой)
-        remoteStream.onaddtrack = () => {
-          pushOrUpdate();
-        };
-      });
-
-      call.on("close", () => {
-        removeStream(call.peer);
-      });
-
-      call.on("error", (error) => {
-        errorMessage.value = {
-          message: error.message,
-          pending: false,
-        };
-
-        removeStream(call.peer);
-      });
-
-      // === ЗАПУСК МОНИТОРИНГА СЕТИ ===
-      attachMonitoring(call);
+      attachCallListeners(incomingCall);
     });
 
     $socketPlugin.off("user-connected");
@@ -2700,47 +2663,9 @@ const joinToRoom = async () => {
                   }
                 };
               }
-              
+
               peers[user.peerId] = outgoingCall;
-
-              outgoingCall.on("stream", (remoteStream) => {
-                const pushOrUpdate = () => {
-                  addStream(
-                    true,
-                    remoteStream,
-                    outgoingCall.peer,
-                    user.userId,
-                    user.userInfo,
-                    user.isStream,
-                    user.isMuted,
-                  );
-                };
-
-                // 1. Добавляем/обновляем поток сразу
-                pushOrUpdate();
-
-                // 2. Слушаем отложенное появление видео-трека
-                remoteStream.onaddtrack = () => {
-                  pushOrUpdate();
-                };
-              });
-
-              // 3. Используем централизованный removeStream для закрытия и ошибок
-              outgoingCall.on("close", () => {
-                removeStream(outgoingCall.peer);
-              });
-
-              outgoingCall.on("error", (error) => {
-                errorMessage.value = {
-                  message: error.message,
-                  pending: false,
-                };
-
-                removeStream(outgoingCall.peer);
-              });
-
-              // === ЗАПУСК МОНИТОРИНГА СЕТИ ===
-              attachMonitoring(outgoingCall);
+              attachCallListeners(outgoingCall, user);
             }
           });
         });
@@ -3004,7 +2929,46 @@ const replaceTrackInConnections = (newTrack, kind = "video") => {
   });
 };
 
-const attachMonitoring = (mediaConnection) => {
+const attachCallListeners = (call, userData = null) => {
+  call.on("stream", (remoteStream) => {
+    const pushOrUpdate = () => {
+      // Для входящих берем из call.metadata, для исходящих из переданного userData
+      const userId = userData?.userId || call.metadata?.userId;
+      const userInfo = userData?.userInfo || call.metadata?.userInfo;
+      const isStream = userData?.isStream ?? call.metadata?.isStream;
+      const isMuted = userData?.isMuted ?? call.metadata?.isMuted;
+
+      addStream(
+        true,
+        remoteStream,
+        call.peer,
+        userId,
+        userInfo,
+        isStream,
+        isMuted,
+      );
+    };
+
+    pushOrUpdate();
+    remoteStream.onaddtrack = () => pushOrUpdate();
+  });
+
+  call.on("close", () => {
+    removeStream(call.peer);
+  });
+
+  call.on("error", (error) => {
+    errorMessage.value = {
+      message: error.message,
+      pending: false,
+    };
+    removeStream(call.peer);
+  });
+
+  attachNetworkMonitoring(call);
+};
+
+const attachNetworkMonitoring = (mediaConnection) => {
   const peerId = mediaConnection.peer;
 
   // Если для этого участника уже был мониторинг — сбрасываем старый
