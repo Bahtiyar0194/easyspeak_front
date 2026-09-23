@@ -1154,7 +1154,7 @@
 
       <modal
         :show="selectTasksModalIsVisible"
-        :onClose="() => closeSelectTasksModal()"
+        :onClose="() => closeSelectTasksModal(true)"
         :className="tasksSelectionModalClass"
         :showLoader="pendingTasksSelection"
         :closeOnClickSelf="false"
@@ -1715,7 +1715,7 @@ const closeAllModals = () => {
   drawingBoardModalIsVisible.value = false;
   messagesModalIsVisible.value = false;
 
-  closeSelectTasksModal();
+  closeSelectTasksModal(false);
 };
 
 const closeTaskModal = async () => {
@@ -1778,8 +1778,8 @@ const openSelectTasksModal = () => {
   selectTasksModalIsVisible.value = true;
 };
 
-const closeSelectTasksModal = () => {
-  tasksModalIsVisible.value = true;
+const closeSelectTasksModal = (state) => {
+  tasksModalIsVisible.value = state;
   selectTasksModalIsVisible.value = false;
 };
 
