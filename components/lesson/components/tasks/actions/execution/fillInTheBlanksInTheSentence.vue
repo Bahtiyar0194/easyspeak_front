@@ -708,22 +708,15 @@ const setSentences = () => {
       } else {
         sentence.missingWords.forEach((word) => {
           word.userInput = "";
-
-
             hiddenWords.value.push({
               word: sentence.sentence.split(" ")[word.word_position],
               disabled: false,
             });
-          
         });
 
         hiddenWords.value.sort(() => Math.random() - 0.5);
       }
     });
-
-    console.log(hiddenWords.value);
-    console.log('sentnecs')
-    console.log(currentSentences.value);
 
     time.value =
       taskData.value.options.seconds_per_sentence *
