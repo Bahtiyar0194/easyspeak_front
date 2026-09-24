@@ -1,21 +1,30 @@
 // utils/audioTracker.js
 const activeAudios = new Set();
 
-// Перехватываем метод play у всех аудио
-const originalPlay = HTMLAudioElement.prototype.play;
+// Выполняем прототипирование только на клиенте
+if (import.meta.client) {
+    const originalPlay = HTMLAudioElement.prototype.play;
 
-HTMLAudioElement.prototype.play = function () {
-    // Останавливаем все ранее созданные аудио
-    activeAudios.forEach(audio => {
-        if (audio !== this) {
-            audio.pause();
-        }
-    });
+    HTMLAudioElement.prototype.play = function (...args) {
+        // Останавливаем все ранее созданные аудио
+        activeAudios.forEach(audio => {
+            if (audio !== this) {
+                audio.pause();
+            }
+        });
 
-    activeAudios.add(this);
-    return originalPlay.apply(this, arguments);
-};
+        activeAudios.add(this);
+        // Удаляем элемент из отслеживания, когда проигрывание завершилось
+        this.addEventListener('ended', () => {
+            activeAudios.delete(this);
+        }, { once: true });
+
+        return originalPlay.apply(this, args);
+    };
+}
 
 export const stopAllAudios = () => {
-    activeAudios.forEach(audio => audio.pause());
+    if (import.meta.client) {
+        activeAudios.forEach(audio => audio.pause());
+    }
 };

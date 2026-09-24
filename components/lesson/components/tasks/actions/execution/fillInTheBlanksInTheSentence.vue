@@ -708,10 +708,13 @@ const setSentences = () => {
       } else {
         sentence.missingWords.forEach((word) => {
           word.userInput = "";
-          hiddenWords.value.push({
-            word: sentence.sentence.split(" ")[word.word_position],
-            disabled: false,
-          });
+
+          if(sentence.sentence.split(" ")[word.word_position]){
+            hiddenWords.value.push({
+              word: sentence.sentence.split(" ")[word.word_position],
+              disabled: false,
+            });
+          }
         });
 
         hiddenWords.value.sort(() => Math.random() - 0.5);
