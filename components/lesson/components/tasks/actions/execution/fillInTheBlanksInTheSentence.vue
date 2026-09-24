@@ -709,12 +709,12 @@ const setSentences = () => {
         sentence.missingWords.forEach((word) => {
           word.userInput = "";
 
-          if(sentence.sentence.split(" ")[word.word_position]){
+
             hiddenWords.value.push({
               word: sentence.sentence.split(" ")[word.word_position],
               disabled: false,
             });
-          }
+          
         });
 
         hiddenWords.value.sort(() => Math.random() - 0.5);
