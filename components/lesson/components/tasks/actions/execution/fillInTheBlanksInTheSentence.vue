@@ -715,6 +715,8 @@ const setSentences = () => {
         });
 
         hiddenWords.value.sort(() => Math.random() - 0.5);
+
+        console.log(hiddenWords.value);
       }
     });
 
