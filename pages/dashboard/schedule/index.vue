@@ -238,11 +238,32 @@
           </div>
         </div>
 
-        <roleProvider :roles="[1, 2, 3]">
+        <roleProvider :roles="[1, 2, 3, 4]">
           <div class="col-span-12">
-            <button class="btn btn-outline-primary" @click="openEditModal()">
-              <i class="pi pi-pencil"></i>{{ $t("edit") }}
-            </button>
+            <div class="btn-wrap">
+              <button
+                v-if="
+                  currentEvent.mentor_id === authUser.user_id ||
+                  currentEvent.operator_id === authUser.user_id
+                "
+                class="btn btn-outline-primary"
+                @click="openEditModal()"
+              >
+                <i class="pi pi-pencil"></i>{{ $t("edit") }}
+              </button>
+
+              <button
+                v-if="
+                  schoolStore.isAiSchoolDomain &&
+                  (currentEvent.mentor_id === authUser.user_id ||
+                    currentEvent.operator_id === authUser.user_id)
+                "
+                class="btn btn-outline-danger"
+                @click="openDeleteModal()"
+              >
+                <i class="pi pi-trash"></i>{{ $t("delete") }}
+              </button>
+            </div>
           </div>
         </roleProvider>
       </div>
@@ -251,7 +272,7 @@
 
   <modal
     :show="editModalIsVisible"
-    :onClose="() => closeEditModal()"
+    :onClose="() => closeEditModal(false)"
     :className="'modal-2xl'"
     :showLoader="pendingEdit"
     :closeOnClickSelf="false"
@@ -486,6 +507,34 @@
       </div> -->
     </template>
   </modal>
+
+  <modal
+    :show="deleteModalIsVisible"
+    :onClose="() => closeDeleteModal()"
+    :className="'modal-lg'"
+    :showLoader="pendingDelete"
+    :closeOnClickSelf="false"
+  >
+    <template v-slot:header_content>
+      <h4>{{ $t("pages.conference.delete_conference") }}</h4>
+    </template>
+    <template v-slot:body_content>
+      <p>{{ $t("pages.conference.delete_confirm") }}</p>
+      <div class="btn-wrap justify-end mt-4">
+        <button
+          @click="deleteConferenceSubmit()"
+          class="btn btn-outline-danger"
+        >
+          <i class="pi pi-trash"></i>
+          {{ $t("yes") }}
+        </button>
+        <button @click="deleteModalIsVisible = false" class="btn btn-light">
+          <i class="pi pi-ban"></i>
+          {{ $t("no") }}
+        </button>
+      </div>
+    </template>
+  </modal>
 </template>
 <script setup>
 import { ref, computed } from "vue";
@@ -504,11 +553,13 @@ const router = useRouter();
 const errors = ref([]);
 const { $axiosPlugin } = useNuxtApp();
 const schoolStore = useSchoolStore();
+const authUser = useSanctumUser();
 const attributes = ref([]);
 const schedule = ref([]);
 const pending = ref(true);
 const pendingSchedule = ref(true);
 const pendingEdit = ref(false);
+const pendingDelete = ref(false);
 const searchFormRef = ref(null);
 const editFormRef = ref(null);
 const searchFilter = ref(false);
@@ -519,6 +570,7 @@ const currentEvent = ref(null);
 
 const eventModalIsVisible = ref(false);
 const editModalIsVisible = ref(false);
+const deleteModalIsVisible = ref(false);
 
 const mentorOnlyForThisLesson = ref(1);
 const dateShiftByWeek = ref(0);
@@ -566,6 +618,10 @@ const getSchedule = async () => {
       schedule.value = response.data;
       pendingSchedule.value = false;
       pending.value = false;
+
+      if (currentEvent.value) {
+        openEventModal(currentEvent.value.uuid);
+      }
     })
     .catch((err) => {
       if (err.response) {
@@ -586,12 +642,13 @@ const getSchedule = async () => {
 const editEventSubmit = async () => {
   pendingEdit.value = true;
   const formData = new FormData(editFormRef.value);
+  const uuid = currentEvent.value.uuid;
 
   await $axiosPlugin
-    .post("schedule/update/" + currentEvent.value.uuid, formData)
+    .post("schedule/update/" + uuid, formData)
     .then((res) => {
       pendingEdit.value = false;
-      closeEditModal();
+      closeEditModal(true);
       getSchedule();
     })
     .catch((err) => {
@@ -615,8 +672,42 @@ const editEventSubmit = async () => {
     });
 };
 
+const deleteConferenceSubmit = async () => {
+  pendingDelete.value = true;
+  const formData = new FormData();
+  formData.append("operation_type_id", 29);
+  await $axiosPlugin
+    .post("conferences/delete/" + currentEvent.value.uuid, formData)
+    .then((response) => {
+      pendingDelete.value = false;
+      closeDeleteModal();
+      closeEventModal();
+      getSchedule();
+    })
+    .catch((err) => {
+      if (err.response) {
+        if (err.response.status == 422) {
+          errors.value = err.response.data;
+          pendingDelete.value = false;
+        } else {
+          router.push({
+            path: "/error",
+            query: {
+              status: err.response.status,
+              message: err.response.data.message,
+              url: err.request.responseURL,
+            },
+          });
+        }
+      } else {
+        router.push("/error");
+      }
+    });
+};
+
 const openEventModal = (uuid) => {
   eventModalIsVisible.value = true;
+  currentEvent.value = null;
   currentEvent.value = { ...schedule.value.find((e) => e.uuid === uuid) };
   mentorOnlyForThisLesson.value = 1;
   dateShiftByWeek.value = 0;
@@ -632,10 +723,22 @@ const openEditModal = () => {
   editModalIsVisible.value = true;
 };
 
-const closeEditModal = () => {
+const closeEditModal = (state) => {
   editModalIsVisible.value = false;
-  currentEvent.value = null;
   errors.value = [];
+
+  if (state === false) {
+    openEventModal(currentEvent.value.uuid);
+  }
+};
+
+const openDeleteModal = () => {
+  deleteModalIsVisible.value = true;
+};
+
+const closeDeleteModal = () => {
+  deleteModalIsVisible.value = false;
+  pendingDelete.value = false;
 };
 
 const showHideScheduleSearchFilter = () => {
