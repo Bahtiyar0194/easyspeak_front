@@ -722,7 +722,7 @@ const setSentences = () => {
     });
 
     console.log(hiddenWords.value);
-
+    console.log('sentnecs')
     console.log(currentSentences.value);
 
     time.value =
