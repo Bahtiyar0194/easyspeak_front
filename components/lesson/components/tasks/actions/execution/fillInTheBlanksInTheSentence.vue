@@ -718,10 +718,12 @@ const setSentences = () => {
         });
 
         hiddenWords.value.sort(() => Math.random() - 0.5);
-
-        console.log(hiddenWords.value);
       }
     });
+
+    console.log(hiddenWords.value);
+
+    console.log(currentSentences.value);
 
     time.value =
       taskData.value.options.seconds_per_sentence *
