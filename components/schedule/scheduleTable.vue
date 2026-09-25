@@ -131,7 +131,7 @@
       >
         <div class="flex max-md:flex-col">
           <div
-            v-if="schoolStore.isAiSchoolDomain && e.poster_file"
+            v-if="schoolStore.isAiSchoolDomain && props.showPoster === true && e.poster_file"
             class="relative w-full md:w-64 md:h-auto min-h-[240px] overflow-hidden rounded-lg bg-gray-950 flex items-center justify-center p-4 group"
           >
             <!-- 1. Размытый фоновый слой с плавной анимацией -->
@@ -280,6 +280,12 @@ const props = defineProps({
     type: Boolean,
     default: false,
     required: false,
+  },
+
+  showPoster: {
+    type: Boolean,
+    default: true,
+    required: false
   },
 
   mode: {

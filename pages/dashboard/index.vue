@@ -373,6 +373,7 @@
                       :miniTable="true"
                       :openEventModal="openEventModal"
                       :acceptConference="acceptConference"
+                      :showPoster="false"
                       :mode="'stack'"
                     />
                     <button
@@ -578,6 +579,7 @@
                       :schedule="dashboard.upcoming_lessons"
                       :openEventModal="openEventModal"
                       :acceptConference="acceptConference"
+                      :showPoster="true"
                       :mode="'stack'"
                     />
                   </scrollFadeContainer>
