@@ -63,7 +63,7 @@
                         <div class="flex flex-wrap gap-x-1 font-medium">
                           <div
                             v-for="(word, wordIndex) in sentence.sentence.split(
-                              ' '
+                              ' ',
                             )"
                             :key="wordIndex"
                           >
@@ -85,8 +85,8 @@
                                     'with_first_letter' &&
                                     removePunctuation(
                                       sentence.missingWords.find(
-                                        (w) => w.word_position == wordIndex
-                                      )?.userInput
+                                        (w) => w.word_position == wordIndex,
+                                      )?.userInput,
                                     ).toLowerCase() ==
                                       removePunctuation(word)
                                         .toLowerCase()
@@ -146,7 +146,7 @@
                         <div class="flex flex-wrap gap-x-1 font-medium">
                           <div
                             v-for="(word, wordIndex) in sentence.sentence.split(
-                              ' '
+                              ' ',
                             )"
                             :key="wordIndex"
                           >
@@ -173,7 +173,7 @@
                                 taskData?.options.find_word_option !=
                                   'with_options' &&
                                 sentence.missingWords.find(
-                                  (w) => w.word_position == wordIndex
+                                  (w) => w.word_position == wordIndex,
                                 )?.userInput
                               "
                               :class="
@@ -189,8 +189,8 @@
                                   'with_first_letter' &&
                                   removePunctuation(
                                     sentence.missingWords.find(
-                                      (w) => w.word_position == wordIndex
-                                    )?.userInput
+                                      (w) => w.word_position == wordIndex,
+                                    )?.userInput,
                                   ).toLowerCase() ==
                                     removePunctuation(word)
                                       .toLowerCase()
@@ -210,7 +210,7 @@
                               >
                               {{
                                 sentence.missingWords.find(
-                                  (w) => w.word_position == wordIndex
+                                  (w) => w.word_position == wordIndex,
                                 )?.userInput
                               }}
                             </span>
@@ -226,7 +226,7 @@
                                 (taskData?.options.find_word_option !=
                                   'task_options' &&
                                   sentence.missingWords.find(
-                                    (w) => w.word_position == wordIndex
+                                    (w) => w.word_position == wordIndex,
                                   )?.userInput == '')
                               "
                             >
@@ -252,7 +252,7 @@
                         <div class="flex flex-wrap gap-x-1 font-medium">
                           <div
                             v-for="(word, wordIndex) in sentence.sentence.split(
-                              ' '
+                              ' ',
                             )"
                             :key="wordIndex"
                           >
@@ -266,7 +266,7 @@
                                 (taskData?.options.find_word_option !=
                                   'with_options' &&
                                   sentence.missingWords.find(
-                                    (w) => w.word_position == wordIndex
+                                    (w) => w.word_position == wordIndex,
                                   )?.word_position == wordIndex)
                               "
                               >{{ word }}</span
@@ -378,7 +378,7 @@
                         taskData?.options.find_word_option ==
                           'without_hints') &&
                       sentence.missingWords.find(
-                        (w) => w.word_position === wordIndex
+                        (w) => w.word_position === wordIndex,
                       )
                     "
                   >
@@ -387,7 +387,7 @@
                       :class="
                         unFilledSentences.includes(sentenceIndex) &&
                         sentence.missingWords.find(
-                          (w) => w.word_position == wordIndex
+                          (w) => w.word_position == wordIndex,
                         ).userInput === ''
                           ? 'pulse border-danger bg-danger'
                           : 'border-active'
@@ -398,7 +398,7 @@
                       <input
                         v-model="
                           sentence.missingWords.find(
-                            (w) => w.word_position == wordIndex
+                            (w) => w.word_position == wordIndex,
                           ).userInput
                         "
                         :disabled="false"
@@ -406,10 +406,10 @@
                         :style="{
                           width:
                             sentence.missingWords.find(
-                              (w) => w.word_position == wordIndex
+                              (w) => w.word_position == wordIndex,
                             ).userInput !== ''
                               ? sentence.missingWords.find(
-                                  (w) => w.word_position == wordIndex
+                                  (w) => w.word_position == wordIndex,
                                 ).userInput.length +
                                 0.5 +
                                 'ch'
@@ -422,7 +422,7 @@
                       <button
                         v-if="
                           sentence.missingWords.find(
-                            (w) => w.word_position == wordIndex
+                            (w) => w.word_position == wordIndex,
                           ).userInput !== ''
                         "
                         @click="clearInput(sentenceIndex, wordIndex)"
@@ -437,7 +437,7 @@
                       taskData?.options.find_word_option ==
                         'with_first_letter' &&
                       sentence.missingWords.find(
-                        (w) => w.word_position == wordIndex
+                        (w) => w.word_position == wordIndex,
                       )
                     "
                     class="flex items-center"
@@ -448,7 +448,7 @@
                       :class="
                         unFilledSentences.includes(sentenceIndex) &&
                         sentence.missingWords.find(
-                          (w) => w.word_position == wordIndex
+                          (w) => w.word_position == wordIndex,
                         ).userInput === ''
                           ? 'pulse border-b-danger bg-danger'
                           : 'border-b-active'
@@ -457,7 +457,7 @@
                       <input
                         v-model="
                           sentence.missingWords.find(
-                            (w) => w.word_position == wordIndex
+                            (w) => w.word_position == wordIndex,
                           ).userInput
                         "
                         :disabled="false"
@@ -466,10 +466,10 @@
                           marginTop: '0.05rem',
                           width:
                             sentence.missingWords.find(
-                              (w) => w.word_position == wordIndex
+                              (w) => w.word_position == wordIndex,
                             ).userInput !== ''
                               ? sentence.missingWords.find(
-                                  (w) => w.word_position == wordIndex
+                                  (w) => w.word_position == wordIndex,
                                 ).userInput.length +
                                 0.2 +
                                 'ch'
@@ -481,7 +481,7 @@
                       <button
                         v-if="
                           sentence.missingWords.find(
-                            (w) => w.word_position == wordIndex
+                            (w) => w.word_position == wordIndex,
                           ).userInput !== ''
                         "
                         @click="clearInput(sentenceIndex, wordIndex)"
@@ -624,7 +624,7 @@ const getTask = async () => {
   try {
     onPending(true);
     const res = await $axiosPlugin.get(
-      "tasks/get/fill_in_the_blanks_in_the_sentence/" + props.task.task_id
+      "tasks/get/fill_in_the_blanks_in_the_sentence/" + props.task.task_id,
     );
 
     taskData.value = res.data;
@@ -708,10 +708,10 @@ const setSentences = () => {
       } else {
         sentence.missingWords.forEach((word) => {
           word.userInput = "";
-            hiddenWords.value.push({
-              word: sentence.sentence.split(" ")[word.word_position],
-              disabled: false,
-            });
+          hiddenWords.value.push({
+            word: sentence.sentence.split(" ")[word.word_position],
+            disabled: false,
+          });
         });
 
         hiddenWords.value.sort(() => Math.random() - 0.5);
@@ -745,7 +745,7 @@ const onDrop = (event, sentenceIndex, wordIndex) => {
   word.disabled = true;
 
   currentSentences.value[sentenceIndex].missingWords.find(
-    (w) => w.word_position == wordIndex
+    (w) => w.word_position == wordIndex,
   ).userInput = word.word;
   disableTheHiddenWord();
 };
@@ -777,7 +777,7 @@ const disableTheHiddenWord = () => {
   if (hiddenWords.value.length > 0) {
     hiddenWords.value.forEach((word) => {
       const userInput = userInputs.find(
-        (w) => w.word === word.word.toLowerCase() && w.disabled === false
+        (w) => w.word === word.word.toLowerCase() && w.disabled === false,
       );
       if (userInput) {
         word.disabled = true;
@@ -808,7 +808,7 @@ const insertWordToInput = (w) => {
 
 const clearInput = (sentenceIndex, wordIndex) => {
   currentSentences.value[sentenceIndex].missingWords.find(
-    (w) => w.word_position == wordIndex
+    (w) => w.word_position == wordIndex,
   ).userInput = "";
 
   disableTheHiddenWord();
@@ -817,7 +817,7 @@ const clearInput = (sentenceIndex, wordIndex) => {
 const checkSentences = () => {
   currentSentences.value.forEach((sentence) => {
     sentences.value = sentences.value.filter(
-      (s) => s.task_sentence_id !== sentence.task_sentence_id
+      (s) => s.task_sentence_id !== sentence.task_sentence_id,
     );
 
     if (taskData.value.options.find_word_option != "with_options") {
@@ -883,7 +883,7 @@ const pushToStudySentences = async (sentence) => {
 
   await nextTick();
   const answer = rightAnswers.value.querySelector(
-    "#right_answer_" + sentence.task_sentence_id
+    "#right_answer_" + sentence.task_sentence_id,
   );
 
   if (answer) {
@@ -896,11 +896,11 @@ const pushToStudySentences = async (sentence) => {
 
   if (
     reStudySentences.value.some(
-      (s) => s.task_sentence_id === sentence.task_sentence_id
+      (s) => s.task_sentence_id === sentence.task_sentence_id,
     )
   ) {
     reStudySentences.value = reStudySentences.value.filter(
-      (s) => s.task_sentence_id !== sentence.task_sentence_id
+      (s) => s.task_sentence_id !== sentence.task_sentence_id,
     );
   }
 };
@@ -915,11 +915,11 @@ const pushToCurrentReStudySentences = async (sentence) => {
     await nextTick();
 
     const userAnswer = wrongAnswers.value.querySelector(
-      "#user_answer_" + sentence.task_sentence_id
+      "#user_answer_" + sentence.task_sentence_id,
     );
 
     const rightAnswer = wrongAnswers.value.querySelector(
-      "#right_answer_" + sentence.task_sentence_id
+      "#right_answer_" + sentence.task_sentence_id,
     );
 
     if (userAnswer && rightAnswer) {
@@ -1041,6 +1041,6 @@ watch(
     if (newVal === taskData.value.sentences.length) {
       saveTaskResult();
     }
-  }
+  },
 );
 </script>
