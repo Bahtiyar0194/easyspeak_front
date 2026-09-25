@@ -132,7 +132,7 @@
         <div class="flex max-md:flex-col">
           <div
             v-if="schoolStore.isAiSchoolDomain && e.poster_file"
-            class="relative w-full md:w-52 md:h-auto min-h-[240px] overflow-hidden rounded-2xl bg-gray-950 flex items-center justify-center p-4 group"
+            class="relative w-full md:w-64 md:h-auto min-h-[240px] overflow-hidden rounded-lg bg-gray-950 flex items-center justify-center p-4 group"
           >
             <!-- 1. Размытый фоновый слой с плавной анимацией -->
             <img
@@ -154,7 +154,7 @@
             />
           </div>
 
-          <div class="p-3 text-left flex flex-col gap-y-2 select-none">
+          <div class="py-3 px-4 text-left flex flex-col gap-y-2 select-none">
             <p class="mb-0" :class="props.miniTable === false ? 'text-lg' : ''">
               <b>{{ e.topic || e.lesson_name }}</b>
             </p>

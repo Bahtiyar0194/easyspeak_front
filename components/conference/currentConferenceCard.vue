@@ -3,7 +3,7 @@
     <div class="flex max-md:flex-col">
       <div
         v-if="schoolStore.isAiSchoolDomain && props.conference.poster_file"
-        class="relative w-full h-72 md:w-1/2 md:h-auto min-h-[320px] overflow-hidden rounded-2xl bg-gray-950 flex items-center justify-center p-4 group"
+        class="relative w-full h-72 md:w-2/3 lg:w-1/2 md:h-auto min-h-[320px] overflow-hidden rounded-lg bg-gray-950 flex items-center justify-center p-4 group"
       >
         <!-- 1. Размытый фоновый слой с плавной анимацией -->
         <img

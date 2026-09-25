@@ -16,7 +16,7 @@
         <div
           v-for="conference in conferences"
           :key="conference.uuid"
-          class="col-span-12 lg:col-span-4"
+          class="col-span-12 lg:col-span-6"
         >
           <currentConferenceCard
             :conference="conference"
