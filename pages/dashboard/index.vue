@@ -587,14 +587,14 @@
 
                 <div class="col-span-12">
                   <div class="btn-wrap justify-end">
-                    <!-- <button
+                   <button
                     v-if="paymentLessons.length > 0"
                     @click="openPaymentModal()"
                     class="btn btn-primary"
                   >
                     <i class="pi pi-credit-card"></i>
                     {{ $t("pages.lessons.pay_for_lessons") }}
-                  </button> -->
+                  </button>
                     <nuxt-link
                       v-if="!schoolStore.isAiSchoolDomain"
                       class="btn btn-light"
