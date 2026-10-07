@@ -1375,7 +1375,7 @@ const handlePayment = async () => {
             path: "/error",
             query: {
               status: err.response.status,
-              message: err.response.data.message,
+              message: err.response.data.message || err.response.data.Message,
               url: err.request.responseURL,
             },
           });
