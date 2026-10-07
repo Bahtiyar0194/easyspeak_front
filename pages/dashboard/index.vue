@@ -507,7 +507,7 @@
           "
           class="p-6 rounded-xl overflow-hidden relative"
         >
-          <div class="z-10 relative pr-32">
+          <div class="z-10 relative pr-32 max-md:pr-4">
             <h3 class="text-white mb-2">{{ $t("telegram.banner.title") }}</h3>
             <p class="text-white mb-4 font-medium">
               {{ $t("telegram.banner.description") }}
@@ -1119,6 +1119,7 @@ useHead({
   meta: [{ name: "description", content: t("pages.home.description") }],
   script: [
     {
+      key: "tiptoppay-checkout",
       src: `${config.public.tiptopPayCheckoutURL}?_nc=${Date.now()}`,
       defer: true,
     },

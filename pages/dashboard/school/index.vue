@@ -323,6 +323,7 @@ useHead({
 
   script: [
     {
+      key: "tiptoppay-checkout",
       src: `${config.public.tiptopPayCheckoutURL}?_nc=${Date.now()}`,
       defer: true,
     },
