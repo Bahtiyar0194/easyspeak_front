@@ -1268,7 +1268,7 @@ const createPaymentScript = async () => {
       container: paymentFormRef.value,
     });
 
-        console.log(schoolStore.schoolData.tiptoppay.public_id)
+    console.log(schoolStore.schoolData.tiptoppay.public_id_marketplace)
   }
 };
 
