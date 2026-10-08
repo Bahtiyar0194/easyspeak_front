@@ -409,13 +409,15 @@ const paymentFormRef = ref(null);
 const cryptogram = ref("");
 const promoCode = ref("");
 
+const today = new Date().toISOString().slice(0, 10);
+
 useHead(() => ({
   title: pageTitle.value,
   meta: [{ name: "description", content: "Section" }],
   script: [
     {
       key: "tiptoppay-checkout",
-      src: `${config.public.tiptopPayCheckoutURL}?_nc=${Date.now()}`,
+      src: `${config.public.tiptopPayCheckoutURL}?v=${today}`,
       defer: true,
     },
   ],

@@ -1114,13 +1114,15 @@ provide("tasks", tasks);
 provide("completedTasksCount", completedTasksCount);
 provide("openTask", openTask);
 
+const today = new Date().toISOString().slice(0, 10);
+
 useHead({
   title: t("pages.dashboard.title"),
   meta: [{ name: "description", content: t("pages.home.description") }],
   script: [
     {
       key: "tiptoppay-checkout",
-      src: `${config.public.tiptopPayCheckoutURL}?_nc=${Date.now()}`,
+      src: `${config.public.tiptopPayCheckoutURL}?v=${today}`,
       defer: true,
     },
   ],

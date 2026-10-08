@@ -317,6 +317,8 @@ const backToStep = (step) => {
   currentStep.value = step;
 };
 
+const today = new Date().toISOString().slice(0, 10);
+
 useHead({
   title: schoolStore.schoolData?.full_school_name,
   meta: [{ name: "description", content: t("pages.home.description") }],
@@ -324,7 +326,7 @@ useHead({
   script: [
     {
       key: "tiptoppay-checkout",
-      src: `${config.public.tiptopPayCheckoutURL}?_nc=${Date.now()}`,
+      src: `${config.public.tiptopPayCheckoutURL}?v=${today}`,
       defer: true,
     },
   ],
