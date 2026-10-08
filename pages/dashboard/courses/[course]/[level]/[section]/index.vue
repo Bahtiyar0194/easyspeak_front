@@ -673,6 +673,8 @@ const createPaymentScript = () => {
       container: paymentFormRef.value,
     });
   }
+
+  console.log(schoolStore.schoolData.tiptoppay.public_id);
 };
 
 const handlePayment = async () => {

@@ -358,6 +358,8 @@ const getPaymentAttributes = async () => {
       container: paymentFormRef.value,
     });
 
+    console.log(schoolStore.schoolData.tiptoppay.public_id)
+
     plans.value = response.data.plans;
   } catch (err) {
     if (err.response) {
