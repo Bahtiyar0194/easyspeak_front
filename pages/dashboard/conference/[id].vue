@@ -2177,16 +2177,24 @@ const startStream = async () => {
 
     $socketPlugin.off("user-connected");
 
-    $socketPlugin.on("user-connected", (connectedUserInfo) => {
-      toast(connectedUserInfo.first_name + " " + t("online").toLowerCase(), {
-        toastClassName: ["custom-toast", "info"],
-        timeout: 10000,
-      });
-    });
+    $socketPlugin.on(
+      "user-connected",
+      ({ peerId, userId, userInfo, isStream, isMuted }) => {
+        if (userInfo?.first_name) {
+          toast(`${userInfo.first_name} ${t("online").toLowerCase()}`, {
+            toastClassName: ["custom-toast", "info"],
+            timeout: 10000,
+          });
+        }
+      },
+    );
 
     $socketPlugin.on("user-disconnected", (peerId) => {
       removeStream(peerId);
     });
+
+    // Слушаем принудительное отключение от сервера
+    $socketPlugin.on("force-disconnect", handleForceDisconnect);
 
     $socketPlugin.on("new-message", (data) => {
       messages.value.push(data);
@@ -2735,6 +2743,7 @@ const addStream = (
 const stopLocalStream = async () => {
   $socketPlugin.off("user-connected");
   $socketPlugin.off("user-disconnected");
+  $socketPlugin.off("force-disconnect");
   $socketPlugin.off("new-message");
   $socketPlugin.off("toggle-video");
   $socketPlugin.off("toggle-audio");
@@ -3163,6 +3172,21 @@ const debounceConferenceSettings = debounceHandler(
 
 const reloadPage = () => {
   window.location.reload();
+};
+
+const handleForceDisconnect = ({ reason }) => {
+  // 1. Показываем уведомление пользователю
+  toast(t("errors.server.force_disconnect"), {
+    toastClassName: ["custom-toast", "warning"],
+    timeout: 10000,
+  });
+
+  errorMessage.value = {
+    message: t("errors.server.force_disconnect"),
+    pending: false,
+  };
+
+  stopLocalStream();
 };
 
 onMounted(() => {

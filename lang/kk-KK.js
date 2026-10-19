@@ -411,6 +411,7 @@ export default {
             user_network_error: 'Байланыс нашар, қайта орнату жүріп жатыр...',
             other_user_network_error: '{name} пайдаланушысының байланысы нашар, қайта орнату жүріп жатыр...',
             user_disconnect: 'Байланыс үзілді.',
+            force_disconnect: 'Сіз конференцияға басқа қойындыдан немесе құрылғыдан кірдіңіз.',
             other_user_disconnect: '{name} пайдаланушысымен байланыс үзілді.'
         },
         statuses: {

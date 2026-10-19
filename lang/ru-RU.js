@@ -412,6 +412,7 @@ export default {
             user_network_error: 'У вас проблемы со связью, пытаемся восстановить...',
             other_user_network_error: 'У пользователя {name} есть проблемы со связью, пытаемся восстановить...',
             user_disconnect: 'Соединение потеряно.',
+            force_disconnect: 'Вы вошли в конференцию с другой вкладки или устройства.',
             other_user_disconnect: 'Соединение с пользователем {name} потеряно.'
         },
         statuses: {
