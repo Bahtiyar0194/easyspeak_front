@@ -2042,9 +2042,8 @@ const startStream = async () => {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
-        // Используем ideal вместо жестких рамок
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
+        width: { ideal: 640, max: 850 }, // Максимум 480p вместо 720p/1080p
+        height: { ideal: 480, max: 480 },
         frameRate: { max: 15 },
         facingMode: "user",
       },
@@ -2173,6 +2172,9 @@ const startStream = async () => {
       peers[incomingCall.peer] = incomingCall;
 
       attachCallListeners(incomingCall);
+
+      // Устанавливаем лимит битрейта для этого соединения
+      applyBitrateLimit(incomingCall, 400);
     });
 
     $socketPlugin.off("user-connected");
@@ -2674,6 +2676,9 @@ const joinToRoom = async () => {
 
               peers[user.peerId] = outgoingCall;
               attachCallListeners(outgoingCall, user);
+
+              // Устанавливаем лимит битрейта для этого соединения
+              applyBitrateLimit(outgoingCall, 400);
             }
           });
         });
@@ -3000,6 +3005,40 @@ const attachNetworkMonitoring = (mediaConnection) => {
     }
     delete peersStats[peerId];
   });
+};
+
+const applyBitrateLimit = (call, maxBitrateKbps = 400) => {
+  // Достаем нативный RTCPeerConnection из объекта call
+  const pc = call.peerConnection;
+
+  if (pc) {
+    // Если соединение уже открыто — применяем сразу
+    limitVideoBitrate(pc, maxBitrateKbps);
+
+    // Если соединение еще в процессе handshake — ждем события 'open' / 'stream'
+    pc.addEventListener("connectionstatechange", () => {
+      if (pc.connectionState === "connected") {
+        limitVideoBitrate(pc, maxBitrateKbps);
+      }
+    });
+  }
+};
+
+const limitVideoBitrate = (peerConnection, maxBitrateKbps = 400) => {
+  const senders = peerConnection.getSenders();
+  const videoSender = senders.find((s) => s.track && s.track.kind === "video");
+
+  if (videoSender) {
+    const parameters = videoSender.getParameters();
+    if (!parameters.encodings) parameters.encodings = [{}];
+
+    // Устанавливаем лимит битрейта в битах/сек
+    parameters.encodings[0].maxBitrate = maxBitrateKbps * 1000;
+
+    videoSender.setParameters(parameters).catch((err) => {
+      console.error("Ошибка установки лимита битрейта:", err);
+    });
+  }
 };
 
 const toggleScreenSharing = async () => {
