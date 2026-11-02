@@ -326,7 +326,7 @@ useHead({
   script: [
     {
       key: "tiptoppay-checkout",
-      src: "/scripts/tiptoppay.js",
+      src: `${config.public.tiptopPayCheckoutURL}?v=${today}`,
       defer: true,
     },
   ],

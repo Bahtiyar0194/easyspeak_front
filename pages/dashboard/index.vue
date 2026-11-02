@@ -587,14 +587,14 @@
 
                 <div class="col-span-12">
                   <div class="btn-wrap justify-end">
-                   <button
-                    v-if="paymentLessons.length > 0"
-                    @click="openPaymentModal()"
-                    class="btn btn-primary"
-                  >
-                    <i class="pi pi-credit-card"></i>
-                    {{ $t("pages.lessons.pay_for_lessons") }}
-                  </button>
+                    <button
+                      v-if="paymentLessons.length > 0"
+                      @click="openPaymentModal()"
+                      class="btn btn-primary"
+                    >
+                      <i class="pi pi-credit-card"></i>
+                      {{ $t("pages.lessons.pay_for_lessons") }}
+                    </button>
                     <nuxt-link
                       v-if="!schoolStore.isAiSchoolDomain"
                       class="btn btn-light"
@@ -1114,13 +1114,15 @@ provide("tasks", tasks);
 provide("completedTasksCount", completedTasksCount);
 provide("openTask", openTask);
 
+const today = new Date().toISOString().slice(0, 10);
+
 useHead({
   title: t("pages.dashboard.title"),
   meta: [{ name: "description", content: t("pages.home.description") }],
   script: [
     {
       key: "tiptoppay-checkout",
-      src: "/scripts/tiptoppay.js",
+      src: `${config.public.tiptopPayCheckoutURL}?v=${today}`,
       defer: true,
     },
   ],
