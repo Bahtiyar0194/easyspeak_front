@@ -2723,7 +2723,6 @@ const addStream = (
       isMuted,
     });
 
-    // Логика запуска таска
     if (
       taskInProgress.value === true &&
       conference.value.mentor_id === user_id
@@ -2736,7 +2735,6 @@ const addStream = (
       });
     }
   } else {
-    // 2. ЕСЛИ УЧАСТНИК УЖЕ ЕСТЬ — ОБНОВЛЯЕМ ЕГО ДАННЫЕ И СТРИМ
     streams.value[index].stream = stream;
     streams.value[index].isStream = isStream;
     streams.value[index].isMuted = isMuted;

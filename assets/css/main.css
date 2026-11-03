@@ -652,7 +652,6 @@ input:disabled{
   @apply w-full relative overflow-x-auto rounded-xl shadow-md flex border-inactive text-left;
   box-shadow: var(--shadow-soft);
   border-color: var(--surface-border);
-  backdrop-filter: blur(10px);
 }
 
 .table:has(.overlay) {
@@ -1932,8 +1931,7 @@ input:disabled + .slider {
 
 .modal-backdrop{
   @apply fixed w-full h-full top-0 bottom-0 left-0 right-0 z-50 duration-200 flex justify-center items-center p-4 opacity-0 pointer-events-none;
-  background-color: rgb(15 23 42 / 58%);
-  backdrop-filter: blur(10px);
+  background-color: rgb(15 23 42 / 80%);
 }
 
 .dark .modal-backdrop{
@@ -2068,14 +2066,12 @@ input:disabled + .slider {
 .db__header{
   @apply fixed top-0 left-0 w-full bg-active flex justify-between items-center px-3 border-b-inactive z-20;
   height: 80px;
-  backdrop-filter: blur(12px);
 }
 
 .db__sidebar__menu{
   @apply bg-active px-3.5 fixed z-50 border-r-inactive;
   height: calc(100vh - 79px);
   top: 79px;
-  backdrop-filter: blur(12px);
 }
 
 .db__sidebar__menu a{
