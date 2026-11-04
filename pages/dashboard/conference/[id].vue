@@ -2042,13 +2042,17 @@ const startStream = async () => {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
       video: {
-        width: { ideal: 640, max: 850 }, // Максимум 480p вместо 720p/1080p
-        height: { ideal: 480, max: 480 },
-        frameRate: { max: 15 },
+        width: { ideal: 320, max: 640 },
+        height: { ideal: 240, max: 480 },
+        frameRate: { ideal: 12, max: 15 },
         facingMode: "user",
       },
       audio: selectedMicrophoneId.value
-        ? { deviceId: { exact: selectedMicrophoneId.value } }
+        ? {
+            deviceId: { exact: selectedMicrophoneId.value },
+            echoCancellation: true,
+            noiseSuppression: true,
+          }
         : true,
     });
 

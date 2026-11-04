@@ -3,7 +3,7 @@
     <img class="w-full" :src="`/images/courses/${props.course.course_name_slug}.png`" />
 
     <div
-      class="absolute left-0 bottom-0 w-full h-12 group-hover:h-full transition-all duration-200 flex justify-center items-center group-hover:items-center px-4 backdrop-blur-sm bg-black bg-opacity-50"
+      class="absolute left-0 bottom-0 w-full h-12 group-hover:h-full transition-all duration-200 flex justify-center items-center group-hover:items-center px-4 bg-black bg-opacity-50"
     >
       <div class="flex flex-col gap-y-1">
         <h4 class="mb-0 text-white text-center">
