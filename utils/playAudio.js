@@ -65,7 +65,7 @@ export function playSuccessSound(url) {
             secondAudio.play().catch(error => {
                 console.error('Ошибка при воспроизведении аудиофайла:', error);
             });
-        }, 300);
+        }, 500);
     }).catch(error => {
         console.error('Ошибка при воспроизведении аудиофайла:', error);
     });

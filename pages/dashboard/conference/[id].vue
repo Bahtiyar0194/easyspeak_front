@@ -1485,6 +1485,7 @@ const rawStream = ref(null);
 const screenStream = ref(null);
 const streams = ref([]);
 
+let isExplicitlyClosed = false; // По умолчанию мы в эфире
 let selfieSegmentation = null;
 let animationFrameId = null;
 let canvasStream = null;
@@ -2074,7 +2075,9 @@ const startStream = async () => {
     const username = (config.public.turnUSERNAME || "").trim();
     const credential = (config.public.turnPASSWORD || "").trim();
 
-    myPeer = new Peer(undefined, {
+    // Используем уникальный комбинированный ID: userId + таймстамп текущей сессии
+    const clientPeerId = `user_${authUser.value.user_id}_${Date.now()}`;
+    myPeer = new Peer(clientPeerId, {
       host: config.public.peerBase,
       port: process.env.NODE_ENV === "development" ? 3002 : "",
       path: "/peerjs/myapp",
@@ -2133,6 +2136,11 @@ const startStream = async () => {
         message: err?.message,
         pending: false,
       };
+    });
+
+    myPeer.on("disconnect", () => {
+      if (isExplicitlyClosed) return;
+      myPeer.reconnect();
     });
 
     myPeer.on("call", (incomingCall) => {
@@ -2356,7 +2364,7 @@ const startPeerHeartbeat = (myPeer) => {
     ) {
       myPeer.socket.send({ type: "PING" });
     }
-  }, 25000);
+  }, 20000);
 };
 
 // Функция-хелпер, которая гарантированно найдёт именно функцию-конструктор
@@ -2786,6 +2794,7 @@ const stopLocalStream = async () => {
     rawStream.value.getTracks().forEach((track) => track.stop());
   }
 
+  isExplicitlyClosed = true; // Устанавливаем флаг: выход НАМЕРЕННЫЙ
   localStream.value = null;
   screenStream.value = null;
   rawStream.value = null;
