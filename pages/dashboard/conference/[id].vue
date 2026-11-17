@@ -2153,7 +2153,7 @@ const startStream = async () => {
       const pc = incomingCall.peerConnection;
 
       if (pc) {
-        pc.oniceconnectionstatechange = () => {
+        pc.oniceconnectionstatechange = async () => {
           if (pc.iceConnectionState === "disconnected") {
             toast(
               t("errors.server.other_user_network_error", {
@@ -2340,6 +2340,73 @@ const startStream = async () => {
             toastClassName: ["custom-toast", "danger"],
             timeout: 10000,
           });
+        }
+      }
+    });
+
+    // Слушаем событие ice_restart от другого участника
+    $socketPlugin.on("ice_restart", async ({ senderPeerId, sdp }) => {
+      // Находим активный объект звонка для этого пользователя
+      const call = peers[senderPeerId];
+
+      if (call && call.peerConnection) {
+        const pc = call.peerConnection;
+
+        try {
+          console.log(
+            `[WebRTC] Получен ICE Restart от ${senderPeerId}. Применяем новый SDP...`,
+          );
+
+          // 1. Устанавливаем полученный SDP (с флагом iceRestart) как удаленное описание
+          await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+
+          // 2. Создаем ответ (answer) для подтверждения перезапуска путей
+          const answer = await pc.createAnswer();
+
+          // 3. Устанавливаем ответ локально
+          await pc.setLocalDescription(answer);
+
+          // 4. Отправляем answer обратно инициатору через сокет
+          $socketPlugin.emit("ice_restart_answer", {
+            targetPeerId: senderPeerId,
+            sdp: pc.localDescription,
+          });
+
+          console.log(
+            `[WebRTC] ICE Restart успешно обработан для ${senderPeerId}`,
+          );
+        } catch (err) {
+          console.error(
+            "[WebRTC] Ошибка при обработке входящего ICE Restart:",
+            err,
+          );
+        }
+      }
+    });
+
+    // Слушаем ответ на наш ice_restart
+    $socketPlugin.on("ice_restart_answer", async ({ senderPeerId, sdp }) => {
+      const call = peers[senderPeerId];
+
+      if (call && call.peerConnection) {
+        const pc = call.peerConnection;
+
+        try {
+          console.log(
+            `[WebRTC] Получен answer на ICE Restart от ${senderPeerId}`,
+          );
+
+          // Устанавливаем удаленный ответ
+          await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+
+          console.log(
+            `[WebRTC] Соединение успешно восстановлено через новые ICE кандидаты!`,
+          );
+        } catch (err) {
+          console.error(
+            "[WebRTC] Ошибка при установке answer для ICE Restart:",
+            err,
+          );
         }
       }
     });
@@ -2671,17 +2738,38 @@ const joinToRoom = async () => {
               const pc = outgoingCall.peerConnection;
 
               if (pc) {
-                pc.oniceconnectionstatechange = () => {
+                pc.oniceconnectionstatechange = async () => {
                   if (pc.iceConnectionState === "disconnected") {
                     toast(t("errors.server.user_network_error"), {
                       toastClassName: ["custom-toast", "warning"],
                       timeout: 20000,
                     });
                   } else if (pc.iceConnectionState === "failed") {
+                    console.warn(
+                      "[WebRTC] Исходящее соединение упало. Пробуем ICE Restart...",
+                    );
                     toast(t("errors.server.user_disconnect"), {
                       toastClassName: ["custom-toast", "danger"],
                       timeout: 20000,
                     });
+
+                    try {
+                      // Создаем новый оффер с флагом iceRestart
+                      const offer = await pc.createOffer({ iceRestart: true });
+                      await pc.setLocalDescription(offer);
+
+                      // Отправляем обновленный SDP через сокет вашему сигнальному серверу,
+                      // чтобы собеседник пересоздал у себя путь через TURN/STUN
+                      $socketPlugin.emit("ice_restart", {
+                        targetPeerId: user.peerId,
+                        sdp: pc.localDescription,
+                      });
+                    } catch (err) {
+                      console.error(
+                        "[WebRTC] Ошибка при выполнении ICE restart:",
+                        err,
+                      );
+                    }
                   }
                 };
               }
@@ -2771,6 +2859,8 @@ const stopLocalStream = async () => {
   $socketPlugin.off("complete_task");
   $socketPlugin.off("show_material");
   $socketPlugin.off("start_test");
+  $socketPlugin.off("ice_restart");
+  $socketPlugin.off("ice_restart_answer");
 
   if (pingIntervalId) {
     clearInterval(pingIntervalId);
