@@ -1422,6 +1422,14 @@ let myPeer;
 const peers = {};
 let pingIntervalId = null;
 
+// Состояние восстановления соединений
+let peerOpenedOnce = false; // PeerJS уже открывался (последующие "open" — это реконнект)
+let pendingRejoin = false; // socket.io переподключился, пока PeerJS был отключён
+let isRejoining = false;
+const recallTimers = {}; // peerId -> timeout повторного звонка
+const recallAttempts = {}; // peerId -> число попыток подряд
+const MAX_RECALL_ATTEMPTS = 5;
+
 const conference = ref(null);
 
 const confModes = [
@@ -2077,6 +2085,7 @@ const startStream = async () => {
 
     // Используем уникальный комбинированный ID: userId + таймстамп текущей сессии
     const clientPeerId = `user_${authUser.value.user_id}_${Date.now()}`;
+    isExplicitlyClosed = false; // новый вход в конференцию
     myPeer = new Peer(clientPeerId, {
       host: config.public.peerBase,
       port: process.env.NODE_ENV === "development" ? 3002 : "",
@@ -2104,6 +2113,15 @@ const startStream = async () => {
     });
 
     myPeer.on("open", (id) => {
+      // Повторный "open" — это myPeer.reconnect() после обрыва сигнального сервера.
+      // Медиасоединения при этом могут быть живы, поэтому заходим в комнату заново
+      // только если за время обрыва переподключался socket.io.
+      if (peerOpenedOnce) {
+        if (pendingRejoin) rejoinRoom();
+        return;
+      }
+      peerOpenedOnce = true;
+
       //monitorNetworkAndAdjustQuality(myPeer);
 
       addStream(
@@ -2153,11 +2171,13 @@ const startStream = async () => {
       const pc = incomingCall.peerConnection;
 
       if (pc) {
-        pc.oniceconnectionstatechange = async () => {
+        // addEventListener, а не присваивание: иначе затирается обработчик PeerJS,
+        // который закрывает соединение при "failed"/"closed"
+        pc.addEventListener("iceconnectionstatechange", () => {
           if (pc.iceConnectionState === "disconnected") {
             toast(
               t("errors.server.other_user_network_error", {
-                name: incomingCall.metadata.userInfo.first_name,
+                name: incomingCall.metadata?.userInfo?.first_name,
               }),
               {
                 toastClassName: ["custom-toast", "warning"],
@@ -2167,7 +2187,7 @@ const startStream = async () => {
           } else if (pc.iceConnectionState === "failed") {
             toast(
               t("errors.server.other_user_disconnect", {
-                name: incomingCall.metadata.userInfo.first_name,
+                name: incomingCall.metadata?.userInfo?.first_name,
               }),
               {
                 toastClassName: ["custom-toast", "danger"],
@@ -2175,13 +2195,24 @@ const startStream = async () => {
               },
             );
           }
-        };
+        })
       }
       // ============================================
 
       startPeerHeartbeat(myPeer);
 
+      // Если от этого участника уже был звонок (он переподключился) — сначала
+      // регистрируем новый, потом закрываем старый, чтобы закрытие старого
+      // не удалило карточку нового
+      const previousCall = peers[incomingCall.peer];
       peers[incomingCall.peer] = incomingCall;
+      if (previousCall && previousCall !== incomingCall) {
+        try {
+          previousCall.close();
+        } catch (e) {
+          console.error("Ошибка при закрытии старого call:", e);
+        }
+      }
 
       attachCallListeners(incomingCall);
 
@@ -2344,72 +2375,11 @@ const startStream = async () => {
       }
     });
 
-    // Слушаем событие ice_restart от другого участника
-    $socketPlugin.on("ice_restart", async ({ senderPeerId, sdp }) => {
-      // Находим активный объект звонка для этого пользователя
-      const call = peers[senderPeerId];
-
-      if (call && call.peerConnection) {
-        const pc = call.peerConnection;
-
-        try {
-          console.log(
-            `[WebRTC] Получен ICE Restart от ${senderPeerId}. Применяем новый SDP...`,
-          );
-
-          // 1. Устанавливаем полученный SDP (с флагом iceRestart) как удаленное описание
-          await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-
-          // 2. Создаем ответ (answer) для подтверждения перезапуска путей
-          const answer = await pc.createAnswer();
-
-          // 3. Устанавливаем ответ локально
-          await pc.setLocalDescription(answer);
-
-          // 4. Отправляем answer обратно инициатору через сокет
-          $socketPlugin.emit("ice_restart_answer", {
-            targetPeerId: senderPeerId,
-            sdp: pc.localDescription,
-          });
-
-          console.log(
-            `[WebRTC] ICE Restart успешно обработан для ${senderPeerId}`,
-          );
-        } catch (err) {
-          console.error(
-            "[WebRTC] Ошибка при обработке входящего ICE Restart:",
-            err,
-          );
-        }
-      }
-    });
-
-    // Слушаем ответ на наш ice_restart
-    $socketPlugin.on("ice_restart_answer", async ({ senderPeerId, sdp }) => {
-      const call = peers[senderPeerId];
-
-      if (call && call.peerConnection) {
-        const pc = call.peerConnection;
-
-        try {
-          console.log(
-            `[WebRTC] Получен answer на ICE Restart от ${senderPeerId}`,
-          );
-
-          // Устанавливаем удаленный ответ
-          await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-
-          console.log(
-            `[WebRTC] Соединение успешно восстановлено через новые ICE кандидаты!`,
-          );
-        } catch (err) {
-          console.error(
-            "[WebRTC] Ошибка при установке answer для ICE Restart:",
-            err,
-          );
-        }
-      }
-    });
+    // socket.io переподключился после обрыва сети. Сервер к этому моменту
+    // уже выкинул нас из комнаты и разослал "user-disconnected", а остальные
+    // закрыли свои звонки к нам — заходим в комнату заново и перезваниваем всем.
+    $socketPlugin.io.off("reconnect", handleSocketReconnect);
+    $socketPlugin.io.on("reconnect", handleSocketReconnect);
   } catch (error) {
     toast(t("errors.media.camera_error"), {
       toastClassName: ["custom-toast", "danger"],
@@ -2705,98 +2675,173 @@ const setUserConferenceSettings = async () => {
     });
 };
 
-const joinToRoom = async () => {
-  await $socketPlugin.connect();
+const joinToRoom = () =>
+  new Promise((resolve) => {
+    $socketPlugin.connect();
 
-  $socketPlugin.emit(
-    "join-room",
-    "room_" + conference.value.uuid,
-    myPeer.id,
-    authUser.value.user_id,
-    authUserInfo,
-    isStream.value,
-    isMuted.value,
-    (response) => {
-      if (response.success) {
-        errorMessage.value = null;
+    $socketPlugin.emit(
+      "join-room",
+      "room_" + conference.value.uuid,
+      myPeer.id,
+      authUser.value.user_id,
+      authUserInfo,
+      isStream.value,
+      isMuted.value,
+      (response) => {
+        if (response.success) {
+          errorMessage.value = null;
 
-        $socketPlugin.emit("get-room-info", (roomInfo) => {
-          roomInfo.forEach((user) => {
-            if (user.peerId !== myPeer.id) {
-              const streamToSend = getActiveStream();
-
-              const outgoingCall = myPeer.call(user.peerId, streamToSend, {
-                metadata: {
-                  userId: authUser.value.user_id,
-                  userInfo: authUserInfo,
-                  isStream: isStream.value,
-                  isMuted: isMuted.value,
-                },
-              });
-
-              // === ИНТЕГРАЦИЯ МОНИТОРИНГА ICE-СОЕДИНЕНИЯ ===
-              const pc = outgoingCall.peerConnection;
-
-              if (pc) {
-                pc.oniceconnectionstatechange = async () => {
-                  if (pc.iceConnectionState === "disconnected") {
-                    toast(t("errors.server.user_network_error"), {
-                      toastClassName: ["custom-toast", "warning"],
-                      timeout: 20000,
-                    });
-                  } else if (pc.iceConnectionState === "failed") {
-                    console.warn(
-                      "[WebRTC] Исходящее соединение упало. Пробуем ICE Restart...",
-                    );
-                    toast(t("errors.server.user_disconnect"), {
-                      toastClassName: ["custom-toast", "danger"],
-                      timeout: 20000,
-                    });
-
-                    try {
-                      // Создаем новый оффер с флагом iceRestart
-                      const offer = await pc.createOffer({ iceRestart: true });
-                      await pc.setLocalDescription(offer);
-
-                      // Отправляем обновленный SDP через сокет вашему сигнальному серверу,
-                      // чтобы собеседник пересоздал у себя путь через TURN/STUN
-                      $socketPlugin.emit("ice_restart", {
-                        targetPeerId: user.peerId,
-                        sdp: pc.localDescription,
-                      });
-                    } catch (err) {
-                      console.error(
-                        "[WebRTC] Ошибка при выполнении ICE restart:",
-                        err,
-                      );
-                    }
-                  }
-                };
-              }
-
-              peers[user.peerId] = outgoingCall;
-              attachCallListeners(outgoingCall, user);
-
-              // Устанавливаем лимит битрейта для этого соединения
-              applyBitrateLimit(outgoingCall, 400);
-            }
-          });
-        });
-      } else {
-        if (response.message === "peer_is_null") {
-          toast(t("errors.server.peer_error"), {
-            toastClassName: ["custom-toast", "danger"],
-            timeout: 10000,
+          $socketPlugin.emit("get-room-info", (roomInfo) => {
+            roomInfo.forEach((user) => {
+              if (user.peerId !== myPeer?.id) callUser(user);
+            });
+            resolve();
           });
         } else {
-          toast(t("errors.server.room_error"), {
-            toastClassName: ["custom-toast", "danger"],
-            timeout: 10000,
-          });
+          if (response.message === "peer_is_null") {
+            toast(t("errors.server.peer_error"), {
+              toastClassName: ["custom-toast", "danger"],
+              timeout: 10000,
+            });
+          } else {
+            toast(t("errors.server.room_error"), {
+              toastClassName: ["custom-toast", "danger"],
+              timeout: 10000,
+            });
+          }
+          resolve();
         }
-      }
+      },
+    );
+  });
+
+// Исходящий звонок участнику комнаты (user — запись из get-room-info)
+const callUser = (user) => {
+  if (!myPeer || myPeer.destroyed || myPeer.disconnected) return;
+
+  const outgoingCall = myPeer.call(user.peerId, getActiveStream(), {
+    metadata: {
+      userId: authUser.value.user_id,
+      userInfo: authUserInfo,
+      isStream: isStream.value,
+      isMuted: isMuted.value,
     },
-  );
+  });
+
+  if (!outgoingCall) return;
+
+  // === ИНТЕГРАЦИЯ МОНИТОРИНГА ICE-СОЕДИНЕНИЯ ===
+  // addEventListener, а не присваивание: обработчик PeerJS при "failed" закрывает
+  // звонок, после чего attachCallListeners перезвонит (scheduleRecall)
+  const pc = outgoingCall.peerConnection;
+
+  if (pc) {
+    pc.addEventListener("iceconnectionstatechange", () => {
+      if (pc.iceConnectionState === "disconnected") {
+        toast(t("errors.server.user_network_error"), {
+          toastClassName: ["custom-toast", "warning"],
+          timeout: 20000,
+        });
+      } else if (pc.iceConnectionState === "failed") {
+        console.warn("[WebRTC] Исходящее соединение упало, перезваниваем...");
+        toast(t("errors.server.user_disconnect"), {
+          toastClassName: ["custom-toast", "danger"],
+          timeout: 20000,
+        });
+      }
+    });
+  }
+
+  const previousCall = peers[user.peerId];
+  peers[user.peerId] = outgoingCall;
+  if (previousCall && previousCall !== outgoingCall) {
+    try {
+      previousCall.close();
+    } catch (e) {
+      console.error("Ошибка при закрытии старого call:", e);
+    }
+  }
+
+  attachCallListeners(outgoingCall, user);
+
+  // Устанавливаем лимит битрейта для этого соединения
+  applyBitrateLimit(outgoingCall, 400);
+};
+
+// Повторный звонок после того, как соединение упало само (не по user-disconnected).
+// Перезванивает только сторона, которая изначально звонила, — так обе стороны
+// не начнут звонить друг другу одновременно.
+const scheduleRecall = (user) => {
+  const peerId = user.peerId;
+  if (recallTimers[peerId]) return;
+
+  const attempt = (recallAttempts[peerId] || 0) + 1;
+  if (attempt > MAX_RECALL_ATTEMPTS) {
+    console.warn(`[WebRTC] Не удалось восстановить соединение с ${peerId}`);
+    return;
+  }
+  recallAttempts[peerId] = attempt;
+
+  recallTimers[peerId] = setTimeout(() => {
+    delete recallTimers[peerId];
+    if (isExplicitlyClosed || peers[peerId] || !$socketPlugin.connected) return;
+
+    // Перезваниваем, только если участник всё ещё в комнате
+    $socketPlugin.emit("get-room-info", (roomInfo) => {
+      const freshUser = roomInfo.find((u) => u.peerId === peerId);
+      if (freshUser && !peers[peerId] && !isExplicitlyClosed) {
+        callUser(freshUser);
+      }
+    });
+  }, 1500 * attempt);
+};
+
+const clearRecall = (peerId) => {
+  if (recallTimers[peerId]) {
+    clearTimeout(recallTimers[peerId]);
+    delete recallTimers[peerId];
+  }
+  delete recallAttempts[peerId];
+};
+
+// Полный перезаход в комнату: закрываем все звонки и звоним всем заново
+const rejoinRoom = async () => {
+  if (isExplicitlyClosed || !myPeer || myPeer.destroyed) return;
+
+  // Звонить через PeerJS можно только при живом сигнальном соединении.
+  // Если оно тоже упало — дождёмся "open" после myPeer.reconnect()
+  if (myPeer.disconnected || !myPeer.open) {
+    pendingRejoin = true;
+    return;
+  }
+  if (isRejoining) return;
+
+  pendingRejoin = false;
+  isRejoining = true;
+
+  try {
+    Object.keys(recallTimers).forEach(clearRecall);
+
+    Object.keys(peers).forEach((peerId) => {
+      const call = peers[peerId];
+      delete peers[peerId];
+      try {
+        call.close();
+      } catch (e) {
+        console.error("Ошибка при закрытии call:", e);
+      }
+    });
+    streams.value = streams.value.filter((s) => !s.remote);
+
+    await joinToRoom();
+  } finally {
+    isRejoining = false;
+  }
+};
+
+const handleSocketReconnect = () => {
+  console.warn("[Socket] Переподключение, заходим в комнату заново");
+  rejoinRoom();
 };
 
 const addStream = (
@@ -2859,8 +2904,13 @@ const stopLocalStream = async () => {
   $socketPlugin.off("complete_task");
   $socketPlugin.off("show_material");
   $socketPlugin.off("start_test");
-  $socketPlugin.off("ice_restart");
-  $socketPlugin.off("ice_restart_answer");
+  $socketPlugin.io.off("reconnect", handleSocketReconnect);
+
+  // Ставим флаг до myPeer.destroy(), чтобы закрытие звонков не запускало перезвон
+  isExplicitlyClosed = true;
+  peerOpenedOnce = false;
+  pendingRejoin = false;
+  Object.keys(recallTimers).forEach(clearRecall);
 
   if (pingIntervalId) {
     clearInterval(pingIntervalId);
@@ -2895,8 +2945,15 @@ const stopLocalStream = async () => {
   if (selfieSegmentation) selfieSegmentation.close();
 };
 
-const removeStream = (peerId) => {
+// call — конкретный звонок, который закрылся. Если для этого peerId уже есть
+// другой (более новый) звонок, значит закрылся устаревший — карточку не трогаем.
+const removeStream = (peerId, call = null) => {
   if (!peerId) return;
+
+  if (call && peers[peerId] && peers[peerId] !== call) return;
+
+  // Участник ушёл / мы сами закрыли звонок — перезванивать не нужно
+  if (!call) clearRecall(peerId);
 
   // 1. Находим участника
   const streamToRemove = streams.value.find((s) => s.peer_id === peerId);
@@ -3066,18 +3123,35 @@ const attachCallListeners = (call, userData = null) => {
 
     pushOrUpdate();
     remoteStream.onaddtrack = () => pushOrUpdate();
+
+    // Соединение установилось — сбрасываем счётчик попыток перезвона
+    delete recallAttempts[call.peer];
   });
 
-  call.on("close", () => {
-    removeStream(call.peer);
-  });
+  // PeerJS при "failed" шлёт "error", а "close" — только если поток уже был получен,
+  // поэтому обрабатываем оба события одной идемпотентной функцией
+  let ended = false;
+  const handleCallEnded = () => {
+    if (ended) return;
+    ended = true;
+
+    // true — звонок упал сам; false — его уже убрали мы (user-disconnected,
+    // перезаход в комнату) или заменили новым
+    const droppedUnexpectedly = peers[call.peer] === call;
+
+    removeStream(call.peer, call);
+
+    // Перезванивает только инициатор звонка (у исходящих есть userData)
+    if (droppedUnexpectedly && userData && !isExplicitlyClosed) {
+      scheduleRecall(userData);
+    }
+  };
+
+  call.on("close", handleCallEnded);
 
   call.on("error", (error) => {
-    errorMessage.value = {
-      message: error.message,
-      pending: false,
-    };
-    removeStream(call.peer);
+    console.warn(`[WebRTC] Ошибка звонка с ${call.peer}:`, error?.message);
+    handleCallEnded();
   });
 
   attachNetworkMonitoring(call);
@@ -3100,11 +3174,12 @@ const attachNetworkMonitoring = (mediaConnection) => {
 
   // Когда звонок закрывается — удаляем его метрики
   mediaConnection.on("close", () => {
-    if (activeMonitors.has(peerId)) {
-      activeMonitors.get(peerId)();
+    stop();
+    // Не трогаем мониторинг нового звонка, если этот был заменён
+    if (activeMonitors.get(peerId) === stop) {
       activeMonitors.delete(peerId);
+      delete peersStats[peerId];
     }
-    delete peersStats[peerId];
   });
 };
 
