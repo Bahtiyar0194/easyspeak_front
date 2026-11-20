@@ -1429,6 +1429,9 @@ let isRejoining = false;
 const recallTimers = {}; // peerId -> timeout повторного звонка
 const recallAttempts = {}; // peerId -> число попыток подряд
 const MAX_RECALL_ATTEMPTS = 5;
+let peerReconnectTimer = null; // таймер следующей попытки myPeer.reconnect()
+let peerReconnectAttempts = 0;
+let isReconnecting = false; // показан тост "пытаемся восстановить"
 
 const conference = ref(null);
 
@@ -2115,9 +2118,18 @@ const startStream = async () => {
     myPeer.on("open", (id) => {
       // Повторный "open" — это myPeer.reconnect() после обрыва сигнального сервера.
       // Медиасоединения при этом могут быть живы, поэтому заходим в комнату заново
-      // только если за время обрыва переподключался socket.io.
+      // только если за время обрыва переподключался socket.io или какие-то
+      // звонки уже не в состоянии "connected" (например, после смены Wi-Fi).
       if (peerOpenedOnce) {
-        if (pendingRejoin) rejoinRoom();
+        resetPeerReconnect();
+        const hasBrokenCalls = Object.values(peers).some(
+          (call) => call?.peerConnection?.connectionState !== "connected",
+        );
+        if (pendingRejoin || hasBrokenCalls) {
+          rejoinRoom();
+        } else {
+          finishReconnecting();
+        }
         return;
       }
       peerOpenedOnce = true;
@@ -2145,6 +2157,24 @@ const startStream = async () => {
     });
 
     myPeer.on("error", (err) => {
+      if (isExplicitlyClosed) return;
+
+      // Звонок участнику, который уже вышел, — не ошибка конференции
+      if (err?.type === "peer-unavailable") {
+        console.warn("[PeerJS]", err?.message);
+        return;
+      }
+
+      // После того как мы уже были в конференции, сетевые ошибки
+      // (network, socket-closed, socket-error, server-error, ...) не фатальны:
+      // PeerJS переходит в "disconnected", и мы переподключаемся
+      if (peerOpenedOnce && err?.type !== "browser-incompatible") {
+        console.warn("[PeerJS] Ошибка, переподключаемся:", err?.type, err?.message);
+        startReconnecting();
+        return;
+      }
+
+      // Не удалось подключиться при первом входе — показываем ошибку
       toast(t("errors.server.peer_error"), {
         toastClassName: ["custom-toast", "danger"],
         timeout: 10000,
@@ -2156,9 +2186,12 @@ const startStream = async () => {
       };
     });
 
-    myPeer.on("disconnect", () => {
-      if (isExplicitlyClosed) return;
-      myPeer.reconnect();
+    // PeerJS 1.5 отправляет именно "disconnected" (не "disconnect").
+    // Срабатывает и при обрыве, и после каждой неудачной попытки reconnect().
+    myPeer.on("disconnected", () => {
+      if (isExplicitlyClosed || !myPeer || myPeer.destroyed) return;
+      startReconnecting();
+      schedulePeerReconnect();
     });
 
     myPeer.on("call", (incomingCall) => {
@@ -2267,6 +2300,13 @@ const startStream = async () => {
     });
 
     $socketPlugin.on("connect_error", () => {
+      // Уже были в конференции — не закрываем экран ошибкой,
+      // socket.io переподключится сам, а мы перезайдём в комнату
+      if (peerOpenedOnce) {
+        startReconnecting();
+        return;
+      }
+
       if (!errorMessage.value) {
         errorMessage.value = {
           message: t("errors.server.error"),
@@ -2380,6 +2420,11 @@ const startStream = async () => {
     // закрыли свои звонки к нам — заходим в комнату заново и перезваниваем всем.
     $socketPlugin.io.off("reconnect", handleSocketReconnect);
     $socketPlugin.io.on("reconnect", handleSocketReconnect);
+
+    window.removeEventListener("online", handleBrowserOnline);
+    window.removeEventListener("offline", handleBrowserOffline);
+    window.addEventListener("online", handleBrowserOnline);
+    window.addEventListener("offline", handleBrowserOffline);
   } catch (error) {
     toast(t("errors.media.camera_error"), {
       toastClassName: ["custom-toast", "danger"],
@@ -2690,6 +2735,7 @@ const joinToRoom = () =>
       (response) => {
         if (response.success) {
           errorMessage.value = null;
+          finishReconnecting();
 
           $socketPlugin.emit("get-room-info", (roomInfo) => {
             roomInfo.forEach((user) => {
@@ -2814,6 +2860,8 @@ const rejoinRoom = async () => {
     pendingRejoin = true;
     return;
   }
+  // socket.io ещё не подключён — перезайдём по его событию "reconnect"
+  if (!$socketPlugin.connected) return;
   if (isRejoining) return;
 
   pendingRejoin = false;
@@ -2842,6 +2890,74 @@ const rejoinRoom = async () => {
 const handleSocketReconnect = () => {
   console.warn("[Socket] Переподключение, заходим в комнату заново");
   rejoinRoom();
+};
+
+// Один тост на весь период восстановления, а не на каждую ошибку
+const startReconnecting = () => {
+  if (isReconnecting || isExplicitlyClosed) return;
+  isReconnecting = true;
+  toast(t("errors.server.user_network_error"), {
+    toastClassName: ["custom-toast", "warning"],
+    timeout: 10000,
+  });
+};
+
+const finishReconnecting = () => {
+  if (!isReconnecting) return;
+  isReconnecting = false;
+  toast(t("errors.server.reconnected"), {
+    toastClassName: ["custom-toast", "success"],
+    timeout: 5000,
+  });
+};
+
+// Переподключение к PeerJS-серверу с нарастающей паузой: 1, 2, 4, 8, 10, 10... сек.
+// Не ограничено по числу попыток — сеть может вернуться и через минуту.
+const schedulePeerReconnect = (delay = null) => {
+  if (peerReconnectTimer) return;
+
+  const wait = delay ?? Math.min(1000 * 2 ** peerReconnectAttempts, 10000);
+  peerReconnectAttempts++;
+
+  peerReconnectTimer = setTimeout(() => {
+    peerReconnectTimer = null;
+    if (isExplicitlyClosed || !myPeer || myPeer.destroyed || !myPeer.disconnected) {
+      return;
+    }
+    try {
+      console.warn(`[PeerJS] Попытка переподключения #${peerReconnectAttempts}`);
+      myPeer.reconnect();
+    } catch (e) {
+      console.error("[PeerJS] Ошибка reconnect:", e);
+      schedulePeerReconnect();
+    }
+  }, wait);
+};
+
+const resetPeerReconnect = () => {
+  if (peerReconnectTimer) {
+    clearTimeout(peerReconnectTimer);
+    peerReconnectTimer = null;
+  }
+  peerReconnectAttempts = 0;
+};
+
+// Сеть вернулась (например, подключились к другому Wi-Fi) — не ждём таймеров
+const handleBrowserOnline = () => {
+  if (isExplicitlyClosed || !myPeer || myPeer.destroyed) return;
+
+  if (myPeer.disconnected) {
+    resetPeerReconnect();
+    schedulePeerReconnect(300);
+  }
+  if (!$socketPlugin.connected) {
+    $socketPlugin.connect();
+  }
+};
+
+const handleBrowserOffline = () => {
+  if (isExplicitlyClosed) return;
+  startReconnecting();
 };
 
 const addStream = (
@@ -2905,11 +3021,15 @@ const stopLocalStream = async () => {
   $socketPlugin.off("show_material");
   $socketPlugin.off("start_test");
   $socketPlugin.io.off("reconnect", handleSocketReconnect);
+  window.removeEventListener("online", handleBrowserOnline);
+  window.removeEventListener("offline", handleBrowserOffline);
 
   // Ставим флаг до myPeer.destroy(), чтобы закрытие звонков не запускало перезвон
   isExplicitlyClosed = true;
   peerOpenedOnce = false;
   pendingRejoin = false;
+  isReconnecting = false;
+  resetPeerReconnect();
   Object.keys(recallTimers).forEach(clearRecall);
 
   if (pingIntervalId) {
