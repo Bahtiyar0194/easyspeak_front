@@ -1433,6 +1433,9 @@ let peerReconnectTimer = null; // таймер следующей попытки
 let peerReconnectAttempts = 0;
 let isReconnecting = false; // показан тост "пытаемся восстановить"
 let hasJoinedRoom = false; // уже успешно заходили в комнату (последующие "connect" — реконнект)
+let lastPeerOpenAt = 0; // когда PeerJS последний раз успешно подключился к серверу
+let healthCheckInProgress = false;
+let healthCheckDebounce = null;
 
 const conference = ref(null);
 
@@ -2121,6 +2124,8 @@ const startStream = async () => {
       // Медиасоединения при этом могут быть живы, поэтому заходим в комнату заново
       // только если за время обрыва переподключался socket.io или какие-то
       // звонки уже не в состоянии "connected" (например, после смены Wi-Fi).
+      lastPeerOpenAt = Date.now();
+
       if (peerOpenedOnce) {
         resetPeerReconnect();
         const hasBrokenCalls = Object.values(peers).some(
@@ -2213,6 +2218,7 @@ const startStream = async () => {
         // который закрывает соединение при "failed"/"closed"
         pc.addEventListener("iceconnectionstatechange", () => {
           if (pc.iceConnectionState === "disconnected") {
+            scheduleHealthCheck();
             toast(
               t("errors.server.other_user_network_error", {
                 name: incomingCall.metadata?.userInfo?.first_name,
@@ -2432,6 +2438,11 @@ const startStream = async () => {
     window.removeEventListener("offline", handleBrowserOffline);
     window.addEventListener("online", handleBrowserOnline);
     window.addEventListener("offline", handleBrowserOffline);
+
+    navigator.connection?.removeEventListener?.("change", handleNetworkChange);
+    navigator.connection?.addEventListener?.("change", handleNetworkChange);
+    document.removeEventListener("visibilitychange", handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
   } catch (error) {
     toast(t("errors.media.camera_error"), {
       toastClassName: ["custom-toast", "danger"],
@@ -2795,6 +2806,7 @@ const callUser = (user) => {
   if (pc) {
     pc.addEventListener("iceconnectionstatechange", () => {
       if (pc.iceConnectionState === "disconnected") {
+        scheduleHealthCheck();
         toast(t("errors.server.user_network_error"), {
           toastClassName: ["custom-toast", "warning"],
           timeout: 20000,
@@ -2909,7 +2921,86 @@ const handleSocketReconnect = () => {
   // Первое подключение обрабатывает joinToRoom, здесь — только повторные
   if (!hasJoinedRoom || isExplicitlyClosed) return;
   console.warn("[Socket] Переподключение, заходим в комнату заново");
+
+  // Раз socket.io переподключался, сеть менялась — значит, WebSocket PeerJS
+  // скорее всего тоже мёртвый, даже если myPeer.open === true (PeerJS сам этого
+  // не замечает). Перезапускаем его, если он не переподключался только что.
+  if (
+    myPeer &&
+    !myPeer.destroyed &&
+    !myPeer.disconnected &&
+    Date.now() - lastPeerOpenAt > 10000
+  ) {
+    restartPeerSignaling();
+    return; // rejoinRoom вызовется по "open" (pendingRejoin)
+  }
+
   rejoinRoom();
+};
+
+// Переподключить WebSocket PeerJS с тем же id. Медиасоединения не закрываются,
+// после "open" выполнится rejoinRoom
+const restartPeerSignaling = () => {
+  if (!myPeer || myPeer.destroyed) return;
+  console.warn("[PeerJS] Принудительное переподключение к серверу");
+  pendingRejoin = true;
+  if (!myPeer.disconnected) myPeer.disconnect(); // → "disconnected" → таймер
+  resetPeerReconnect();
+  schedulePeerReconnect(300);
+};
+
+// Всё переподключить: и socket.io, и PeerJS
+const forceReconnectAll = () => {
+  if (isExplicitlyClosed || !myPeer || myPeer.destroyed) return;
+  startReconnecting();
+  restartPeerSignaling();
+  // После connect() придёт "connect" → handleSocketReconnect → rejoinRoom
+  $socketPlugin.disconnect();
+  $socketPlugin.connect();
+};
+
+// Проверка, что socket.io живой на самом деле: при смене сети (Wi-Fi → мобильный
+// интернет) браузер не уходит в offline, а старые соединения становятся «зомби»:
+// connected === true, но пакеты никуда не доходят. Отправляем запрос с ack —
+// нет ответа за 4 сек. → соединение мёртвое, переподключаем всё.
+const checkConnectionHealth = () => {
+  if (healthCheckInProgress || isExplicitlyClosed || !hasJoinedRoom) return;
+  if (!myPeer || myPeer.destroyed) return;
+
+  // socket.io уже сам знает, что отключён, и переподключается
+  if (!$socketPlugin.connected) return;
+
+  healthCheckInProgress = true;
+  $socketPlugin.timeout(4000).emit("get-room-info", (err) => {
+    healthCheckInProgress = false;
+    if (err) {
+      console.warn("[Socket] Нет ответа от сервера — соединение мёртвое");
+      forceReconnectAll();
+    }
+  });
+};
+
+// Несколько событий подряд (несколько звонков ушли в "disconnected",
+// смена сети) — одна проверка
+const scheduleHealthCheck = () => {
+  if (healthCheckDebounce) clearTimeout(healthCheckDebounce);
+  healthCheckDebounce = setTimeout(() => {
+    healthCheckDebounce = null;
+    checkConnectionHealth();
+  }, 1000);
+};
+
+// Смена типа сети (Android Chrome: wifi ↔ cellular). Событие срабатывает и
+// при изменении оценки скорости, поэтому только проверяем, а не переподключаем
+const handleNetworkChange = () => {
+  if (isExplicitlyClosed) return;
+  console.warn("[Network] Изменилась сеть, проверяем соединение");
+  scheduleHealthCheck();
+};
+
+// Вкладка вернулась из фона (телефон мог усыпить её и потерять соединения)
+const handleVisibilityChange = () => {
+  if (document.visibilityState === "visible") scheduleHealthCheck();
 };
 
 // Один тост на весь период восстановления, а не на каждую ошибку
@@ -3055,6 +3146,13 @@ const stopLocalStream = async () => {
   $socketPlugin.off("connect", handleSocketReconnect);
   window.removeEventListener("online", handleBrowserOnline);
   window.removeEventListener("offline", handleBrowserOffline);
+  navigator.connection?.removeEventListener?.("change", handleNetworkChange);
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
+  if (healthCheckDebounce) {
+    clearTimeout(healthCheckDebounce);
+    healthCheckDebounce = null;
+  }
+  healthCheckInProgress = false;
 
   // Ставим флаг до myPeer.destroy(), чтобы закрытие звонков не запускало перезвон
   isExplicitlyClosed = true;
