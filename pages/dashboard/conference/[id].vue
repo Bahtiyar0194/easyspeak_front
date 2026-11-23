@@ -2861,7 +2861,7 @@ const clearRecall = (peerId) => {
 const rejoinRoom = async () => {
   if (isExplicitlyClosed || !myPeer || myPeer.destroyed) return;
 
-  console.warn('Делаем reJoinRoom');
+  console.warn('Делаем reJoinRoom d');
 
   // Звонить через PeerJS можно только при живом сигнальном соединении.
   // Если оно тоже упало — дождёмся "open" после myPeer.reconnect()
