@@ -37,7 +37,7 @@
   </div>
   <div v-else-if="localStream" class="col-span-12">
     <div class="custom-grid">
-      <div class="col-span-12">
+      <div class="col-span-12 relative z-10">
         <div class="btn-wrap justify-end">
           <button
             v-for="(mode, modeIndex) in confModes"
@@ -84,6 +84,7 @@
           :streams="streams"
           :peersStats="peersStats"
           :reflected="isVideoReflected"
+          :mentorId="conference.mentor_id"
         />
       </div>
 
@@ -1370,32 +1371,30 @@ import { useRoute, useRouter, onBeforeRouteLeave } from "nuxt/app";
 import {
   ref,
   onMounted,
-  onUnmounted,
   onBeforeUnmount,
   provide,
   shallowRef,
 } from "vue";
-import { debounceHandler } from "../../../utils/debounceHandler.js";
-import { monitorNetworkAndAdjustQuality } from "../../../utils/networkQuality";
-import { startNetworkMonitoring } from "../../../composables/usePeerStats.js";
+import { debounceHandler } from "~/utils/debounceHandler.js";
+import { startNetworkMonitoring } from "~/composables/usePeerStats.js";
 import { useToast } from "vue-toastification";
 import Peer from "peerjs";
 import { useRuntimeConfig } from "nuxt/app";
 import SelfieSegmentationPkg from "@mediapipe/selfie_segmentation";
-import gridMode from "../../../components/conference/modes/gridMode.vue";
-import sliderMode from "../../../components/conference/modes/sliderMode.vue";
-import drawingBoard from "../../../components/conference/drawingBoard.vue";
-import countBadge from "../../../components/ui/countBadge.vue";
-import modal from "../../../components/ui/modal.vue";
-import userAvatar from "../../../components/ui/userAvatar.vue";
-import countdownTimer from "../../../components/ui/countdownTimer.vue";
-import taskResultChart from "../../../components/lesson/components/tasks/taskResultChart.vue";
-import circleProgressBar from "../../../components/ui/circleProgressBar.vue";
-import materialViewer from "../../../components/lesson/components/materialViewer.vue";
-import stickyBox from "../../../components/ui/stickyBox.vue";
-import dropdownMenu from "../../../components/ui/dropdownMenu.vue";
-import alert from "../../../components/ui/alert.vue";
-import levelCard from "../../../components/levels/levelCard.vue";
+import gridMode from "~/components/conference/modes/gridMode.vue";
+import sliderMode from "~/components/conference/modes/sliderMode.vue";
+import drawingBoard from "~/components/conference/drawingBoard.vue";
+import countBadge from "~/components/ui/countBadge.vue";
+import modal from "~/components/ui/modal.vue";
+import userAvatar from "~/components/ui/userAvatar.vue";
+import countdownTimer from "~/components/ui/countdownTimer.vue";
+import taskResultChart from "~/components/lesson/components/tasks/taskResultChart.vue";
+import circleProgressBar from "~/components/ui/circleProgressBar.vue";
+import materialViewer from "~/components/lesson/components/materialViewer.vue";
+import stickyBox from "~/components/ui/stickyBox.vue";
+import dropdownMenu from "~/components/ui/dropdownMenu.vue";
+import alert from "~/components/ui/alert.vue";
+import levelCard from "~/components/levels/levelCard.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -1406,6 +1405,69 @@ const pageTitle = ref("");
 const { t } = useI18n();
 const config = useRuntimeConfig();
 const toast = useToast();
+
+// Тост в стиле приложения. type: "success" | "info" | "warning" | "danger"
+const notify = (type, message, timeout = 10000) =>
+  toast(message, { toastClassName: ["custom-toast", type], timeout });
+
+// --- Тосты о проблемах со связью без спама ---
+const TOAST_COOLDOWN_MS = 30000; // один и тот же тост — не чаще раза в 30 сек.
+const ICE_TOAST_DELAY_MS = 3000; // короткие "disconnected" обычно проходят сами
+const toastShownAt = {}; // ключ тоста -> время последнего показа
+
+// Один и тот же тост (по ключу) — не чаще раза в cooldown мс
+const showToastOnce = (
+  key,
+  type,
+  message,
+  timeout,
+  cooldown = TOAST_COOLDOWN_MS,
+) => {
+  const now = Date.now();
+  if (toastShownAt[key] && now - toastShownAt[key] < cooldown) return;
+  toastShownAt[key] = now;
+  notify(type, message, timeout);
+};
+
+// Кому показывать тосты о связи с собеседником: учитель видит проблемы любого
+// ученика, ученики — только проблемы учителя (про других учеников им знать не нужно).
+const shouldNotifyAboutPeer = (peerUserId) => {
+  const mentorId = conference.value?.mentor_id;
+  return authUser.value.user_id === mentorId || peerUserId === mentorId;
+};
+
+// Проблемы со связью у собеседника: показываем, только если соединение
+// не восстановилось за ICE_TOAST_DELAY_MS. Во время нашего собственного
+// переподключения молчим — уже показан тост "у вас проблемы со связью".
+const notifyPeerConnectionIssue = (pc, peerId, name, peerUserId) => {
+  if (!shouldNotifyAboutPeer(peerUserId)) return;
+
+  setTimeout(() => {
+    if (isReconnecting || isExplicitlyClosed) return;
+    const state = pc.iceConnectionState;
+    if (state !== "disconnected" && state !== "failed") return; // восстановилось
+
+    if (state === "disconnected") {
+      showToastOnce(
+        `peer-network:${peerId}`,
+        "warning",
+        t("errors.server.other_user_network_error", { name }),
+        5000,
+      );
+    }
+  }, ICE_TOAST_DELAY_MS);
+};
+
+const notifyPeerDisconnected = (peerId, name, peerUserId) => {
+  if (!shouldNotifyAboutPeer(peerUserId)) return;
+  if (isReconnecting || isExplicitlyClosed) return;
+  showToastOnce(
+    `peer-disconnect:${peerId}`,
+    "danger",
+    t("errors.server.other_user_disconnect", { name }),
+    10000,
+  );
+};
 const { $axiosPlugin, $socketPlugin } = useNuxtApp();
 const schoolStore = useSchoolStore();
 const authUser = useSanctumUser();
@@ -1422,18 +1484,17 @@ let myPeer;
 const peers = {};
 let pingIntervalId = null;
 
-// Состояние восстановления соединений
-let peerOpenedOnce = false; // PeerJS уже открывался (последующие "open" — это реконнект)
-let pendingRejoin = false; // socket.io переподключился, пока PeerJS был отключён
+let peerOpenedOnce = false;
+let pendingRejoin = false;
 let isRejoining = false;
-const recallTimers = {}; // peerId -> timeout повторного звонка
-const recallAttempts = {}; // peerId -> число попыток подряд
+const recallTimers = {};
+const recallAttempts = {};
 const MAX_RECALL_ATTEMPTS = 5;
-let peerReconnectTimer = null; // таймер следующей попытки myPeer.reconnect()
+let peerReconnectTimer = null;
 let peerReconnectAttempts = 0;
-let isReconnecting = false; // показан тост "пытаемся восстановить"
-let hasJoinedRoom = false; // уже успешно заходили в комнату (последующие "connect" — реконнект)
-let lastPeerOpenAt = 0; // когда PeerJS последний раз успешно подключился к серверу
+let isReconnecting = false;
+let hasJoinedRoom = false;
+let lastPeerOpenAt = 0;
 let healthCheckInProgress = false;
 let healthCheckDebounce = null;
 
@@ -1500,14 +1561,12 @@ const rawStream = ref(null);
 const screenStream = ref(null);
 const streams = ref([]);
 
-let isExplicitlyClosed = false; // По умолчанию мы в эфире
+let isExplicitlyClosed = false;
 let selfieSegmentation = null;
 let animationFrameId = null;
 let canvasStream = null;
 
 const microphones = ref([]);
-const dynamics = ref([]);
-const cameras = ref([]);
 const selectedMicrophoneId = ref(null);
 
 const offlineMembers = computed(() => {
@@ -1523,18 +1582,14 @@ const isMuted = ref(false);
 const volume = ref(0);
 const isStream = ref(false);
 const isScreenSharing = ref(false);
-
-// Храним метрики всех подключенных участников: { peerId: { rtt, lossPercentage, bitrate, quality } }
 const peersStats = reactive({});
-
-// Храним функции остановки таймеров
 const activeMonitors = new Map();
 
 const message = ref("");
 const messages = ref([]);
 const unReadMessages = ref(0);
 
-//Modals
+
 const leaveModalIsVisible = ref(false);
 const participantsModalIsVisible = ref(false);
 const drawingBoardModalIsVisible = ref(false);
@@ -1589,7 +1644,7 @@ definePageMeta({
   middleware: ["sanctum:auth"],
 });
 
-// SPA-переходы
+
 onBeforeRouteLeave((to, from, next) => {
   if (localStream.value) {
     if (pendingRoute.value) {
@@ -1635,10 +1690,7 @@ const closeMaterialModal = (showMaterialsModal) => {
 
 const showMaterialForLearners = () => {
   if (busyLearners.value.length > 0) {
-    toast(t("pages.tasks.warning_1"), {
-      toastClassName: ["custom-toast", "danger"],
-      timeout: 10000,
-    });
+    notify("danger", t("pages.tasks.warning_1"), 10000);
   } else {
     if (currentMaterial.value.is_show === false) {
       currentMaterial.value.is_show = true;
@@ -1703,10 +1755,7 @@ const startTheTest = () => {
     $socketPlugin.emit("start_test");
     testIsStarted.value = true;
 
-    toast(t("pages.tasks.test_is_started_for_learners"), {
-      toastClassName: ["custom-toast", "success"],
-      timeout: 10000,
-    });
+    notify("success", t("pages.tasks.test_is_started_for_learners"), 10000);
   } else {
     for (let index = 0; index < tasks.value.length; index++) {
       const task = tasks.value[index];
@@ -2022,7 +2071,6 @@ const timeIsUp = () => {
   }, 1000);
 };
 
-// Возвращает поток с актуальным треком (Canvas или сырая камера)
 const getActiveStream = () => {
   if (isScreenSharing.value && screenStream.value) {
     return screenStream.value;
@@ -2032,7 +2080,6 @@ const getActiveStream = () => {
 
   let activeVideoTrack = null;
 
-  // Проверяем, что canvasStream существует и его видеодорожка активна (live)
   if (bgMode.value !== "none" && canvasStream) {
     const canvasTrack = canvasStream.getVideoTracks()[0];
     if (canvasTrack && canvasTrack.readyState === "live") {
@@ -2081,7 +2128,6 @@ const startStream = async () => {
 
     loadMicrophones();
 
-    // Очищаем хост от протоколов, портов и пробелов
     const turnDomain = (config.public.turnURL || "turn.easyspeak.kz")
       .replace(/^https?:\/\//, "")
       .split(":")[0]
@@ -2090,7 +2136,6 @@ const startStream = async () => {
     const username = (config.public.turnUSERNAME || "").trim();
     const credential = (config.public.turnPASSWORD || "").trim();
 
-    // Используем уникальный комбинированный ID: userId + таймстамп текущей сессии
     const clientPeerId = `user_${authUser.value.user_id}_${Date.now()}`;
     isExplicitlyClosed = false; // новый вход в конференцию
     myPeer = new Peer(clientPeerId, {
@@ -2120,10 +2165,6 @@ const startStream = async () => {
     });
 
     myPeer.on("open", (id) => {
-      // Повторный "open" — это myPeer.reconnect() после обрыва сигнального сервера.
-      // Медиасоединения при этом могут быть живы, поэтому заходим в комнату заново
-      // только если за время обрыва переподключался socket.io или какие-то
-      // звонки уже не в состоянии "connected" (например, после смены Wi-Fi).
       lastPeerOpenAt = Date.now();
 
       if (peerOpenedOnce) {
@@ -2139,8 +2180,6 @@ const startStream = async () => {
         return;
       }
       peerOpenedOnce = true;
-
-      //monitorNetworkAndAdjustQuality(myPeer);
 
       addStream(
         false,
@@ -2165,30 +2204,18 @@ const startStream = async () => {
     myPeer.on("error", (err) => {
       if (isExplicitlyClosed) return;
 
-      // Звонок участнику, который уже вышел, — не ошибка конференции
       if (err?.type === "peer-unavailable") {
         console.warn("[PeerJS]", err?.message);
         return;
       }
 
-      // После того как мы уже были в конференции, сетевые ошибки
-      // (network, socket-closed, socket-error, server-error, ...) не фатальны:
-      // PeerJS переходит в "disconnected", и мы переподключаемся
       if (peerOpenedOnce && err?.type !== "browser-incompatible") {
-        console.warn(
-          "[PeerJS] Ошибка, переподключаемся:",
-          err?.type,
-          err?.message,
-        );
+        console.warn("[PeerJS] Error, reconnecting:", err?.type, err?.message);
         startReconnecting();
         return;
       }
 
-      // Не удалось подключиться при первом входе — показываем ошибку
-      toast(t("errors.server.peer_error"), {
-        toastClassName: ["custom-toast", "danger"],
-        timeout: 10000,
-      });
+      notify("danger", t("errors.server.peer_error"), 10000);
 
       errorMessage.value = {
         message: err?.message,
@@ -2196,8 +2223,6 @@ const startStream = async () => {
       };
     });
 
-    // PeerJS 1.5 отправляет именно "disconnected" (не "disconnect").
-    // Срабатывает и при обрыве, и после каждой неудачной попытки reconnect().
     myPeer.on("disconnected", () => {
       if (isExplicitlyClosed || !myPeer || myPeer.destroyed) return;
       startReconnecting();
@@ -2205,38 +2230,28 @@ const startStream = async () => {
     });
 
     myPeer.on("call", (incomingCall) => {
-      // Вызываем функцию для получения актуального потока с фоном/без
       const streamToSend = getActiveStream();
 
       incomingCall.answer(streamToSend);
 
-      // === ИНТЕГРАЦИЯ МОНИТОРИНГА ICE-СОЕДИНЕНИЯ ===
       const pc = incomingCall.peerConnection;
 
       if (pc) {
-        // addEventListener, а не присваивание: иначе затирается обработчик PeerJS,
-        // который закрывает соединение при "failed"/"closed"
         pc.addEventListener("iceconnectionstatechange", () => {
+          const name = incomingCall.metadata?.userInfo?.first_name;
           if (pc.iceConnectionState === "disconnected") {
             scheduleHealthCheck();
-            toast(
-              t("errors.server.other_user_network_error", {
-                name: incomingCall.metadata?.userInfo?.first_name,
-              }),
-              {
-                toastClassName: ["custom-toast", "warning"],
-                timeout: 20000,
-              },
+            notifyPeerConnectionIssue(
+              pc,
+              incomingCall.peer,
+              name,
+              incomingCall.metadata?.userId,
             );
           } else if (pc.iceConnectionState === "failed") {
-            toast(
-              t("errors.server.other_user_disconnect", {
-                name: incomingCall.metadata?.userInfo?.first_name,
-              }),
-              {
-                toastClassName: ["custom-toast", "danger"],
-                timeout: 20000,
-              },
+            notifyPeerDisconnected(
+              incomingCall.peer,
+              name,
+              incomingCall.metadata?.userId,
             );
           }
         });
@@ -2245,22 +2260,17 @@ const startStream = async () => {
 
       startPeerHeartbeat(myPeer);
 
-      // Если от этого участника уже был звонок (он переподключился) — сначала
-      // регистрируем новый, потом закрываем старый, чтобы закрытие старого
-      // не удалило карточку нового
       const previousCall = peers[incomingCall.peer];
       peers[incomingCall.peer] = incomingCall;
       if (previousCall && previousCall !== incomingCall) {
         try {
           previousCall.close();
         } catch (e) {
-          console.error("Ошибка при закрытии старого call:", e);
+          console.error("Error on close old call:", e);
         }
       }
 
       attachCallListeners(incomingCall);
-
-      // Устанавливаем лимит битрейта для этого соединения
       applyBitrateLimit(incomingCall, 400);
     });
 
@@ -2268,12 +2278,13 @@ const startStream = async () => {
 
     $socketPlugin.on(
       "user-connected",
-      ({ peerId, userId, userInfo, isStream, isMuted }) => {
+      ({ userInfo }) => {
         if (userInfo?.first_name) {
-          toast(`${userInfo.first_name} ${t("online").toLowerCase()}`, {
-            toastClassName: ["custom-toast", "info"],
-            timeout: 10000,
-          });
+          notify(
+            "info",
+            `${userInfo.first_name} ${t("online").toLowerCase()}`,
+            10000,
+          );
         }
       },
     );
@@ -2282,7 +2293,6 @@ const startStream = async () => {
       removeStream(peerId);
     });
 
-    // Слушаем принудительное отключение от сервера
     $socketPlugin.on("force-disconnect", handleForceDisconnect);
 
     $socketPlugin.on("new-message", (data) => {
@@ -2311,8 +2321,6 @@ const startStream = async () => {
     });
 
     $socketPlugin.on("connect_error", () => {
-      // Уже были в конференции — не закрываем экран ошибкой,
-      // socket.io переподключится сам, а мы перезайдём в комнату
       if (peerOpenedOnce) {
         startReconnecting();
         return;
@@ -2326,10 +2334,7 @@ const startStream = async () => {
 
         streams.value = streams.value.filter((stream) => !stream.remote);
 
-        toast(t("errors.server.error"), {
-          toastClassName: ["custom-toast", "danger"],
-          timeout: 5000,
-        });
+        notify("danger", t("errors.server.error"), 5000);
       }
     });
 
@@ -2356,24 +2361,19 @@ const startStream = async () => {
 
           if (selectedTask && !selectedTask?.task_result?.answers) {
             if (taskInProgress.value === true) {
-              toast(
+              notify(
+                "info",
                 t("pages.tasks.new_task_is_available", {
                   taskName: selectedTask.task_slug,
                 }),
-                {
-                  toastClassName: ["custom-toast", "info"],
-                  timeout: 10000,
-                },
+                10000,
               );
             } else {
               openTask(selectedTask);
             }
           }
         } else {
-          toast(t("pages.tasks.allowed_only_participants"), {
-            toastClassName: ["custom-toast", "danger"],
-            timeout: 10000,
-          });
+          notify("danger", t("pages.tasks.allowed_only_participants"), 10000);
         }
       }
     });
@@ -2400,15 +2400,13 @@ const startStream = async () => {
           (l) => l.userId !== data.userId,
         );
 
-        toast(
+        notify(
+          "success",
           t("pages.tasks.completed_the_task", {
             name: data.userInfo.last_name + " " + data.userInfo.first_name,
             taskName: data.taskName,
           }),
-          {
-            toastClassName: ["custom-toast", "success"],
-            timeout: 10000,
-          },
+          10000,
         );
       }
     });
@@ -2418,19 +2416,11 @@ const startStream = async () => {
         if (conference.value.is_member) {
           startTheTest();
         } else {
-          toast(t("pages.tasks.allowed_only_participants"), {
-            toastClassName: ["custom-toast", "danger"],
-            timeout: 10000,
-          });
+          notify("danger", t("pages.tasks.allowed_only_participants"), 10000);
         }
       }
     });
 
-    // socket.io подключился заново после обрыва сети. Сервер к этому моменту
-    // уже выкинул нас из комнаты и разослал "user-disconnected", а остальные
-    // закрыли свои звонки к нам — заходим в комнату заново и перезваниваем всем.
-    // Слушаем именно "connect" сокета: событие менеджера "reconnect" приходит
-    // только при автопереподключении и не приходит после ручного connect().
     $socketPlugin.off("connect", handleSocketReconnect);
     $socketPlugin.on("connect", handleSocketReconnect);
 
@@ -2444,19 +2434,14 @@ const startStream = async () => {
     document.removeEventListener("visibilitychange", handleVisibilityChange);
     document.addEventListener("visibilitychange", handleVisibilityChange);
   } catch (error) {
-    toast(t("errors.media.camera_error"), {
-      toastClassName: ["custom-toast", "danger"],
-      timeout: 10000,
-    });
+    notify("danger", t("errors.media.camera_error"), 10000);
   }
 };
 
 const startPeerHeartbeat = (myPeer) => {
-  // На всякий случай очищаем предыдущий таймер, если он был
   if (pingIntervalId) clearInterval(pingIntervalId);
 
   pingIntervalId = setInterval(() => {
-    // Проверяем, что сокет существует и находится в открытом состоянии (OPEN = 1)
     if (
       myPeer &&
       !myPeer.destroyed &&
@@ -2467,7 +2452,6 @@ const startPeerHeartbeat = (myPeer) => {
   }, 20000);
 };
 
-// Функция-хелпер, которая гарантированно найдёт именно функцию-конструктор
 const getSelfieSegmentationConstructor = () => {
   if (typeof SelfieSegmentationPkg === "function") {
     return SelfieSegmentationPkg;
@@ -2493,14 +2477,10 @@ const getSelfieSegmentationConstructor = () => {
 };
 
 const initMediaPipe = () => {
-  // Получаем сам конструктор
   const SelfieSegmentationClass = getSelfieSegmentationConstructor();
 
   if (!SelfieSegmentationClass) {
-    console.error(
-      "Не удалось найти конструктор SelfieSegmentation в модуле:",
-      SelfieSegmentationPkg,
-    );
+    console.error("Error on SelfieSegmentation:", SelfieSegmentationPkg);
   } else {
     const selfieSegmentation = new SelfieSegmentationClass({
       locateFile: (file) =>
@@ -2521,17 +2501,11 @@ const initMediaPipe = () => {
       ctx.clearRect(0, 0, w, h);
 
       if (bgMode.value === "none") {
-        // Без фона
         ctx.drawImage(results.image, 0, 0, w, h);
       } else if (bgMode.value === "blur" || bgMode.value === "image") {
-        // 1. Рисуем маску человека (белый силуэт)
         ctx.drawImage(results.segmentationMask, 0, 0, w, h);
-
-        // 2. Оставляем ТОЛЬКО человека внутри маски
         ctx.globalCompositeOperation = "source-in";
         ctx.drawImage(results.image, 0, 0, w, h);
-
-        // 3. Рисуем фон ПОД человеком
         ctx.globalCompositeOperation = "destination-over";
 
         if (bgMode.value === "blur") {
@@ -2543,7 +2517,6 @@ const initMediaPipe = () => {
           bgImageRef.value
         ) {
           ctx.filter = "none";
-          // Заполняем весь Canvas фоновой картинкой (cover)
           drawImageCover(ctx, bgImageRef.value, w, h);
         }
       }
@@ -2556,7 +2529,6 @@ const initMediaPipe = () => {
         const video = rawVideoRef.value;
         const canvas = canvasRef.value;
 
-        // Автоматически подгоняем Canvas под реальное разрешение камеры (например, 720x1280 на телефоне или 1280x720 на ноутбуке)
         if (video.videoWidth && video.videoHeight) {
           if (
             canvas.width !== video.videoWidth ||
@@ -2608,57 +2580,8 @@ const drawImageCover = (ctx, img, canvasWidth, canvasHeight) => {
   ctx.drawImage(img, offsetX, offsetY, renderWidth, renderHeight);
 };
 
-// Возвращает координаты для вписывания видео по центру Canvas с сохранением пропорций (Contain)
-const getCenteredVideoRect = (
-  videoWidth,
-  videoHeight,
-  canvasWidth,
-  canvasHeight,
-) => {
-  const videoRatio = videoWidth / videoHeight;
-  const canvasRatio = canvasWidth / canvasHeight;
-
-  let renderWidth, renderHeight, offsetX, offsetY;
-
-  if (videoRatio < canvasRatio) {
-    // Вертикальное видео (например, со смартфона)
-    renderHeight = canvasHeight;
-    renderWidth = canvasHeight * videoRatio;
-    offsetX = (canvasWidth - renderWidth) / 2;
-    offsetY = 0;
-  } else {
-    // Горизонтальное видео
-    renderWidth = canvasWidth;
-    renderHeight = canvasWidth / videoRatio;
-    offsetX = 0;
-    offsetY = (canvasHeight - renderHeight) / 2;
-  }
-
-  return { x: offsetX, y: offsetY, w: renderWidth, h: renderHeight };
-};
-
-const adjustCanvasSize = () => {
-  if (!rawVideoRef.value || !canvasRef.value) return;
-
-  const video = rawVideoRef.value;
-  const canvas = canvasRef.value;
-
-  // Берем РЕАЛЬНОЕ разрешение видеопотока с камеры устройства
-  const videoWidth = video.videoWidth;
-  const videoHeight = video.videoHeight;
-
-  // Если размеры определились и они отличаются от текущего Canvas
-  if (
-    videoWidth &&
-    videoHeight &&
-    (canvas.width !== videoWidth || canvas.height !== videoHeight)
-  ) {
-    canvas.width = videoWidth;
-    canvas.height = videoHeight;
-  }
-};
-
 const setConferenceMode = (mode) => {
+  console.log(123)
   confMode.value = mode;
   debounceConferenceSettings();
 };
@@ -2719,7 +2642,7 @@ const setUserConferenceSettings = async () => {
       bg_image: currentBgImage.value,
       video_reflected: isVideoReflected.value,
     })
-    .then((response) => {
+    .then(() => {
       refreshIdentity();
     })
     .catch((err) => {
@@ -2751,9 +2674,6 @@ const joinToRoom = () =>
       isStream.value,
       isMuted.value,
       (response) => {
-        console.warn(
-          `Заходим или перезаходим в комнату. Ваш peerId: ${myPeer.id}`,
-        );
         if (response.success) {
           errorMessage.value = null;
           hasJoinedRoom = true;
@@ -2767,15 +2687,9 @@ const joinToRoom = () =>
           });
         } else {
           if (response.message === "peer_is_null") {
-            toast(t("errors.server.peer_error"), {
-              toastClassName: ["custom-toast", "danger"],
-              timeout: 10000,
-            });
+            notify("danger", t("errors.server.peer_error"), 10000);
           } else {
-            toast(t("errors.server.room_error"), {
-              toastClassName: ["custom-toast", "danger"],
-              timeout: 10000,
-            });
+            notify("danger", t("errors.server.room_error"), 10000);
           }
           resolve();
         }
@@ -2783,7 +2697,6 @@ const joinToRoom = () =>
     );
   });
 
-// Исходящий звонок участнику комнаты (user — запись из get-room-info)
 const callUser = (user) => {
   if (!myPeer || myPeer.destroyed || myPeer.disconnected) return;
 
@@ -2798,25 +2711,20 @@ const callUser = (user) => {
 
   if (!outgoingCall) return;
 
-  // === ИНТЕГРАЦИЯ МОНИТОРИНГА ICE-СОЕДИНЕНИЯ ===
-  // addEventListener, а не присваивание: обработчик PeerJS при "failed" закрывает
-  // звонок, после чего attachCallListeners перезвонит (scheduleRecall)
   const pc = outgoingCall.peerConnection;
 
   if (pc) {
     pc.addEventListener("iceconnectionstatechange", () => {
+      // Проблема в соединении с собеседником не обязательно наша —
+      // поэтому тост с его именем, как и для входящих звонков.
+      // Про нашу собственную сеть сообщает startReconnecting().
+      const name = user.userInfo?.first_name;
       if (pc.iceConnectionState === "disconnected") {
         scheduleHealthCheck();
-        toast(t("errors.server.user_network_error"), {
-          toastClassName: ["custom-toast", "warning"],
-          timeout: 20000,
-        });
+        notifyPeerConnectionIssue(pc, user.peerId, name, user.userId);
       } else if (pc.iceConnectionState === "failed") {
-        console.warn("[WebRTC] Исходящее соединение упало, перезваниваем...");
-        toast(t("errors.server.user_disconnect"), {
-          toastClassName: ["custom-toast", "danger"],
-          timeout: 20000,
-        });
+        console.warn("[WebRTC] Outgoing call error, recall...");
+        notifyPeerDisconnected(user.peerId, name, user.userId);
       }
     });
   }
@@ -2827,26 +2735,21 @@ const callUser = (user) => {
     try {
       previousCall.close();
     } catch (e) {
-      console.error("Ошибка при закрытии старого call:", e);
+      console.error("Error on close old call:", e);
     }
   }
 
   attachCallListeners(outgoingCall, user);
-
-  // Устанавливаем лимит битрейта для этого соединения
   applyBitrateLimit(outgoingCall, 400);
 };
 
-// Повторный звонок после того, как соединение упало само (не по user-disconnected).
-// Перезванивает только сторона, которая изначально звонила, — так обе стороны
-// не начнут звонить друг другу одновременно.
 const scheduleRecall = (user) => {
   const peerId = user.peerId;
   if (recallTimers[peerId]) return;
 
   const attempt = (recallAttempts[peerId] || 0) + 1;
   if (attempt > MAX_RECALL_ATTEMPTS) {
-    console.warn(`[WebRTC] Не удалось восстановить соединение с ${peerId}`);
+    console.warn(`[WebRTC] Error on connect with peer ${peerId}`);
     return;
   }
   recallAttempts[peerId] = attempt;
@@ -2855,7 +2758,6 @@ const scheduleRecall = (user) => {
     delete recallTimers[peerId];
     if (isExplicitlyClosed || peers[peerId] || !$socketPlugin.connected) return;
 
-    // Перезваниваем, только если участник всё ещё в комнате
     $socketPlugin.emit("get-room-info", (roomInfo) => {
       const freshUser = roomInfo.find((u) => u.peerId === peerId);
       if (freshUser && !peers[peerId] && !isExplicitlyClosed) {
@@ -2873,27 +2775,17 @@ const clearRecall = (peerId) => {
   delete recallAttempts[peerId];
 };
 
-// Полный перезаход в комнату: закрываем все звонки и звоним всем заново
 const rejoinRoom = async () => {
   if (isExplicitlyClosed || !myPeer || myPeer.destroyed) return;
 
-  console.warn('Делаем reJoinRoom d');
-
-  // Звонить через PeerJS можно только при живом сигнальном соединении.
-  // Если оно тоже упало — дождёмся "open" после myPeer.reconnect()
   if (myPeer.disconnected || !myPeer.open) {
     pendingRejoin = true;
     return;
   }
-
-  console.warn(`Socket plugin connected: ${$socketPlugin.connected}`);
-  // socket.io ещё не подключён — перезайдём по его событию "reconnect"
   if (!$socketPlugin.connected) return;
-
 
   if (isRejoining) return;
 
-    console.warn(`Is rejoining: ${isRejoining}`);
   pendingRejoin = false;
   isRejoining = true;
 
@@ -2906,7 +2798,7 @@ const rejoinRoom = async () => {
       try {
         call.close();
       } catch (e) {
-        console.error("Ошибка при закрытии call:", e);
+        console.error("Error on close call:", e);
       }
     });
     streams.value = streams.value.filter((s) => !s.remote);
@@ -2918,13 +2810,7 @@ const rejoinRoom = async () => {
 };
 
 const handleSocketReconnect = () => {
-  // Первое подключение обрабатывает joinToRoom, здесь — только повторные
   if (!hasJoinedRoom || isExplicitlyClosed) return;
-  console.warn("[Socket] Переподключение, заходим в комнату заново");
-
-  // Раз socket.io переподключался, сеть менялась — значит, WebSocket PeerJS
-  // скорее всего тоже мёртвый, даже если myPeer.open === true (PeerJS сам этого
-  // не замечает). Перезапускаем его, если он не переподключался только что.
   if (
     myPeer &&
     !myPeer.destroyed &&
@@ -2932,56 +2818,46 @@ const handleSocketReconnect = () => {
     Date.now() - lastPeerOpenAt > 10000
   ) {
     restartPeerSignaling();
-    return; // rejoinRoom вызовется по "open" (pendingRejoin)
+    return;
   }
 
   rejoinRoom();
 };
 
-// Переподключить WebSocket PeerJS с тем же id. Медиасоединения не закрываются,
-// после "open" выполнится rejoinRoom
 const restartPeerSignaling = () => {
   if (!myPeer || myPeer.destroyed) return;
-  console.warn("[PeerJS] Принудительное переподключение к серверу");
+
   pendingRejoin = true;
-  if (!myPeer.disconnected) myPeer.disconnect(); // → "disconnected" → таймер
+  if (!myPeer.disconnected) myPeer.disconnect();
   resetPeerReconnect();
   schedulePeerReconnect(300);
 };
 
-// Всё переподключить: и socket.io, и PeerJS
 const forceReconnectAll = () => {
   if (isExplicitlyClosed || !myPeer || myPeer.destroyed) return;
   startReconnecting();
   restartPeerSignaling();
-  // После connect() придёт "connect" → handleSocketReconnect → rejoinRoom
+
   $socketPlugin.disconnect();
   $socketPlugin.connect();
 };
 
-// Проверка, что socket.io живой на самом деле: при смене сети (Wi-Fi → мобильный
-// интернет) браузер не уходит в offline, а старые соединения становятся «зомби»:
-// connected === true, но пакеты никуда не доходят. Отправляем запрос с ack —
-// нет ответа за 4 сек. → соединение мёртвое, переподключаем всё.
+
 const checkConnectionHealth = () => {
   if (healthCheckInProgress || isExplicitlyClosed || !hasJoinedRoom) return;
   if (!myPeer || myPeer.destroyed) return;
 
-  // socket.io уже сам знает, что отключён, и переподключается
   if (!$socketPlugin.connected) return;
 
   healthCheckInProgress = true;
   $socketPlugin.timeout(4000).emit("get-room-info", (err) => {
     healthCheckInProgress = false;
     if (err) {
-      console.warn("[Socket] Нет ответа от сервера — соединение мёртвое");
       forceReconnectAll();
     }
   });
 };
 
-// Несколько событий подряд (несколько звонков ушли в "disconnected",
-// смена сети) — одна проверка
 const scheduleHealthCheck = () => {
   if (healthCheckDebounce) clearTimeout(healthCheckDebounce);
   healthCheckDebounce = setTimeout(() => {
@@ -2990,40 +2866,37 @@ const scheduleHealthCheck = () => {
   }, 1000);
 };
 
-// Смена типа сети (Android Chrome: wifi ↔ cellular). Событие срабатывает и
-// при изменении оценки скорости, поэтому только проверяем, а не переподключаем
 const handleNetworkChange = () => {
   if (isExplicitlyClosed) return;
-  console.warn("[Network] Изменилась сеть, проверяем соединение");
   scheduleHealthCheck();
 };
 
-// Вкладка вернулась из фона (телефон мог усыпить её и потерять соединения)
 const handleVisibilityChange = () => {
   if (document.visibilityState === "visible") scheduleHealthCheck();
 };
 
-// Один тост на весь период восстановления, а не на каждую ошибку
 const startReconnecting = () => {
   if (isReconnecting || isExplicitlyClosed) return;
   isReconnecting = true;
-  toast(t("errors.server.user_network_error"), {
-    toastClassName: ["custom-toast", "warning"],
-    timeout: 10000,
-  });
+  showToastOnce(
+    "self-network",
+    "warning",
+    t("errors.server.user_network_error"),
+    5000,
+  );
 };
 
 const finishReconnecting = () => {
   if (!isReconnecting) return;
   isReconnecting = false;
-  toast(t("errors.server.reconnected"), {
-    toastClassName: ["custom-toast", "success"],
-    timeout: 5000,
-  });
+  showToastOnce(
+    "self-reconnected",
+    "success",
+    t("errors.server.reconnected"),
+    5000,
+  );
 };
 
-// Переподключение к PeerJS-серверу с нарастающей паузой: 1, 2, 4, 8, 10, 10... сек.
-// Не ограничено по числу попыток — сеть может вернуться и через минуту.
 const schedulePeerReconnect = (delay = null) => {
   if (peerReconnectTimer) return;
 
@@ -3041,12 +2914,8 @@ const schedulePeerReconnect = (delay = null) => {
       return;
     }
     try {
-      console.warn(
-        `[PeerJS] Попытка переподключения #${peerReconnectAttempts}`,
-      );
       myPeer.reconnect();
     } catch (e) {
-      console.error("[PeerJS] Ошибка reconnect:", e);
       schedulePeerReconnect();
     }
   }, wait);
@@ -3060,18 +2929,13 @@ const resetPeerReconnect = () => {
   peerReconnectAttempts = 0;
 };
 
-// Сеть вернулась (например, подключились к другому Wi-Fi) — не ждём таймеров
 const handleBrowserOnline = () => {
-  console.warn("Мы снова в сети");
   if (isExplicitlyClosed || !myPeer || myPeer.destroyed) return;
 
   if (myPeer.disconnected) {
     resetPeerReconnect();
     schedulePeerReconnect(300);
   }
-  // socket.io между попытками ждёт до ~5 сек. (а при долгом обрыве пауза растёт),
-  // поэтому сбрасываем его ожидание и подключаемся сразу.
-  // После connect() придёт событие "connect" → handleSocketReconnect → rejoinRoom
   if (!$socketPlugin.connected) {
     $socketPlugin.disconnect();
     $socketPlugin.connect();
@@ -3092,11 +2956,10 @@ const addStream = (
   isStream,
   isMuted,
 ) => {
-  // Ищем индекс уже существующего участника по peer_id
   const index = streams.value.findIndex((item) => item.peer_id === peer_id);
 
   if (index === -1) {
-    // 1. Если участника нет — добавляем нового
+
     streams.value.push({
       remote,
       stream,
@@ -3127,7 +2990,7 @@ const addStream = (
   }
 };
 
-const stopLocalStream = async () => {
+const leaveConference = async () => {
   $socketPlugin.off("user-connected");
   $socketPlugin.off("user-disconnected");
   $socketPlugin.off("force-disconnect");
@@ -3141,7 +3004,6 @@ const stopLocalStream = async () => {
   $socketPlugin.off("close_task");
   $socketPlugin.off("start_task");
   $socketPlugin.off("complete_task");
-  $socketPlugin.off("show_material");
   $socketPlugin.off("start_test");
   $socketPlugin.off("connect", handleSocketReconnect);
   window.removeEventListener("online", handleBrowserOnline);
@@ -3154,7 +3016,6 @@ const stopLocalStream = async () => {
   }
   healthCheckInProgress = false;
 
-  // Ставим флаг до myPeer.destroy(), чтобы закрытие звонков не запускало перезвон
   isExplicitlyClosed = true;
   peerOpenedOnce = false;
   pendingRejoin = false;
@@ -3185,7 +3046,7 @@ const stopLocalStream = async () => {
     rawStream.value.getTracks().forEach((track) => track.stop());
   }
 
-  isExplicitlyClosed = true; // Устанавливаем флаг: выход НАМЕРЕННЫЙ
+  isExplicitlyClosed = true;
   localStream.value = null;
   screenStream.value = null;
   rawStream.value = null;
@@ -3196,24 +3057,18 @@ const stopLocalStream = async () => {
   if (selfieSegmentation) selfieSegmentation.close();
 };
 
-// call — конкретный звонок, который закрылся. Если для этого peerId уже есть
-// другой (более новый) звонок, значит закрылся устаревший — карточку не трогаем.
 const removeStream = (peerId, call = null) => {
   if (!peerId) return;
 
   if (call && peers[peerId] && peers[peerId] !== call) return;
 
-  // Участник ушёл / мы сами закрыли звонок — перезванивать не нужно
   if (!call) clearRecall(peerId);
 
-  // 1. Находим участника
   const streamToRemove = streams.value.find((s) => s.peer_id === peerId);
 
   if (streamToRemove) {
-    // Удаляем карточку из массива streams.value
     streams.value = streams.value.filter((s) => s.peer_id !== peerId);
 
-    // Логика ментора
     if (authUser.value.user_id === conference.value.mentor_id) {
       busyLearners.value = busyLearners.value.filter(
         (l) => l.userId !== streamToRemove.user_id,
@@ -3221,30 +3076,29 @@ const removeStream = (peerId, call = null) => {
     }
   }
 
-  // 2. Закрываем WebRTC звонок и удаляем из объекта peers
   if (peers[peerId]) {
     const call = peers[peerId];
-    delete peers[peerId]; // Сначала удаляем из объекта, чтобы избежать рекурсии
+    delete peers[peerId];
     try {
-      call.close(); // Закрываем соединение
+      call.close();
     } catch (e) {
-      console.error("Ошибка при закрытии call:", e);
+      console.error("Error on close call:", e);
     }
   }
 
-  // 3. ОЧИСТКА МОНИТОРИНГА СЕТИ (важно!)
   if (activeMonitors?.has(peerId)) {
     const stopMonitor = activeMonitors.get(peerId);
-    stopMonitor(); // Очищает setInterval
+    stopMonitor();
     activeMonitors.delete(peerId);
   }
   if (peersStats[peerId]) {
-    delete peersStats[peerId]; // Удаляем плашку со статистикой
+    delete peersStats[peerId];
   }
 
-  // 4. Остановка локального стрима
+  // Пришёл "user-disconnected" с нашим же peerId: сервер выкинул эту вкладку,
+  // потому что тот же пользователь зашёл с другой вкладки/устройства
   if (peerId === myPeer?.id) {
-    stopLocalStream();
+    leaveConference();
   }
 };
 
@@ -3270,35 +3124,25 @@ const toggleStream = () => {
       isStream: isStream.value,
     });
   } else {
-    toast(t("errors.media.camera_error"), {
-      toastClassName: ["custom-toast", "danger"],
-      timeout: 10000,
-    });
+    notify("danger", t("errors.media.camera_error"), 10000);
   }
 };
 
 const toggleMute = () => {
   if (!localStream.value) {
-    toast(t("errors.media.camera_error"), {
-      toastClassName: ["custom-toast", "danger"],
-      timeout: 10000,
-    });
+    notify("danger", t("errors.media.camera_error"), 10000);
     return;
   }
 
-  // 1. Инвертируем состояние
   const newMutedState = !isMuted.value;
   isMuted.value = newMutedState;
 
-  // 2. Управляем enabled у основного потока
   const mainAudioTrack = localStream.value.getAudioTracks()[0];
   if (mainAudioTrack) {
     mainAudioTrack.enabled = !newMutedState;
   }
 
-  // 3. Также отключаем/включаем аудиотрек во всех установленных PeerJS соединениях
   Object.values(peers).forEach((call) => {
-    // Получаем отправщик медиаданных (RTCRtpSender)
     const peerConnection = call.peerConnection;
     if (peerConnection) {
       peerConnection.getSenders().forEach((sender) => {
@@ -3309,7 +3153,6 @@ const toggleMute = () => {
     }
   });
 
-  // 4. Обновляем локальное состояние и отправляем событие на сокет
   if (myStream.value) {
     myStream.value.isMuted = newMutedState;
   }
@@ -3330,14 +3173,11 @@ const replaceTrackInConnections = (newTrack, kind = "video") => {
       peerConnectionArray.forEach((mediaConnection) => {
         const pc = mediaConnection?.peerConnection;
 
-        // Проверяем, что соединение существует и не закрыто
         if (pc && pc.connectionState !== "closed") {
-          // Ищем сендер нужного типа (видео или аудио)
           const sender = pc.getSenders().find((s) => {
             if (s.track) {
               return s.track.kind === kind;
             }
-            // Если трек у сендера временно null, пытаемся определить по видео-каналу
             return kind === "video";
           });
 
@@ -3355,7 +3195,6 @@ const replaceTrackInConnections = (newTrack, kind = "video") => {
 const attachCallListeners = (call, userData = null) => {
   call.on("stream", (remoteStream) => {
     const pushOrUpdate = () => {
-      // Для входящих берем из call.metadata, для исходящих из переданного userData
       const userId = userData?.userId || call.metadata?.userId;
       const userInfo = userData?.userInfo || call.metadata?.userInfo;
       const isStream = userData?.isStream ?? call.metadata?.isStream;
@@ -3374,26 +3213,18 @@ const attachCallListeners = (call, userData = null) => {
 
     pushOrUpdate();
     remoteStream.onaddtrack = () => pushOrUpdate();
-
-    // Соединение установилось — сбрасываем счётчик попыток перезвона
     delete recallAttempts[call.peer];
   });
 
-  // PeerJS при "failed" шлёт "error", а "close" — только если поток уже был получен,
-  // поэтому обрабатываем оба события одной идемпотентной функцией
   let ended = false;
 
   const handleCallEnded = () => {
     if (ended) return;
     ended = true;
-
-    // true — звонок упал сам; false — его уже убрали мы (user-disconnected,
-    // перезаход в комнату) или заменили новым
     const droppedUnexpectedly = peers[call.peer] === call;
 
     removeStream(call.peer, call);
 
-    // Перезванивает только инициатор звонка (у исходящих есть userData)
     if (droppedUnexpectedly && userData && !isExplicitlyClosed) {
       scheduleRecall(userData);
     }
@@ -3402,7 +3233,6 @@ const attachCallListeners = (call, userData = null) => {
   call.on("close", handleCallEnded);
 
   call.on("error", (error) => {
-    console.warn(`[WebRTC] Ошибка звонка с ${call.peer}:`, error?.message);
     handleCallEnded();
   });
 
@@ -3412,22 +3242,18 @@ const attachCallListeners = (call, userData = null) => {
 const attachNetworkMonitoring = (mediaConnection) => {
   const peerId = mediaConnection.peer;
 
-  // Если для этого участника уже был мониторинг — сбрасываем старый
   if (activeMonitors.has(peerId)) {
     activeMonitors.get(peerId)();
   }
 
-  // Запускаем мониторинг для конкретного peerId
   const stop = startNetworkMonitoring(mediaConnection, (stats) => {
-    peersStats[peerId] = stats; // Записываем метрики именно этого участника
+    peersStats[peerId] = stats;
   });
 
   activeMonitors.set(peerId, stop);
 
-  // Когда звонок закрывается — удаляем его метрики
   mediaConnection.on("close", () => {
     stop();
-    // Не трогаем мониторинг нового звонка, если этот был заменён
     if (activeMonitors.get(peerId) === stop) {
       activeMonitors.delete(peerId);
       delete peersStats[peerId];
@@ -3436,14 +3262,11 @@ const attachNetworkMonitoring = (mediaConnection) => {
 };
 
 const applyBitrateLimit = (call, maxBitrateKbps = 400) => {
-  // Достаем нативный RTCPeerConnection из объекта call
   const pc = call.peerConnection;
 
   if (pc) {
-    // Если соединение уже открыто — применяем сразу
     limitVideoBitrate(pc, maxBitrateKbps);
 
-    // Если соединение еще в процессе handshake — ждем события 'open' / 'stream'
     pc.addEventListener("connectionstatechange", () => {
       if (pc.connectionState === "connected") {
         limitVideoBitrate(pc, maxBitrateKbps);
@@ -3460,7 +3283,6 @@ const limitVideoBitrate = (peerConnection, maxBitrateKbps = 400) => {
     const parameters = videoSender.getParameters();
     if (!parameters.encodings) parameters.encodings = [{}];
 
-    // Устанавливаем лимит битрейта в битах/сек
     parameters.encodings[0].maxBitrate = maxBitrateKbps * 1000;
 
     videoSender.setParameters(parameters).catch((err) => {
@@ -3489,10 +3311,7 @@ const toggleScreenSharing = async () => {
 
       screenStream.value.getVideoTracks()[0].onended = stopScreenSharing;
     } catch (error) {
-      toast(t("errors.media.screen_sharing_error"), {
-        toastClassName: ["custom-toast", "danger"],
-        timeout: 10000,
-      });
+      notify("danger", t("errors.media.screen_sharing_error"), 10000);
     }
   } else {
     stopScreenSharing();
@@ -3641,52 +3460,44 @@ const reloadPage = () => {
   window.location.reload();
 };
 
-const handleForceDisconnect = ({ reason }) => {
-  // 1. Показываем уведомление пользователю
-  toast(t("errors.server.force_disconnect"), {
-    toastClassName: ["custom-toast", "warning"],
-    timeout: 10000,
-  });
+const handleForceDisconnect = () => {
+  notify("warning", t("errors.server.force_disconnect"), 10000);
 
   errorMessage.value = {
     message: t("errors.server.force_disconnect"),
     pending: false,
   };
 
-  stopLocalStream();
+  leaveConference();
+};
+
+// Именованные функции, чтобы removeEventListener снимал именно их
+const handleDeviceChange = () => {
+  loadMicrophones();
+};
+
+const handleBeforeUnload = (event) => {
+  event.preventDefault();
+  event.returnValue = "";
+  return "";
 };
 
 onMounted(() => {
-  navigator.mediaDevices.addEventListener("devicechange", (event) => {
-    loadMicrophones();
-  });
-
-  getConference();
-
-  const handleBeforeUnload = (event) => {
-    event.preventDefault();
-    event.returnValue = "";
-    return "";
-  };
-
+  navigator.mediaDevices.addEventListener("devicechange", handleDeviceChange);
   window.addEventListener("beforeunload", handleBeforeUnload);
 
-  onUnmounted(() => {
-    window.removeEventListener("beforeunload", handleBeforeUnload);
-
-    // Очищаем все таймеры при уходе со страницы
-    activeMonitors.forEach((stop) => stop());
-    activeMonitors.clear();
-  });
+  getConference();
 });
 
 onBeforeUnmount(() => {
-  navigator.mediaDevices.removeEventListener("devicechange", (event) => {
-    loadMicrophones();
-  });
+  navigator.mediaDevices.removeEventListener("devicechange", handleDeviceChange);
+  window.removeEventListener("beforeunload", handleBeforeUnload);
 
-  if (localStream) {
-    stopLocalStream();
+  if (localStream.value) {
+    leaveConference();
   }
+
+  activeMonitors.forEach((stop) => stop());
+  activeMonitors.clear();
 });
 </script>

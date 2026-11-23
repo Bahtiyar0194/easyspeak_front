@@ -5,8 +5,6 @@ export default defineNuxtConfig({
     'primeicons/primeicons.css',
     'bootstrap-icons/font/bootstrap-icons.css',
     'plyr/dist/plyr.css',
-    //'vue3-carousel/dist/carousel.css',
-    'keen-slider/keen-slider.min.css',
     'vue-toastification/dist/index.css',
     '@/assets/css/main.css',
     '@/assets/css/slider-animate.css'

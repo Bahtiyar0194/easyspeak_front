@@ -1,104 +1,35 @@
 <template>
-  <div class="grid" :class="gridClass">
+  <div
+    ref="containerRef"
+    class="w-full flex justify-center items-center"
+    :style="{ height: `${availableHeight}px` }"
+  >
     <div
-      class="border-2 relative overflow-hidden rounded-xl border-"
-      v-for="stream in streams"
-      :key="stream.peer_id"
-      :class="[
-        stream.volume > 50 ? 'border-success' : 'border-transparent',
-        streams.length === 1 ? 'col-span-12 md:col-span-6 md:col-start-3' : '',
-      ]"
+      class="flex flex-wrap justify-center content-center"
+      :style="{ gap: `${GAP}px`, width: rowWidth }"
     >
       <div
-        v-if="stream.isStream"
-        class="absolute py-1 px-1.5 md:px-2 bg-black bg-opacity-50 text-white rounded-md left-2 top-2 flex"
+        v-for="stream in streams"
+        :key="stream.peer_id"
+        :style="tileStyle"
       >
-        <span class="text-xs md:text-base">{{
-          stream.userInfo.first_name
-        }}</span>
-      </div>
-
-      <div
-        v-else
-        class="bg-black text-white w-full h-full flex flex-col gap-1 justify-center items-center text-center px-2 select-none"
-      >
-        <span class="text-lg md:text-2xl font-medium">{{
-          stream.userInfo.last_name + " " + stream.userInfo.first_name
-        }}</span>
-        <span class="text-inactive text-xs"
-          >({{ $t("pages.conference.video_turned_off") }})</span
-        >
-      </div>
-
-      <video
-        class="w-full h-full aspect-square md:aspect-video duration-200 object-cover"
-        :class="!stream.remote && props.reflected ? 'scale-x-[-1]' : ''"
-        :srcObject="stream.stream"
-        :muted="!stream.remote"
-        autoplay
-        playsinline
-      ></video>
-
-      <div
-        class="absolute py-1 px-1.5 md:px-2 bg-black bg-opacity-50 text-white rounded-md right-2 top-2 flex gap-1 md:gap-2"
-      >
-        <i
-          class="bi text-xs md:text-base"
-          :class="
-            !stream.isMuted ? 'bi-mic text-success' : 'bi-mic-mute text-danger'
-          "
-        ></i>
-        <i
-          class="bi text-xs md:text-base"
-          :class="
-            stream.isStream
-              ? 'bi-camera-video text-success'
-              : 'bi-camera-video-off text-danger'
-          "
-        ></i>
-      </div>
-
-      <!-- Показываем блок со статистикой ТОЛЬКО для удаленных участников -->
-      <div
-        v-if="stream.remote && props.peersStats[stream.peer_id]"
-        class="absolute py-1 px-1.5 md:px-2 bg-black bg-opacity-50 text-white select-none rounded-md left-2 bottom-2 flex gap-1 md:gap-2"
-      >
-        <div
-          class="flex items-center gap-1.5"
-          :class="props.peersStats[stream.peer_id].quality"
-        >
-          <div
-            class="w-2 h-2 rounded-full transition-colors duration-300"
-            :class="{
-              'bg-success':
-                props.peersStats[stream.peer_id].quality === 'excellent',
-              'bg-warning': ['good', 'poor'].includes(
-                props.peersStats[stream.peer_id].quality,
-              ),
-              'bg-danger': props.peersStats[stream.peer_id].quality === 'bad',
-            }"
-          ></div>
-          <div class="text-xs flex gap-2">
-            <span
-              ><span class="max-md:hidden">{{ $t("ping") }}: </span
-              ><span class="md:font-medium">{{ props.peersStats[stream.peer_id].rtt }} {{ $t("time.millisecond.short") }}</span></span
-            >
-            <!-- <span
-              >Loss:
-              {{ props.peersStats[stream.peer_id].lossPercentage }}%</span
-            > -->
-            <span
-              ><span class="max-md:hidden">{{ $t("file.video.player.speed") }}: </span
-              ><span class="md:font-medium">{{ props.peersStats[stream.peer_id].bitrate }} {{ $t("file.kilobyte_sec") }}</span></span
-            >
-          </div>
-        </div>
+        <participantTile
+          :stream="stream"
+          :stats="peersStats[stream.peer_id]"
+          :reflected="reflected"
+          :compact="isCompact"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref, computed, toRefs, onMounted, onBeforeUnmount } from "vue";
+import participantTile from "~/components/conference/participantTile.vue";
+import { computeTileLayout } from "~/utils/conferenceLayout.js";
+import { useAvailableHeight } from "~/composables/useAvailableHeight.js";
+
 const props = defineProps({
   streams: {
     type: Array,
@@ -117,19 +48,59 @@ const props = defineProps({
   },
 });
 
-import { computed } from "vue";
-
 const { streams } = toRefs(props);
 
-const gridClass = computed(() => {
-  const count = streams.value.length;
+const GAP = 8;
+const COMPACT_TILE_WIDTH = 220;
 
-  if (count === 1) return "grid-cols-10";
-  if (count === 2) return "grid-cols-2";
-  if (count === 3) return "grid-cols-3";
-  if (count === 4) return "grid-cols-4";
-  if (count <= 6) return "grid-cols-2 md:grid-cols-3";
-  if (count <= 8) return "grid-cols-3 md:grid-cols-4";
-  return "grid-cols-4";
+const containerRef = ref(null);
+const containerWidth = ref(0);
+const { height: availableHeight, update: updateHeight } =
+  useAvailableHeight(containerRef);
+
+const layout = computed(() =>
+  computeTileLayout(
+    streams.value.length,
+    containerWidth.value,
+    availableHeight.value,
+    {
+      gap: GAP,
+      minRatio: containerWidth.value >= availableHeight.value ? 1 : 3 / 4,
+    },
+  ),
+);
+
+// +2px запаса: при масштабе Windows 125–150% из-за округления пикселей
+// ряд, посчитанный впритык, может перенести последнюю плитку на новую строку
+const rowWidth = computed(() =>
+  layout.value
+    ? `${layout.value.cols * layout.value.width + (layout.value.cols - 1) * GAP + 2}px`
+    : "100%",
+);
+
+// Пока размеры не измерены, плитки не показываем: иначе они на мгновение
+// получаются огромными, вылезают из контейнера и перекрывают кнопки выше
+const tileStyle = computed(() =>
+  layout.value
+    ? { width: `${layout.value.width}px`, height: `${layout.value.height}px` }
+    : { width: 0, height: 0, overflow: "hidden" },
+);
+
+const isCompact = computed(
+  () => !!layout.value && layout.value.width < COMPACT_TILE_WIDTH,
+);
+
+let resizeObserver = null;
+
+onMounted(() => {
+  resizeObserver = new ResizeObserver(([entry]) => {
+    containerWidth.value = entry.contentRect.width;
+    updateHeight();
+  });
+  resizeObserver.observe(containerRef.value);
+});
+
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect();
 });
 </script>

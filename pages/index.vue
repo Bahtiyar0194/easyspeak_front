@@ -327,12 +327,10 @@
 </template>
 
 <script setup>
-import keenSliderThumbs from "../components/ui/keenSliderThumbs.vue";
 import Typed from "typed.js";
 import { onMounted, onBeforeUnmount, ref } from "vue";
 import modal from "../components/ui/modal.vue";
 import videoPlayer from "../components/ui/videoPlayer.vue";
-import { isSubdomain } from "../utils/isSubdomain.js";
 const { t, localeProperties } = useI18n();
 const { $axiosPlugin, $contacts } = useNuxtApp();
 const config = useRuntimeConfig();
