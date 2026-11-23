@@ -1432,6 +1432,7 @@ const MAX_RECALL_ATTEMPTS = 5;
 let peerReconnectTimer = null; // таймер следующей попытки myPeer.reconnect()
 let peerReconnectAttempts = 0;
 let isReconnecting = false; // показан тост "пытаемся восстановить"
+let hasJoinedRoom = false; // уже успешно заходили в комнату (последующие "connect" — реконнект)
 
 const conference = ref(null);
 
@@ -2419,11 +2420,13 @@ const startStream = async () => {
       }
     });
 
-    // socket.io переподключился после обрыва сети. Сервер к этому моменту
+    // socket.io подключился заново после обрыва сети. Сервер к этому моменту
     // уже выкинул нас из комнаты и разослал "user-disconnected", а остальные
     // закрыли свои звонки к нам — заходим в комнату заново и перезваниваем всем.
-    $socketPlugin.io.off("reconnect", handleSocketReconnect);
-    $socketPlugin.io.on("reconnect", handleSocketReconnect);
+    // Слушаем именно "connect" сокета: событие менеджера "reconnect" приходит
+    // только при автопереподключении и не приходит после ручного connect().
+    $socketPlugin.off("connect", handleSocketReconnect);
+    $socketPlugin.on("connect", handleSocketReconnect);
 
     window.removeEventListener("online", handleBrowserOnline);
     window.removeEventListener("offline", handleBrowserOffline);
@@ -2742,6 +2745,7 @@ const joinToRoom = () =>
         );
         if (response.success) {
           errorMessage.value = null;
+          hasJoinedRoom = true;
           finishReconnecting();
 
           $socketPlugin.emit("get-room-info", (roomInfo) => {
@@ -2902,6 +2906,8 @@ const rejoinRoom = async () => {
 };
 
 const handleSocketReconnect = () => {
+  // Первое подключение обрабатывает joinToRoom, здесь — только повторные
+  if (!hasJoinedRoom || isExplicitlyClosed) return;
   console.warn("[Socket] Переподключение, заходим в комнату заново");
   rejoinRoom();
 };
@@ -2972,7 +2978,11 @@ const handleBrowserOnline = () => {
     resetPeerReconnect();
     schedulePeerReconnect(300);
   }
+  // socket.io между попытками ждёт до ~5 сек. (а при долгом обрыве пауза растёт),
+  // поэтому сбрасываем его ожидание и подключаемся сразу.
+  // После connect() придёт событие "connect" → handleSocketReconnect → rejoinRoom
   if (!$socketPlugin.connected) {
+    $socketPlugin.disconnect();
     $socketPlugin.connect();
   }
 };
@@ -3042,7 +3052,7 @@ const stopLocalStream = async () => {
   $socketPlugin.off("complete_task");
   $socketPlugin.off("show_material");
   $socketPlugin.off("start_test");
-  $socketPlugin.io.off("reconnect", handleSocketReconnect);
+  $socketPlugin.off("connect", handleSocketReconnect);
   window.removeEventListener("online", handleBrowserOnline);
   window.removeEventListener("offline", handleBrowserOffline);
 
@@ -3051,6 +3061,7 @@ const stopLocalStream = async () => {
   peerOpenedOnce = false;
   pendingRejoin = false;
   isReconnecting = false;
+  hasJoinedRoom = false;
   resetPeerReconnect();
   Object.keys(recallTimers).forEach(clearRecall);
 
