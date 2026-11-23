@@ -2869,10 +2869,15 @@ const rejoinRoom = async () => {
     pendingRejoin = true;
     return;
   }
+
+  console.warn(`Socket plugin connected: ${$socketPlugin.connected}`);
   // socket.io ещё не подключён — перезайдём по его событию "reconnect"
   if (!$socketPlugin.connected) return;
+
+
   if (isRejoining) return;
 
+    console.warn(`Is rejoining: ${isRejoining}`);
   pendingRejoin = false;
   isRejoining = true;
 
