@@ -2944,6 +2944,7 @@ const resetPeerReconnect = () => {
 
 // Сеть вернулась (например, подключились к другому Wi-Fi) — не ждём таймеров
 const handleBrowserOnline = () => {
+  console.warn('Мы снова в сети');
   if (isExplicitlyClosed || !myPeer || myPeer.destroyed) return;
 
   if (myPeer.disconnected) {
@@ -3251,6 +3252,7 @@ const attachCallListeners = (call, userData = null) => {
   // PeerJS при "failed" шлёт "error", а "close" — только если поток уже был получен,
   // поэтому обрабатываем оба события одной идемпотентной функцией
   let ended = false;
+
   const handleCallEnded = () => {
     if (ended) return;
     ended = true;
