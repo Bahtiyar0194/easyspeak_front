@@ -2722,6 +2722,7 @@ const setUserConferenceSettings = async () => {
 
 const joinToRoom = () =>
   new Promise((resolve) => {
+    console.warn(`Заходим или перезаходим в комнату. Ваш peerId: ${myPeer.id}`);
     $socketPlugin.connect();
 
     $socketPlugin.emit(
