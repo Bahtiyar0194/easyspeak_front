@@ -2121,6 +2121,8 @@ const startStream = async () => {
 
     rawStream.value = stream;
     localStream.value = stream;
+    micRestartAttempts = 0;
+    watchAudioTrack(stream.getAudioTracks()[0]);
 
     setTimeout(() => {
       rawVideoRef.value.srcObject = stream;
@@ -2872,7 +2874,10 @@ const handleNetworkChange = () => {
 };
 
 const handleVisibilityChange = () => {
-  if (document.visibilityState === "visible") scheduleHealthCheck();
+  if (document.visibilityState !== "visible") return;
+  scheduleHealthCheck();
+  resumeRemoteMedia();
+  scheduleMicrophoneCheck();
 };
 
 const startReconnecting = () => {
@@ -3015,6 +3020,9 @@ const leaveConference = async () => {
     healthCheckDebounce = null;
   }
   healthCheckInProgress = false;
+  unwatchAudioTrack();
+  hideMicLostToast();
+  micRestartAttempts = 0;
 
   isExplicitlyClosed = true;
   peerOpenedOnce = false;
@@ -3354,36 +3362,204 @@ const loadMicrophones = async () => {
   }
 };
 
+// --- Восстановление микрофона ---
+// Входящий звонок или другое приложение (WhatsApp и т.п.) забирает микрофон:
+// на iOS аудиотрек становится "ended", на Android — muted и часто так и
+// остаётся. Видео при этом продолжает идти, а собеседники слышат тишину.
+// Следим за треком и при необходимости захватываем микрофон заново,
+// подменяя трек во всех соединениях через replaceTrack (без перезвона).
+const MIC_CHECK_DELAY_MS = 1500; // короткий mute (iOS при возврате во вкладку) проходит сам
+const MAX_MIC_RESTART_ATTEMPTS = 3;
+let watchedAudioTrack = null;
+let micCheckTimer = null;
+let micRestartInProgress = false;
+let micRestartAttempts = 0;
+let micLostToastId = null;
+
+const isAudioTrackBroken = () => {
+  const track = localStream.value?.getAudioTracks()[0];
+  return !track || track.readyState === "ended" || track.muted;
+};
+
+const clearMicCheck = () => {
+  if (micCheckTimer) {
+    clearTimeout(micCheckTimer);
+    micCheckTimer = null;
+  }
+};
+
+const scheduleMicrophoneCheck = () => {
+  clearMicCheck();
+  micCheckTimer = setTimeout(() => {
+    micCheckTimer = null;
+    if (!document.hidden && isAudioTrackBroken()) restartMicrophone();
+  }, MIC_CHECK_DELAY_MS);
+};
+
+const hideMicLostToast = () => {
+  if (micLostToastId !== null) {
+    toast.dismiss(micLostToastId);
+    micLostToastId = null;
+  }
+};
+
+// Автоматически вернуть микрофон не получилось (например, iOS требует
+// действия пользователя) — просим нажать на тост
+const showMicLostToast = () => {
+  if (micLostToastId !== null || isExplicitlyClosed) return;
+  micLostToastId = toast(t("errors.media.microphone_lost"), {
+    toastClassName: ["custom-toast", "danger"],
+    timeout: false,
+    closeOnClick: true,
+    onClick: () => {
+      micLostToastId = null;
+      micRestartAttempts = 0;
+      restartMicrophone();
+    },
+    onClose: () => {
+      micLostToastId = null;
+    },
+  });
+};
+
+const onAudioTrackEnded = () => {
+  // В фоне (идёт звонок) захватить микрофон всё равно не получится —
+  // проверим при возврате во вкладку
+  if (document.hidden) return;
+  restartMicrophone();
+};
+
+const onAudioTrackMute = () => {
+  if (document.hidden) return;
+  scheduleMicrophoneCheck();
+};
+
+const onAudioTrackUnmute = () => {
+  clearMicCheck();
+  micRestartAttempts = 0;
+  hideMicLostToast();
+};
+
+const unwatchAudioTrack = () => {
+  if (watchedAudioTrack) {
+    watchedAudioTrack.removeEventListener("ended", onAudioTrackEnded);
+    watchedAudioTrack.removeEventListener("mute", onAudioTrackMute);
+    watchedAudioTrack.removeEventListener("unmute", onAudioTrackUnmute);
+    watchedAudioTrack = null;
+  }
+  clearMicCheck();
+};
+
+const watchAudioTrack = (track) => {
+  unwatchAudioTrack();
+  if (!track) return;
+  watchedAudioTrack = track;
+  track.addEventListener("ended", onAudioTrackEnded);
+  track.addEventListener("mute", onAudioTrackMute);
+  track.addEventListener("unmute", onAudioTrackUnmute);
+};
+
+// Новый аудиотрек с выбранного микрофона; если он недоступен — с любого
+const acquireAudioTrack = async (deviceId) => {
+  const base = { echoCancellation: true, noiseSuppression: true };
+
+  if (deviceId) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: { ...base, deviceId: { exact: deviceId } },
+        video: false,
+      });
+      return stream.getAudioTracks()[0];
+    } catch (err) {
+      console.warn("Выбранный микрофон недоступен, берём любой:", err);
+    }
+  }
+
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: base,
+    video: false,
+  });
+  return stream.getAudioTracks()[0];
+};
+
+// Подменить аудиотрек в локальном потоке и во всех соединениях
+const applyAudioTrack = (newTrack) => {
+  newTrack.enabled = !isMuted.value; // сохраняем ручной mute пользователя
+
+  replaceTrackInConnections(newTrack, "audio");
+
+  const stream = localStream.value;
+  stream.getAudioTracks().forEach((oldTrack) => {
+    if (oldTrack === newTrack) return;
+    oldTrack.stop();
+    stream.removeTrack(oldTrack);
+  });
+  stream.addTrack(newTrack);
+
+  watchAudioTrack(newTrack);
+};
+
+const restartMicrophone = async () => {
+  if (micRestartInProgress || isExplicitlyClosed || !localStream.value) return;
+
+  if (micRestartAttempts >= MAX_MIC_RESTART_ATTEMPTS) {
+    showMicLostToast();
+    return;
+  }
+
+  micRestartInProgress = true;
+  micRestartAttempts++;
+  clearMicCheck();
+
+  try {
+    const newTrack = await acquireAudioTrack(selectedMicrophoneId.value);
+
+    if (isExplicitlyClosed || !localStream.value) {
+      newTrack.stop();
+      return;
+    }
+
+    applyAudioTrack(newTrack);
+    console.warn("Микрофон перезахвачен");
+
+    if (newTrack.muted) {
+      // Микрофон всё ещё занят (звонок не закончился) — попробуем ещё раз
+      scheduleMicrophoneCheck();
+    } else {
+      micRestartAttempts = 0;
+      hideMicLostToast();
+    }
+  } catch (err) {
+    console.error("Не удалось перезахватить микрофон:", err);
+    showMicLostToast();
+  } finally {
+    micRestartInProgress = false;
+  }
+};
+
+// После прерывания (звонок, другое приложение) iOS может поставить
+// воспроизведение удалённых видео на паузу — тогда уже мы не слышим других
+const resumeRemoteMedia = () => {
+  document.querySelectorAll("video").forEach((video) => {
+    if (video.srcObject && video.paused) video.play().catch(() => {});
+  });
+};
+
 const switchMicrophone = async (micDeviceId) => {
   selectedMicrophoneId.value = micDeviceId;
   localStorage.setItem("micdeviceid", micDeviceId);
 
-  const audioStream = await navigator.mediaDevices.getUserMedia({
-    audio: { deviceId: { exact: micDeviceId } },
-    video: false,
-  });
+  if (!localStream.value) return;
 
-  const newAudioTrack = audioStream.getAudioTracks()[0];
-
-  newAudioTrack.enabled = !isMuted.value;
-
-  Object.values(peers).forEach((call) => {
-    const sender = call.peerConnection
-      .getSenders()
-      .find((s) => s.track?.kind === "audio");
-
-    if (sender) {
-      sender.replaceTrack(newAudioTrack);
-    }
-  });
-
-  const oldTrack = localStream.value.getAudioTracks()[0];
-  if (oldTrack) {
-    oldTrack.stop();
-    localStream.value.removeTrack(oldTrack);
+  try {
+    const newTrack = await acquireAudioTrack(micDeviceId);
+    applyAudioTrack(newTrack);
+    micRestartAttempts = 0;
+    hideMicLostToast();
+  } catch (err) {
+    console.error("Не удалось переключить микрофон:", err);
+    notify("danger", t("errors.media.camera_error"), 10000);
   }
-
-  localStream.value.addTrack(newAudioTrack);
 };
 
 const trackMicrophone = async (stream) => {
