@@ -2123,6 +2123,7 @@ const startStream = async () => {
     localStream.value = stream;
     micRestartAttempts = 0;
     watchAudioTrack(stream.getAudioTracks()[0]);
+    startSilenceWatchdog();
 
     setTimeout(() => {
       rawVideoRef.value.srcObject = stream;
@@ -2873,11 +2874,37 @@ const handleNetworkChange = () => {
   scheduleHealthCheck();
 };
 
+let hiddenAt = null;
+const isMobileDevice =
+  typeof navigator !== "undefined" &&
+  (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+    // iPadOS представляется как Mac
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1));
+
 const handleVisibilityChange = () => {
-  if (document.visibilityState !== "visible") return;
+  if (document.visibilityState !== "visible") {
+    hiddenAt = Date.now();
+    return;
+  }
+
+  const wasHiddenFor = hiddenAt ? Date.now() - hiddenAt : 0;
+  hiddenAt = null;
+
   scheduleHealthCheck();
   resumeRemoteMedia();
-  scheduleMicrophoneCheck();
+
+  // На телефоне уход из браузера дольше пары секунд — это, скорее всего,
+  // звонок или другое приложение, которое могло «тихо» забрать микрофон
+  // (WhatsApp не помечает трек как ended/muted). Перезахват через
+  // replaceTrack незаметен для собеседников, поэтому делаем его всегда.
+  if (isMobileDevice && wasHiddenFor > 2000) {
+    micRestartAttempts = 0;
+    setTimeout(() => {
+      if (!document.hidden) restartMicrophone();
+    }, 500);
+  } else {
+    scheduleMicrophoneCheck();
+  }
 };
 
 const startReconnecting = () => {
@@ -3021,8 +3048,10 @@ const leaveConference = async () => {
   }
   healthCheckInProgress = false;
   unwatchAudioTrack();
+  stopSilenceWatchdog();
   hideMicLostToast();
   micRestartAttempts = 0;
+  hiddenAt = null;
 
   isExplicitlyClosed = true;
   peerOpenedOnce = false;
@@ -3535,6 +3564,112 @@ const restartMicrophone = async () => {
   } finally {
     micRestartInProgress = false;
   }
+};
+
+// --- Детектор «цифровой тишины» ---
+// VoIP-звонки (WhatsApp, Telegram) часто не помечают наш трек как ended/muted:
+// он остаётся «живым», но после звонка отдаёт ровно нули. Живой микрофон
+// даже в тихой комнате даёт шум, поэтому totalAudioEnergy исходящего аудио
+// всегда растёт. Если она не меняется несколько проверок подряд — микрофон
+// мёртвый, перезахватываем.
+const SILENCE_CHECK_INTERVAL_MS = 2000;
+const SILENCE_CHECKS_BEFORE_RESTART = 3; // ~6 сек. полной тишины
+const SILENCE_RESTART_COOLDOWN_MS = 20000;
+let silenceWatchdogId = null;
+let lastAudioEnergy = null;
+let silentChecks = 0;
+let lastSilenceRestartAt = 0;
+
+const resetSilenceState = () => {
+  lastAudioEnergy = null;
+  silentChecks = 0;
+};
+
+// totalAudioEnergy нашего аудиотрека из статистики любого активного соединения
+const getOutgoingAudioEnergy = async () => {
+  const track = localStream.value?.getAudioTracks()[0];
+  if (!track || !myPeer?.connections) return null;
+
+  for (const connections of Object.values(myPeer.connections)) {
+    for (const connection of connections || []) {
+      const pc = connection?.peerConnection;
+      if (!pc || pc.connectionState !== "connected") continue;
+
+      const sender = pc.getSenders().find((s) => s.track === track);
+      if (!sender) continue;
+
+      const report = await sender.getStats();
+      for (const stat of report.values()) {
+        if (
+          stat.type === "media-source" &&
+          stat.kind === "audio" &&
+          typeof stat.totalAudioEnergy === "number"
+        ) {
+          return stat.totalAudioEnergy;
+        }
+      }
+      return null; // браузер не отдаёт эту статистику — детектор не работает
+    }
+  }
+  return null;
+};
+
+const checkMicrophoneSilence = async () => {
+  // Выключенный пользователем микрофон (enabled = false) тоже даёт нули
+  if (
+    document.hidden ||
+    isMuted.value ||
+    micRestartInProgress ||
+    isExplicitlyClosed
+  ) {
+    resetSilenceState();
+    return;
+  }
+
+  let energy = null;
+  try {
+    energy = await getOutgoingAudioEnergy();
+  } catch {
+    energy = null;
+  }
+
+  if (energy === null) {
+    resetSilenceState();
+    return;
+  }
+
+  silentChecks =
+    lastAudioEnergy !== null && energy === lastAudioEnergy
+      ? silentChecks + 1
+      : 0;
+  lastAudioEnergy = energy;
+
+  if (
+    silentChecks >= SILENCE_CHECKS_BEFORE_RESTART &&
+    Date.now() - lastSilenceRestartAt > SILENCE_RESTART_COOLDOWN_MS
+  ) {
+    console.warn("Микрофон отдаёт полную тишину — перезахватываем");
+    lastSilenceRestartAt = Date.now();
+    resetSilenceState();
+    micRestartAttempts = 0;
+    restartMicrophone();
+  }
+};
+
+const startSilenceWatchdog = () => {
+  stopSilenceWatchdog();
+  silenceWatchdogId = setInterval(
+    checkMicrophoneSilence,
+    SILENCE_CHECK_INTERVAL_MS,
+  );
+};
+
+const stopSilenceWatchdog = () => {
+  if (silenceWatchdogId) {
+    clearInterval(silenceWatchdogId);
+    silenceWatchdogId = null;
+  }
+  resetSilenceState();
 };
 
 // После прерывания (звонок, другое приложение) iOS может поставить
