@@ -2169,7 +2169,11 @@ const startStream = async () => {
       // (network, socket-closed, socket-error, server-error, ...) не фатальны:
       // PeerJS переходит в "disconnected", и мы переподключаемся
       if (peerOpenedOnce && err?.type !== "browser-incompatible") {
-        console.warn("[PeerJS] Ошибка, переподключаемся:", err?.type, err?.message);
+        console.warn(
+          "[PeerJS] Ошибка, переподключаемся:",
+          err?.type,
+          err?.message,
+        );
         startReconnecting();
         return;
       }
@@ -2228,7 +2232,7 @@ const startStream = async () => {
               },
             );
           }
-        })
+        });
       }
       // ============================================
 
@@ -2722,7 +2726,6 @@ const setUserConferenceSettings = async () => {
 
 const joinToRoom = () =>
   new Promise((resolve) => {
-    console.warn(`Заходим или перезаходим в комнату. Ваш peerId: ${myPeer.id}`);
     $socketPlugin.connect();
 
     $socketPlugin.emit(
@@ -2734,6 +2737,9 @@ const joinToRoom = () =>
       isStream.value,
       isMuted.value,
       (response) => {
+        console.warn(
+          `Заходим или перезаходим в комнату. Ваш peerId: ${myPeer.id}`,
+        );
         if (response.success) {
           errorMessage.value = null;
           finishReconnecting();
@@ -2855,6 +2861,8 @@ const clearRecall = (peerId) => {
 const rejoinRoom = async () => {
   if (isExplicitlyClosed || !myPeer || myPeer.destroyed) return;
 
+  console.warn('Делаем reJoinRoom');
+
   // Звонить через PeerJS можно только при живом сигнальном соединении.
   // Если оно тоже упало — дождёмся "open" после myPeer.reconnect()
   if (myPeer.disconnected || !myPeer.open) {
@@ -2922,11 +2930,18 @@ const schedulePeerReconnect = (delay = null) => {
 
   peerReconnectTimer = setTimeout(() => {
     peerReconnectTimer = null;
-    if (isExplicitlyClosed || !myPeer || myPeer.destroyed || !myPeer.disconnected) {
+    if (
+      isExplicitlyClosed ||
+      !myPeer ||
+      myPeer.destroyed ||
+      !myPeer.disconnected
+    ) {
       return;
     }
     try {
-      console.warn(`[PeerJS] Попытка переподключения #${peerReconnectAttempts}`);
+      console.warn(
+        `[PeerJS] Попытка переподключения #${peerReconnectAttempts}`,
+      );
       myPeer.reconnect();
     } catch (e) {
       console.error("[PeerJS] Ошибка reconnect:", e);
@@ -2945,7 +2960,7 @@ const resetPeerReconnect = () => {
 
 // Сеть вернулась (например, подключились к другому Wi-Fi) — не ждём таймеров
 const handleBrowserOnline = () => {
-  console.warn('Мы снова в сети');
+  console.warn("Мы снова в сети");
   if (isExplicitlyClosed || !myPeer || myPeer.destroyed) return;
 
   if (myPeer.disconnected) {
