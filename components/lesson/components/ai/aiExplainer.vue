@@ -4,6 +4,17 @@
     <div class="border-b-inactive p-4">
       <div class="flex flex-wrap justify-between items-center gap-4">
         <h3 class="mb-0"><i class="bi bi-stars text-corp"></i> EasySpeak AI</h3>
+
+        <!-- <button
+          @click="toggleMute()"
+          class="btn btn-circle btn-lg relative"
+          :class="isMuted ? 'btn-light' : 'btn-success'"
+        >
+          <i
+            class="bi"
+            :class="isMuted ? 'bi-volume-mute-fill' : 'bi-broadcast'"
+          ></i>
+        </button> -->
       </div>
     </div>
     <div class="p-4">
@@ -62,6 +73,7 @@
 
                   <div v-if="message.ai_content !== '...'" class="btn-wrap">
                     <button
+                      type="button"
                       class="btn btn-light btn-sm btn-square"
                       @click="copyText(message.uuid)"
                       :title="message.copied ? $t('copied') : $t('copy')"
@@ -73,6 +85,7 @@
                     </button>
 
                     <button
+                      type="button"
                       class="btn btn-light btn-sm btn-square"
                       @click="
                         sendFeedback(
@@ -93,6 +106,7 @@
                     </button>
 
                     <button
+                      type="button"
                       class="btn btn-light btn-sm btn-square"
                       @click="
                         sendFeedback(
@@ -178,6 +192,7 @@
         class="flex flex-wrap gap-1.5 mb-4"
       >
         <button
+          type="button"
           v-for="prompt in prompts"
           :key="prompt"
           @click="() => (promptInput = prompt)"
@@ -247,6 +262,7 @@
                   </button> -->
 
             <button
+              type="button"
               @pointerdown="startRecord()"
               @pointerup="stopRecord()"
               @pointerleave="stopRecord()"
@@ -272,6 +288,7 @@
               />
             </button>
             <button
+              type="button"
               v-else
               @click="sendPrompt()"
               class="btn btn-circle btn-active-invert relative"
@@ -287,16 +304,6 @@
             </button>
           </div>
         </div>
-        <!-- <button
-          @click="toggleMute()"
-          class="btn btn-circle btn-lg relative"
-          :class="isMuted ? 'btn-light' : 'btn-success'"
-        >
-          <i
-            class="bi"
-            :class="isMuted ? 'bi-volume-mute-fill' : 'bi-broadcast'"
-          ></i>
-        </button> -->
       </div>
     </div>
   </div>
@@ -352,7 +359,7 @@ const prompts =
         t("materials.chat.speaking.prompts.text_4"),
       ];
 
-const isMuted = ref(false);
+const isMuted = ref(true);
 const promptInput = ref("");
 const chatContainer = ref(null);
 const chat = ref([]);

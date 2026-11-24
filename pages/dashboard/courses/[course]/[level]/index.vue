@@ -16,7 +16,7 @@
           <h2 class="mb-0">{{ sectionsData.level.level_name }}</h2>
           <roleProvider :roles="[1]" :redirect="false">
             <div class="btn-wrap justify-end">
-              <button
+              <button type="button"
                 @click="addSectionModalIsVisible = true"
                 class="btn btn-primary"
               >

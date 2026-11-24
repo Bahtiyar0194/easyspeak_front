@@ -9,7 +9,7 @@
       :key="levelIndex"
       class="col-span-12 lg:col-span-4"
     >
-      <button @click="selectLevel(levelIndex)">
+      <button type="button" @click="selectLevel(levelIndex)">
         <div class="card relative overflow-hidden group">
           <img class="w-full" :src="`/images/courses/${level.course_name_slug}.png`" />
 

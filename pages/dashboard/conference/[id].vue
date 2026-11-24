@@ -29,7 +29,7 @@
     <div class="card p-6 flex flex-col justify-center items-center">
       <h5 class="text-danger mb-0">{{ t("an_error_occurred") }}</h5>
       <p class="text-center">{{ errorMessage.message }}</p>
-      <button class="btn btn-sm btn-outline-primary" @click="reloadPage">
+      <button type="button" class="btn btn-sm btn-outline-primary" @click="reloadPage">
         <i class="pi pi-refresh"></i>
         {{ $t("restart") }}
       </button>
@@ -95,7 +95,7 @@
           :position="'left'"
         >
           <template v-slot:btn_content>
-            <button
+            <button type="button"
               :title="
                 isMuted
                   ? $t('pages.conference.mic_turn_on')
@@ -165,7 +165,7 @@
           :position="'left'"
         >
           <template v-slot:btn_content>
-            <button
+            <button type="button"
               :title="
                 isStream
                   ? $t('pages.conference.video_turned_on')
@@ -196,7 +196,7 @@
                       {{ $t("pages.conference.effects.title") }}:
                     </p>
                     <div class="btn-group">
-                      <button
+                      <button type="button"
                         v-for="(effect, effectIndex) in effects"
                         :key="effectIndex"
                         @click="switchBackgroundMode(effect.name)"
@@ -295,7 +295,7 @@
           </template>
         </dropdownMenu>
 
-        <button @click="participantsModalIsVisible = true">
+        <button type="button" @click="participantsModalIsVisible = true">
           <i class="bi bi-people-fill"></i>
           <countBadge
             :count="streams.length"
@@ -304,7 +304,7 @@
           <span>{{ $t("pages.conference.participants") }}</span>
         </button>
 
-        <button
+        <button type="button"
           v-if="authUser.user_id === conference.mentor_id"
           @click="toggleScreenSharing"
           :title="
@@ -323,7 +323,7 @@
           <span>{{ $t("pages.conference.demo") }}</span>
         </button>
 
-        <button @click="messagesModalIsVisible = true">
+        <button type="button" @click="messagesModalIsVisible = true">
           <i class="bi bi-chat"></i>
           <countBadge
             v-if="unReadMessages > 0"
@@ -333,12 +333,12 @@
           <span>{{ $t("pages.conference.chat") }}</span>
         </button>
 
-        <button @click="drawingBoardModalIsVisible = true">
+        <button type="button" @click="drawingBoardModalIsVisible = true">
           <i class="bi bi-easel2"></i>
           <span>{{ $t("pages.conference.board") }}</span>
         </button>
 
-        <button
+        <button type="button"
           v-if="conference.materials && conference.materials.length > 0"
           @click="materialsModalIsVisible = true"
         >
@@ -346,7 +346,7 @@
           <span>{{ $t("materials.title") }}</span>
         </button>
 
-        <button
+        <button type="button"
           v-if="tasks.length > 0 || schoolStore.isAiSchoolDomain"
           @click="tasksModalIsVisible = true"
         >
@@ -551,7 +551,7 @@
               <input v-model="message" type="text" placeholder=" " />
               <label>{{ $t("message") }}</label>
             </div>
-            <button
+            <button type="button"
               @click="sendMessage"
               class="btn btn-square btn-success !h-auto !w-12 !rounded-tl-none !rounded-bl-none"
             >
@@ -633,7 +633,7 @@
               class="col-span-12"
             >
               <div class="btn-wrap">
-                <button
+                <button type="button"
                   class="btn btn-outline-success"
                   :class="currentMaterial.is_show === true ? 'disabled' : ''"
                   @click="showMaterialForLearners()"
@@ -711,7 +711,7 @@
                     </div>
 
                     <div v-if="tasks.length" class="btn-wrap justify-end">
-                      <button
+                      <button type="button"
                         v-if="
                           conference.lesson_type_slug === 'file_test' &&
                           completedTasksCount < tasks.length
@@ -844,7 +844,7 @@
                   </div>
                   <div class="col-span-12">
                     <div class="btn-wrap justify-end">
-                      <button
+                      <button type="button"
                         v-if="
                           conference.mentor_id === authUser.user_id &&
                           conference.lesson_type_slug === 'file_test'
@@ -872,7 +872,7 @@
                         }}
                       </button>
 
-                      <button
+                      <button type="button"
                         @click="openSelectTasksModal()"
                         v-if="
                           schoolStore.isAiSchoolDomain &&
@@ -898,7 +898,7 @@
                       : $t("pages.tasks.not_started.learner")
                   }}
                 </p>
-                <button
+                <button type="button"
                   @click="openSelectTasksModal()"
                   v-if="conference.mentor_id === authUser.user_id"
                   class="btn btn-success"
@@ -1057,7 +1057,7 @@
                 class="col-span-12"
               >
                 <div class="btn-wrap">
-                  <button
+                  <button type="button"
                     class="btn btn-success"
                     :class="task.launched ? 'disabled' : ''"
                     @click="showTaskForLearners()"
@@ -1070,7 +1070,7 @@
                     }}
                   </button>
 
-                  <button
+                  <button type="button"
                     v-if="authUser.user_id === conference.mentor_id"
                     class="btn btn-success"
                     @click="openTask(task)"
@@ -1146,11 +1146,11 @@
         <template v-slot:body_content>
           <p>{{ $t("pages.conference.leave.confirm") }}</p>
           <div class="btn-wrap justify-end mt-8">
-            <button @click="proceedLeave()" class="btn btn-danger">
+            <button type="button" @click="proceedLeave()" class="btn btn-danger">
               <i class="pi pi-sign-out"></i>
               {{ $t("pages.conference.leave.yes") }}
             </button>
-            <button @click="cancelLeave()" class="btn btn-light">
+            <button type="button" @click="cancelLeave()" class="btn btn-light">
               <i class="pi pi-sign-in"></i>
               {{ $t("pages.conference.leave.no") }}
             </button>
@@ -1173,7 +1173,7 @@
             <div class="col-span-12">
               <ul class="breadcrumb">
                 <li>
-                  <button
+                  <button type="button"
                     @click="goToLevels()"
                     :class="
                       activeLevel || activeSection || activeLesson
@@ -1185,7 +1185,7 @@
                   </button>
                 </li>
                 <li v-if="activeLevel">
-                  <button
+                  <button type="button"
                     @click="goToSections()"
                     :class="!activeSection ? 'inactive' : ''"
                   >
@@ -1193,7 +1193,7 @@
                   </button>
                 </li>
                 <li v-if="activeSection">
-                  <button
+                  <button type="button"
                     @click="goToLessons()"
                     :class="!activeLesson ? 'inactive' : ''"
                   >
@@ -1209,7 +1209,7 @@
               <div class="custom-grid">
                 <template v-if="activeLesson">
                   <div class="col-span-12">
-                    <button class="btn btn-light" @click="goToLessons()">
+                    <button type="button" class="btn btn-light" @click="goToLessons()">
                       <i class="pi pi-arrow-left"></i>
                       {{ $t("back") }}
                     </button>
@@ -1245,7 +1245,7 @@
                           </div>
 
                           <div class="btn-wrap">
-                            <button
+                            <button type="button"
                               class="btn btn-sm text-nowrap"
                               @click="showTaskForLearners(taskItem.task_id)"
                               :class="
@@ -1266,7 +1266,7 @@
                               }}
                             </button>
 
-                            <button
+                            <button type="button"
                               v-if="authUser.user_id === conference.mentor_id"
                               class="btn btn-sm btn-success text-nowrap"
                               @click="openTask(taskItem)"
@@ -1282,7 +1282,7 @@
                 </template>
                 <template v-else-if="activeSection">
                   <div class="col-span-12">
-                    <button class="btn btn-light" @click="goToSections()">
+                    <button type="button" class="btn btn-light" @click="goToSections()">
                       <i class="pi pi-arrow-left"></i>
                       {{ $t("back") }}
                     </button>
@@ -1293,7 +1293,7 @@
                         v-for="(lesson, lessonIndex) in activeSection.lessons"
                         :key="lessonIndex"
                       >
-                        <button class="w-full" @click="selectLesson(lesson)">
+                        <button type="button" class="w-full" @click="selectLesson(lesson)">
                           <div class="flex gap-2 justify-between items-center">
                             <div class="flex flex-col gap-y-1.5">
                               <p class="mb-0 leading-none font-bold text-left">
@@ -1315,7 +1315,7 @@
                 </template>
                 <template v-else-if="activeLevel">
                   <div class="col-span-12">
-                    <button class="btn btn-light" @click="goToLevels()">
+                    <button type="button" class="btn btn-light" @click="goToLevels()">
                       <i class="pi pi-arrow-left"></i>
                       {{ $t("back") }}
                     </button>
@@ -1326,7 +1326,7 @@
                         v-for="(section, sectionIndex) in activeLevel.sections"
                         :key="sectionIndex"
                       >
-                        <button class="w-full" @click="selectSection(section)">
+                        <button type="button" class="w-full" @click="selectSection(section)">
                           <div class="flex gap-2 justify-between items-center">
                             <div class="flex flex-col gap-y-1.5">
                               <p class="mb-0 leading-none font-bold text-left">
@@ -1349,7 +1349,7 @@
                     :key="levelIndex"
                     class="col-span-12 md:col-span-4"
                   >
-                    <button @click="selectLevel(level)">
+                    <button type="button" @click="selectLevel(level)">
                       <levelCard :level="level" :showProgressBar="false" />
                     </button>
                   </div>

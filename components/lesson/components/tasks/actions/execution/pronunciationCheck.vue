@@ -101,7 +101,7 @@
             <div class="col-span-12">
               <div class="flex justify-center">
                 <div class="btn-wrap justify-center mb-1 mx-0.5">
-                  <button
+                  <button type="button"
                     v-for="(word, wordIndex) in cleanedSentenceWords"
                     :key="`${word}-${wordIndex}-${currentSentence?.sentence_id}`"
                     v-motion="{
@@ -137,7 +137,7 @@
 
         <div v-if="timeIsUp || isWrong" class="col-span-12">
           <div class="flex justify-center">
-            <button class="btn btn-primary btn-lg" @click="setSentence()">
+            <button type="button" class="btn btn-primary btn-lg" @click="setSentence()">
               <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
             </button>
           </div>

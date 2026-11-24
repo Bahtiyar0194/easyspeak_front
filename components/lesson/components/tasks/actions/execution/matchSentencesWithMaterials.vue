@@ -175,14 +175,14 @@
             </div>
 
             <div class="btn-wrap right">
-              <button
+              <button type="button"
                 v-if="sentences.length > 0"
                 class="btn btn-outline-primary"
                 @click="setSentences()"
               >
                 <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
               </button>
-              <button v-else class="btn btn-light" @click="isFinished = true">
+              <button type="button" v-else class="btn btn-light" @click="isFinished = true">
                 <i class="pi pi-check"></i>
                 {{ $t("pages.tasks.complete_the_task") }}
               </button>
@@ -307,7 +307,7 @@
 
             <div class="col-span-12">
               <div class="btn-wrap right">
-                <button
+                <button type="button"
                   class="btn btn-outline-primary"
                   :class="checkingStatus && 'disabled'"
                   @click="acceptAnswers()"

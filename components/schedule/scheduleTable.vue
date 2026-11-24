@@ -233,7 +233,7 @@
             </div>
 
             <div class="btn-wrap">
-              <button
+              <button type="button"
                 class="btn btn-primary btn-sm"
                 @click="openEventModal(e.uuid)"
               >
@@ -241,7 +241,7 @@
                 {{ $t("more") }}
               </button>
 
-              <button
+              <button type="button"
                 v-if="
                   schoolStore.isAiSchoolDomain &&
                   e.is_active === false &&

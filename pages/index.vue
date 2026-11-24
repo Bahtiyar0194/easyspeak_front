@@ -68,7 +68,7 @@
             >
               {{ $t("pages.courses.go_to_courses") }}
             </nuxt-link>
-            <button
+            <button type="button"
               @click="demoModalIsVisible = true"
               class="btn btn-light btn-lg !px-8 transition-all duration-700 ease-out delay-400"
               :class="
@@ -153,7 +153,7 @@
             <li>✅ {{ $t("pages.home.section_2.card_1.item_4") }}</li>
           </ul>
 
-          <button
+          <button type="button"
             @click="demoModalIsVisible = true"
             class="btn btn-primary mx-auto btn-lg !px-8 mt-6"
           >
@@ -243,7 +243,7 @@
       <p class="text-lg mb-6">
         {{ $t("pages.home.section_5.description") }}
       </p>
-      <button
+      <button type="button"
         @click="demoModalIsVisible = true"
         class="btn btn-light btn-lg !px-8"
       >

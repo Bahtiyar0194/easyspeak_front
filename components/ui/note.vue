@@ -3,7 +3,7 @@
     <div class="note" :class="props.className">
       {{ props.message }}
 
-      <button @click="show = false" :title="$t('close')">
+      <button type="button" @click="show = false" :title="$t('close')">
         <i class="pi pi-times text-xs"></i>
       </button>
     </div>

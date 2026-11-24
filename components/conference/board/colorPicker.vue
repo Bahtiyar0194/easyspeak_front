@@ -1,6 +1,6 @@
 <template>
     <div class="grid grid-cols-12 gap-1">
-        <button v-for="color in colors" :key="color" @click="selectColor(color)"
+        <button type="button" v-for="color in colors" :key="color" @click="selectColor(color)"
             class="w-4 h-4 md:w-5 md:h-5 flex justify-center items-center rounded-full"
             :class="((color != '#FFFFFF' && color != '#FFFFFF00') ? `border-[${color}]` : 'border-inactive ') + (color === '#FFFFFF00' && 'checkered')"
             :style="{ 'backgroundColor': color }">

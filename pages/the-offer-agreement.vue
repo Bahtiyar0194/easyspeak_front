@@ -8,7 +8,7 @@
 
             <ul class="list-none px-0">
               <li v-for="item in headings" :key="item.id">
-                <button
+                <button type="button"
                   class="text-left"
                   @click="scrollTo(item.id, headerOffset)"
                 >

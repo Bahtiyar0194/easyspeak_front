@@ -82,28 +82,28 @@
 
             <roleProvider :roles="[1]">
               <div class="flex gap-x-1 justify-end">
-                <button
+                <button type="button"
                   @click="order('up', materialIndex, $event.target)"
                   class="btn btn-square btn-light btn-sm btn-up"
                   :title="$t('move_up')"
                 >
                   <i class="pi pi-arrow-up"></i>
                 </button>
-                <button
+                <button type="button"
                   @click="order('down', materialIndex, $event.target)"
                   class="btn btn-square btn-light btn-sm btn-down"
                   :title="$t('move_down')"
                 >
                   <i class="pi pi-arrow-down"></i>
                 </button>
-                <button
+                <button type="button"
                   @click="openEditModal(material)"
                   class="btn btn-square btn-light btn-sm"
                   :title="$t('edit')"
                 >
                   <i class="pi pi-pencil"></i>
                 </button>
-                <button
+                <button type="button"
                   @click="openDeleteModal(material)"
                   class="btn btn-square btn-outline-danger btn-sm"
                   :title="$t('delete')"
@@ -329,14 +329,14 @@
     <template v-slot:body_content>
       <p>{{ $t("materials.delete_confirm") }}</p>
       <div class="btn-wrap justify-end mt-4">
-        <button
+        <button type="button"
           @click="deleteMaterialSubmit(currentMaterial.lesson_material_id)"
           class="btn btn-outline-danger"
         >
           <i class="pi pi-trash"></i>
           {{ $t("yes") }}
         </button>
-        <button @click="deleteModalIsVisible = false" class="btn btn-light">
+        <button type="button" @click="deleteModalIsVisible = false" class="btn btn-light">
           <i class="pi pi-ban"></i>
           {{ $t("no") }}
         </button>

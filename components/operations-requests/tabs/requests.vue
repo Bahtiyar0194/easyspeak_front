@@ -2,7 +2,7 @@
   <div class="custom-grid">
     <div class="col-span-12">
       <div class="btn-wrap">
-        <button @click="showHideRequestSearchFilter" class="btn btn-light">
+        <button type="button" @click="showHideRequestSearchFilter" class="btn btn-light">
           <i class="pi pi-search"></i>
           {{
             searchFilter === true

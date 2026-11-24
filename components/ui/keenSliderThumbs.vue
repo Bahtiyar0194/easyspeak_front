@@ -63,13 +63,13 @@ function prev() {
     </div>
 
     <!-- Кнопки -->
-    <button
+    <button type="button"
       @click="prev"
       class="absolute left-3 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center bg-inactive opa border-inactive !border-2 rounded-full transition"
     >
       <i class="pi pi-chevron-left"></i>
     </button>
-    <button
+    <button type="button"
       @click="next"
       class="absolute right-3 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center bg-inactive opa border-inactive !border-2 rounded-full transition"
     >
@@ -79,7 +79,7 @@ function prev() {
 
   <!-- Миниатюры -->
   <div class="flex gap-2 mt-4 justify-center flex-wrap">
-    <button
+    <button type="button"
       v-for="(src, idx) in images"
       :key="`thumb-${idx}`"
       class="!border-2 rounded-xl overflow-hidden p-0.5"

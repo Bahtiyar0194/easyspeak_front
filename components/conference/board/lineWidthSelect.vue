@@ -1,6 +1,6 @@
 <template>
     <div class="flex gap-1 flex-wrap">
-        <button v-for="width in widths" :key="width" @click="selectWidth(width)"
+        <button type="button" v-for="width in widths" :key="width" @click="selectWidth(width)"
             class="min-w-8 min-h-8 flex justify-center items-center rounded-lg duration-200"
             :class="(width === currentWidth) ? 'border-active' : 'border-inactive'">
             <span class="rounded-full"

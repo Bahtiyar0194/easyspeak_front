@@ -6,7 +6,7 @@
         <div class="btn-wrap">
           <client-only>
             <roleProvider :roles="[1]">
-              <button
+              <button type="button"
                 @click="addModalIsVisible = true"
                 class="btn btn-outline-primary"
               >
@@ -15,7 +15,7 @@
               </button>
             </roleProvider>
           </client-only>
-          <button @click="showHideFileSearchFilter" class="btn btn-light">
+          <button type="button" @click="showHideFileSearchFilter" class="btn btn-light">
             <i class="pi pi-search"></i>
             {{
               searchFilter === true
@@ -24,7 +24,7 @@
             }}
           </button>
 
-          <button @click="diskInfo = !diskInfo" class="btn btn-light">
+          <button type="button" @click="diskInfo = !diskInfo" class="btn btn-light">
             <i class="pi pi-chart-pie"></i>
             {{
               diskInfo === true
@@ -498,7 +498,7 @@
             </p>
 
             <div class="btn-wrap">
-              <button
+              <button type="button"
                 v-if="currentFile.material_type_slug !== 'video'"
                 class="btn btn-light"
                 @click="
@@ -512,7 +512,7 @@
                 {{ $t("download") }}
               </button>
 
-              <button
+              <button type="button"
                 class="btn btn-light"
                 @click="replaceFile(currentFile.file_id)"
               >
@@ -520,7 +520,7 @@
                 {{ $t("file.replace.replace") }}
               </button>
 
-              <button
+              <button type="button"
                 v-if="
                   getFileExtension(currentFile.target) === 'mp4' &&
                   currentFile.processing === 0

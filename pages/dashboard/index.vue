@@ -61,7 +61,7 @@
                   ]"
                   :style="{ transitionDelay: `${300 + lessonIndex * 200}ms` }"
                 >
-                  <button
+                  <button type="button"
                     @click="selectLevel(l.lesson_id)"
                     class="!w-full !py-5 !rounded-2xl duration-300 hover:scale-[1.03]"
                     :class="
@@ -88,7 +88,7 @@
                     transitionDelay: `${400 + dashboard.quiz.lessons.length * 200}ms`,
                   }"
                 >
-                  <button
+                  <button type="button"
                     @click="selectLevel(0)"
                     class="!w-full !py-5 !rounded-2xl duration-300 hover:scale-[1.03]"
                     :class="
@@ -376,7 +376,7 @@
                       :showPoster="false"
                       :mode="'stack'"
                     />
-                    <button
+                    <button type="button"
                       class="btn btn-primary btn-sm mt-4"
                       @click="goToDashboard(false)"
                     >
@@ -397,7 +397,7 @@
                   transitionDelay: `${currentStep === 2 ? 400 + dashboard.quiz.lessons.length * 200 : 800}ms`,
                 }"
               >
-                <button
+                <button type="button"
                   v-if="currentStep < 5"
                   class="btn !rounded-3xl !px-6"
                   :class="[
@@ -587,7 +587,7 @@
 
                 <div class="col-span-12">
                   <div class="btn-wrap justify-end">
-                    <button
+                    <button type="button"
                       v-if="paymentLessons.length > 0"
                       @click="openPaymentModal()"
                       class="btn btn-primary"
@@ -775,7 +775,7 @@
               "
               class="col-span-12"
             >
-              <button
+              <button type="button"
                 @click="acceptConference(currentEvent.uuid)"
                 class="btn btn-success"
                 :class="currentEvent.is_member === true ? 'disabled' : ''"

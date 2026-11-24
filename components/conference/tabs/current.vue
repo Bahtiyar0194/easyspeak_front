@@ -3,7 +3,7 @@
     <roleProvider :roles="[1, 2, 3, 4]">
       <div class="col-span-12">
         <div class="btn-wrap">
-          <button class="btn btn-primary" @click="addModalIsVisible = true">
+          <button type="button" class="btn btn-primary" @click="addModalIsVisible = true">
             <i class="pi pi-plus"></i>
             {{ $t("pages.conference.create") }}
           </button>
@@ -87,14 +87,14 @@
     <template v-slot:body_content>
       <p>{{ $t("pages.conference.delete_confirm") }}</p>
       <div class="btn-wrap justify-end mt-4">
-        <button
+        <button type="button"
           @click="deleteConferenceSubmit()"
           class="btn btn-outline-danger"
         >
           <i class="pi pi-trash"></i>
           {{ $t("yes") }}
         </button>
-        <button @click="deleteModalIsVisible = false" class="btn btn-light">
+        <button type="button" @click="deleteModalIsVisible = false" class="btn btn-light">
           <i class="pi pi-ban"></i>
           {{ $t("no") }}
         </button>

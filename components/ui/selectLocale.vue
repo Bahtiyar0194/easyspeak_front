@@ -6,7 +6,7 @@
 
     <template v-slot:menu_content>
       <li v-for="l in locales" :key="l.code">
-        <button @click="changeLocale(l.code)">
+        <button type="button" @click="changeLocale(l.code)">
           {{ l.name }}
         </button>
       </li>

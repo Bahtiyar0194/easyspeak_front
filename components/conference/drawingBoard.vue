@@ -2,7 +2,7 @@
     <div class="relative bg-active">
         <div class="controls flex flex-col">
             <div class="flex gap-1 w-fit">
-                <button v-for="item in actions" :key="item.action_name" class='btn btn-square btn-sm btn-light'
+                <button type="button" v-for="item in actions" :key="item.action_name" class='btn btn-square btn-sm btn-light'
                     :title="$t('board.actions.' + item.action_name)" @click="item.action">
                     <i :class="item.action_icon"></i>
                 </button>
@@ -10,12 +10,12 @@
 
             <div class="flex flex-col gap-1 w-fit justify-center">
                 <div v-for="item in tools" :key="item.tool_name" class="flex gap-1 tool">
-                    <button class='btn btn-square btn-sm' :title="$t('board.tools.' + item.tool_name)"
+                    <button type="button" class='btn btn-square btn-sm' :title="$t('board.tools.' + item.tool_name)"
                         :class="tool.tool_name === item.tool_name ? 'btn-primary' : 'btn-light'"
                         @click="selectTool(item)">
                         <i :class="item.tool_icon"></i>
                     </button>
-                    <button v-if="tool.tool_name === item.tool_name && tool.tool_params != null"
+                    <button type="button" v-if="tool.tool_name === item.tool_name && tool.tool_params != null"
                         @click="toolModalIsVisible = true;" class='btn btn-square btn-sm btn-light tool-params'
                         :title="$t('board.show_tool_parameters')">
                         <i class="bi bi-gear"></i>

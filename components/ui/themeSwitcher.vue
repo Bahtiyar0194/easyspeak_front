@@ -1,5 +1,5 @@
 <template>
-    <button @click="toggleTheme"
+    <button type="button" @click="toggleTheme"
         :title="theme === 'dark' ? $t('theme.switch_to_a_light_theme') : $t('theme.switch_to_a_dark_theme')">
         <i :class="theme === 'dark' ? 'bi bi-moon' : 'bi bi-sun'"></i>
     </button>

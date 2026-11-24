@@ -5,7 +5,7 @@
       <roleProvider :roles="[1, 2, 3, 4]">
         <div class="col-span-12">
           <div class="btn-wrap">
-            <button @click="showHideScheduleSearchFilter" class="btn btn-light">
+            <button type="button" @click="showHideScheduleSearchFilter" class="btn btn-light">
               <i class="pi pi-search"></i>
               {{
                 searchFilter === true
@@ -241,7 +241,7 @@
         <roleProvider :roles="[1, 2, 3, 4]">
           <div class="col-span-12">
             <div class="btn-wrap">
-              <button
+              <button type="button"
                 v-if="
                   currentEvent.mentor_id === authUser.user_id ||
                   currentEvent.operator_id === authUser.user_id
@@ -252,7 +252,7 @@
                 <i class="pi pi-pencil"></i>{{ $t("edit") }}
               </button>
 
-              <button
+              <button type="button"
                 v-if="
                   schoolStore.isAiSchoolDomain &&
                   (currentEvent.mentor_id === authUser.user_id ||
@@ -521,14 +521,14 @@
     <template v-slot:body_content>
       <p>{{ $t("pages.conference.delete_confirm") }}</p>
       <div class="btn-wrap justify-end mt-4">
-        <button
+        <button type="button"
           @click="deleteConferenceSubmit()"
           class="btn btn-outline-danger"
         >
           <i class="pi pi-trash"></i>
           {{ $t("yes") }}
         </button>
-        <button @click="deleteModalIsVisible = false" class="btn btn-light">
+        <button type="button" @click="deleteModalIsVisible = false" class="btn btn-light">
           <i class="pi pi-ban"></i>
           {{ $t("no") }}
         </button>

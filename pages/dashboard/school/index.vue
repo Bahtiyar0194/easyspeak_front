@@ -81,7 +81,7 @@
                 }}</b>
               </p>
 
-              <button
+              <button type="button"
                 class="btn btn-primary"
                 @click="subscriptionModalIsVisible = true"
               >
@@ -150,7 +150,7 @@
               </p>
 
               <div class="btn-wrap justify-end">
-                <button
+                <button type="button"
                   class="btn btn-outline-danger btn-sm"
                   @click="generateInvoice(schoolStore.schoolData.invoice)"
                 >

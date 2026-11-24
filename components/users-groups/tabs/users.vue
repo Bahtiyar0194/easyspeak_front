@@ -3,7 +3,7 @@
     <div class="col-span-12">
       <div class="btn-wrap">
         <roleProvider :roles="[1, 2, 3]">
-          <button
+          <button type="button"
             class="btn btn-outline-primary"
             @click="inviteModalIsVisible = true"
           >
@@ -12,7 +12,7 @@
           </button>
         </roleProvider>
 
-        <button @click="showHideUserSearchFilter" class="btn btn-light">
+        <button type="button" @click="showHideUserSearchFilter" class="btn btn-light">
           <i class="pi pi-search"></i>
           {{
             searchFilter === true
@@ -367,12 +367,12 @@
           </div>
 
           <div class="btn-wrap">
-            <button @click="getGrade" class="btn btn-primary">
+            <button type="button" @click="getGrade" class="btn btn-primary">
               <i class="pi pi-chart-bar"></i>
               {{ $t("pages.education-program.get_grade") }}
             </button>
             <roleProvider :roles="[1, 2, 3]">
-              <button @click="getEditUser" class="btn btn-outline-primary">
+              <button type="button" @click="getEditUser" class="btn btn-outline-primary">
                 <i class="pi pi-user-edit"></i>
                 {{ $t("edit") }}
               </button>
@@ -520,7 +520,7 @@
           <div class="col-span-12">
             <ul class="breadcrumb">
               <li>
-                <button
+                <button type="button"
                   @click="goToCourses()"
                   :class="!activeCourse ? 'inactive' : ''"
                 >
@@ -530,7 +530,7 @@
                 </button>
               </li>
               <li v-if="activeCourse">
-                <button
+                <button type="button"
                   @click="goToLevels()"
                   :class="!activeLevel ? 'inactive' : ''"
                 >
@@ -538,7 +538,7 @@
                 </button>
               </li>
               <li v-if="activeLevel">
-                <button
+                <button type="button"
                   @click="goToSections()"
                   :class="!activeSection ? 'inactive' : ''"
                 >
@@ -546,7 +546,7 @@
                 </button>
               </li>
               <li v-if="activeSection">
-                <button
+                <button type="button"
                   @click="goToLessons()"
                   :class="!activeLesson ? 'inactive' : ''"
                 >
@@ -554,7 +554,7 @@
                 </button>
               </li>
               <li v-if="activeLesson">
-                <button
+                <button type="button"
                   @click="goToTasks()"
                   :class="!activeTask ? 'inactive' : ''"
                 >
@@ -570,7 +570,7 @@
             <div class="custom-grid">
               <template v-if="activeTask">
                 <div class="col-span-12">
-                  <button class="btn btn-light" @click="goToTasks()">
+                  <button type="button" class="btn btn-light" @click="goToTasks()">
                     <i class="pi pi-arrow-left"></i>
                     {{ $t("back") }}
                   </button>
@@ -582,7 +582,7 @@
               </template>
               <template v-else-if="activeLesson">
                 <div class="col-span-12">
-                  <button class="btn btn-light" @click="goToLessons()">
+                  <button type="button" class="btn btn-light" @click="goToLessons()">
                     <i class="pi pi-arrow-left"></i>
                     {{ $t("back") }}
                   </button>
@@ -614,7 +614,7 @@
                       v-for="taskItem in activeLesson.tasks"
                       :key="taskItem.task_id"
                     >
-                      <button
+                      <button type="button"
                         class="w-full"
                         :class="
                           taskItem.task_result.completed === false
@@ -680,7 +680,7 @@
               </template>
               <template v-else-if="activeSection">
                 <div class="col-span-12">
-                  <button class="btn btn-light" @click="goToSections()">
+                  <button type="button" class="btn btn-light" @click="goToSections()">
                     <i class="pi pi-arrow-left"></i>
                     {{ $t("back") }}
                   </button>
@@ -700,7 +700,7 @@
                       v-for="(lesson, lessonIndex) in activeSection.lessons"
                       :key="lessonIndex"
                     >
-                      <button class="w-full" @click="selectLesson(lesson)">
+                      <button type="button" class="w-full" @click="selectLesson(lesson)">
                         <div class="flex gap-2 justify-between items-center">
                           <div class="flex flex-col gap-y-1.5">
                             <p class="mb-0 leading-none font-bold text-left">
@@ -725,7 +725,7 @@
               </template>
               <template v-else-if="activeLevel">
                 <div class="col-span-12">
-                  <button class="btn btn-light" @click="goToLevels()">
+                  <button type="button" class="btn btn-light" @click="goToLevels()">
                     <i class="pi pi-arrow-left"></i>
                     {{ $t("back") }}
                   </button>
@@ -745,7 +745,7 @@
                       v-for="(section, sectionIndex) in activeLevel.sections"
                       :key="sectionIndex"
                     >
-                      <button class="w-full" @click="selectSection(section)">
+                      <button type="button" class="w-full" @click="selectSection(section)">
                         <div class="flex gap-2 justify-between items-center">
                           <div class="flex flex-col gap-y-1.5">
                             <p class="mb-0 leading-none font-bold text-left">
@@ -767,7 +767,7 @@
               </template>
               <template v-else-if="activeCourse">
                 <div class="col-span-12">
-                  <button class="btn btn-light" @click="goToCourses()">
+                  <button type="button" class="btn btn-light" @click="goToCourses()">
                     <i class="pi pi-arrow-left"></i>
                     {{ $t("back") }}
                   </button>
@@ -777,7 +777,7 @@
                   :key="levelIndex"
                   class="col-span-12 md:col-span-4"
                 >
-                  <button
+                  <button type="button"
                     @click="
                       level.available_status.is_available === true
                         ? selectLevel(level)
@@ -803,7 +803,7 @@
                   :key="courseIndex"
                   class="col-span-12"
                 >
-                  <button @click="selectCourse(course)">
+                  <button type="button" @click="selectCourse(course)">
                     <courseCard :course="course" />
                   </button>
                 </div>

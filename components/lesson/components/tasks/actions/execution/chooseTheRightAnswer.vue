@@ -151,7 +151,7 @@
             </div>
 
             <div class="col-span-12">
-              <button class="btn btn-primary" @click="checkQuestion(true)">
+              <button type="button" class="btn btn-primary" @click="checkQuestion(true)">
                 <i class="pi pi-arrow-right"></i>
                 {{ $t("check") }}
               </button>
@@ -161,7 +161,7 @@
 
         <div v-if="timeIsUp || isWrong || isComplete" class="col-span-12">
           <div class="flex justify-end">
-            <button class="btn btn-primary" @click="setQuestion()">
+            <button type="button" class="btn btn-primary" @click="setQuestion()">
               <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
             </button>
           </div>

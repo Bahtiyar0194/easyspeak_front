@@ -55,7 +55,7 @@
               </b>
             </p>
 
-            <button class="btn btn-white" @click="openPaymentModal()">
+            <button type="button" class="btn btn-white" @click="openPaymentModal()">
               {{ $t("pages.courses.purchase_button") }}
             </button>
           </div>

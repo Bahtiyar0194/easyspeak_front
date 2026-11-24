@@ -3,7 +3,7 @@
     <roleProvider :roles="[1, 2, 3, 4, 6]">
       <div class="col-span-12">
         <div class="btn-wrap">
-          <button class="btn btn-primary" @click="addModalIsVisible = true">
+          <button type="button" class="btn btn-primary" @click="addModalIsVisible = true">
             <i class="pi pi-calendar"></i>
             {{ $t("pages.conference.plan") }}
           </button>

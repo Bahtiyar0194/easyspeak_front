@@ -4,7 +4,7 @@
     <div class="custom-grid">
       <div class="col-span-12">
         <div class="btn-wrap">
-          <button @click="showHideFileSearchFilter" class="btn btn-light">
+          <button type="button" @click="showHideFileSearchFilter" class="btn btn-light">
             <i class="pi pi-search"></i>
             {{
               searchFilter === true
@@ -371,7 +371,7 @@
               >
             </p>
 
-            <button
+            <button type="button"
               v-if="
                 !currentPayment.is_paid &&
                 currentPayment.payment_method_slug === 'invoice'
@@ -401,14 +401,14 @@
     <template v-if="currentPayment" v-slot:body_content>
       <p>{{ $t("pages.payment.methods.invoice.accept.confirm") }}</p>
       <div class="btn-wrap justify-end mt-4">
-        <button
+        <button type="button"
           @click="acceptPaymentSubmit(currentPayment.payment_id)"
           class="btn btn-outline-danger"
         >
           <i class="pi pi-receipt"></i>
           {{ $t("yes") }}
         </button>
-        <button @click="closeAcceptPaymentModal()" class="btn btn-light">
+        <button type="button" @click="closeAcceptPaymentModal()" class="btn btn-light">
           <i class="pi pi-ban"></i>
           {{ $t("no") }}
         </button>

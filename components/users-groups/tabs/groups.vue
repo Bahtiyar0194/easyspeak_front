@@ -3,12 +3,12 @@
     <div class="col-span-12">
       <div class="btn-wrap">
         <roleProvider :roles="[1, 2, 3]">
-          <button @click="openCreateModal()" class="btn btn-outline-primary">
+          <button type="button" @click="openCreateModal()" class="btn btn-outline-primary">
             <i class="pi pi-plus"></i>
             {{ $t("pages.groups.create_group") }}
           </button>
         </roleProvider>
-        <button @click="showHideGroupSearchFilter" class="btn btn-light">
+        <button type="button" @click="showHideGroupSearchFilter" class="btn btn-light">
           <i class="pi pi-search"></i>
           {{
             searchFilter === true
@@ -366,18 +366,18 @@
         </div>
 
         <div class="btn-wrap">
-          <button @click="openScheduleModal" class="btn btn-light">
+          <button type="button" @click="openScheduleModal" class="btn btn-light">
             <i class="pi pi-calendar-clock"></i>
             {{ $t("pages.schedule.show_schedule") }}
           </button>
 
           <roleProvider :roles="[1, 2, 3]">
-            <button @click="openPaymentsModal" class="btn btn-light">
+            <button type="button" @click="openPaymentsModal" class="btn btn-light">
               <i class="pi pi-credit-card"></i>
               {{ $t("pages.payment.title") }}
             </button>
 
-            <button @click="getEditGroup" class="btn btn-light">
+            <button type="button" @click="getEditGroup" class="btn btn-light">
               <i class="pi pi-pencil"></i>
               {{ $t("edit") }}
             </button>
@@ -549,7 +549,7 @@
         />
         <div class="col-span-12">
           <div class="btn-wrap justify-end">
-            <button
+            <button type="button"
               class="btn btn-primary"
               :class="!newPayments.length ? 'disabled' : ''"
               @click="closeModal('payments')"
@@ -581,18 +581,18 @@
             {{ $t("save_changes.confirm") }}
           </p>
           <div class="btn-wrap justify-end">
-            <button class="btn btn-outline-primary" @click="savePayments()">
+            <button type="button" class="btn btn-outline-primary" @click="savePayments()">
               <i class="pi pi-save"></i>
               {{ $t("save_changes.save") }}
             </button>
-            <button
+            <button type="button"
               class="btn btn-light"
               @click="closeModal('unsave_payments')"
             >
               <i class="pi pi-ban"></i>
               {{ $t("save_changes.unsave") }}
             </button>
-            <button
+            <button type="button"
               class="btn btn-light"
               @click="closeModal('return_to_payments')"
             >
@@ -624,7 +624,7 @@
           <div class="col-span-12">
             <ul class="breadcrumb">
               <li>
-                <button
+                <button type="button"
                   @click="goToSections()"
                   :class="!activeSection ? 'inactive' : ''"
                 >
@@ -632,7 +632,7 @@
                 </button>
               </li>
               <li v-if="activeSection">
-                <button
+                <button type="button"
                   @click="goToLessons()"
                   :class="!activeLesson ? 'inactive' : ''"
                 >
@@ -640,7 +640,7 @@
                 </button>
               </li>
               <li v-if="activeLesson">
-                <button
+                <button type="button"
                   @click="goToTasks()"
                   :class="!activeTask ? 'inactive' : ''"
                 >
@@ -656,7 +656,7 @@
             <div class="custom-grid">
               <template v-if="activeTask">
                 <div class="col-span-12">
-                  <button class="btn btn-light" @click="goToTasks()">
+                  <button type="button" class="btn btn-light" @click="goToTasks()">
                     <i class="pi pi-arrow-left"></i>
                     {{ $t("back") }}
                   </button>
@@ -668,7 +668,7 @@
               </template>
               <template v-else-if="activeLesson">
                 <div class="col-span-12">
-                  <button class="btn btn-light" @click="goToLessons()">
+                  <button type="button" class="btn btn-light" @click="goToLessons()">
                     <i class="pi pi-arrow-left"></i>
                     {{ $t("back") }}
                   </button>
@@ -700,7 +700,7 @@
                       v-for="taskItem in activeLesson.tasks"
                       :key="taskItem.task_id"
                     >
-                      <button
+                      <button type="button"
                         class="w-full"
                         :class="
                           taskItem.task_result.completed === false
@@ -766,7 +766,7 @@
               </template>
               <template v-else-if="activeSection">
                 <div class="col-span-12">
-                  <button class="btn btn-light" @click="goToSections()">
+                  <button type="button" class="btn btn-light" @click="goToSections()">
                     <i class="pi pi-arrow-left"></i>
                     {{ $t("back") }}
                   </button>
@@ -786,7 +786,7 @@
                       v-for="(lesson, lessonIndex) in activeSection.lessons"
                       :key="lessonIndex"
                     >
-                      <button class="w-full" @click="selectLesson(lesson)">
+                      <button type="button" class="w-full" @click="selectLesson(lesson)">
                         <div class="flex gap-2 justify-between items-center">
                           <div class="flex flex-col gap-y-1.5">
                             <p class="mb-0 leading-none font-bold text-left">
@@ -824,7 +824,7 @@
                       v-for="(section, sectionIndex) in userGrade.sections"
                       :key="sectionIndex"
                     >
-                      <button class="w-full" @click="selectSection(section)">
+                      <button type="button" class="w-full" @click="selectSection(section)">
                         <div class="flex gap-2 justify-between items-center">
                           <div class="flex flex-col gap-y-1.5">
                             <p class="mb-0 leading-none font-bold text-left">

@@ -122,7 +122,7 @@
 
         <div v-if="timeIsUp || isWrong || isComplete" class="col-span-12">
           <div class="flex justify-end">
-            <button class="btn btn-primary" @click="setSentence()">
+            <button type="button" class="btn btn-primary" @click="setSentence()">
               <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
             </button>
           </div>

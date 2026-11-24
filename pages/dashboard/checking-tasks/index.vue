@@ -3,7 +3,7 @@
     <div class="custom-grid">
       <div class="col-span-12">
         <div class="btn-wrap">
-          <button @click="showHideTaskSearchFilter" class="btn btn-light">
+          <button type="button" @click="showHideTaskSearchFilter" class="btn btn-light">
             <i class="pi pi-search"></i>
             {{
               searchFilter === true
@@ -449,7 +449,7 @@
           >
             <div class="col-span-12">
               <div class="btn-wrap justify-end">
-                <button
+                <button type="button"
                   class="btn btn-outline-primary"
                   @click="saveTaskResult()"
                 >

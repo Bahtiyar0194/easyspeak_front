@@ -1,3 +1,17 @@
+import colors from 'tailwindcss/colors'
+
+// Фирменная палитра — единственное место, где задаются цвета бренда и
+// статусов. Классы bg-corp, text-danger, border-success и т.п. в main.css
+// берут значения отсюда через theme(), а Tailwind дополнительно даёт
+// модификаторы: hover:bg-corp, bg-corp/10, ring-corp, dark:text-success...
+const brand = {
+  corp: { DEFAULT: colors.blue[500], 100: colors.blue[200] },
+  info: { DEFAULT: colors.blue[500], 100: colors.blue[200] },
+  success: { DEFAULT: colors.green[500], 100: colors.green[200] },
+  danger: { DEFAULT: colors.red[500], 100: colors.red[100] },
+  warning: { DEFAULT: colors.yellow[300], 100: colors.yellow[100] },
+}
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: 'class',
@@ -12,6 +26,8 @@ export default {
   theme: {
     extend: {
       colors: {
+        ...brand,
+
         dark: {
           200: '#424242',
           500: '#212121',

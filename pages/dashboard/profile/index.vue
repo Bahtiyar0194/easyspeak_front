@@ -37,7 +37,7 @@
           <i class="pi pi-telegram text-corp text-4xl"></i>
           <div>
             <p class="mb-0 text-xs text-inactive">Telegram:</p>
-            <button
+            <button type="button"
               v-if="authUser.telegram"
               @click="disconnectBotModalIsVisible = true"
             >
@@ -85,11 +85,11 @@
               }}
             </p>
             <div class="btn-wrap justify-end">
-              <button class="btn btn-primary" @click="connectToTelegramBot()">
+              <button type="button" class="btn btn-primary" @click="connectToTelegramBot()">
                 <i class="pi pi-telegram"></i>
                 {{ $t("telegram.connect.connect") }}
               </button>
-              <button
+              <button type="button"
                 class="btn btn-light"
                 @click="connectBotModalIsVisible = false"
               >
@@ -124,14 +124,14 @@
               }}
             </p>
             <div class="btn-wrap justify-end">
-              <button
+              <button type="button"
                 class="btn btn-outline-danger"
                 @click="disconnectTelegramBot()"
               >
                 <i class="pi pi-sign-out"></i>
                 {{ $t("telegram.disconnect.disconnect") }}
               </button>
-              <button
+              <button type="button"
                 class="btn btn-light"
                 @click="disconnectBotModalIsVisible = false"
               >

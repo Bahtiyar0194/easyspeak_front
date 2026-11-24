@@ -134,7 +134,7 @@
                 {{ $t("pages.conference.join") }}
               </nuxt-link>
 
-              <button
+              <button type="button"
                 v-if="
                   authUser.user_id === props.conference.operator_id &&
                   props.conference.forced === 1 &&

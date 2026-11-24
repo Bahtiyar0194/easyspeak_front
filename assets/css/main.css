@@ -193,21 +193,23 @@
 }
 
 /*DEFAULT THEME*/
+/* Цвета бренда и статусов берутся из палитры в tailwind.config.js (brand),
+   чтобы менять их в одном месте */
 
 .bg-corp {
-  @apply bg-blue-500;
+  background-color: theme('colors.corp.DEFAULT');
 }
 
 .bg-corp-100{
-  @apply bg-blue-200 dark:bg-blue-200;
+  background-color: theme('colors.corp.100');
 }
 
 .border-corp {
-  @apply border-blue-500;
+  border-color: theme('colors.corp.DEFAULT');
 }
 
 .text-corp {
-  @apply text-blue-500;
+  color: theme('colors.corp.DEFAULT');
 }
 
 /*STYLES*/
@@ -229,27 +231,27 @@
 }
 
 .bg-success{
-  @apply bg-green-500;
+  background-color: theme('colors.success.DEFAULT');
 }
 
 .bg-success-100{
-  @apply bg-green-200 dark:bg-green-200;
+  background-color: theme('colors.success.100');
 }
 
 .bg-info{
-  @apply bg-corp;
+  background-color: theme('colors.info.DEFAULT');
 }
 
 .bg-danger{
-  @apply bg-red-500;
+  background-color: theme('colors.danger.DEFAULT');
 }
 
 .bg-danger-100{
-  @apply bg-red-100;
+  background-color: theme('colors.danger.100');
 }
 
 .bg-warning{
-  @apply bg-yellow-300;
+  background-color: theme('colors.warning.DEFAULT');
 }
 
 .bg-orange{
@@ -297,35 +299,35 @@
 }
 
 .border-success{
-  @apply border-green-500;
+  border-color: theme('colors.success.DEFAULT');
 }
 
 .border-t-success{
-  @apply border-t-green-500;
+  border-top-color: theme('colors.success.DEFAULT');
 }
 
 .border-r-success{
-  @apply border-r-green-500;
+  border-right-color: theme('colors.success.DEFAULT');
 }
 
 .border-b-success{
-  @apply border-b-green-500;
+  border-bottom-color: theme('colors.success.DEFAULT');
 }
 
 .border-l-success{
-  @apply border-l-green-500;
+  border-left-color: theme('colors.success.DEFAULT');
 }
 
 .border-inset-success{
-  @apply outline-2 outline-green-500 outline;
+  outline: 2px solid theme('colors.success.DEFAULT');
 }
 
 .border-danger{
-  @apply border-red-500;
+  border-color: theme('colors.danger.DEFAULT');
 }
 
 .border-warning{
-  @apply border-yellow-300;
+  border-color: theme('colors.warning.DEFAULT');
 }
 
 .text-active {
@@ -341,23 +343,19 @@
 }
 
 .text-success{
-  @apply text-green-500;
+  color: theme('colors.success.DEFAULT');
 }
 
 .text-danger{
-  @apply text-red-500;
+  color: theme('colors.danger.DEFAULT');
 }
 
 .text-warning{
-  @apply text-yellow-300;
+  color: theme('colors.warning.DEFAULT');
 }
 
 .text-inactive {
   @apply text-neutral-500 dark:text-slate-500;
-}
-
-.text-success{
-  @apply text-green-500;
 }
 
 .text-stroke{
@@ -373,19 +371,19 @@
 }
 
 .stroke-corp{
-  @apply stroke-blue-500;
+  stroke: theme('colors.corp.DEFAULT');
 }
 
 .stroke-success{
-  @apply stroke-green-500;
+  stroke: theme('colors.success.DEFAULT');
 }
 
 .stroke-warning{
-  @apply stroke-yellow-300;
+  stroke: theme('colors.warning.DEFAULT');
 }
 
 .stroke-danger{
-  @apply stroke-red-500;
+  stroke: theme('colors.danger.DEFAULT');
 }
 
 .stroke-inactive {
@@ -401,14 +399,16 @@
   scrollbar-color: rgb(96 165 250 / 0.55) transparent;
 }
 
+/* 8px — за полосу можно взять мышью; прозрачная рамка делает видимую
+   часть тоньше (4px), поэтому выглядит аккуратно */
 ::-webkit-scrollbar {
-  width: 1px;
-  height: 1px;
+  width: 8px;
+  height: 8px;
   background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   border-radius: 9999px;
   background: rgb(59 130 246 / 0.55);
   background-clip: padding-box;
@@ -427,11 +427,11 @@
 }
 
 ::-webkit-scrollbar:horizontal{
-  height: 2px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-thumb:horizontal{
-  height: 2px;
+  height: 8px;
 }
 
 .scroll-fade {
@@ -698,11 +698,11 @@ td.th{
 }
 
 .table.selectable table tbody tr:hover{
-  @apply bg-corp-100;
+  @apply !bg-corp-100;
 }
 
 .table.selectable.success table tbody tr:hover{
-  @apply bg-success-100;
+  @apply !bg-success-100;
 }
 
 .table.selectable table tbody tr:hover > td{
@@ -773,13 +773,33 @@ textarea:focus {
   @apply outline-none;
 }
 
+/* Видимый фокус при навигации с клавиатуры (Tab). :focus-visible не
+   срабатывает при клике мышью, поэтому при обычной работе рамки нет.
+   Текстовые поля подсвечиваются своими стилями (.form-group:focus-within). */
 a:focus-visible,
 button:focus-visible,
+summary:focus-visible,
+[role="button"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 2px solid theme('colors.corp.DEFAULT');
+  outline-offset: 2px;
+}
+
 input:focus-visible,
 select:focus-visible,
-textarea:focus-visible,
-[role="button"]:focus-visible {
+textarea:focus-visible {
   outline: none;
+}
+
+/* Кастомные чекбоксы/переключатели: сам input скрыт, подсвечиваем
+   видимую часть */
+.ios-switch input:focus-visible + .slider,
+.custom-checkbox > input:focus-visible + span::before,
+.custom-radio > input:focus-visible + span::before,
+.custom-radio-checkbox > input:focus-visible + span::before {
+  box-shadow: var(--shadow-focus);
+  outline: 2px solid theme('colors.corp.DEFAULT');
+  outline-offset: 2px;
 }
 
 select{
@@ -2043,7 +2063,7 @@ input:disabled + .slider {
 }
 
 .breadcrumb{
-  @apply text-inactive flex flex-wrap list-none px-0;
+  @apply text-inactive flex flex-wrap list-none px-0 relative z-10;
 }
 
 .breadcrumb a, .breadcrumb button{

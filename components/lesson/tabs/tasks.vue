@@ -6,7 +6,7 @@
           <roleProvider :roles="[1]">
             <dropdownMenu :dropdownArrow="false" :position="'left'">
               <template v-slot:btn_content>
-                <button class="btn btn-outline-primary">
+                <button type="button" class="btn btn-outline-primary">
                   <i class="pi pi-plus"></i>
                   {{ $t("pages.tasks.add_a_task") }}
                 </button>
@@ -17,7 +17,7 @@
                   v-for="(task_type, index) in taskAttributes.all_task_types"
                   :key="index"
                 >
-                  <button
+                  <button type="button"
                     @click="
                       openTaskModal(task_type.task_type_component, 'create', {
                         lesson_id: props.lesson_id,
@@ -57,7 +57,7 @@
               </div>
 
               <div class="btn-wrap justify-end">
-                <button
+                <button type="button"
                   v-if="
                     props.lessonData.lesson_type_slug === 'file_test' &&
                     completedTasksCount < tasks.length
@@ -125,28 +125,28 @@
                   <div class="flex items-center gap-x-2">
                     <roleProvider :roles="[1]">
                       <div class="flex gap-x-1 justify-end">
-                        <button
+                        <button type="button"
                           @click="order('up', taskIndex, $event.target)"
                           class="btn btn-square btn-light btn-sm btn-up"
                           :title="$t('move_up')"
                         >
                           <i class="pi pi-arrow-up"></i>
                         </button>
-                        <button
+                        <button type="button"
                           @click="order('down', taskIndex, $event.target)"
                           class="btn btn-square btn-light btn-sm btn-down"
                           :title="$t('move_down')"
                         >
                           <i class="pi pi-arrow-down"></i>
                         </button>
-                        <button
+                        <button type="button"
                           @click="openEditTask(taskItem)"
                           class="btn btn-square btn-light btn-sm"
                           :title="$t('edit')"
                         >
                           <i class="pi pi-pencil"></i>
                         </button>
-                        <button
+                        <button type="button"
                           @click="openDeleteModal(taskItem)"
                           class="btn btn-square btn-outline-danger btn-sm"
                           :title="$t('delete')"
@@ -208,11 +208,11 @@
     <template v-slot:body_content>
       <p>{{ $t("pages.tasks.delete_confirm") }}</p>
       <div class="btn-wrap justify-end mt-4">
-        <button @click="deleteTaskSubmit()" class="btn btn-outline-danger">
+        <button type="button" @click="deleteTaskSubmit()" class="btn btn-outline-danger">
           <i class="pi pi-trash"></i>
           {{ $t("yes") }}
         </button>
-        <button @click="deleteModalIsVisible = false" class="btn btn-light">
+        <button type="button" @click="deleteModalIsVisible = false" class="btn btn-light">
           <i class="pi pi-ban"></i>
           {{ $t("no") }}
         </button>
@@ -238,7 +238,7 @@
         >
           <div class="col-span-12">
             <div class="btn-wrap justify-end">
-              <button
+              <button type="button"
                 v-if="
                   props.lessonData.lesson_type_slug === 'file_test' &&
                   completedTasksCount < tasks.length
@@ -249,7 +249,7 @@
                 <i class="pi pi-arrow-right"></i>
                 {{ $t("pages.tasks.next_task") }}
               </button>
-              <button
+              <button type="button"
                 v-if="props.lessonData.lesson_type_slug !== 'file_test'"
                 class="btn btn-primary"
                 @click="openTask(task)"

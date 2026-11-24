@@ -17,7 +17,7 @@
     </div>
 
     <div class="flex gap-4 justify-center max-md:flex-wrap">
-      <button
+      <button type="button"
         v-if="message"
         class="btn btn-light"
         @click="showMessage = !showMessage"

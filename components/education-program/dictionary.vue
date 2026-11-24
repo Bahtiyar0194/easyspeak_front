@@ -3,7 +3,7 @@
     <div class="col-span-12">
       <div class="btn-wrap">
         <roleProvider :roles="[1]">
-          <button
+          <button type="button"
             class="btn btn-outline-primary"
             @click="addModalIsVisible = true"
           >
@@ -11,7 +11,7 @@
             {{ $t("add") }}
           </button>
         </roleProvider>
-        <button @click="showHideWordSearchFilter" class="btn btn-light">
+        <button type="button" @click="showHideWordSearchFilter" class="btn btn-light">
           <i class="pi pi-search"></i>
           {{
             searchFilter === true
@@ -476,7 +476,7 @@
 
       <roleProvider :roles="[1]">
         <div class="btn-wrap mt-4">
-          <button @click="getEditWord" class="btn btn-outline-primary">
+          <button type="button" @click="getEditWord" class="btn btn-outline-primary">
             <i class="pi pi-pencil"></i>
             {{ $t("edit") }}
           </button>

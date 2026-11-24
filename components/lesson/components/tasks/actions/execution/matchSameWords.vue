@@ -237,14 +237,14 @@
             </div>
 
             <div class="btn-wrap right">
-              <button
+              <button type="button"
                 v-if="sections.length > 0"
                 class="btn btn-outline-primary"
                 @click="setSections()"
               >
                 <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
               </button>
-              <button v-else class="btn btn-light" @click="isFinished = true">
+              <button type="button" v-else class="btn btn-light" @click="isFinished = true">
                 <i class="pi pi-check"></i>
                 {{ $t("pages.tasks.complete_the_task") }}
               </button>
@@ -358,7 +358,7 @@
                           @input="disableTheHiddenWord()"
                           type="text"
                         />
-                        <button
+                        <button type="button"
                           v-if="word.userInput !== ''"
                           @click="clearInput(sectionIndex, wordIndex)"
                           class="text-danger ml-0.5 mt-0.5"
@@ -402,7 +402,7 @@
 
             <div class="col-span-12">
               <div class="btn-wrap right">
-                <button
+                <button type="button"
                   class="btn btn-outline-primary"
                   :class="checkingStatus && 'disabled'"
                   @click="acceptAnswers()"

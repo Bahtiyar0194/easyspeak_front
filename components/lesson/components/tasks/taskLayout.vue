@@ -9,7 +9,7 @@
       <materialsList :materials="props.materials" />
       <div class="col-span-12">
         <div class="btn-wrap justify-end">
-          <button class="btn btn-light" @click="props.startTask()">
+          <button type="button" class="btn btn-light" @click="props.startTask()">
             <i class="pi pi-arrow-right"></i>
             {{ $t("pages.tasks.start_the_task") }}
           </button>
@@ -81,7 +81,7 @@
             >
               <div class="col-span-12">
                 <div class="btn-wrap justify-end">
-                  <button
+                  <button type="button"
                     v-if="
                       props.lessonType === 'file_test' &&
                       completedTasksCount < tasks.length
@@ -93,7 +93,7 @@
                     {{ $t("pages.tasks.next_task") }}
                   </button>
 
-                  <button
+                  <button type="button"
                     v-if="
                       props.lessonType === 'file_test' &&
                       completedTasksCount === tasks.length
@@ -105,7 +105,7 @@
                     {{ $t("pages.tasks.finish_the_test") }}
                   </button>
 
-                  <button
+                  <button type="button"
                     v-if="props.lessonType !== 'file_test'"
                     class="btn btn-primary"
                     @click="openTask(props.task)"
@@ -123,7 +123,7 @@
         <slot name="task_result_content" />
         <div class="col-span-12">
           <div class="btn-wrap justify-end">
-            <button
+            <button type="button"
               class="btn btn-primary"
               @click="showTaskResult = true"
             >

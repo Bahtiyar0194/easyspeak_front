@@ -1,7 +1,6 @@
 export default defineNuxtConfig({
   devtools: { enabled: false },
   css: [
-    '@fortawesome/fontawesome-free/css/all.css',
     'primeicons/primeicons.css',
     'bootstrap-icons/font/bootstrap-icons.css',
     'plyr/dist/plyr.css',

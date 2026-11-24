@@ -3,7 +3,7 @@
     <!-- Переключатель режима -->
     <div class="col-span-12 mt-1">
       <div class="flex justify-between gap-x-1">
-        <button
+        <button type="button"
           v-for="m in modes"
           :key="m"
           class="btn !w-full max-md:!px-2 max-md:!py-1 max-md:!text-sm max-md:!rounded-lg !font-medium"
@@ -18,11 +18,11 @@
     <!-- Общий заголовок -->
     <div class="col-span-12">
       <div class="flex items-center justify-between">
-        <button class="btn btn-circle btn-success" @click="prev">
+        <button type="button" class="btn btn-circle btn-success" @click="prev">
           <i class="pi pi-chevron-left"></i>
         </button>
         <span class="font-medium md:text-xl">{{ title }}</span>
-        <button class="btn btn-circle btn-success" @click="next">
+        <button type="button" class="btn btn-circle btn-success" @click="next">
           <i class="pi pi-chevron-right"></i>
         </button>
       </div>
