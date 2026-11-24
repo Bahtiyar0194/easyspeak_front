@@ -87,7 +87,7 @@
     <!-- Рамка «говорит сейчас» — поверх видео и только во время речи,
          поэтому в обычном состоянии видео занимает всю плитку -->
     <div
-      v-if="stream.volume > 50"
+      v-if="stream.speaking"
       class="absolute inset-0 rounded-xl border-2 border-success pointer-events-none"
     ></div>
   </div>

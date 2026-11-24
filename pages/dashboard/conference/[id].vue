@@ -104,7 +104,7 @@
             >
               <i v-if="isMuted" class="bi bi-mic-mute text-danger"></i>
               <div v-else>
-                <i v-if="volume > 50" class="bi bi-mic-fill text-success"></i>
+                <i v-if="myStream?.speaking" class="bi bi-mic-fill text-success"></i>
                 <i v-else class="bi bi-mic text-success"></i>
               </div>
 
@@ -1579,7 +1579,6 @@ const errorMessage = ref(null);
 const pendingConference = ref(null);
 const endedConference = ref(null);
 const isMuted = ref(false);
-const volume = ref(0);
 const isStream = ref(false);
 const isScreenSharing = ref(false);
 const peersStats = reactive({});
@@ -2124,6 +2123,7 @@ const startStream = async () => {
     micRestartAttempts = 0;
     watchAudioTrack(stream.getAudioTracks()[0]);
     startSilenceWatchdog();
+    startSpeakingMonitor();
 
     setTimeout(() => {
       rawVideoRef.value.srcObject = stream;
@@ -2200,7 +2200,6 @@ const startStream = async () => {
         toggleStream();
       }
 
-      //trackMicrophone(localStream.value);
       joinToRoom();
     });
 
@@ -2319,9 +2318,6 @@ const startStream = async () => {
       }
     });
 
-    $socketPlugin.on("update-volume", (data) => {
-      updateVolume(data);
-    });
 
     $socketPlugin.on("connect_error", () => {
       if (peerOpenedOnce) {
@@ -2355,9 +2351,8 @@ const startStream = async () => {
 
     $socketPlugin.on("open_task", async (data) => {
       if (authUser.value.user_id !== conference.value.mentor_id) {
+        await getConferenceTasks();
         if (conference.value.is_member) {
-          await getConferenceTasks();
-
           const selectedTask = tasks.value.find(
             (t) => t.task_id === data.taskId,
           );
@@ -2479,20 +2474,100 @@ const getSelfieSegmentationConstructor = () => {
   return null;
 };
 
+// Обработка видео (фон) не чаще частоты камеры: requestAnimationFrame идёт
+// 60 раз в секунду, а камера даёт ~12 кадров — без ограничения нейросеть
+// гоняла бы один и тот же кадр по 5 раз
+const VIDEO_PROCESSING_FPS = 15;
+let renderGeneration = 0; // смена поколения останавливает старый цикл
+let lastFrameProcessedAt = 0;
+
+const stopVideoProcessing = () => {
+  renderGeneration++;
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+  }
+};
+
+const destroyMediaPipe = () => {
+  stopVideoProcessing();
+  if (selfieSegmentation) {
+    try {
+      selfieSegmentation.close();
+    } catch {}
+    selfieSegmentation = null;
+  }
+};
+
+// Модель (WASM + WebGL) создаётся один раз и переиспользуется при
+// включении/выключении камеры. Раньше при каждом включении камеры
+// создавался новый экземпляр, который никогда не закрывался, а цикл
+// отрисовки после выключения камеры мог продолжать работать — за урок
+// они накапливались, нагружали процессор, и звук начинал искажаться.
 const initMediaPipe = () => {
+  stopVideoProcessing();
+
   const SelfieSegmentationClass = getSelfieSegmentationConstructor();
 
   if (!SelfieSegmentationClass) {
     console.error("Error on SelfieSegmentation:", SelfieSegmentationPkg);
   } else {
-    const selfieSegmentation = new SelfieSegmentationClass({
-      locateFile: (file) =>
-        `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
-    });
+    if (!selfieSegmentation) {
+      selfieSegmentation = new SelfieSegmentationClass({
+        locateFile: (file) =>
+          `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
+      });
+      selfieSegmentation.setOptions({ modelSelection: 1 });
+      selfieSegmentation.onResults(drawSegmentationResults);
+    }
 
-    selfieSegmentation.setOptions({ modelSelection: 1 });
+    const generation = renderGeneration;
 
-    selfieSegmentation.onResults((results) => {
+    const renderFrame = async () => {
+      if (generation !== renderGeneration) return; // цикл остановлен
+
+      const now = performance.now();
+      const frameDue =
+        now - lastFrameProcessedAt >= 1000 / VIDEO_PROCESSING_FPS;
+
+      // При bgMode "none" отправляется исходный трек камеры, canvas не нужен
+      if (
+        frameDue &&
+        bgMode.value !== "none" &&
+        rawVideoRef.value &&
+        rawVideoRef.value.readyState >= 2 &&
+        canvasRef.value
+      ) {
+        lastFrameProcessedAt = now;
+        const video = rawVideoRef.value;
+        const canvas = canvasRef.value;
+
+        if (
+          video.videoWidth &&
+          video.videoHeight &&
+          (canvas.width !== video.videoWidth ||
+            canvas.height !== video.videoHeight)
+        ) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+        }
+
+        try {
+          await selfieSegmentation?.send({ image: video });
+        } catch (err) {
+          console.error("SelfieSegmentation error:", err);
+        }
+      }
+
+      if (generation !== renderGeneration) return; // остановили во время send
+      animationFrameId = requestAnimationFrame(renderFrame);
+    };
+
+    renderFrame();
+  }
+};
+
+const drawSegmentationResults = (results) => {
       if (!canvasRef.value) return;
 
       const canvas = canvasRef.value;
@@ -2525,36 +2600,6 @@ const initMediaPipe = () => {
       }
 
       ctx.restore();
-    });
-
-    const renderFrame = async () => {
-      if (rawVideoRef.value && rawVideoRef.value.readyState >= 2) {
-        const video = rawVideoRef.value;
-        const canvas = canvasRef.value;
-
-        if (video.videoWidth && video.videoHeight) {
-          if (
-            canvas.width !== video.videoWidth ||
-            canvas.height !== video.videoHeight
-          ) {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-          }
-        }
-
-        if (bgMode.value !== "none" && selfieSegmentation) {
-          await selfieSegmentation.send({ image: video });
-        } else if (bgMode.value === "none" && canvas) {
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        }
-      }
-
-      animationFrameId = requestAnimationFrame(renderFrame);
-    };
-
-    renderFrame();
-  }
 };
 
 const drawImageCover = (ctx, img, canvasWidth, canvasHeight) => {
@@ -2584,7 +2629,6 @@ const drawImageCover = (ctx, img, canvasWidth, canvasHeight) => {
 };
 
 const setConferenceMode = (mode) => {
-  console.log(123)
   confMode.value = mode;
   debounceConferenceSettings();
 };
@@ -3000,6 +3044,7 @@ const addStream = (
       userInfo,
       isStream,
       isMuted,
+      speaking: false,
     });
 
     if (
@@ -3029,7 +3074,6 @@ const leaveConference = async () => {
   $socketPlugin.off("new-message");
   $socketPlugin.off("toggle-video");
   $socketPlugin.off("toggle-audio");
-  $socketPlugin.off("update-volume");
   $socketPlugin.off("connect_error");
   $socketPlugin.off("open_material");
   $socketPlugin.off("open_task");
@@ -3049,6 +3093,7 @@ const leaveConference = async () => {
   healthCheckInProgress = false;
   unwatchAudioTrack();
   stopSilenceWatchdog();
+  stopSpeakingMonitor();
   hideMicLostToast();
   micRestartAttempts = 0;
   hiddenAt = null;
@@ -3090,8 +3135,7 @@ const leaveConference = async () => {
   streams.value = [];
   $socketPlugin.disconnect();
 
-  if (animationFrameId) cancelAnimationFrame(animationFrameId);
-  if (selfieSegmentation) selfieSegmentation.close();
+  destroyMediaPipe();
 };
 
 const removeStream = (peerId, call = null) => {
@@ -3152,8 +3196,8 @@ const toggleStream = () => {
         initMediaPipe();
       }, 500);
     } else {
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-      if (selfieSegmentation) selfieSegmentation.close();
+      // Модель не закрываем — переиспользуем при следующем включении камеры
+      stopVideoProcessing();
     }
 
     $socketPlugin.emit("toggle-video", {
@@ -3364,9 +3408,19 @@ const stopScreenSharing = () => {
 };
 
 const loadMicrophones = async () => {
-  await navigator.mediaDevices.getUserMedia({ audio: true });
+  let devices = await navigator.mediaDevices.enumerateDevices();
 
-  const devices = await navigator.mediaDevices.enumerateDevices();
+  // Без разрешения на микрофон названия устройств пустые — тогда один раз
+  // запрашиваем доступ и СРАЗУ освобождаем микрофон. Раньше захват здесь
+  // никогда не останавливался: при каждом devicechange (наушники, Bluetooth)
+  // открывался ещё один параллельный захват того же микрофона.
+  if (devices.some((d) => d.kind === "audioinput" && !d.label)) {
+    const permissionStream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+    });
+    permissionStream.getTracks().forEach((track) => track.stop());
+    devices = await navigator.mediaDevices.enumerateDevices();
+  }
 
   microphones.value = [];
 
@@ -3585,8 +3639,10 @@ const resetSilenceState = () => {
   silentChecks = 0;
 };
 
-// totalAudioEnergy нашего аудиотрека из статистики любого активного соединения
-const getOutgoingAudioEnergy = async () => {
+// Статистика "media-source" нашего аудиотрека (audioLevel, totalAudioEnergy)
+// из любого активного соединения. null — не с кем соединены или браузер
+// такую статистику не отдаёт.
+const getOutgoingAudioStats = async () => {
   const track = localStream.value?.getAudioTracks()[0];
   if (!track || !myPeer?.connections) return null;
 
@@ -3600,18 +3656,21 @@ const getOutgoingAudioEnergy = async () => {
 
       const report = await sender.getStats();
       for (const stat of report.values()) {
-        if (
-          stat.type === "media-source" &&
-          stat.kind === "audio" &&
-          typeof stat.totalAudioEnergy === "number"
-        ) {
-          return stat.totalAudioEnergy;
+        if (stat.type === "media-source" && stat.kind === "audio") {
+          return stat;
         }
       }
-      return null; // браузер не отдаёт эту статистику — детектор не работает
+      return null;
     }
   }
   return null;
+};
+
+const getOutgoingAudioEnergy = async () => {
+  const stat = await getOutgoingAudioStats();
+  return typeof stat?.totalAudioEnergy === "number"
+    ? stat.totalAudioEnergy
+    : null;
 };
 
 const checkMicrophoneSilence = async () => {
@@ -3697,51 +3756,83 @@ const switchMicrophone = async (micDeviceId) => {
   }
 };
 
-const trackMicrophone = async (stream) => {
-  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+// --- Индикатор «говорит сейчас» ---
+// Громкость каждого аудиопотока браузер уже считает внутри WebRTC, поэтому
+// не нужны ни AudioContext/AudioWorklet (сотни сообщений в секунду и
+// перерисовок), ни пересылка громкости через сокет-сервер:
+//  - удалённые: receiver.getSynchronizationSources()[0].audioLevel;
+//  - свой микрофон: audioLevel из статистики отправителя.
+// Опрашиваем несколько раз в секунду и меняем реактивный флаг speaking
+// только при его переключении — Vue перерисовывает плитку пару раз за фразу.
+const SPEAKING_CHECK_INTERVAL_MS = 300;
+const SPEAKING_THRESHOLD = 0.05; // audioLevel 0…1; фоновый шум после шумоподавления ниже
+const SPEAKING_HOLD_MS = 700; // не гасим рамку в паузах между словами
+let speakingMonitorId = null;
+let speakingCheckInProgress = false;
+const lastLoudAt = {}; // peer_id -> время последнего громкого замера
 
-  await audioContext.audioWorklet.addModule("/scripts/volume-processor.js");
+const getRemoteAudioLevel = (peerId) => {
+  const pc = peers[peerId]?.peerConnection;
+  if (!pc || pc.connectionState === "closed") return 0;
 
-  const microphone = audioContext.createMediaStreamSource(stream);
-  const volumeProcessor = new AudioWorkletNode(
-    audioContext,
-    "volume-processor",
-  );
-
-  microphone.connect(volumeProcessor);
-  volumeProcessor.connect(audioContext.destination);
-
-  volumeProcessor.port.onmessage = (event) => {
-    volume.value = Math.ceil(event.data);
-
-    myStream.value.volume = volume.value;
-
-    // if (!isMuted.value && streams.value.length > 1 && volume.value >= 50) {
-    //   $socketPlugin.emit("microphone-volume", {
-    //     peerId: myPeer.id,
-    //     volume: volume.value,
-    //   });
-    // }
-  };
+  const receiver = pc
+    .getReceivers()
+    .find((r) => r.track?.kind === "audio");
+  const source = receiver?.getSynchronizationSources?.()[0];
+  return source?.audioLevel ?? 0;
 };
 
-const updateVolume = (() => {
-  let timeoutId = null;
-  return (data) => {
-    const findStream = streams.value.find((s) => s.peer_id === data.peerId);
-    if (findStream) {
-      findStream.volume = data.volume;
+const getLocalAudioLevel = async () => {
+  if (isMuted.value) return 0;
+  try {
+    const stat = await getOutgoingAudioStats();
+    return stat?.audioLevel ?? 0;
+  } catch {
+    return 0;
+  }
+};
 
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
+const applySpeaking = (stream, level, now) => {
+  if (level >= SPEAKING_THRESHOLD) lastLoudAt[stream.peer_id] = now;
 
-      timeoutId = setTimeout(() => {
-        findStream.volume = 0;
-      }, 100);
+  const speaking =
+    !stream.isMuted && now - (lastLoudAt[stream.peer_id] || 0) < SPEAKING_HOLD_MS;
+
+  if (stream.speaking !== speaking) stream.speaking = speaking;
+};
+
+const checkSpeaking = async () => {
+  if (document.hidden || speakingCheckInProgress) return;
+  speakingCheckInProgress = true;
+
+  try {
+    const localLevel = await getLocalAudioLevel();
+    const now = Date.now();
+
+    for (const stream of streams.value) {
+      const level = stream.remote
+        ? getRemoteAudioLevel(stream.peer_id)
+        : localLevel;
+      applySpeaking(stream, level, now);
     }
-  };
-})();
+  } finally {
+    speakingCheckInProgress = false;
+  }
+};
+
+const startSpeakingMonitor = () => {
+  stopSpeakingMonitor();
+  speakingMonitorId = setInterval(checkSpeaking, SPEAKING_CHECK_INTERVAL_MS);
+};
+
+const stopSpeakingMonitor = () => {
+  if (speakingMonitorId) {
+    clearInterval(speakingMonitorId);
+    speakingMonitorId = null;
+  }
+  speakingCheckInProgress = false;
+  Object.keys(lastLoudAt).forEach((key) => delete lastLoudAt[key]);
+};
 
 const sendMessage = () => {
   if (message.value !== "") {
