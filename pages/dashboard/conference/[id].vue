@@ -267,11 +267,16 @@
                     }}
                   </p>
                 </div>
-                <div class="flex gap-x-2 items-center my-1">
+                <div
+                  class="flex gap-x-2 items-center my-1"
+                  :class="{ 'opacity-50 cursor-not-allowed': !hasCamera }"
+                  :title="!hasCamera ? $t('errors.media.camera_not_detected') : ''"
+                >
                   <label class="ios-switch">
                     <input
                       type="checkbox"
                       :checked="isStream"
+                      :disabled="!hasCamera"
                       @change="toggleStream()"
                     />
                     <span class="slider"></span>
@@ -1580,6 +1585,8 @@ const pendingConference = ref(null);
 const endedConference = ref(null);
 const isMuted = ref(false);
 const isStream = ref(false);
+// Есть ли в локальном потоке видеотрек (false — вошли только со звуком)
+const hasCamera = ref(true);
 const isScreenSharing = ref(false);
 const peersStats = reactive({});
 const activeMonitors = new Map();
@@ -2100,23 +2107,153 @@ const getActiveStream = () => {
   return streamToSend;
 };
 
+// --- Получение камеры и микрофона с повторными попытками ---
+const VIDEO_CONSTRAINTS = {
+  width: { ideal: 320, max: 640 },
+  height: { ideal: 240, max: 480 },
+  frameRate: { ideal: 12, max: 15 },
+  facingMode: "user",
+};
+
+const audioConstraints = (deviceId) => ({
+  ...(deviceId ? { deviceId: { exact: deviceId } } : {}),
+  echoCancellation: true,
+  noiseSuppression: true,
+});
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Камера занята или «зависла» в драйвере (часто сразу после перезагрузки
+// страницы: прошлая вкладка ещё не отпустила камеру) — стоит подождать
+const isDeviceBusyError = (err) =>
+  ["NotReadableError", "TrackStartError", "AbortError"].includes(err?.name);
+
+const mediaErrorMessage = (err) => {
+  switch (err?.name) {
+    case "NotAllowedError":
+    case "PermissionDeniedError":
+    case "SecurityError":
+      return t("errors.media.camera_permission_denied");
+    case "NotFoundError":
+    case "DevicesNotFoundError":
+      return t("errors.media.camera_not_found");
+    case "NotReadableError":
+    case "TrackStartError":
+    case "AbortError":
+      return t("errors.media.camera_busy");
+    default:
+      return t("errors.media.camera_error");
+  }
+};
+
+const acquireLocalMedia = async () => {
+  const attempts = [
+    // 1. Как обычно: выбранный микрофон и наши параметры видео
+    { video: VIDEO_CONSTRAINTS, audio: audioConstraints(selectedMicrophoneId.value) },
+    // 2. Сохранённый микрофон мог пропасть (OverconstrainedError) — любой
+    { video: VIDEO_CONSTRAINTS, audio: audioConstraints(null) },
+    // 3. Некоторые драйверы не запускаются с заданным форматом — без ограничений
+    { video: true, audio: audioConstraints(null) },
+  ];
+  const busyDelays = [1000, 2000, 3000];
+  let lastError = null;
+  let busyRetries = 0;
+
+  for (let i = 0; i < attempts.length; i++) {
+    try {
+      return await navigator.mediaDevices.getUserMedia(attempts[i]);
+    } catch (err) {
+      lastError = err;
+      console.warn(`getUserMedia, попытка ${i + 1}:`, err?.name, err?.message);
+
+      // Доступ запрещён или устройств нет — повторы не помогут
+      if (
+        ["NotAllowedError", "PermissionDeniedError", "SecurityError"].includes(
+          err?.name,
+        )
+      ) {
+        throw err;
+      }
+
+      // Камера занята — ждём и повторяем ту же попытку
+      if (isDeviceBusyError(err) && busyRetries < busyDelays.length) {
+        await wait(busyDelays[busyRetries++]);
+        i--;
+      }
+    }
+  }
+
+  // Какие устройства браузер вообще видит. NotFoundError при подключённой
+  // камере обычно значит, что её драйвер завис и Windows перестала отдавать
+  // камеру приложениям (помогает отключить/включить её в диспетчере устройств)
+  let hasCamera = true;
+  let hasMicrophone = true;
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    hasCamera = devices.some((d) => d.kind === "videoinput");
+    hasMicrophone = devices.some((d) => d.kind === "audioinput");
+    console.warn("Устройства, видимые браузеру:", {
+      cameras: devices.filter((d) => d.kind === "videoinput").length,
+      microphones: devices.filter((d) => d.kind === "audioinput").length,
+    });
+  } catch {}
+
+  const cameraMessage = !hasCamera
+    ? t("errors.media.camera_not_detected")
+    : mediaErrorMessage(lastError);
+
+  // Камера так и не запустилась — входим хотя бы со звуком, чтобы урок
+  // не срывался
+  if (hasMicrophone) {
+    try {
+      const audioOnly = await navigator.mediaDevices.getUserMedia({
+        audio: audioConstraints(null),
+      });
+      showToastOnce(
+        "camera-unavailable",
+        "warning",
+        `${cameraMessage} ${t("errors.media.audio_only")}`,
+        20000,
+      );
+      return audioOnly;
+    } catch (err) {
+      console.warn("Не удалось получить даже микрофон:", err?.name);
+    }
+  }
+
+  // Микрофона нет, но камера есть — входим только с видео
+  if (hasCamera) {
+    try {
+      const videoOnly = await navigator.mediaDevices.getUserMedia({
+        video: VIDEO_CONSTRAINTS,
+      });
+      showToastOnce(
+        "microphone-unavailable",
+        "warning",
+        t("errors.media.microphone_not_found"),
+        20000,
+      );
+      return videoOnly;
+    } catch (err) {
+      console.warn("Не удалось получить камеру отдельно:", err?.name);
+    }
+  }
+
+  throw lastError;
+};
+
+// При закрытии/перезагрузке вкладки сразу освобождаем камеру и микрофон,
+// чтобы новая страница не получила NotReadableError
+const releaseLocalMedia = () => {
+  [localStream.value, rawStream.value, screenStream.value].forEach((stream) =>
+    stream?.getTracks().forEach((track) => track.stop()),
+  );
+};
+
 const startStream = async () => {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        width: { ideal: 320, max: 640 },
-        height: { ideal: 240, max: 480 },
-        frameRate: { ideal: 12, max: 15 },
-        facingMode: "user",
-      },
-      audio: selectedMicrophoneId.value
-        ? {
-            deviceId: { exact: selectedMicrophoneId.value },
-            echoCancellation: true,
-            noiseSuppression: true,
-          }
-        : true,
-    });
+    const stream = await acquireLocalMedia();
+    hasCamera.value = stream.getVideoTracks().length > 0;
 
     rawStream.value = stream;
     localStream.value = stream;
@@ -2432,7 +2569,8 @@ const startStream = async () => {
     document.removeEventListener("visibilitychange", handleVisibilityChange);
     document.addEventListener("visibilitychange", handleVisibilityChange);
   } catch (error) {
-    notify("danger", t("errors.media.camera_error"), 10000);
+    console.error("startStream error:", error);
+    notify("danger", mediaErrorMessage(error), 15000);
   }
 };
 
@@ -3186,6 +3324,20 @@ const removeStream = (peerId, call = null) => {
 const toggleStream = () => {
   if (localStream.value) {
     const videoTrack = localStream.value.getVideoTracks()[0];
+
+    // Вошли только со звуком — камеры нет
+    if (!videoTrack) {
+      isStream.value = false;
+      if (myStream.value) myStream.value.isStream = false;
+      showToastOnce(
+        "camera-unavailable",
+        "warning",
+        `${t("errors.media.camera_busy")} ${t("errors.media.audio_only")}`,
+        15000,
+      );
+      return;
+    }
+
     videoTrack.enabled = !videoTrack.enabled;
     isStream.value = videoTrack.enabled;
 
@@ -3584,6 +3736,8 @@ const applyAudioTrack = (newTrack) => {
 
 const restartMicrophone = async () => {
   if (micRestartInProgress || isExplicitlyClosed || !localStream.value) return;
+  // Вошли без микрофона (только видео) — восстанавливать нечего
+  if (localStream.value.getAudioTracks().length === 0) return;
 
   if (micRestartAttempts >= MAX_MIC_RESTART_ATTEMPTS) {
     showMicLostToast();
@@ -3887,6 +4041,7 @@ const handleBeforeUnload = (event) => {
 onMounted(() => {
   navigator.mediaDevices.addEventListener("devicechange", handleDeviceChange);
   window.addEventListener("beforeunload", handleBeforeUnload);
+  window.addEventListener("pagehide", releaseLocalMedia);
 
   getConference();
 });
@@ -3894,6 +4049,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   navigator.mediaDevices.removeEventListener("devicechange", handleDeviceChange);
   window.removeEventListener("beforeunload", handleBeforeUnload);
+  window.removeEventListener("pagehide", releaseLocalMedia);
 
   if (localStream.value) {
     leaveConference();
