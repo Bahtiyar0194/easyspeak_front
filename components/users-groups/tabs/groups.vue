@@ -174,13 +174,27 @@
       </stickyBox>
     </div>
 
-    <div class="col-span-12 relative" :class="searchFilter && 'lg:col-span-9'">
-      <template v-if="groups.data?.length > 0">
-        <loader
-          v-if="pending"
-          :className="'overlay !rounded-xl'"
-          :showPendingText="true"
-        />
+    <div
+      ref="listTopRef"
+      class="col-span-12 relative scroll-mt-24"
+      :class="searchFilter && 'lg:col-span-9'"
+    >
+      <!-- Скелетон: первая загрузка или переход на другую страницу
+           (при пагинации — столько же строк, сколько было, чтобы не прыгало) -->
+      <listSkeleton
+        v-if="pending && (paging || !groups.data?.length)"
+        :columns="groupsTableHeads.length"
+        :avatar="false"
+        :rows="paging ? skeletonRows : 8"
+      />
+
+      <!-- Фильтр / сортировка: список на месте, по нему перелив -->
+      <div
+        v-else-if="groups.data?.length > 0"
+        :class="{ 'list-refreshing': pending }"
+        :aria-busy="pending || undefined"
+      >
+        <span v-if="pending" class="sr-only">{{ $t("loading") }}</span>
         <div class="table table-striped table-sm selectable max-md:!hidden">
           <table ref="tableRef">
             <thead>
@@ -315,15 +329,22 @@
             </button>
           </li>
         </ul>
-        <div class="btn-wrap mt-4">
-          <pagination
-            :items="groups"
-            :setItems="getGroups"
-            :onSelect="(count) => (perPage = count)"
-          />
-        </div>
-      </template>
-      <emptyState v-else :pending="pending" :text="$t('nothing_was_found_for_your_query')" icon="bi bi-search" />
+      </div>
+      <emptyState v-else :text="$t('nothing_was_found_for_your_query')" icon="bi bi-search" />
+
+      <!-- Вне блока списка: при переходе по страницам остаётся на месте
+           под скелетоном; пока идёт загрузка — неактивна -->
+      <div
+        v-if="groups.data?.length"
+        class="btn-wrap mt-4"
+        :class="{ 'pointer-events-none opacity-60': pending }"
+      >
+        <pagination
+          :items="groups"
+          :setItems="getGroups"
+          :onSelect="(count) => (perPage = count)"
+        />
+      </div>
     </div>
   </div>
 
@@ -906,7 +927,7 @@ import { useRouter } from "nuxt/app";
 import modal from "../../ui/modal.vue";
 import subscription from "../../ui/subscription.vue";
 import scheduleGrid from "../../schedule/scheduleGrid.vue";
-import loader from "../../ui/loader.vue";
+import listSkeleton from "../../ui/listSkeleton.vue";
 import emptyState from "~/components/ui/emptyState.vue";
 import userAvatar from "../../ui/userAvatar.vue";
 import userTag from "../../ui/userTag.vue";
@@ -1121,8 +1142,24 @@ const tabs_data = computed(() => [
   },
 ]);
 
+// Переход по страницам: пагинация передаёт url страницы (фильтр, сортировка и
+// смена «по N на странице» — без url). В этом случае показываем скелетон.
+const paging = ref(false);
+const skeletonRows = ref(8);
+const listTopRef = ref(null);
+
 const getGroups = async (url) => {
   pending.value = true;
+  paging.value = Boolean(url);
+
+  if (paging.value) {
+    skeletonRows.value = groups.value.data?.length || 8;
+    // Пагинация внизу — поднимаем к началу списка, если его верх не виден
+    const top = listTopRef.value?.getBoundingClientRect().top;
+    if (top !== undefined && top < 0) {
+      listTopRef.value.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
 
   const formData = new FormData(searchFormRef.value);
   formData.append("per_page", perPage.value);
@@ -1138,6 +1175,7 @@ const getGroups = async (url) => {
     .then((response) => {
       groups.value = response.data;
       pending.value = false;
+      paging.value = false;
     })
     .catch((err) => {
       if (err.response) {

@@ -36,7 +36,46 @@
       </div>
     </roleProvider>
 
-    <template v-if="tasks.length">
+    <!-- Первая загрузка: скелетон той же формы, что и вкладка (сводка + строки) -->
+    <template v-if="firstRequest">
+      <div class="col-span-12 lg:col-span-3" aria-hidden="true">
+        <div class="tasks-summary">
+          <div class="flex items-center gap-4">
+            <div class="skeleton w-20 h-20 shrink-0 !rounded-full"></div>
+            <div class="flex flex-col gap-2 flex-1 min-w-0">
+              <div class="skeleton h-3 w-24"></div>
+              <div class="skeleton h-5 w-32 max-w-full"></div>
+            </div>
+          </div>
+          <div class="skeleton h-2 w-full !rounded-full"></div>
+          <div class="skeleton h-11 w-full !rounded-xl"></div>
+        </div>
+      </div>
+
+      <div class="col-span-12 lg:col-span-9" aria-busy="true">
+        <span class="sr-only">{{ $t("loading") }}</span>
+        <ul class="task-list" aria-hidden="true">
+          <li v-for="n in TASK_SKELETON_ROWS" :key="n">
+            <div class="task-row">
+              <div class="task-row-main">
+                <div class="skeleton w-11 h-11 shrink-0 !rounded-xl"></div>
+                <div class="flex flex-col gap-2 flex-1 min-w-0">
+                  <!-- Разная ширина названий — выглядит естественнее -->
+                  <div
+                    class="skeleton h-4 max-w-full"
+                    :style="{ width: ['55%', '40%', '65%', '48%'][(n - 1) % 4] }"
+                  ></div>
+                  <div class="skeleton h-3 w-28"></div>
+                </div>
+                <div class="skeleton w-11 h-11 shrink-0 !rounded-full"></div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </template>
+
+    <template v-else-if="tasks.length">
       <!-- Прогресс по заданиям урока -->
       <div class="col-span-12 lg:col-span-3">
         <stickyBox>
@@ -98,15 +137,17 @@
       </div>
 
       <!-- Список заданий -->
-      <div class="col-span-12 lg:col-span-9 relative">
-        <loader
-          v-if="pendingTasks"
-          :className="'overlay !rounded-2xl'"
-          :showPendingText="true"
-        />
+      <!-- Обновление (после выполнения/удаления задания): список остаётся
+           на месте, по строкам идёт перелив, клики на это время отключены -->
+      <div
+        class="col-span-12 lg:col-span-9 relative"
+        :aria-busy="pendingTasks || undefined"
+      >
+        <span v-if="pendingTasks" class="sr-only">{{ $t("loading") }}</span>
         <TransitionGroup
           tag="ul"
           class="task-list"
+          :class="{ refreshing: pendingTasks }"
           :move="{ transition: { duration: 0.3 } }"
         >
           <li v-for="(taskItem, taskIndex) in tasks" :key="taskItem.task_id">
@@ -271,7 +312,6 @@
 </template>
 
 <script setup>
-import loader from "../../ui/loader.vue";
 import { scrollIntoView } from "seamless-scroll-polyfill";
 import { useRouter } from "nuxt/app";
 import { provide, shallowRef } from "vue";
@@ -439,7 +479,9 @@ provide("completedTasksCount", completedTasksCount);
 provide("openTask", openTask);
 
 const pendingLesson = inject("pendingLesson");
+// true до первого ответа — показываем скелетон, а не «Заданий нет»
 const firstRequest = ref(true);
+const TASK_SKELETON_ROWS = 4;
 
 const getLessonTasks = async () => {
   pendingTasks.value = true;

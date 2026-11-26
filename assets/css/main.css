@@ -171,8 +171,12 @@
 }
 
 :root {
-  --page-bg: #f4f7fb;
-  --page-bg-secondary: #eaf0f8;
+  /* Фон страницы (body::before): базовый цвет, верх и два мягких свечения
+     в тонах фирменного градиента синий → фиолетовый */
+  --page-bg: #f5f7fb;
+  --page-bg-secondary: #eaf1fb;
+  --page-glow-1: rgb(59 130 246 / 0.12);
+  --page-glow-2: rgb(139 92 246 / 0.07);
   --shadow-soft: 0 16px 40px -28px rgb(15 23 42 / 0.28);
   --shadow-medium: 0 24px 60px -30px rgb(15 23 42 / 0.32);
   --shadow-strong: 0 36px 90px -36px rgb(15 23 42 / 0.42);
@@ -185,8 +189,12 @@
 }
 
 .dark {
-  --page-bg: #09111f;
-  --page-bg-secondary: #111c2e;
+  /* Темнее карточек (slate-800 → slate-900), чтобы они «приподнимались»;
+     свечение чуть сильнее — на тёмном оно иначе теряется */
+  --page-bg: #0a1120;
+  --page-bg-secondary: #0e1a2f;
+  --page-glow-1: rgb(59 130 246 / 0.16);
+  --page-glow-2: rgb(139 92 246 / 0.10);
   --shadow-soft: 0 20px 42px -28px rgb(2 6 23 / 0.6);
   --shadow-medium: 0 28px 66px -32px rgb(2 6 23 / 0.72);
   --shadow-strong: 0 40px 96px -40px rgb(2 6 23 / 0.82);
@@ -551,19 +559,36 @@ html {
 }
 
 body {
-  @apply bg-inactive text-active font-normal duration-200;
+  @apply text-active font-normal duration-200;
   font-family: 'Roboto', sans-serif;
   min-height: 100vh;
   line-height: 1.55;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-      background-color: var(--page-bg);
-    background-image:
-        radial-gradient(circle at top left, rgb(86 164 255 / 16%), transparent 28%),
-        radial-gradient(circle at top right, rgb(59 130 246 / 12%), transparent 22%),
-        linear-gradient(180deg, var(--page-bg-secondary) 0%, var(--page-bg) 26%, var(--page-bg) 100%);
-    background-attachment: fixed;
+  background-color: var(--page-bg);
+  color-scheme: light;
+}
+
+/* Нативные элементы браузера (скроллбары, календарь в input[type=date],
+   автозаполнение) — тоже тёмные */
+.dark body {
+  color-scheme: dark;
+}
+
+/* Фон отдельным фиксированным слоем, а не background-attachment: fixed —
+   не перерисовывается при прокрутке и одинаково работает на iOS.
+   Свечения широкие и опущены, чтобы выглядывать из-под шапки и меню. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(ellipse 60% 50% at 10% 0%, var(--page-glow-1), transparent 70%),
+    radial-gradient(ellipse 45% 40% at 95% 5%, var(--page-glow-2), transparent 70%),
+    linear-gradient(180deg, var(--page-bg-secondary) 0%, var(--page-bg) 35%);
 }
 
 h1, h2, h3, h4, h5, h6, .title-font {
@@ -1915,32 +1940,115 @@ img.img-loading{
   @apply border-corp text-corp;
 }
 
+/* ===== Уведомления (vue-toastification + composables/useNotify.js) =====
+   Карточка в стиле интерфейса: цветная полоска слева, иконка в цветном
+   квадрате, крестик и тонкая полоска оставшегося времени. Цвет задаёт тип
+   (success / info / warning / danger) через --toast-accent. Двойной класс —
+   чтобы перебить стили библиотеки (.Vue-Toastification__toast--default и т.п.) */
 .custom-toast{
-  @apply flex items-center gap-5 min-h-max px-4 py-3;
+  --toast-accent: 59 130 246; /* info — blue-500 */
 }
 
-.custom-toast i{
-  @apply text-3xl m-0;
+.custom-toast.success{ --toast-accent: 34 197 94; }  /* green-500 */
+.custom-toast.warning{ --toast-accent: 245 158 11; } /* amber-500: жёлтый warning плохо читается */
+.custom-toast.danger{ --toast-accent: 239 68 68; }   /* red-500 */
+
+.Vue-Toastification__toast.custom-toast{
+  @apply items-center gap-3 rounded-2xl border bg-white text-dark-500 dark:bg-slate-800 dark:text-slate-100;
+  border-color: var(--surface-border);
+  box-shadow: var(--shadow-medium), 0 2px 8px -2px rgb(15 23 42 / 0.08);
+  min-height: 0;
+  min-width: 300px;
+  max-width: 420px;
+  padding: 0.75rem 0.75rem 0.75rem 1rem;
+  font-family: inherit;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.custom-toast .close-button{
-  @apply opacity-50 text-2xl;
+.Vue-Toastification__toast.custom-toast:hover{
+  transform: translateY(-1px);
 }
 
-.custom-toast.info{
-  @apply bg-corp;
+/* Цветная полоска слева */
+.Vue-Toastification__toast.custom-toast::before{
+  content: "";
+  @apply absolute left-0 top-0 bottom-0 w-1;
+  background-color: rgb(var(--toast-accent));
 }
 
-.custom-toast.warning{
-  @apply bg-warning;
+.custom-toast .Vue-Toastification__icon{
+  @apply flex items-center justify-center shrink-0 w-9 h-9 m-0 rounded-xl text-lg;
+  color: rgb(var(--toast-accent));
+  background-color: rgb(var(--toast-accent) / 0.14);
 }
 
-.custom-toast.danger{
-  @apply bg-danger;
+.custom-toast .Vue-Toastification__toast-body{
+  @apply text-sm font-medium leading-snug;
 }
 
-.custom-toast.success{
-  @apply bg-success;
+/* Тост с действием по клику (например, «нажмите, чтобы включить микрофон») */
+.custom-toast.clickable{
+  cursor: pointer;
+}
+
+.Vue-Toastification__toast.custom-toast .Vue-Toastification__close-button{
+  @apply flex items-center justify-center shrink-0 w-7 h-7 p-0 rounded-lg text-xl font-normal text-slate-500 dark:text-slate-400 opacity-70;
+  line-height: 1;
+}
+
+.Vue-Toastification__toast.custom-toast .Vue-Toastification__close-button:hover,
+.Vue-Toastification__toast.custom-toast .Vue-Toastification__close-button:focus-visible{
+  @apply opacity-100 text-dark-500 dark:text-slate-100;
+  background-color: var(--cell-tint);
+}
+
+/* Сколько осталось до скрытия */
+.custom-toast .Vue-Toastification__progress-bar{
+  height: 3px;
+  background-color: rgb(var(--toast-accent) / 0.55);
+}
+
+/* Телефон: библиотека растягивает тост на всю ширину без скруглений — делаем
+   карточку с отступами по краям */
+@media only screen and (max-width: 600px){
+  .Vue-Toastification__container.top-right{
+    padding: 0.5rem 0.75rem 0;
+  }
+
+  .Vue-Toastification__container .Vue-Toastification__toast.custom-toast{
+    @apply rounded-2xl mb-2;
+    min-width: 0;
+    max-width: none;
+  }
+}
+
+/* Появление: мягко выезжает справа (вместо «прыгающего» bounce по умолчанию) */
+.toast-slide-enter-active{
+  animation: toast-in 0.32s cubic-bezier(0.21, 1.02, 0.73, 1) both;
+}
+
+.toast-slide-leave-active{
+  animation: toast-out 0.22s ease-in both;
+}
+
+.toast-slide-move{
+  transition: transform 0.25s ease;
+}
+
+@keyframes toast-in{
+  from { opacity: 0; transform: translate3d(24px, 0, 0) scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes toast-out{
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translate3d(24px, 0, 0) scale(0.96); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .toast-slide-enter-active,
+  .toast-slide-leave-active{ animation-duration: 0.01ms; }
+  .Vue-Toastification__toast.custom-toast:hover{ transform: none; }
 }
 
 .card {
@@ -3983,6 +4091,59 @@ a:focus-visible > .cover-card{
 }
 
 /* ===== Вкладка «Задания» урока (components/lesson/tabs/tasks.vue) ===== */
+/* Список сущностей обновляется (фильтр, сортировка, страница): таблица и
+   карточки на месте, по ним идёт перелив, клики на это время отключены */
+.list-refreshing{
+  @apply pointer-events-none;
+}
+
+/* .table уже relative и с горизонтальной прокруткой — её не трогаем */
+.list-refreshing .entity-card{
+  @apply relative overflow-hidden;
+}
+
+.list-refreshing .table::after,
+.list-refreshing .entity-card::after{
+  content: "";
+  @apply absolute inset-0 pointer-events-none;
+  background: linear-gradient(90deg, transparent, rgb(148 163 184 / 0.18), transparent);
+  transform: translateX(-100%);
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+/* Расписание обновляется (фильтр, перенос, удаление): календарь на месте,
+   по нему идёт перелив, клики на это время отключены */
+.sg-refreshing{
+  @apply pointer-events-none overflow-hidden rounded-2xl;
+}
+
+.sg-refreshing::after{
+  content: "";
+  @apply absolute inset-0 pointer-events-none;
+  z-index: 5;
+  background: linear-gradient(90deg, transparent, rgb(148 163 184 / 0.18), transparent);
+  transform: translateX(-100%);
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+/* Список заданий обновляется: строки на месте, по ним идёт перелив
+   (как у .skeleton), клики на это время отключены */
+.task-list.refreshing{
+  @apply pointer-events-none;
+}
+
+.task-list.refreshing .task-row{
+  @apply relative overflow-hidden;
+}
+
+.task-list.refreshing .task-row::after{
+  content: "";
+  @apply absolute inset-0 pointer-events-none;
+  background: linear-gradient(90deg, transparent, rgb(148 163 184 / 0.18), transparent);
+  transform: translateX(-100%);
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
 .tasks-summary{
   @apply flex flex-col gap-4 p-5 rounded-2xl border bg-active;
   border-color: var(--surface-border);
@@ -4187,6 +4348,153 @@ a:focus-visible > .cover-card{
 
 .presence-dot.online{
   @apply bg-success;
+}
+
+/* ===== Окно «Участники» в конференции ===== */
+.participants-toolbar{
+  @apply flex flex-wrap items-center justify-between gap-3;
+}
+
+.lesson-badge.muted{
+  @apply text-slate-500 dark:text-slate-400;
+  border-color: var(--surface-border);
+  background-color: var(--cell-tint);
+}
+
+.participants-search{
+  @apply flex items-center gap-2 h-10 px-3 rounded-xl border bg-active text-inactive w-full sm:w-64;
+  border-color: var(--surface-border);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.participants-search:focus-within{
+  border-color: rgb(59 130 246 / 0.6);
+  box-shadow: var(--shadow-focus);
+}
+
+.participants-search input{
+  @apply flex-1 min-w-0 h-full bg-transparent border-0 p-0 text-sm text-active outline-none;
+  box-shadow: none;
+}
+
+.participants-section-title{
+  @apply mb-0 text-xs font-semibold uppercase tracking-wide text-inactive;
+}
+
+.participant-list{
+  @apply flex flex-col gap-2 list-none p-0 m-0;
+}
+
+.participant-row{
+  @apply flex items-center gap-3 p-2.5 pr-3 rounded-2xl border bg-active;
+  border-color: var(--surface-border);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+/* Вы — лёгкая синяя подложка, чтобы быстро найти себя */
+.participant-row.me{
+  background-color: rgb(59 130 246 / 0.05);
+  border-color: rgb(59 130 246 / 0.25);
+}
+
+/* Говорит — зелёная рамка, как у плитки видео */
+.participant-row.speaking{
+  border-color: rgb(34 197 94 / 0.55);
+}
+
+.participant-row.offline{
+  @apply bg-inactive;
+}
+
+.participant-row.offline .participant-avatar{
+  @apply opacity-60 grayscale;
+}
+
+/* Кольцо вокруг аватара, пока участник говорит */
+.participant-avatar::after{
+  content: "";
+  @apply absolute -inset-1 rounded-full border-2 border-success opacity-0 pointer-events-none;
+  transition: opacity 0.2s ease;
+}
+
+.participant-row.speaking .participant-avatar::after{
+  @apply opacity-100;
+}
+
+.participant-status{
+  @apply flex items-center gap-1.5 mt-0.5 text-xs text-inactive;
+}
+
+.participant-status > span{
+  @apply inline-flex items-center gap-1.5;
+}
+
+/* Роль рядом с именем */
+.role-chip{
+  @apply inline-flex items-center px-2 py-px rounded-full text-[11px] font-semibold leading-4 whitespace-nowrap;
+}
+
+.role-chip.me{
+  @apply text-corp;
+  background-color: rgb(59 130 246 / 0.12);
+}
+
+.role-chip.mentor{
+  @apply text-success;
+  background-color: rgb(34 197 94 / 0.12);
+}
+
+/* Микрофон / камера: включено — спокойно, выключено — красным */
+.device-pill{
+  @apply flex items-center justify-center w-8 h-8 rounded-lg text-base text-slate-500 dark:text-slate-300;
+  background-color: var(--cell-tint);
+}
+
+.device-pill.off{
+  @apply text-danger;
+  background-color: rgb(239 68 68 / 0.1);
+}
+
+/* «Говорит»: три пляшущих столбика */
+.speaking-bars{
+  @apply inline-flex items-end gap-[2px] h-3;
+}
+
+.speaking-bars i{
+  @apply block w-[3px] rounded-full bg-success;
+  height: 100%;
+  animation: speaking-bar 0.9s ease-in-out infinite;
+}
+
+.speaking-bars i:nth-child(2){ animation-delay: 0.15s; }
+.speaking-bars i:nth-child(3){ animation-delay: 0.3s; }
+
+@keyframes speaking-bar{
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+
+/* Качество связи: три столбика разной высоты, закрашено по уровню */
+.signal-bars{
+  @apply inline-flex items-end gap-[2px] h-3;
+}
+
+.signal-bars i{
+  @apply block w-[3px] rounded-full bg-slate-300 dark:bg-slate-600;
+}
+
+.signal-bars i:nth-child(1){ height: 40%; }
+.signal-bars i:nth-child(2){ height: 70%; }
+.signal-bars i:nth-child(3){ height: 100%; }
+
+.signal-bars.excellent i{ @apply bg-success; }
+.signal-bars.good i:nth-child(-n+2){ @apply bg-success; }
+.signal-bars.poor i:nth-child(1),
+.signal-bars.poor i:nth-child(2){ @apply bg-amber-500; }
+.signal-bars.bad i:nth-child(1){ @apply bg-danger; }
+
+@media (prefers-reduced-motion: reduce){
+  .speaking-bars i{ animation: none; transform: scaleY(0.7); }
 }
 
 /* ===== Списки сущностей (пользователи, группы) ===== */

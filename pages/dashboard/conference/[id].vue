@@ -426,101 +426,205 @@
           <h5>{{ $t("pages.conference.participants") }}</h5>
         </template>
         <template v-slot:body_content>
-          <div class="flex flex-col gap-y-4">
-            <div class="flex flex-col gap-y-2">
-              <p class="text-success mb-0">
-                {{ $t("online") }}: <b>{{ streams.length }}</b>
-              </p>
-              <ul class="list-group nowrap">
-                <li v-for="stream in streams" :key="stream.peer_id">
-                  <div
-                    class="flex flex-wrap items-center justify-between gap-1"
+          <div class="flex flex-col gap-4">
+            <!-- Сводка + поиск (поиск — когда участников много) -->
+            <div class="participants-toolbar">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="lesson-badge live">
+                  <span class="live-dot !w-2 !h-2" aria-hidden="true"></span>
+                  {{ $t("online") }}: {{ streams.length }}
+                </span>
+                <span
+                  v-if="offlineMembers.length > 0"
+                  class="lesson-badge muted"
+                >
+                  {{ $t("offline") }}: {{ offlineMembers.length }}
+                </span>
+              </div>
+
+              <label
+                v-if="streams.length + offlineMembers.length > 6"
+                class="participants-search"
+              >
+                <i class="pi pi-search" aria-hidden="true"></i>
+                <input
+                  v-model="participantsQuery"
+                  type="search"
+                  :placeholder="$t('pages.conference.participants_search')"
+                  :aria-label="$t('pages.conference.participants_search')"
+                />
+              </label>
+            </div>
+
+            <!-- В сети: вы, учитель, затем остальные по алфавиту -->
+            <ul
+              v-if="filteredOnline.length"
+              class="participant-list"
+              :aria-label="$t('online')"
+            >
+              <li
+                v-for="stream in filteredOnline"
+                :key="stream.peer_id"
+                class="participant-row"
+                :class="{ speaking: stream.speaking, me: !stream.remote }"
+              >
+                <div class="learner-avatar participant-avatar">
+                  <userAvatar
+                    :padding="0.5"
+                    :className="'w-10 h-10 text-sm'"
+                    :user="stream.userInfo"
+                  />
+                  <span class="presence-dot online" aria-hidden="true"></span>
+                </div>
+
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span class="font-medium truncate"
+                      >{{ stream.userInfo.last_name }}
+                      {{ stream.userInfo.first_name }}</span
+                    >
+                    <span v-if="!stream.remote" class="role-chip me">{{
+                      $t("pages.conference.you_badge")
+                    }}</span>
+                    <span
+                      v-if="stream.user_id === conference.mentor_id"
+                      class="role-chip mentor"
+                      >{{ $t("mentor") }}</span
+                    >
+                  </div>
+
+                  <!-- Что происходит с участником: говорит / выполняет задание / связь -->
+                  <div class="participant-status">
+                    <span v-if="stream.speaking" class="text-success">
+                      <span class="speaking-bars" aria-hidden="true"
+                        ><i></i><i></i><i></i
+                      ></span>
+                      {{ $t("pages.conference.speaking") }}
+                    </span>
+                    <span
+                      v-else-if="isParticipantBusy(stream.user_id)"
+                      class="text-amber-600 dark:text-amber-400"
+                    >
+                      <i class="bi bi-pen" aria-hidden="true"></i>
+                      {{ $t("pages.tasks.in_process") }}
+                    </span>
+                    <span
+                      v-else-if="stream.remote && peerQuality(stream)"
+                      :title="$t('ping') + ': ' + peerQuality(stream).rtt + ' ' + $t('time.millisecond.short')"
+                    >
+                      <span
+                        class="signal-bars"
+                        :class="peerQuality(stream).quality"
+                        aria-hidden="true"
+                        ><i></i><i></i><i></i
+                      ></span>
+                      {{
+                        $t(
+                          "pages.conference.connection." +
+                            peerQuality(stream).quality,
+                        )
+                      }}
+                      · {{ peerQuality(stream).rtt }}
+                      {{ $t("time.millisecond.short") }}
+                    </span>
+                    <span v-else>{{ $t("online") }}</span>
+                  </div>
+                </div>
+
+                <!-- Микрофон и камера: выключенное — красным, чтобы сразу было видно -->
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <span
+                    class="device-pill"
+                    :class="{ off: stream.isMuted }"
+                    :title="
+                      stream.isMuted
+                        ? $t('pages.conference.mic_off')
+                        : $t('pages.conference.mic_on')
+                    "
                   >
-                    <div class="flex items-center gap-1">
-                      <userAvatar
-                        :padding="0.5"
-                        :className="'w-7 h-7 text-sm'"
-                        :user="stream.userInfo"
-                      />
-                      <div class="flex flex-col">
-                        <span class="font-medium"
-                          >{{ stream.userInfo.last_name }}
-                          {{ stream.userInfo.first_name }}
-                          <i v-if="!stream.remote">({{ $t("you") }})</i>
-                          <i
-                            class="text-success"
-                            v-if="
-                              stream.remote &&
-                              stream.user_id === conference.mentor_id
-                            "
-                            >({{ $t("mentor") }})</i
-                          >
-                        </span>
-                        <span
-                          v-if="
-                            busyLearners.length > 0 &&
-                            busyLearners.some(
-                              (l) => l.userId === stream.user_id,
-                            )
-                          "
-                          class="text-xs text-warning"
-                          >{{ $t("pages.tasks.in_process") }}</span
-                        >
-                      </div>
-                    </div>
-                    <div class="flex gap-2">
-                      <i
-                        class="bi"
-                        :class="
-                          !stream.isMuted
-                            ? 'bi-mic text-success'
-                            : 'bi-mic-mute text-danger'
-                        "
-                      ></i>
-                      <i
-                        class="bi"
-                        :class="
-                          stream.isStream
-                            ? 'bi-camera-video text-success'
-                            : 'bi-camera-video-off text-danger'
-                        "
-                      ></i>
+                    <i
+                      class="bi"
+                      :class="stream.isMuted ? 'bi-mic-mute' : 'bi-mic'"
+                      aria-hidden="true"
+                    ></i>
+                    <span class="sr-only">{{
+                      stream.isMuted
+                        ? $t("pages.conference.mic_off")
+                        : $t("pages.conference.mic_on")
+                    }}</span>
+                  </span>
+                  <span
+                    class="device-pill"
+                    :class="{ off: !stream.isStream }"
+                    :title="
+                      stream.isStream
+                        ? $t('pages.conference.camera_on')
+                        : $t('pages.conference.camera_off')
+                    "
+                  >
+                    <i
+                      class="bi"
+                      :class="
+                        stream.isStream
+                          ? 'bi-camera-video'
+                          : 'bi-camera-video-off'
+                      "
+                      aria-hidden="true"
+                    ></i>
+                    <span class="sr-only">{{
+                      stream.isStream
+                        ? $t("pages.conference.camera_on")
+                        : $t("pages.conference.camera_off")
+                    }}</span>
+                  </span>
+                </div>
+              </li>
+            </ul>
+
+            <!-- Не в сети: приглушённо, отдельным блоком -->
+            <div v-if="filteredOffline.length" class="flex flex-col gap-2">
+              <p class="participants-section-title">
+                {{ $t("offline") }}
+              </p>
+              <ul class="participant-list" :aria-label="$t('offline')">
+                <li
+                  v-for="member in filteredOffline"
+                  :key="member.user_id"
+                  class="participant-row offline"
+                >
+                  <div class="learner-avatar participant-avatar">
+                    <userAvatar
+                      :padding="0.5"
+                      :className="'w-10 h-10 text-sm'"
+                      :user="{
+                        avatar: member.avatar,
+                        first_name: member.first_name,
+                        last_name: member.last_name,
+                      }"
+                    />
+                    <span class="presence-dot" aria-hidden="true"></span>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <span class="font-medium truncate block"
+                      >{{ member.last_name }} {{ member.first_name }}</span
+                    >
+                    <div class="participant-status">
+                      {{ $t("pages.conference.not_joined") }}
                     </div>
                   </div>
                 </li>
               </ul>
-
-              <template v-if="offlineMembers.length > 0">
-                <p class="text-danger mb-0 text-inactive">
-                  {{ $t("offline") }}: <b>{{ offlineMembers.length }}</b>
-                </p>
-                <ul class="list-group nowrap">
-                  <li v-for="member in offlineMembers" :key="member.user_id">
-                    <div
-                      class="flex flex-wrap items-center justify-between gap-1"
-                    >
-                      <div class="flex items-center gap-1 text-inactive">
-                        <userAvatar
-                          :padding="0.5"
-                          :className="'w-7 h-7 text-sm'"
-                          :user="{
-                            avatar: member.avatar,
-                            first_name: member.first_name,
-                            last_name: member.last_name,
-                          }"
-                        />
-                        <div class="flex flex-col">
-                          <span class="font-medium"
-                            >{{ member.last_name }}
-                            {{ member.first_name }}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                </ul>
-              </template>
             </div>
+
+            <emptyState
+              v-if="
+                participantsQuery &&
+                !filteredOnline.length &&
+                !filteredOffline.length
+              "
+              :text="$t('pages.conference.participants_not_found')"
+              image="/images/calendar-search.svg"
+            />
           </div>
         </template>
       </modal>
@@ -1684,7 +1788,7 @@ import {
 import { debounceHandler } from "~/utils/debounceHandler.js";
 import { startNetworkMonitoring } from "~/composables/usePeerStats.js";
 import { useToast } from "vue-toastification";
-import { useNotify } from "~/composables/useNotify";
+import { useNotify, notifyClasses } from "~/composables/useNotify";
 import Peer from "peerjs";
 import { useRuntimeConfig } from "nuxt/app";
 import SelfieSegmentationPkg from "@mediapipe/selfie_segmentation";
@@ -1885,6 +1989,44 @@ const offlineMembers = computed(() => {
   return conference.value.members.filter((m) => !onlineIds.has(m.user_id));
 });
 
+// ===== Окно «Участники» =====
+const participantsQuery = ref("");
+
+const fullName = (u) =>
+  `${u?.last_name || ""} ${u?.first_name || ""}`.trim();
+
+const matchesQuery = (u) => {
+  const q = participantsQuery.value.trim().toLowerCase();
+  return !q || fullName(u).toLowerCase().includes(q);
+};
+
+// Порядок стабильный (не прыгает, когда кто-то заговорил):
+// вы → учитель → остальные по алфавиту
+const filteredOnline = computed(() => {
+  const mentorId = conference.value?.mentor_id;
+  const rank = (s) => (!s.remote ? 0 : s.user_id === mentorId ? 1 : 2);
+
+  return streams.value
+    .filter((s) => matchesQuery(s.userInfo))
+    .sort(
+      (a, b) =>
+        rank(a) - rank(b) ||
+        fullName(a.userInfo).localeCompare(fullName(b.userInfo)),
+    );
+});
+
+const filteredOffline = computed(() =>
+  offlineMembers.value
+    .filter(matchesQuery)
+    .sort((a, b) => fullName(a).localeCompare(fullName(b))),
+);
+
+const isParticipantBusy = (userId) =>
+  busyLearners.value.some((l) => l.userId === userId);
+
+// Качество связи удалённого участника (обновляется раз в 2 секунды)
+const peerQuality = (stream) => peersStats[stream.peer_id] || null;
+
 const errorMessage = ref(null);
 const pendingConference = ref(null);
 const endedConference = ref(null);
@@ -1903,6 +2045,10 @@ const unReadMessages = ref(0);
 
 const leaveModalIsVisible = ref(false);
 const participantsModalIsVisible = ref(false);
+// Поиск по участникам сбрасываем при закрытии окна
+watch(participantsModalIsVisible, (visible) => {
+  if (!visible) participantsQuery.value = "";
+});
 const drawingBoardModalIsVisible = ref(false);
 const messagesModalIsVisible = ref(false);
 const chatScrollRef = ref(null);
@@ -4046,7 +4192,8 @@ const hideMicLostToast = () => {
 const showMicLostToast = () => {
   if (micLostToastId !== null || isExplicitlyClosed) return;
   micLostToastId = toast(t("errors.media.microphone_lost"), {
-    toastClassName: ["custom-toast", "danger"],
+    toastClassName: notifyClasses("danger", true),
+    icon: "pi pi-microphone",
     timeout: false,
     closeOnClick: true,
     onClick: () => {

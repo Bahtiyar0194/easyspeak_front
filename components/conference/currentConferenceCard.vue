@@ -24,9 +24,18 @@
     <div class="live-card-body">
       <!-- Статус + название -->
       <div class="flex flex-col gap-2">
-        <span class="lesson-badge live w-fit">
+        <!-- Одна конференция — «Идёт сейчас»; за несколько минут до начала,
+             когда вход уже открыт, — «Скоро начнётся» -->
+        <span
+          class="lesson-badge w-fit"
+          :class="started ? 'live' : 'warning'"
+        >
           <span class="live-dot !w-2 !h-2" aria-hidden="true"></span>
-          {{ $t("pages.dashboard.live_now") }}
+          {{
+            started
+              ? $t("pages.conference.card_live")
+              : $t("pages.conference.card_soon")
+          }}
         </span>
         <h3 class="mb-0 leading-tight">{{ title }}</h3>
         <p
@@ -140,6 +149,26 @@
             <i class="pi pi-trash" aria-hidden="true"></i>
             {{ $t("delete") }}
           </button>
+          <!-- Ссылка для учеников — только персоналу школы (как «Создать конференцию») -->
+          <roleProvider :roles="[1, 2, 3, 4]">
+            <button
+              type="button"
+              class="btn btn-light max-sm:flex-1"
+              :title="conferenceUrl"
+              @click="copyLink"
+            >
+              <i
+                class="pi"
+                :class="linkCopied ? 'pi-check text-success' : 'pi-link'"
+                aria-hidden="true"
+              ></i>
+              {{
+                linkCopied
+                  ? $t("pages.conference.link_copied")
+                  : $t("pages.conference.copy_link")
+              }}
+            </button>
+          </roleProvider>
           <nuxt-link
             class="btn btn-success animate-pulse-glow max-sm:flex-1"
             :to="localePath('/dashboard/conference/' + props.conference.uuid)"
@@ -157,8 +186,12 @@
 import { useRuntimeConfig } from "nuxt/app";
 import countdownTimer from "../ui/countdownTimer.vue";
 import userAvatar from "../ui/userAvatar.vue";
+import roleProvider from "../ui/roleProvider.vue";
+import { useNotify } from "~/composables/useNotify";
 
 const schoolStore = useSchoolStore();
+const { t } = useI18n();
+const notify = useNotify();
 const config = useRuntimeConfig();
 const authUser = useSanctumUser();
 
@@ -230,9 +263,65 @@ const progress = computed(() => {
   return Math.round(Math.min(100, Math.max(0, p)));
 });
 
+// Урок уже начался? Без даты начала считаем, что идёт
+const started = computed(() => {
+  const start = parseDate(props.conference.start_time);
+  return !start || isNaN(start) || now.value >= start.getTime();
+});
+
+// ===== Ссылка на конференцию для учеников =====
+// Без префикса языка: у ученика откроется его собственный язык интерфейса
+const conferenceUrl = computed(() =>
+  import.meta.client
+    ? `${window.location.origin}/dashboard/conference/${props.conference.uuid}`
+    : "",
+);
+
+const linkCopied = ref(false);
+let linkCopiedTimer = null;
+
+// navigator.clipboard работает только по https (и на localhost). На http,
+// например на локальном домене, копируем через скрытое текстовое поле.
+const writeToClipboard = async (text) => {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  try {
+    if (!document.execCommand("copy")) throw new Error("copy failed");
+  } finally {
+    document.body.removeChild(textarea);
+  }
+};
+
+const copyLink = async () => {
+  try {
+    await writeToClipboard(conferenceUrl.value);
+    linkCopied.value = true;
+    notify("success", t("pages.conference.link_copied"));
+    clearTimeout(linkCopiedTimer);
+    linkCopiedTimer = setTimeout(() => (linkCopied.value = false), 2500);
+  } catch (e) {
+    // Браузер не дал скопировать — показываем ссылку, чтобы скопировать вручную
+    notify("warning", conferenceUrl.value, { timeout: 15000 });
+  }
+};
+
 onMounted(() => {
   tick = setInterval(() => (now.value = Date.now()), 15000);
 });
 
-onBeforeUnmount(() => clearInterval(tick));
+onBeforeUnmount(() => {
+  clearInterval(tick);
+  clearTimeout(linkCopiedTimer);
+});
 </script>

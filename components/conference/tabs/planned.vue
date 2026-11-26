@@ -15,22 +15,16 @@
       </div>
     </roleProvider>
 
-    <div class="col-span-12">
-      <div v-if="schedule.length > 0" class="custom-grid">
-        <div class="col-span-12 relative">
-          <scheduleGrid
-            :schedule="schedule"
-            :pendingSchedule="pendingSchedule"
-            :openEventModal="null"
-          />
-        </div>
-      </div>
-
-      <emptyState
-        v-else
-        :pending="pending"
-        :text="$t('pages.events.no_events')"
-        image="/images/calendar-search.svg"
+    <!-- Календарь грузит расписание помесячно сам (@range). Пустые дни видны
+         в календаре, в режиме «День» — своё «нет занятий» -->
+    <div class="col-span-12 relative">
+      <scheduleGrid
+        :schedule="schedule"
+        :pendingSchedule="pendingSchedule"
+        :rangeLoaded="scheduleHasData"
+        :monthCounts="monthCounts"
+        :openEventModal="null"
+        @range="setScheduleRange"
       />
     </div>
   </div>
@@ -94,23 +88,24 @@ import modal from "../../ui/modal.vue";
 import loader from "../../ui/loader.vue";
 import emptyState from "~/components/ui/emptyState.vue";
 import scheduleGrid from "../../schedule/scheduleGrid.vue";
-import { checkConferenceLiveNow } from "~/composables/useConferenceLive";
+import {
+  onConferencesChanged,
+  checkConferenceLiveNow,
+} from "~/composables/useConferenceLive";
+import { useScheduleLoader } from "~/composables/useScheduleLoader";
 
 const router = useRouter();
 const errors = ref([]);
 const { $axiosPlugin } = useNuxtApp();
 const schoolStore = useSchoolStore();
-const pending = ref(true);
 const pendingAdd = ref(false);
 const pendingDelete = ref(false);
-const pendingSchedule = ref(true);
 
 const mode = "plan";
 
 const addFormRef = ref(null);
 const childRef = ref(null);
 
-const schedule = ref([]);
 // const conference = ref(null);
 
 const addModalIsVisible = ref(false);
@@ -125,29 +120,38 @@ const props = defineProps({
 
 const { attributes } = toRefs(props);
 
-const getSchedule = async () => {
-  pendingSchedule.value = true;
-  await $axiosPlugin
-    .post("schedule/get")
-    .then((response) => {
-      schedule.value = response.data;
-      pendingSchedule.value = false;
-      pending.value = false;
-    })
-    .catch((err) => {
-      if (err.response) {
-        router.push({
-          path: "/error",
-          query: {
-            status: err.response.status,
-            message: err.response.data.message,
-            url: err.request.responseURL,
-          },
-        });
-      } else {
-        router.push("/error");
-      }
-    });
+let scheduleLoadedAt = 0;
+
+// Расписание грузится помесячно — только то, что видно в календаре
+const {
+  schedule,
+  pending: pendingSchedule,
+  hasData: scheduleHasData,
+  monthCounts,
+  setRange: setScheduleRange,
+  refresh: refreshSchedule,
+} = useScheduleLoader({
+  onError: (err) => {
+    if (err.response) {
+      router.push({
+        path: "/error",
+        query: {
+          status: err.response.status,
+          message: err.response.data.message,
+          url: err.request.responseURL,
+        },
+      });
+    } else {
+      router.push("/error");
+    }
+  },
+});
+
+// Перезагрузить видимый период. silent — фоновое обновление: ошибки не
+// уводят на страницу ошибки
+const getSchedule = async (silent = false) => {
+  await refreshSchedule({ silent });
+  scheduleLoadedAt = Date.now();
 };
 
 const timeIsUp = () => {
@@ -244,7 +248,12 @@ const closeAddModal = () => {
 //   conference.value = null;
 // };
 
-onMounted(() => {
-  getSchedule();
+// Урок начался/закончился, создан, перенесён или удалён — меню
+// (layouts/dashboard.vue) замечает это при опросе, и расписание обновляется само
+onConferencesChanged(() => {
+  if (pendingSchedule.value || pendingAdd.value) return;
+  // Только что загрузили сами (например, после создания) — расписание свежее
+  if (Date.now() - scheduleLoadedAt < 5000) return;
+  getSchedule(true);
 });
 </script>

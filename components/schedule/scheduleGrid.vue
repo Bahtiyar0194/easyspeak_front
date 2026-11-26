@@ -45,12 +45,15 @@
       </div>
     </div>
 
-    <div class="relative">
-      <loader
-        v-if="pendingSchedule"
-        :className="'overlay !rounded-xl'"
-        :showPendingText="true"
-      />
+    <!-- Сетка календаря от данных не зависит: при первой загрузке рисуем её
+         сразу, а вместо занятий — скелетон-плашки. При обновлении (фильтр,
+         перенос, удаление) календарь на месте, по нему идёт перелив. -->
+    <div
+      class="relative"
+      :class="{ 'sg-refreshing': refreshing }"
+      :aria-busy="pendingSchedule || undefined"
+    >
+      <span v-if="pendingSchedule" class="sr-only">{{ $t("loading") }}</span>
 
       <!-- ГОД -->
       <div v-if="mode === 'year'" class="sg-year">
@@ -62,13 +65,18 @@
           :class="{
             current:
               m - 1 === today.month() && currentDate.year() === today.year(),
-            empty: monthCount(m - 1) === 0,
+            empty: !skeleton && monthCount(m - 1) === 0,
           }"
           @click="selectMonth(m - 1)"
         >
           <span class="capitalize font-semibold">{{ monthName(m - 1) }}</span>
           <span class="sg-month-count">
-            <b>{{ monthCount(m - 1) }}</b>
+            <span
+              v-if="skeleton"
+              class="skeleton inline-block h-6 w-7 align-middle"
+              aria-hidden="true"
+            ></span>
+            <b v-else>{{ monthCount(m - 1) }}</b>
             <span class="text-inactive text-xs lowercase">{{
               $t("pages.lessons.lessons_count")
             }}</span>
@@ -97,6 +105,32 @@
               @keydown.enter="selectDay(cell.date)"
             >
               <span class="sg-day-num">{{ cell.date.date() }}</span>
+
+              <!-- Первая загрузка: скелетон-плашки в части дней -->
+              <template v-if="skeleton">
+                <div
+                  v-if="skeletonCount(cell.date)"
+                  class="sg-chips max-md:hidden"
+                  aria-hidden="true"
+                >
+                  <div
+                    v-for="n in skeletonCount(cell.date)"
+                    :key="n"
+                    class="skeleton h-6 w-full !rounded-md"
+                  ></div>
+                </div>
+                <div
+                  v-if="skeletonCount(cell.date)"
+                  class="sg-dots md:hidden"
+                  aria-hidden="true"
+                >
+                  <span
+                    v-for="n in skeletonCount(cell.date)"
+                    :key="n"
+                    class="skeleton !bg-slate-300 dark:!bg-slate-600"
+                  ></span>
+                </div>
+              </template>
 
               <!-- Компьютер: занятия плашками -->
               <div v-if="eventsOn(cell.date).length" class="sg-chips max-md:hidden">
@@ -150,7 +184,14 @@
             <span class="sg-day-num">{{ d.date() }}</span>
           </button>
 
-          <div v-if="eventsOn(d).length" class="sg-chips">
+          <div v-if="skeleton" class="sg-chips" aria-hidden="true">
+            <div
+              v-for="n in Math.max(1, skeletonCount(d))"
+              :key="n"
+              class="skeleton h-12 w-full !rounded-lg"
+            ></div>
+          </div>
+          <div v-else-if="eventsOn(d).length" class="sg-chips">
             <button
               type="button"
               v-for="e in eventsOn(d)"
@@ -171,8 +212,25 @@
 
       <!-- ДЕНЬ: карточки занятий -->
       <div v-if="mode === 'day'">
+        <!-- Скелетон карточек занятий -->
+        <div v-if="skeleton" class="flex flex-col gap-3" aria-hidden="true">
+          <div
+            v-for="n in 2"
+            :key="n"
+            class="flex gap-4 p-4 rounded-2xl border bg-active"
+            style="border-color: var(--surface-border)"
+          >
+            <div class="skeleton w-24 h-24 shrink-0 !rounded-xl max-sm:hidden"></div>
+            <div class="flex-1 min-w-0 flex flex-col gap-2.5">
+              <div class="skeleton h-5 w-20 !rounded-full"></div>
+              <div class="skeleton h-5 w-2/3"></div>
+              <div class="skeleton h-3.5 w-1/2"></div>
+              <div class="skeleton h-3.5 w-1/3"></div>
+            </div>
+          </div>
+        </div>
         <scheduleTable
-          v-if="dayEvents.length"
+          v-else-if="dayEvents.length"
           :schedule="dayEvents"
           :openEventModal="props.openEventModal"
           :showPoster="true"
@@ -180,7 +238,6 @@
         />
         <emptyState
           v-else
-          :pending="pendingSchedule"
           :text="$t('pages.events.no_events')"
           icon="bi bi-calendar-x"
         />
@@ -189,7 +246,6 @@
   </div>
 </template>
 <script setup>
-import loader from "../ui/loader.vue";
 import emptyState from "~/components/ui/emptyState.vue";
 import scheduleTable from "./scheduleTable.vue";
 
@@ -215,9 +271,48 @@ const props = defineProps({
     type: Function,
     default: null,
   },
+
+  // Помесячная загрузка (composables/useScheduleLoader.js): есть ли данные
+  // для видимого периода. false — показываем скелетон, а не перелив.
+  // Когда расписание передано целиком — не нужен.
+  rangeLoaded: {
+    type: Boolean,
+    default: true,
+  },
+
+  // Режим «Год» при помесячной загрузке: 12 счётчиков с сервера (январь — [0]).
+  // null — считаем по переданному расписанию.
+  monthCounts: {
+    type: Array,
+    default: null,
+  },
 });
 
+// Видимый период — для помесячной загрузки:
+// { mode, year, months: ["YYYY-MM", ...] }
+const emit = defineEmits(["range"]);
+
 const { schedule, pendingSchedule } = toRefs(props);
+
+// ===== Загрузка =====
+// Нет данных для видимого периода (первая загрузка или ещё не загруженный
+// месяц) — скелетон вместо занятий. Обновление уже показанных данных —
+// календарь на месте, по нему идёт перелив (.sg-refreshing)
+const loadedOnce = ref(!pendingSchedule.value);
+watch(pendingSchedule, (pending) => {
+  if (!pending) loadedOnce.value = true;
+});
+
+const skeleton = computed(
+  () => pendingSchedule.value && (!loadedOnce.value || !props.rangeLoaded),
+);
+const refreshing = computed(
+  () => pendingSchedule.value && loadedOnce.value && props.rangeLoaded,
+);
+
+// Сколько скелетон-плашек в дне: 0–2, стабильно для даты (не «мигает»),
+// примерно в половине дней — пусто, как в настоящем расписании
+const skeletonCount = (d) => [0, 1, 0, 2, 1, 0, 1][(d.date() * 3 + d.month()) % 7];
 
 const { t, localeProperties } = useI18n();
 
@@ -294,6 +389,7 @@ const eventsOn = (d) => eventsByDate.value[d.format("YYYY-MM-DD")] || [];
 const dayEvents = computed(() => eventsOn(currentDate.value));
 
 const monthCount = (m) => {
+  if (props.monthCounts) return props.monthCounts[m] || 0;
   const y = currentDate.value.year();
   return (schedule.value || []).filter((e) => {
     const d = dayjs(e.date);
@@ -319,6 +415,30 @@ const currentWeek = computed(() =>
   Array.from({ length: 7 }, (_, i) =>
     currentDate.value.startOf("isoWeek").add(i, "day"),
   ),
+);
+
+// Сообщаем видимый период: какие месяцы нужны на экране
+// (неделя на стыке месяцев — оба), для «Года» — только год
+watch(
+  [mode, currentDate],
+  () => {
+    const d = currentDate.value;
+    let months = [];
+
+    if (mode.value === "week") {
+      months = [
+        ...new Set([
+          d.startOf("isoWeek").format("YYYY-MM"),
+          d.endOf("isoWeek").format("YYYY-MM"),
+        ]),
+      ];
+    } else if (mode.value !== "year") {
+      months = [d.format("YYYY-MM")];
+    }
+
+    emit("range", { mode: mode.value, year: d.year(), months });
+  },
+  { immediate: true },
 );
 
 const dayClasses = (d) => ({

@@ -1,21 +1,37 @@
 <template>
-  <loader
-    v-if="pendingPage"
-    :className="'full-overlay'"
-    :showPendingText="true"
-  />
   <client-only>
     <tabs
       :tabs="tabs_data"
       :showTabHeader="schoolStore.isAiSchoolDomain === false"
     />
+
+    <!-- Пока вкладки не отрисованы на клиенте — скелетон той же формы
+         (раньше страницу закрывал полноэкранный лоадер) -->
+    <template #fallback>
+      <div class="col-span-12 flex flex-col gap-4">
+        <div
+          v-if="schoolStore.isAiSchoolDomain === false"
+          class="flex gap-2"
+          aria-hidden="true"
+        >
+          <div class="skeleton h-10 w-36 !rounded-xl"></div>
+          <div class="skeleton h-10 w-28 !rounded-xl"></div>
+        </div>
+        <div class="flex items-center gap-3" aria-hidden="true">
+          <div class="skeleton h-10 w-28 !rounded-xl"></div>
+          <div class="skeleton h-4 w-24"></div>
+          <div class="skeleton h-10 w-36 !rounded-xl ml-auto"></div>
+        </div>
+        <listSkeleton :columns="5" />
+      </div>
+    </template>
   </client-only>
 </template>
 <script setup>
 import tabs from "../../../components/ui/tabs.vue";
 import users from "../../../components/users-groups/tabs/users.vue";
 import groups from "../../../components/users-groups/tabs/groups.vue";
-import loader from "../../../components/ui/loader.vue";
+import listSkeleton from "../../../components/ui/listSkeleton.vue";
 const { t } = useI18n();
 const schoolStore = useSchoolStore();
 
@@ -33,8 +49,6 @@ definePageMeta({
   middleware: ["sanctum:auth"],
 });
 
-const pendingPage = ref(true);
-
 const tabs_data = computed(() => [
   {
     name: "users",
@@ -49,8 +63,4 @@ const tabs_data = computed(() => [
     component: groups,
   },
 ]);
-
-onMounted(() => {
-  pendingPage.value = false;
-});
 </script>

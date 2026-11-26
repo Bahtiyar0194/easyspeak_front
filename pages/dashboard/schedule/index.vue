@@ -1,5 +1,6 @@
 <template>
-  <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
+  <!-- Загрузку показывает сам календарь (скелетон / перелив) — без
+       полноэкранного лоадера -->
   <div class="col-span-12">
     <div class="custom-grid">
       <div
@@ -139,7 +140,10 @@
         <scheduleGrid
           :schedule="schedule"
           :pendingSchedule="pendingSchedule"
+          :rangeLoaded="scheduleHasData"
+          :monthCounts="monthCounts"
           :openEventModal="openEventModal"
+          @range="setScheduleRange"
         >
           <template #actions>
             <roleProvider :roles="[1, 2, 3, 4]">
@@ -169,7 +173,7 @@
     :show="eventModalIsVisible"
     :onClose="() => closeEventModal()"
     :className="'modal-xl'"
-    :showLoader="false"
+    :showLoader="pendingDelete"
     :closeOnClickSelf="true"
   >
     <template v-slot:header_content>
@@ -549,7 +553,6 @@ import { ref, computed } from "vue";
 import { useRouter } from "nuxt/app";
 import scheduleGrid from "../../../components/schedule/scheduleGrid.vue";
 import modal from "../../../components/ui/modal.vue";
-import loader from "../../../components/ui/loader.vue";
 import stickyBox from "../../../components/ui/stickyBox.vue";
 import { debounceHandler } from "../../../utils/debounceHandler";
 import roleProvider from "../../../components/ui/roleProvider.vue";
@@ -559,6 +562,7 @@ import note from "../../../components/ui/note.vue";
 import userAvatar from "../../../components/ui/userAvatar.vue";
 import { useConfirm } from "~/composables/useConfirm";
 import { checkConferenceLiveNow } from "~/composables/useConferenceLive";
+import { useScheduleLoader } from "~/composables/useScheduleLoader";
 
 const router = useRouter();
 const errors = ref([]);
@@ -566,9 +570,6 @@ const { $axiosPlugin } = useNuxtApp();
 const schoolStore = useSchoolStore();
 const authUser = useSanctumUser();
 const attributes = ref([]);
-const schedule = ref([]);
-const pending = ref(true);
-const pendingSchedule = ref(true);
 const pendingEdit = ref(false);
 const pendingDelete = ref(false);
 const searchFormRef = ref(null);
@@ -596,12 +597,10 @@ definePageMeta({
 });
 
 const getScheduleAttributes = async () => {
-  pending.value = true;
   await $axiosPlugin
     .get("schedule/get_attributes")
     .then((response) => {
       attributes.value = response.data;
-      pending.value = false;
     })
     .catch((err) => {
       if (err.response) {
@@ -619,34 +618,40 @@ const getScheduleAttributes = async () => {
     });
 };
 
-const getSchedule = async () => {
-  pendingSchedule.value = true;
-  const formData = new FormData(searchFormRef.value);
-  await $axiosPlugin
-    .post("schedule/get", formData)
-    .then((response) => {
-      schedule.value = response.data;
-      pendingSchedule.value = false;
-      pending.value = false;
+// Расписание грузится помесячно — только то, что видно в календаре
+// (composables/useScheduleLoader.js), с фильтрами из формы
+const {
+  schedule,
+  pending: pendingSchedule,
+  hasData: scheduleHasData,
+  monthCounts,
+  setRange: setScheduleRange,
+  refresh: refreshSchedule,
+} = useScheduleLoader({
+  getFormData: () => new FormData(searchFormRef.value || undefined),
+  onError: (err) => {
+    if (err.response) {
+      router.push({
+        path: "/error",
+        query: {
+          status: err.response.status,
+          message: err.response.data.message,
+          url: err.request.responseURL,
+        },
+      });
+    } else {
+      router.push("/error");
+    }
+  },
+});
 
-      if (currentEvent.value) {
-        openEventModal(currentEvent.value.uuid);
-      }
-    })
-    .catch((err) => {
-      if (err.response) {
-        router.push({
-          path: "/error",
-          query: {
-            status: err.response.status,
-            message: err.response.data.message,
-            url: err.request.responseURL,
-          },
-        });
-      } else {
-        router.push("/error");
-      }
-    });
+// Фильтр изменился / урок перенесён или удалён — перезагружаем видимый период
+const getSchedule = async () => {
+  await refreshSchedule();
+
+  if (currentEvent.value) {
+    openEventModal(currentEvent.value.uuid);
+  }
 };
 
 const editEventSubmit = async () => {
@@ -698,15 +703,14 @@ const confirmDeleteConference = async () => {
 
 const deleteConferenceSubmit = async () => {
   if (pendingDelete.value) return;
+  // Лоадер — в окне урока, где нажали «Удалить» (modal :showLoader)
   pendingDelete.value = true;
-  pending.value = true;
   const formData = new FormData();
   formData.append("operation_type_id", 29);
   await $axiosPlugin
     .post("conferences/delete/" + currentEvent.value.uuid, formData)
     .then(() => {
       pendingDelete.value = false;
-      pending.value = false;
       closeEventModal();
       getSchedule();
       checkConferenceLiveNow();
@@ -716,7 +720,6 @@ const deleteConferenceSubmit = async () => {
         if (err.response.status == 422) {
           errors.value = err.response.data;
           pendingDelete.value = false;
-          pending.value = false;
         } else {
           router.push({
             path: "/error",
@@ -793,8 +796,8 @@ const onCourseChange = () => {
   debounceSchedule();
 };
 
+// Само расписание календарь запросит сам (@range), когда отрисуется
 onMounted(() => {
   getScheduleAttributes();
-  getSchedule();
 });
 </script>

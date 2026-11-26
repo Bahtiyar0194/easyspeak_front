@@ -152,13 +152,26 @@
       </stickyBox>
     </div>
 
-    <div class="col-span-12 relative" :class="searchFilter && 'lg:col-span-9'">
-      <template v-if="users.data?.length > 0">
-        <loader
-          v-if="pending"
-          :className="'overlay !rounded-xl'"
-          :showPendingText="true"
-        />
+    <div
+      ref="listTopRef"
+      class="col-span-12 relative scroll-mt-24"
+      :class="searchFilter && 'lg:col-span-9'"
+    >
+      <!-- Скелетон: первая загрузка или переход на другую страницу
+           (при пагинации — столько же строк, сколько было, чтобы не прыгало) -->
+      <listSkeleton
+        v-if="pending && (paging || !users.data?.length)"
+        :columns="userTableHeads.length"
+        :rows="paging ? skeletonRows : 8"
+      />
+
+      <!-- Фильтр / сортировка: список на месте, по нему перелив -->
+      <div
+        v-else-if="users.data?.length > 0"
+        :class="{ 'list-refreshing': pending }"
+        :aria-busy="pending || undefined"
+      >
+        <span v-if="pending" class="sr-only">{{ $t("loading") }}</span>
 
         <!-- Компьютер: таблица -->
         <div class="table table-striped table-sm selectable max-md:!hidden">
@@ -241,22 +254,27 @@
             </button>
           </li>
         </ul>
-
-        <div class="btn-wrap mt-4">
-          <pagination
-            :items="users"
-            :setItems="getUsers"
-            :onSelect="(count) => (perPage = count)"
-          />
-        </div>
-      </template>
+      </div>
 
       <emptyState
         v-else
-        :pending="pending"
         :text="$t('nothing_was_found_for_your_query')"
         icon="bi bi-search"
       />
+
+      <!-- Вне блока списка: при переходе по страницам остаётся на месте
+           под скелетоном; пока идёт загрузка — неактивна -->
+      <div
+        v-if="users.data?.length"
+        class="btn-wrap mt-4"
+        :class="{ 'pointer-events-none opacity-60': pending }"
+      >
+        <pagination
+          :items="users"
+          :setItems="getUsers"
+          :onSelect="(count) => (perPage = count)"
+        />
+      </div>
     </div>
   </div>
 
@@ -996,7 +1014,7 @@
 import { useRouter } from "nuxt/app";
 import modal from "../../ui/modal.vue";
 import subscription from "../../ui/subscription.vue";
-import loader from "../../ui/loader.vue";
+import listSkeleton from "../../ui/listSkeleton.vue";
 import emptyState from "~/components/ui/emptyState.vue";
 import userAvatar from "../../ui/userAvatar.vue";
 import stickyBox from "../../ui/stickyBox.vue";
@@ -1037,7 +1055,7 @@ const userModalIsVisible = ref(false);
 const editModalIsVisible = ref(false);
 const gradeModalIsVisible = ref(false);
 
-const gradeModalDefaultClass = "modal-lg";
+const gradeModalDefaultClass = "modal-2xl";
 const gradeModalClass = ref(gradeModalDefaultClass);
 
 const activeCourse = ref(null);
@@ -1077,8 +1095,24 @@ const userTableHeads = [
   },
 ];
 
+// Переход по страницам: пагинация передаёт url страницы (фильтр, сортировка и
+// смена «по N на странице» — без url). В этом случае показываем скелетон.
+const paging = ref(false);
+const skeletonRows = ref(8);
+const listTopRef = ref(null);
+
 const getUsers = async (url) => {
   pending.value = true;
+  paging.value = Boolean(url);
+
+  if (paging.value) {
+    skeletonRows.value = users.value.data?.length || 8;
+    // Пагинация внизу — поднимаем к началу списка, если его верх не виден
+    const top = listTopRef.value?.getBoundingClientRect().top;
+    if (top !== undefined && top < 0) {
+      listTopRef.value.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
 
   const formData = new FormData(searchFormRef.value);
   formData.append("per_page", perPage.value);
@@ -1094,6 +1128,7 @@ const getUsers = async (url) => {
     .then((response) => {
       users.value = response.data;
       pending.value = false;
+      paging.value = false;
     })
     .catch((err) => {
       if (err.response) {
@@ -1375,7 +1410,7 @@ const selectSection = (section) => {
   pendingGrade.value = true;
 
   setTimeout(() => {
-    gradeModalClass.value = "modal-2xl";
+    gradeModalClass.value = "modal-4xl";
     activeSection.value = section;
     pendingGrade.value = false;
   }, 200);
@@ -1397,7 +1432,7 @@ const selectLesson = async (lesson) => {
       user_id: user.value.user_id,
     })
     .then((response) => {
-      gradeModalClass.value = "modal-2xl";
+      gradeModalClass.value = "modal-4xl";
       activeLesson.value = response.data;
       pendingGrade.value = false;
     })

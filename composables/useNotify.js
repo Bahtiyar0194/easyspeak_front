@@ -8,6 +8,21 @@ export const NOTIFY_TIMEOUTS = {
   danger: 10000,
 };
 
+// Иконка по типу уведомления (PrimeIcons). Свою можно передать в options.icon.
+export const NOTIFY_ICONS = {
+  success: "pi pi-check-circle",
+  info: "pi pi-info-circle",
+  warning: "pi pi-exclamation-triangle",
+  danger: "pi pi-times-circle",
+};
+
+// Классы тоста: тип задаёт цвет (стили — .custom-toast в main.css)
+export const notifyClasses = (type, clickable = false) => [
+  "custom-toast",
+  type,
+  ...(clickable ? ["clickable"] : []),
+];
+
 // Уведомления, которые сейчас на экране: ключ -> id тоста.
 const activeToasts = new Map();
 
@@ -29,7 +44,8 @@ export const useNotify = () => {
     if (activeToasts.has(key)) return activeToasts.get(key);
 
     const id = toast(message, {
-      toastClassName: ["custom-toast", type],
+      toastClassName: notifyClasses(type, Boolean(rest.onClick)),
+      icon: NOTIFY_ICONS[type] ?? NOTIFY_ICONS.info,
       timeout: timeout ?? NOTIFY_TIMEOUTS[type] ?? NOTIFY_TIMEOUTS.info,
       ...rest,
       onClose: () => {

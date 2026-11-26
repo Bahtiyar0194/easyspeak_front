@@ -11,13 +11,8 @@
   </template>
 
   <template v-else-if="courseIsAvailable && lessonIsAvailable">
-    <loader
-      v-if="pendingLesson"
-      :className="'full-overlay'"
-      :showPendingText="true"
-    />
-
-    <!-- Шапка урока -->
+    <!-- Шапка урока. Пока грузятся задания, вкладка показывает свой скелетон
+         (раньше страницу закрывал полноэкранный лоадер) -->
     <div class="col-span-12">
       <div class="lesson-hero">
         <nuxt-link class="lesson-back" :to="sectionLink">
@@ -66,7 +61,6 @@
 
 <script setup>
 import emptyState from "../../../../../../../components/ui/emptyState.vue";
-import loader from "../../../../../../../components/ui/loader.vue";
 import tabs from "../../../../../../../components/ui/tabs.vue";
 import materials from "../../../../../../../components/lesson/tabs/materials.vue";
 import tasks from "../../../../../../../components/lesson/tabs/tasks.vue";
