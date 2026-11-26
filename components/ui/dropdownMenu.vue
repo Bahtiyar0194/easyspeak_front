@@ -4,6 +4,7 @@
       v-if="props.dropdownUp === true"
       class="dropdown-menu up"
       ref="dropdownMenu"
+      @click="onMenuClick"
       :class="{
         show: dropdownMenuOpen === true,
         right: props.position === 'right',
@@ -12,7 +13,12 @@
     >
       <slot name="menu_content" />
     </ul>
-    <div @click="showDropdown" class="cursor-pointer">
+    <div
+      @click="toggleDropdown"
+      class="cursor-pointer"
+      :aria-expanded="dropdownMenuOpen"
+      aria-haspopup="menu"
+    >
       <div class="flex items-center gap-0.5">
         <slot name="btn_content" />
         <svg
@@ -38,6 +44,7 @@
       v-if="props.dropdownUp === false"
       class="dropdown-menu"
       ref="dropdownMenu"
+      @click="onMenuClick"
       :class="{
         show: dropdownMenuOpen === true,
         right: props.position === 'right',
@@ -49,7 +56,8 @@
   </div>
 </template>
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { useRoute } from "nuxt/app";
 const dropdownWrapper = ref(null);
 const dropdownMenu = ref(null);
 const dropdownMenuOpen = ref(false);
@@ -84,13 +92,42 @@ const handleClickOutside = (event) => {
   }
 };
 
+// Esc закрывает открытое меню
+const handleKeydown = (event) => {
+  if (event.key === "Escape" && dropdownMenuOpen.value) {
+    dropdownMenuOpen.value = false;
+  }
+};
+
+// Пункт меню (ссылка или кнопка — прямой потомок <li>) закрывает меню.
+// Переключатели, радио и вложенные группы кнопок меню не закрывают.
+const onMenuClick = (event) => {
+  const item = event.target.closest("li > a, li > button");
+  if (item && dropdownMenu.value?.contains(item)) {
+    dropdownMenuOpen.value = false;
+  }
+};
+
+// После перехода на другую страницу меню закрывается
+const route = useRoute();
+watch(
+  () => route.fullPath,
+  () => (dropdownMenuOpen.value = false),
+);
+
 onMounted(() => {
   window.addEventListener("click", handleClickOutside);
+  window.addEventListener("keydown", handleKeydown);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("click", handleClickOutside);
+  window.removeEventListener("keydown", handleKeydown);
 });
+
+const toggleDropdown = () => {
+  dropdownMenuOpen.value = !dropdownMenuOpen.value;
+};
 
 const showDropdown = () => {
   dropdownMenuOpen.value = true;

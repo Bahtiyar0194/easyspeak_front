@@ -62,6 +62,8 @@ export default {
     or: 'Немесе',
     back: 'Артқа',
     close: 'Жабу',
+    cancel: 'Болдырмау',
+    confirmation: 'Растау',
     check: 'Тексеру',
     swap_places: 'Орындарымен ауыстыру',
     an_error_occurred: 'Қателік орнады',
@@ -131,6 +133,10 @@ export default {
     recording_too_short: "Жазба тым қысқа",
     recording_too_long: "Жазба тым ұзақ",
     recording_silent: "Жазба тым тыныш",
+    hold_to_record: "Дауысты жазу үшін микрофонды басып тұрыңыз",
+    mic_access_denied: "Микрофонға рұқсат жоқ. Браузер баптауларында рұқсат етіңіз",
+    mic_not_found: "Микрофон табылмады",
+    mic_record_failed: "Дыбысты жазу мүмкін болмады",
     handling: "Өңделіп жатыр",
     number_of_options: "Нұсқалар саны",
     number_of_attempts: "Қателерді түзету әрекеттерінің саны",
@@ -157,6 +163,11 @@ export default {
     month: 'Ай',
     week: 'Апта',
     day: 'Күн',
+    today: 'Бүгін',
+    add_course: 'Курс қосу',
+    filter: 'Сүзгі',
+    breadcrumb: 'Навигация',
+    found: 'Табылды',
 
     start_time: 'Басталу уақыты',
     end_time: 'Аяқталу уақыты',
@@ -253,6 +264,7 @@ export default {
             current: "Ағымдағы жүктеліп тұрған сурет"
         },
         audio: {
+            load_error: "Аудионы жүктеу мүмкін болмады",
             select: "Аудиофайл таңдаңыз",
             current: "Ағымдағы жүктеліп тұрған аудио",
             loading: "Күте тұрыңыз, аудиофайл жүктеліп жатыр",
@@ -386,6 +398,7 @@ export default {
     },
 
     pagination: {
+        pages: 'Беттер',
         first_page_title: "Бірінші бетке өту",
         previous_page_title: "Алдыңғы бетке өту",
         next_page_title: "Келесі бетке өту",
@@ -433,6 +446,8 @@ export default {
     },
 
     form: {
+        show_password: "Құпиясөзді көрсету",
+        hide_password: "Құпиясөзді жасыру",
         email: 'Эл.пошта',
         school_email: 'Мектептің эл.поштасы',
         first_name: 'Аты',
@@ -693,6 +708,7 @@ export default {
         login: {
             title: 'Жүйеге кіру',
             sign_in: 'Кіру',
+            back_to_login: 'Кіру бетіне оралу',
             dont_have_an_account: "Менде аккаунт жоқ.",
             forgot_password: "Құпиясөзді ұмыттыңыз ба?",
             password_recovery: "Қалпына келтіру",
@@ -716,7 +732,8 @@ export default {
 
         register: {
             title: 'Тіркелу',
-            have_an_account: 'Менде акканут бар.',
+            have_an_account: 'Менде аккаунт бар.',
+            consent_required: 'Жалғастыру үшін дербес деректерді өңдеуге келісім белгісін қойыңыз',
         },
 
         "password-recovery": {
@@ -729,11 +746,14 @@ export default {
         "change-password": {
             title: 'Құпиясөзді өзгерту',
             inst_1: 'Сәлеметсіз бе, {name}! Жаңа құпиясөз ойлап тауып, оны растауыңызды сұраймыз. Құпиясөз кемінде 8 таңбадан тұратын, күрделі болуы тиіс. Осыдан кейін сіз өз аккаунтыңызға қайта кіре аласыз.',
+            success: 'Құпиясөз өзгертілді. Жаңа құпиясөзбен кіріңіз.',
         },
 
         dashboard: {
             title: 'Жеке кабинет',
-            go_to_dashboard: 'Жеке кабинетке өту'
+            go_to_dashboard: 'Жеке кабинетке өту',
+            live_now: 'Қазір жүріп жатыр',
+            unpaid_lessons: 'Төленбеген сабақтар: {count}',
         },
 
         "users-groups": {
@@ -754,6 +774,7 @@ export default {
         },
 
         groups: {
+            member_click_hint: 'Үлгерімін көру үшін қатысушыны басыңыз',
             title: 'Топтар',
             group: 'Топ',
             choose: 'Топты таңдаңыз',
@@ -918,6 +939,11 @@ export default {
         },
 
         conference: {
+            live_now: 'Бейнеконференция жүріп жатыр',
+            no_current_title: 'Қазір сабақ жоқ',
+            no_current_hint: 'Сабақ басталғанда, ол осында пайда болады. Конференцияны қазір бастауға немесе кестені қарауға болады.',
+            settings: 'Параметрлер',
+            start_now: 'Конференцияны бастау',
             title: 'Бейнеконференция',
             create: 'Конференция қосу',
             create_conference: 'Конференция қосу',
@@ -944,6 +970,8 @@ export default {
             participants: 'Қатысушылар',
             participants_count: 'Қатысушылар саны',
             chat: 'Хабарлар',
+            no_messages: 'Әзірге хабарлар жоқ. Бірінші болып жазыңыз!',
+            send: 'Жіберу',
             search_conference: 'Конференцияны іздеу',
             join: 'Конференцияға қосылу',
             start_time: 'Конференцияның басталу уақыты',
@@ -997,6 +1025,7 @@ export default {
             },
             leave: {
                 title: 'Конференциядан шығу',
+                short: 'Шығу',
                 confirm: 'Сіз конференциядан шыққыңыз келетініне сенімдісіз бе?',
                 yes: 'Ия, шығамын',
                 no: 'Жоқ, қаламын'
@@ -1050,6 +1079,12 @@ export default {
         courses: {
             title: 'Курстар',
             my_courses: 'Менің курстарым',
+            levels_count: 'Деңгейлер: {count}',
+            no_courses: 'Әзірге курстар жоқ',
+            sections_completed: 'Өтілген бөлімдер: {total} ішінен {done}',
+            continue_learning: 'Оқуды жалғастыру',
+            start_learning: 'Оқуды бастау',
+            no_levels: 'Бұл курста әзірге деңгейлер жоқ',
             course: 'Курс',
             go_to_courses: 'Курстарға өту',
             choose_a_course: 'Курсты таңдаңыз',
@@ -1076,6 +1111,7 @@ export default {
         },
 
         lessons: {
+            lessons_completed: 'Өтілген сабақтар: {total} ішінен {done}',
             title: 'Сабақтар',
             lessons_count: 'Сабақтар саны',
             lessons_list: 'Сабақтар тізімі',
@@ -1143,6 +1179,7 @@ export default {
         },
 
         dictionary: {
+            search: 'Сөздер бойынша іздеу',
             title: 'Сөздік',
             word: 'Cөз',
             count: 'Сөздер саны',
@@ -1242,6 +1279,18 @@ export default {
         },
 
         tasks: {
+            stress_hint: 'Әр сөздегі екпінді буынды басыңыз',
+            extra_word_hint: 'Әр жолда артық сөзді басыңыз',
+            match_pictures_hint: 'Әр сөзге сәйкес суреттің нөмірін жазыңыз',
+            picture_number: 'Сурет нөмірі',
+            picture_n: '{n}-суретке сөз',
+            type_or_drop_word: 'Сөзді жазыңыз немесе сүйреңіз',
+            match_hint: 'Әр материалға сәйкес сөйлемнің нөмірін жазыңыз',
+            sentence_number: 'Сөйлем нөмірі',
+            material_unavailable: 'Материал қолжетімсіз',
+            attempts_left: 'Тағы қателесуге болады',
+            letter_n: '{n}-әріп',
+            blank_n: '{n}-сөйлемдегі бос орын',
             title: 'Тапсырмалар',
             task_slug: 'Тапсырманың негізгі тілдегі атауы',
             task_name: 'Тапсырманың атауы',
@@ -1249,6 +1298,12 @@ export default {
             add_a_task: 'Тапсырма қосу',
             adding_a_task: 'Тапсырма қосу',
             delete_task: "Тапсырманы жою",
+            start_tasks: 'Тапсырмаларды бастау',
+            continue_tasks: 'Тапсырмаларды жалғастыру',
+            average_result: 'Орташа нәтиже',
+            completed_of: 'Орындалды: {total} ішінен {done}',
+            all_done: 'Барлық тапсырмалар орындалды!',
+            locked_hint: 'Тапсырма тест барысында ашылады',
             delete_confirm: "Сіз бұл тапсырманы шынымен жойғыңыз келе ме?",
             start_the_task: 'Тапсырманы бастау',
             start_an_other_task: 'Басқа тапсырманы бастау',
@@ -1278,8 +1333,26 @@ export default {
             run: {
                 title: 'Тапсырманы іске қосу',
                 self: 'Маған іске қосу',
-                learner: 'Оқушыға іске қосу'
+                self_short: 'Өзім орындау',
+                learner: 'Оқушыға іске қосу',
+                learner_short: 'Іске қосу'
             },
+            status: {
+                launched: 'Іске қосылды',
+                not_launched: 'Іске қосылмаған',
+                available: 'Қолжетімді',
+                locked: 'Қолжетімсіз',
+                completed: 'Орындалды',
+                reviewing: 'Тексерілуде',
+                in_process: 'Орындап жатыр',
+                not_started: 'Әлі бастаған жоқ',
+                not_completed: 'Орындалмаған'
+            },
+            no_tasks_short: 'Тапсырмалар жоқ',
+            lesson_has_no_tasks: 'Бұл сабақта әзірге тапсырмалар жоқ — іске қосатын ештеңе жоқ',
+            launched_of: 'Іске қосылды: {total} ішінен {done}',
+            learners_done: 'Орындағандар: {total} ішінен {done}',
+            learners_results: 'Оқушылардың нәтижелері',
             launched: {
                 title: 'Тапсырма іске қосылды',
                 learner: 'Оқушыларға іске қосылды'
@@ -1382,6 +1455,8 @@ export default {
             answer_the_questions: {
                 answer_type: 'Сұраққа жауап беру әдісін таңдаңыз',
                 paste_prohibited: 'Өтінеміз жауапты өзіңіз жазыңыз. Көшірілген мәтінді тестілеу ережелеріне тыйым салынады.',
+                filled: 'Толтырылды',
+                sent_for_review: 'Жауаптар мұғалімге тексеруге жіберілді',
                 options: {
                     option_1: 'Мәтін ретіндегі жауап',
                     option_2: 'Бейне ретіндегі жауап',

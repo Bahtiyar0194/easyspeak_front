@@ -18,27 +18,26 @@
       :taskResult="taskResult"
     >
       <template v-slot:task_content>
+        <!-- Статус: сколько осталось / итог + таймер -->
         <div class="col-span-12">
-          <p v-if="timeIsUp" class="font-medium text-center text-danger">
-            {{ $t("time_is_up") }}
-          </p>
-          <p
-            v-else-if="isComplete"
-            class="font-medium text-center text-success"
-          >
-            {{ $t("right") }}
-          </p>
-          <p v-else-if="isWrong" class="font-medium text-center text-danger">
-            {{ $t("wrong") }}
-          </p>
-          <p v-else-if="sentencesLeft > 0" class="text-center">
-            {{ $t("pages.sentences.sentences_left") }}:
-            <b>{{ sentencesLeft }}</b>
-          </p>
-        </div>
-
-        <div class="col-span-12">
-          <div class="flex justify-center items-center">
+          <div class="task-status-bar">
+            <p v-if="timeIsUp" class="mb-0 font-semibold text-danger flex items-center gap-1.5">
+              <i class="pi pi-clock" aria-hidden="true"></i>
+              {{ $t("time_is_up") }}
+            </p>
+            <p v-else-if="isComplete" class="mb-0 font-semibold text-success flex items-center gap-1.5">
+              <i class="pi pi-check-circle" aria-hidden="true"></i>
+              {{ $t("right") }}
+            </p>
+            <p v-else-if="isWrong" class="mb-0 font-semibold text-danger flex items-center gap-1.5">
+              <i class="pi pi-times-circle" aria-hidden="true"></i>
+              {{ $t("wrong") }}
+            </p>
+            <p v-else-if="sentencesLeft > 0" class="mb-0 text-inactive">
+              {{ $t("pages.sentences.sentences_left") }}:
+              <b class="text-active">{{ sentencesLeft }}</b>
+            </p>
+            <span v-else></span>
             <countdownCircleTimer
               :totalSeconds="time"
               :startCommand="isStarted"
@@ -48,82 +47,47 @@
           </div>
         </div>
 
+        <!-- Утверждение -->
         <div class="col-span-12">
           <div
-            class="bg-inactive p-4 rounded-xl text-center"
-            :class="isComplete && 'text-success'"
+            class="word-prompt"
+            :class="{ 'is-right': isComplete, 'is-wrong-prompt': isWrong }"
           >
-            <div class="custom-grid">
-              <div class="col-span-12">
-                <p class="text-xl font-medium mb-0">
-                  {{ currentSentence?.sentence }}
-                </p>
-              </div>
-              <div v-if="taskData.options.show_translate" class="col-span-12">
-                <p class="mb-0">{{ currentSentence?.sentence_translate }}</p>
-              </div>
-
-              <div v-if="isComplete" class="col-span-12">
-                <div class="text-center">
-                  <p class="text-inactive text-xs font-medium mb-0">
-                    {{ $t("your_answer") }}:
-                  </p>
-                  <p class="text-success font-medium mb-0">
-                    {{ currentSentence?.answer || $t("no_answer") }}
-                  </p>
-                </div>
-              </div>
-            </div>
+            <p class="text-xl font-semibold mb-0">{{ currentSentence?.sentence }}</p>
+            <p v-if="taskData.options.show_translate" class="mb-0 text-inactive">
+              {{ currentSentence?.sentence_translate }}
+            </p>
           </div>
         </div>
 
-        <div v-if="isWrong === true" class="col-span-12">
-          <div class="custom-grid">
-            <div class="col-span-12 lg:col-span-6">
-              <div class="card p-4 text-center">
-                <p class="text-inactive text-xs font-medium mb-0">
-                  {{ $t("your_answer") }}:
-                </p>
-                <p class="text-danger font-medium mb-0">
-                  {{ currentSentence?.userAnswer || $t("no_answer") }}
-                </p>
-              </div>
+        <!-- Варианты: после ответа остаются на месте и подсвечиваются -->
+        <div v-if="currentSentence" class="col-span-12">
+          <div class="flex flex-col gap-3">
+            <div class="grid gap-2 sm:grid-cols-3">
+              <trainingButton
+                v-for="(button, buttonIndex) in answerButtons[currentSentence.answer_type]"
+                :key="button + currentSentence.task_sentence_id"
+                :text="button"
+                :number="buttonIndex + 1"
+                :state="buttonState(button)"
+                @click="isStarted && checkSentence(button)"
+              />
             </div>
-            <div class="col-span-12 lg:col-span-6">
-              <div class="card p-4 text-center">
-                <p class="text-inactive text-xs font-medium mb-0">
-                  {{ $t("right_answer") }}:
-                </p>
-                <p class="text-success font-medium mb-0">
-                  {{ currentSentence?.answer }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="isStarted" class="col-span-12">
-          <div class="custom-grid">
-            <div class="col-span-12">
-              <div class="btn-wrap items-center justify-center">
-                <button
-                  v-for="button in answerButtons[currentSentence.answer_type]"
-                  :key="button"
-                  type="button"
-                  class="btn btn-light btn-sm"
-                  @click="checkSentence(button)"
-                >
-                  {{ button }}
-                </button>
-              </div>
-            </div>
+            <p
+              v-if="isStarted"
+              class="text-inactive text-sm text-center hidden lg:flex items-center justify-center gap-1.5 mb-0"
+            >
+              <i class="bi bi-keyboard" aria-hidden="true"></i>
+              {{ $t("pages.training.keyboard.numbers") }}
+            </p>
           </div>
         </div>
 
         <div v-if="timeIsUp || isWrong || isComplete" class="col-span-12">
-          <div class="flex justify-end">
-            <button type="button" class="btn btn-primary" @click="setSentence()">
-              <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
+          <div class="task-actions justify-center">
+            <button type="button" class="btn btn-primary btn-lg" @click="setSentence()">
+              {{ $t("continue") }}
+              <i class="pi pi-arrow-right" aria-hidden="true"></i>
             </button>
           </div>
         </div>
@@ -145,6 +109,7 @@ import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
 import taskLayout from "../../taskLayout.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
+import trainingButton from "../../../../../ui/trainingButton.vue";
 import {
   playSuccessSound,
   playErrorSound,
@@ -186,6 +151,15 @@ const answerButtons = [
 ];
 
 const sentencesLeft = computed(() => sentences.value.length);
+
+// Состояние кнопки варианта: до ответа — idle; после — правильный зелёный,
+// выбранный неверный красный, остальные приглушены
+const buttonState = (button) => {
+  if (isStarted.value) return "idle";
+  if (button == currentSentence.value?.answer) return "correct";
+  if (button == currentSentence.value?.userAnswer) return "wrong";
+  return "locked";
+};
 
 const progressPercentage = computed(() => {
   const totalSentences = taskData.value?.sentences?.length || 0; // Предотвращаем ошибки, если данные ещё не загружены
@@ -283,6 +257,7 @@ const setSentence = () => {
     // Устанавливаем текущее предложение
     currentSentence.value = sentences.value[0];
     currentSentence.value.userAnswer = null;
+    currentSentence.value.checked = false;
     isComplete.value = false;
     isStarted.value = true;
     timeIsUp.value = false;
@@ -308,8 +283,11 @@ const setSentence = () => {
 };
 
 const checkSentence = (answer) => {
+  if (!currentSentence.value || currentSentence.value.checked) return;
+  currentSentence.value.checked = true;
+
   sentences.value.shift();
-  currentSentence.value.userAnswer = answer;
+  currentSentence.value.userAnswer = answer ?? null;
   if (currentSentence.value.answer == answer) {
     isComplete.value = true;
     isStarted.value = false;
@@ -366,7 +344,8 @@ const checkSentence = (answer) => {
           "<b>" +
           currentSentence.value.sentence +
           "</b><br><b class='text-danger capitalize'>" +
-          currentSentence.value.userAnswer +
+          // раньше при окончании времени здесь сохранялось «undefined»
+          (currentSentence.value.userAnswer ?? "—") +
           "</b>",
         right_answer:
           "<b>" +
@@ -389,6 +368,20 @@ const timerIsUp = () => {
 };
 
 const handleKeyPress = (event) => {
+  const options = currentSentence.value
+    ? answerButtons[currentSentence.value.answer_type] || []
+    : [];
+  const optionNumber = /^[1-9]$/.test(event.key) ? Number(event.key) : 0;
+  if (
+    !isFinished.value &&
+    isStarted.value === true &&
+    optionNumber >= 1 &&
+    optionNumber <= options.length
+  ) {
+    checkSentence(options[optionNumber - 1]);
+    return;
+  }
+
   if (event.key === "Enter") {
     if (!isFinished.value) {
       if (

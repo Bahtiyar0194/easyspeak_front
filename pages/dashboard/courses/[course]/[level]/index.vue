@@ -1,117 +1,162 @@
 <template>
-  <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
-  <div
-    v-if="
-      sectionsData.level &&
-      sectionsData.level.available_status &&
-      sectionsData.level.available_status.is_available === true
-    "
-    class="col-span-12"
-  >
-    <div class="custom-grid">
-      <div class="col-span-12">
-        <div
-          class="flex flex-wrap gap-x-2 gap-y-4 items-center justify-between"
-        >
-          <h2 class="mb-0">{{ sectionsData.level.level_name }}</h2>
-          <roleProvider :roles="[1]" :redirect="false">
-            <div class="btn-wrap justify-end">
-              <button type="button"
-                @click="addSectionModalIsVisible = true"
-                class="btn btn-primary"
-              >
-                <i class="pi pi-plus"></i> {{ $t("pages.lessons.add_unit") }}
-              </button>
-            </div>
-          </roleProvider>
-        </div>
-      </div>
-
-      <div
-        v-if="
-          sectionsData.level.available_status.is_available_always === true &&
-          sectionsData.level.price === 0
-        "
-        class="col-span-12"
-      >
-        <div class="bg-corp text-white p-4 rounded-xl">
-          <p class="mb-0">
-            <b>
-              {{ $t("pages.courses.modal.description_alt") }}
-            </b>
-          </p>
-        </div>
-      </div>
-
-      <div
-        v-if="sectionsData && sectionsData.sections.length"
-        class="col-span-12"
-      >
-        <ul class="list-group active">
-          <li v-if="sectionsData && sectionsData.level.completed_percent > 0">
-            <p class="mb-2">
-              <b>{{ $t("pages.courses.level_overall_progress") }}:</b>
-            </p>
-            <progressBar
-              :progressPercentage="sectionsData.level.completed_percent"
-              :wrapClass="'!my-0'"
-              :showPercentage="true"
-              :className="'sm success'"
-            />
-          </li>
-          <li
-            v-for="(section, sectionIndex) in sectionsData.sections"
-            :key="sectionIndex"
-            class="list-item"
-          >
-            <nuxt-link
-              :to="
-                localePath(
-                  '/dashboard/courses/' +
-                    course_slug +
-                    '/' +
-                    level_slug +
-                    '/' +
-                    section.section_id,
-                )
-              "
-            >
-              <div class="flex justify-between items-center gap-x-2">
-                <div class="flex flex-col">
-                  <h5 class="mb-0">
-                    {{ section.section_name }}
-                  </h5>
-                  <span
-                    v-if="section.lessons.length"
-                    class="text-active text-sm"
-                    >{{ $t("pages.lessons.lessons_count") }}:
-                    <b>{{ section.lessons.length }}</b></span
-                  >
-                  <span v-else class="text-inactive text-sm">{{
-                    $t("pages.lessons.there_is_no_lessons")
-                  }}</span>
-                </div>
-                <circleProgressBar
-                  v-if="section.completed_percent > 0"
-                  :progress="section.completed_percent"
-                />
-              </div>
-            </nuxt-link>
-          </li>
-        </ul>
-      </div>
-
-      <div v-else class="col-span-12">
-        <alert :className="'light'">
-          <p class="mb-0">{{ $t("pages.courses.not_sections") }}</p>
-        </alert>
+  <!-- Загрузка: скелетон шапки, прогресса и разделов -->
+  <template v-if="pending && !loaded">
+    <div class="col-span-12 flex flex-col gap-4">
+      <div class="skeleton h-9 w-64 max-w-full"></div>
+      <div class="skeleton h-28 w-full !rounded-2xl"></div>
+      <div class="grid lg:grid-cols-2 gap-3">
+        <div v-for="i in 4" :key="i" class="skeleton h-24 w-full !rounded-2xl"></div>
       </div>
     </div>
-  </div>
+  </template>
+
+  <template v-else-if="isAvailable">
+    <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
+
+    <!-- Шапка -->
+    <div class="col-span-12">
+      <div class="page-head">
+        <h2 class="page-title">
+          {{ sectionsData.level.level_name }}
+          <span v-if="sections.length" class="db-count">{{ sections.length }}</span>
+        </h2>
+        <roleProvider :roles="[1]" :redirect="false">
+          <button
+            type="button"
+            @click="addSectionModalIsVisible = true"
+            class="btn btn-primary"
+          >
+            <i class="pi pi-plus" aria-hidden="true"></i>
+            {{ $t("pages.lessons.add_unit") }}
+          </button>
+        </roleProvider>
+      </div>
+    </div>
+
+    <!-- Бесплатный доступ -->
+    <div
+      v-if="
+        sectionsData.level.available_status.is_available_always === true &&
+        sectionsData.level.price === 0
+      "
+      class="col-span-12"
+    >
+      <div class="db-notice">
+        <div class="db-notice-icon" aria-hidden="true">
+          <i class="pi pi-gift"></i>
+        </div>
+        <p class="mb-0 flex-1 font-medium">
+          {{ $t("pages.courses.modal.description_alt") }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Общий прогресс + «Продолжить» -->
+    <div v-if="sections.length" class="col-span-12">
+      <div class="level-progress">
+        <circleProgressBar
+          :progress="levelPercent"
+          :className="'w-16 h-16 shrink-0'"
+          :textClass="'text-sm'"
+        />
+        <div class="flex-1 min-w-0 flex flex-col gap-2">
+          <p class="mb-0 font-semibold">
+            {{ $t("pages.courses.level_overall_progress") }}
+          </p>
+          <div class="cover-card-progress !bg-gray-200 dark:!bg-slate-700">
+            <div :style="{ width: levelPercent + '%' }"></div>
+          </div>
+          <p class="mb-0 text-sm text-inactive">
+            {{
+              $t("pages.courses.sections_completed", {
+                done: completedSections,
+                total: sections.length,
+              })
+            }}
+          </p>
+        </div>
+        <nuxt-link
+          v-if="nextSection"
+          class="btn btn-primary max-sm:w-full"
+          :to="sectionLink(nextSection)"
+        >
+          {{
+            levelPercent > 0
+              ? $t("pages.courses.continue_learning")
+              : $t("pages.courses.start_learning")
+          }}
+          <i class="pi pi-arrow-right" aria-hidden="true"></i>
+        </nuxt-link>
+      </div>
+    </div>
+
+    <!-- Разделы -->
+    <div v-if="sections.length" class="col-span-12">
+      <div class="grid lg:grid-cols-2 gap-3">
+        <nuxt-link
+          v-for="(section, sectionIndex) in sections"
+          :key="section.section_id"
+          :to="sectionLink(section)"
+          class="unit-card"
+          :class="{
+            done: percentOf(section) >= 100,
+            next: nextSection && nextSection.section_id === section.section_id,
+            empty: !section.lessons.length,
+          }"
+        >
+          <span class="unit-num" aria-hidden="true">
+            <i v-if="percentOf(section) >= 100" class="pi pi-check"></i>
+            <template v-else>{{ sectionIndex + 1 }}</template>
+          </span>
+
+          <div class="flex-1 min-w-0 flex flex-col gap-1.5">
+            <h5 class="mb-0 leading-snug">{{ section.section_name }}</h5>
+            <span v-if="section.lessons.length" class="text-sm text-inactive">
+              <i class="pi pi-book text-xs" aria-hidden="true"></i>
+              {{ $t("pages.lessons.lessons_count") }}:
+              <b class="text-active">{{ section.lessons.length }}</b>
+            </span>
+            <span v-else class="text-sm text-inactive">{{
+              $t("pages.lessons.there_is_no_lessons")
+            }}</span>
+
+            <div
+              v-if="percentOf(section) > 0 && percentOf(section) < 100"
+              class="unit-progress"
+            >
+              <div :style="{ width: percentOf(section) + '%' }"></div>
+            </div>
+          </div>
+
+          <span
+            v-if="percentOf(section) > 0"
+            class="unit-percent"
+            :class="{ 'text-success': percentOf(section) >= 100 }"
+            >{{ percentOf(section) }}%</span
+          >
+          <i v-else class="pi pi-chevron-right text-inactive" aria-hidden="true"></i>
+        </nuxt-link>
+      </div>
+    </div>
+
+    <div v-else class="col-span-12">
+      <emptyState :text="$t('pages.courses.not_sections')" icon="bi bi-inbox" />
+    </div>
+  </template>
+
   <div v-else class="col-span-12">
-    <alert :className="'light'">
-      <p class="mb-0">{{ $t("pages.courses.course_is_not_available") }}</p>
-    </alert>
+    <emptyState
+      :text="$t('pages.courses.course_is_not_available')"
+      icon="bi bi-lock"
+    >
+      <nuxt-link
+        class="btn btn-light"
+        :to="localePath('/dashboard/courses/' + course_slug)"
+      >
+        <i class="pi pi-arrow-left" aria-hidden="true"></i>
+        {{ $t("back") }}
+      </nuxt-link>
+    </emptyState>
   </div>
 
   <roleProvider :roles="[1]" :redirect="false">
@@ -136,7 +181,7 @@
               <div class="form-group-border active">
                 <i class="pi pi-bookmark"></i>
                 <input
-                  autoComplete="new-section-name"
+                  autocomplete="off"
                   name="section_name"
                   type="text"
                   placeholder=" "
@@ -152,8 +197,13 @@
             </div>
           </div>
 
-          <button class="btn btn-primary mt-4" type="submit">
-            <i class="pi pi-plus"></i>
+          <button
+            class="btn btn-primary mt-4"
+            :class="{ loading: pendingAddSection }"
+            :disabled="pendingAddSection"
+            type="submit"
+          >
+            <i class="pi pi-plus" aria-hidden="true"></i>
             {{ $t("add") }}
           </button>
         </form>
@@ -166,14 +216,14 @@
 import roleProvider from "../../../../../components/ui/roleProvider.vue";
 import loader from "../../../../../components/ui/loader.vue";
 import modal from "../../../../../components/ui/modal.vue";
-import alert from "../../../../../components/ui/alert.vue";
-import progressBar from "../../../../../components/ui/progressBar.vue";
+import emptyState from "~/components/ui/emptyState.vue";
 import circleProgressBar from "../../../../../components/ui/circleProgressBar.vue";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
 
 const errors = ref([]);
 const router = useRouter();
+const localePath = useLocalePath();
 const route = useRoute();
 const course_slug = route.params.course;
 const level_slug = route.params.level;
@@ -182,6 +232,37 @@ const { $axiosPlugin } = useNuxtApp();
 const pending = ref(true);
 const pendingAddSection = ref(false);
 const sectionsData = ref([]);
+// true после первой загрузки: до этого — скелетон, а не «курс недоступен».
+const loaded = ref(false);
+
+const isAvailable = computed(
+  () => sectionsData.value?.level?.available_status?.is_available === true,
+);
+
+const sections = computed(() => sectionsData.value?.sections || []);
+
+const percentOf = (section) =>
+  Math.round(Math.min(100, Math.max(0, Number(section.completed_percent) || 0)));
+
+const levelPercent = computed(() =>
+  Math.round(
+    Math.min(100, Math.max(0, Number(sectionsData.value?.level?.completed_percent) || 0)),
+  ),
+);
+
+const completedSections = computed(
+  () => sections.value.filter((s) => percentOf(s) >= 100).length,
+);
+
+// Первый незавершённый раздел с уроками — куда ведёт «Продолжить».
+const nextSection = computed(() =>
+  sections.value.find((s) => s.lessons?.length && percentOf(s) < 100),
+);
+
+const sectionLink = (section) =>
+  localePath(
+    "/dashboard/courses/" + course_slug + "/" + level_slug + "/" + section.section_id,
+  );
 const pageTitle = ref("");
 
 const addSectionModalIsVisible = ref(false);
@@ -227,6 +308,7 @@ const getLevel = async () => {
 
       sectionsData.value = response.data;
       pending.value = false;
+      loaded.value = true;
     })
     .catch((err) => {
       if (err.response) {
@@ -245,6 +327,7 @@ const getLevel = async () => {
 };
 
 const addSectionSubmit = async () => {
+  if (pendingAddSection.value) return;
   pendingAddSection.value = true;
   const formData = new FormData(addSectionFormRef.value);
   formData.append("operation_type_id", 15);

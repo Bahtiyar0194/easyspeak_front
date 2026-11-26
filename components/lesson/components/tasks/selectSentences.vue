@@ -215,10 +215,7 @@
         </div>
       </template>
 
-      <alert v-else :className="'light'">
-        <loader v-if="pending" :className="'overlay'" :showPendingText="true" />
-        <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
-      </alert>
+      <emptyState v-else :pending="pending" :text="$t('nothing_was_found_for_your_query')" icon="bi bi-search" />
     </div>
 
     <div class="col-span-12">
@@ -276,7 +273,7 @@ import { useRouter } from "nuxt/app";
 import audioButton from "../../../ui/audioButton.vue";
 import userAvatar from "../../../ui/userAvatar.vue";
 import loader from "../../../ui/loader.vue";
-import alert from "../../../ui/alert.vue";
+import emptyState from "~/components/ui/emptyState.vue";
 import stickyBox from "../../../ui/stickyBox.vue";
 import pagination from "../../../ui/pagination.vue";
 import { debounceHandler } from "../../../../utils/debounceHandler";

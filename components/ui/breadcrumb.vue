@@ -1,20 +1,37 @@
 <template>
   <client-only>
-    <ul class="breadcrumb font-medium select-none">
-      <li v-if="!route.meta.layout">
-        <nuxt-link to="/">
-          <span>{{ $t("pages.home.title") }}</span>
-        </nuxt-link>
-      </li>
-      <li v-for="(crumb, index) in crumbs" :key="index">
-        <nuxt-link
-          :class="index < crumbs.length - 1 ? '' : 'inactive'"
-          :to="crumb.to"
-        >
-          <span :data-crumb="crumb.label">{{ crumb.label }}</span>
-        </nuxt-link>
-      </li>
-    </ul>
+    <!-- На главной кабинета одна «крошка» ничего не даёт — не показываем -->
+    <nav
+      v-if="crumbs.length > 1 || !route.meta.layout"
+      class="breadcrumb-nav"
+      :aria-label="$t('breadcrumb')"
+    >
+      <ol class="breadcrumb font-medium select-none">
+        <li v-if="!route.meta.layout">
+          <nuxt-link to="/" :title="$t('pages.home.title')">
+            <i class="pi pi-home" aria-hidden="true"></i>
+            <span class="sr-only">{{ $t("pages.home.title") }}</span>
+          </nuxt-link>
+        </li>
+        <li v-for="(crumb, index) in crumbs" :key="index">
+          <nuxt-link
+            v-if="index < crumbs.length - 1"
+            :to="crumb.to"
+            :title="crumb.label"
+          >
+            <i
+              v-if="index === 0 && route.meta.layout"
+              class="pi pi-home mr-1"
+              aria-hidden="true"
+            ></i>
+            <span :data-crumb="crumb.label">{{ crumb.label }}</span>
+          </nuxt-link>
+          <span v-else class="breadcrumb-current" aria-current="page">
+            <span :data-crumb="crumb.label">{{ crumb.label }}</span>
+          </span>
+        </li>
+      </ol>
+    </nav>
   </client-only>
 </template>
 

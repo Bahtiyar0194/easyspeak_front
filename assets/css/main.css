@@ -179,6 +179,9 @@
   --shadow-focus: 0 0 0 4px rgb(59 130 246 / 0.16);
   --surface-glass: rgb(255 255 255 / 0.8);
   --surface-border: rgb(148 163 184 / 0.22);
+  /* Рамка ячеек/карточек, которые лежат на белой карточке (календарь и т.п.) */
+  --cell-border: rgb(148 163 184 / 0.42);
+  --cell-tint: rgb(148 163 184 / 0.1);
 }
 
 .dark {
@@ -190,6 +193,8 @@
   --shadow-focus: 0 0 0 4px rgb(96 165 250 / 0.22);
   --surface-glass: rgb(15 23 42 / 0.78);
   --surface-border: rgb(148 163 184 / 0.18);
+  --cell-border: rgb(148 163 184 / 0.18);
+  --cell-tint: rgb(148 163 184 / 0.06);
 }
 
 /*DEFAULT THEME*/
@@ -222,8 +227,14 @@
   @apply bg-slate-800 dark:bg-white;
 }
 
+/* Вторичная заливка внутри карточек. В тёмной теме она СВЕТЛЕЕ карточки
+   (slate-800), чтобы элементы выглядели приподнятыми, а не «дырами». */
 .bg-inactive {
-  @apply bg-gray-100 dark:bg-slate-900;
+  background-color: #f1f5f9; /* slate-100 */
+}
+
+.dark .bg-inactive {
+  background-color: #263347;
 }
 
 .bg-inactive-inverse {
@@ -331,7 +342,7 @@
 }
 
 .text-active {
-  @apply text-dark-500 dark:text-white;
+  @apply text-dark-500 dark:text-slate-100;
 }
 
 .text-active-invert {
@@ -354,8 +365,9 @@
   color: theme('colors.warning.DEFAULT');
 }
 
+/* Вторичный текст: контраст не ниже 4.5:1 в обеих темах */
 .text-inactive {
-  @apply text-neutral-500 dark:text-slate-500;
+  @apply text-slate-500 dark:text-slate-400;
 }
 
 .text-stroke{
@@ -436,7 +448,28 @@
 
 .scroll-fade {
   overflow-y: auto;
+  /* прокрутка до конца не «перескакивает» на страницу */
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(148 163 184 / 0.5) transparent;
+  border-radius: inherit;
+}
 
+.scroll-fade::-webkit-scrollbar{
+  width: 6px;
+}
+
+.scroll-fade::-webkit-scrollbar-thumb{
+  background-color: rgb(148 163 184 / 0.45);
+  border-radius: 9999px;
+}
+
+.scroll-fade::-webkit-scrollbar-track{
+  background: transparent;
+}
+
+.scroll-fade:focus-visible{
+  outline-offset: -2px;
 }
 
 /* обе стороны */
@@ -648,10 +681,16 @@ input:disabled{
   @apply text-inactive;
 }
 
+/* ===== Таблицы =====
+   Карточка с тонкой рамкой; шапка — мелкие заглавные подписи на лёгкой
+   подложке; строки разделены тонкими линиями; при наведении — мягкая
+   подсветка и синяя полоска слева. Классы: table-striped, table-sm,
+   selectable, bordered, editable, строка tr.success. */
 .table{
-  @apply w-full relative overflow-x-auto rounded-xl shadow-md flex border-inactive text-left;
-  box-shadow: var(--shadow-soft);
+  @apply w-full relative overflow-x-auto flex rounded-2xl border bg-active text-left;
   border-color: var(--surface-border);
+  box-shadow: var(--shadow-soft);
+  scrollbar-width: thin;
 }
 
 .table:has(.overlay) {
@@ -663,92 +702,129 @@ input:disabled{
 }
 
 .table table{
-  @apply w-full overflow-hidden relative;
+  @apply w-full relative border-collapse;
+  font-variant-numeric: tabular-nums;
 }
 
+/* Шапка */
 .table table thead{
-  @apply border-b-inactive bg-active;
-  background-image: linear-gradient(180deg, rgb(255 255 255 / 0.72), rgb(255 255 255 / 0.96));
+  background-color: rgb(248 250 252);
+}
+
+.dark .table table thead{
+  background-color: rgb(15 23 42 / 0.6);
+}
+
+.table table thead tr th,
+td.th{
+  @apply px-4 py-3 text-xs font-semibold uppercase text-inactive whitespace-nowrap align-middle;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--surface-border);
 }
 
 td.th{
-  @apply border-b-inactive bg-active;
+  @apply bg-active;
 }
 
+/* Сортируемые колонки (sortTableHead) */
+.table table thead th[title]{
+  transition: color 0.2s ease;
+}
+
+.table table thead th[title]:hover{
+  @apply text-corp;
+}
+
+/* Строки */
 .table table tbody tr{
   @apply bg-active;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.15s ease;
 }
 
-.table table tbody tr.success{
-  @apply bg-success-100 text-dark-500;
-}
-
-.table.table-striped table tbody tr:nth-child(even){
-  @apply bg-inactive;
-}
-
-.table table thead tr th, td.th{
-  @apply px-4 py-3 tracking-wider;
-  letter-spacing: 0.04em;
-}
-
-.table.selectable table tbody tr{
-  @apply cursor-pointer duration-200;
-}
-
-.table.selectable table tbody tr:hover{
-  @apply !bg-corp-100;
-}
-
-.table.selectable.success table tbody tr:hover{
-  @apply !bg-success-100;
-}
-
-.table.selectable table tbody tr:hover > td{
-  @apply text-dark-500;
+.table table tbody tr + tr{
+  border-top: 1px solid var(--surface-border);
 }
 
 .table table tbody tr td{
-  @apply px-4 py-3;
-  vertical-align: middle;
+  @apply px-4 py-3 align-middle;
+}
+
+/* Крайние ячейки чуть шире — текст не прилипает к рамке */
+.table table tr > :first-child{
+  @apply pl-5;
+}
+
+.table table tr > :last-child{
+  @apply pr-5;
+}
+
+.table.table-striped table tbody tr:nth-child(even){
+  background-color: rgb(248 250 252 / 0.7);
+}
+
+.dark .table.table-striped table tbody tr:nth-child(even){
+  background-color: rgb(15 23 42 / 0.35);
+}
+
+.table table tbody tr.success{
+  background-color: rgb(34 197 94 / 0.1) !important;
+}
+
+/* Кликабельные строки */
+.table.selectable table tbody tr{
+  @apply cursor-pointer;
+}
+
+.table.selectable table tbody tr:hover{
+  background-color: rgb(59 130 246 / 0.07) !important;
+}
+
+.table.selectable table tbody tr:hover > td:first-child{
+  box-shadow: inset 3px 0 0 theme('colors.corp.DEFAULT');
+}
+
+.table.selectable.success table tbody tr:hover{
+  background-color: rgb(34 197 94 / 0.12) !important;
+}
+
+.table.selectable.success table tbody tr:hover > td:first-child{
+  box-shadow: inset 3px 0 0 theme('colors.success.DEFAULT');
 }
 
 .table.editable table tbody tr td.selected{
-  @apply bg-corp-100;
+  background-color: rgb(59 130 246 / 0.12);
 }
 
+/* Компактная */
 .table.table-sm table thead tr th{
-  @apply px-3 py-2 text-sm;
+  @apply px-3 py-2.5;
 }
 
 .table.table-sm table tbody tr td{
   @apply px-3 py-2 text-sm;
 }
 
-.table.bordered{
-  @apply border-inactive;
+.table.table-sm table tr > :first-child{
+  @apply pl-4;
 }
 
-.table.bordered table tbody tr{
-  @apply border-b-inactive;
+.table.table-sm table tr > :last-child{
+  @apply pr-4;
 }
 
-.table.bordered table tbody tr:last-child{
-  @apply border-none;
-}
-
+/* С вертикальными линиями */
 .table.bordered table thead tr th,
 .table.bordered table thead tr td,
 .table.bordered table tbody tr th,
 .table.bordered table tbody tr td{
-  @apply border-r-inactive;
+  border-right: 1px solid var(--surface-border);
 }
+
 .table.bordered table thead tr th:last-child,
 .table.bordered table thead tr td:last-child,
 .table.bordered table tbody tr th:last-child,
 .table.bordered table tbody tr td:last-child{
-  @apply border-none;
+  border-right: none;
 }
 
 form code{
@@ -1035,6 +1111,39 @@ select.error:has(option:checked:disabled) {
 
 .form-group-file label > i{
   @apply text-2xl m-auto;
+}
+
+/* Поле с ошибкой: если лейбл получил .label-error, рамка тоже красная
+   (и остаётся красной в фокусе). */
+.form-group:has(> label.label-error),
+.form-group:has(> label.label-error):focus-within,
+.form-group-border:has(> label.label-error),
+.form-group-border:has(> label.label-error):focus-within{
+  border-color: theme('colors.danger.DEFAULT') !important;
+}
+
+/* Обязательное поле: <input required> — к лейблу добавляется звёздочка. */
+.form-group > input:required ~ label:not(.label-error)::after,
+.form-group > select:required ~ label:not(.label-error)::after,
+.form-group > textarea:required ~ label:not(.label-error)::after,
+.form-group-border > input:required ~ label:not(.label-error)::after,
+.form-group-border > select:required ~ label:not(.label-error)::after,
+.form-group-border > textarea:required ~ label:not(.label-error)::after{
+  content: " *";
+  color: theme('colors.danger.DEFAULT');
+}
+
+/* Подсказка под полем: <p class="form-hint">...</p> сразу после .form-group. */
+.form-hint{
+  @apply text-xs text-inactive -mt-3 mb-5;
+}
+
+.form-group-border + .form-hint{
+  @apply mt-1 mb-0;
+}
+
+.form-hint.danger{
+  @apply text-danger;
 }
 
 .custom-radio, 
@@ -1475,46 +1584,90 @@ input:disabled + .slider {
   animation: 0.75s linear infinite spinner-border;
 }
 
-.pagination-wrap{
-  @apply flex items-center flex-wrap gap-x-2 gap-y-4;
+/* Кнопка в состоянии загрузки: текст скрыт (ширина сохраняется), по центру
+   спиннер, повторные нажатия невозможны. Использование:
+   <button class="btn btn-primary" :class="{ loading: pending }" :disabled="pending"> */
+.btn.loading{
+  @apply relative pointer-events-none select-none;
+  color: transparent !important;
+  --btn-spinner: theme('colors.corp.DEFAULT');
+}
+
+.btn.loading > *{
+  visibility: hidden;
+}
+
+.btn.loading::after{
+  content: "";
+  @apply absolute inset-0 m-auto rounded-full;
+  width: 1.1em;
+  height: 1.1em;
+  border: 2px solid var(--btn-spinner);
+  border-bottom-color: transparent;
+  animation: 0.75s linear infinite spinner-border;
+}
+
+.btn-primary.loading,
+.btn-danger.loading,
+.btn-success.loading{
+  --btn-spinner: #fff;
+}
+
+/* Неактивная кнопка в состоянии загрузки не должна выглядеть «бледной». */
+.btn.loading:disabled{
+  @apply opacity-100;
+}
+
+/* Пагинация: «Показано X из Y» · страницы · «на странице» */
+.pagination-bar{
+  @apply w-full flex flex-wrap items-center justify-between gap-x-4 gap-y-3;
+}
+
+.pagination-info{
+  @apply mb-0 text-sm text-inactive;
 }
 
 .pagination{
-  @apply flex flex-wrap gap-2 items-start;
+  @apply flex flex-wrap items-center gap-1;
 }
 
-.per-page-select{
-  @apply relative w-48;
+.page-btn{
+  @apply min-w-9 h-9 px-2 rounded-lg flex items-center justify-center text-sm font-medium text-active border bg-active duration-200 tabular-nums;
+  border-color: var(--surface-border);
 }
 
-.per-page-select::after{
-  content: "›";
-  writing-mode: vertical-rl;
-  @apply absolute right-0 text-inactive text-2xl top-3 w-3 h-3;
+.page-btn:hover:not(:disabled):not(.active){
+  @apply text-corp;
+  border-color: rgb(59 130 246 / 0.4);
 }
 
-.per-page-select > select {
-  @apply border border-corp rounded-lg bg-transparent w-full text-active px-3 py-0.5;
+.page-btn.active{
+  @apply bg-corp text-white border-transparent cursor-default;
 }
 
-.per-page-select.active > select {
-  @apply border-inactive;
+.page-btn:disabled{
+  @apply opacity-40 cursor-not-allowed;
 }
 
-.per-page-select > label {
-  @apply absolute left-8 top-2 pointer-events-none duration-200 z-0 bg-inherit text-inactive;
+.page-gap{
+  @apply min-w-6 text-center text-inactive;
 }
 
-.per-page-select > select:focus ~ label,
-.per-page-select > select:not(:placeholder-shown) ~ label
-{
-  @apply -top-2.5 text-xs left-2 text-inactive bg-inactive px-1.5;
+.per-page{
+  @apply flex items-center gap-2;
 }
 
-.per-page-select.bg_active > select:focus ~ label,
-.per-page-select.bg_active > select:not(:placeholder-shown) ~ label
-{
-  @apply bg-active;
+.per-page-select-wrap{
+  @apply relative;
+}
+
+.per-page-select-wrap > select{
+  @apply appearance-none h-9 pl-3 pr-8 rounded-lg border bg-active text-sm text-active cursor-pointer;
+  border-color: var(--surface-border);
+}
+
+.per-page-select-wrap > i{
+  @apply absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-inactive pointer-events-none;
 }
 
 .badge-wrap{
@@ -1583,6 +1736,121 @@ input:disabled + .slider {
 
 .alert.outline-danger{
   @apply border border-danger text-danger;
+}
+
+/* Пустое состояние (components/ui/emptyState.vue) */
+.empty-state{
+  @apply flex flex-col items-center gap-2 py-10 px-4;
+}
+
+/* Иллюстрация/иконка на мягком круглом фоне с лёгким свечением */
+.empty-state-visual{
+  @apply relative w-24 h-24 mb-2 rounded-full flex items-center justify-center;
+  background: radial-gradient(circle, rgb(59 130 246 / 0.14) 0%, rgb(59 130 246 / 0.06) 60%, transparent 72%);
+}
+
+.empty-state-visual::after{
+  content: "";
+  @apply absolute inset-2 rounded-full border border-dashed;
+  border-color: rgb(59 130 246 / 0.25);
+}
+
+.empty-state-icon{
+  @apply text-4xl text-corp leading-none opacity-80;
+}
+
+.empty-state-image{
+  @apply w-16 h-16 object-contain relative z-10;
+}
+
+.empty-state-text{
+  @apply mb-0 font-semibold text-lg text-active;
+}
+
+.empty-state-hint{
+  @apply mb-0 text-sm text-inactive max-w-md leading-relaxed;
+}
+
+.empty-state-actions{
+  @apply flex flex-wrap gap-2 justify-center mt-3;
+}
+
+/* Скелетон — серая «заглушка» с переливом на время загрузки:
+   <div class="skeleton h-4 w-40"></div> */
+/* В светлой теме — полупрозрачный серо-синий: заметен и на белой карточке,
+   и на фоне страницы (slate-100 там почти сливался) */
+.skeleton{
+  @apply rounded-lg relative overflow-hidden;
+  background-color: rgb(148 163 184 / 0.26);
+}
+
+.dark .skeleton{
+  background-color: #263347;
+}
+
+.skeleton::after{
+  content: "";
+  @apply absolute inset-0;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.55), transparent);
+  transform: translateX(-100%);
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.dark .skeleton::after{
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.06), transparent);
+}
+
+@keyframes skeleton-shimmer{
+  100% { transform: translateX(100%); }
+}
+
+/* Директива v-skeleton (plugins/skeleton.js): картинка, которая ещё грузится. */
+img.img-loading{
+  aspect-ratio: var(--sk-ratio, 4 / 3);
+  height: auto;
+  color: transparent; /* не показывать alt-текст на плашке */
+  border-radius: 0.75rem;
+  background-color: rgb(148 163 184 / 0.26);
+  background-image: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 0.55) 50%, transparent 100%);
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: skeleton-bg 1.4s ease-in-out infinite;
+}
+
+.dark img.img-loading{
+  background-color: theme('colors.slate.900');
+  background-image: linear-gradient(90deg, transparent 0%, rgb(255 255 255 / 0.06) 50%, transparent 100%);
+}
+
+@keyframes skeleton-bg{
+  0% { background-position: 150% 0; }
+  100% { background-position: -50% 0; }
+}
+
+/* Перелив поверх родительского блока, фон блока не меняется (постеры). */
+.skeleton-parent::after{
+  content: "";
+  @apply absolute inset-0 pointer-events-none;
+  z-index: 20;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.12), transparent);
+  transform: translateX(-100%);
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.img-fade-in{
+  animation: img-fade-in 0.3s ease-out;
+}
+
+@keyframes img-fade-in{
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .skeleton::after,
+  .skeleton-parent::after,
+  img.img-loading{ animation: none; }
+  .img-fade-in{ animation: none; }
 }
 
 .tooltip{
@@ -1698,8 +1966,7 @@ input:disabled + .slider {
   @apply bg-inactive;
 }
 
-.dark .card,
-.dark .table table thead {
+.dark .card {
   background-image: linear-gradient(180deg, rgb(30 41 59 / 0.95), rgb(15 23 42 / 0.92));
 }
 
@@ -1714,6 +1981,34 @@ input:disabled + .slider {
 .card-body{
   @apply p-6 overflow-y-auto overflow-x-hidden;
   max-height: 90vh;
+}
+
+/* Карточки входа/регистрации: страница прокручивается целиком, без
+   вложенной прокрутки, на телефоне отступы компактнее. */
+.auth-card .card-body{
+  max-height: none;
+}
+
+@media (max-width: 639px) {
+  .auth-card .card-header{
+    @apply px-4 pt-5;
+  }
+
+  .auth-card .card-body{
+    @apply p-4;
+  }
+}
+
+/* Ссылка-кнопка внутри текста (например, «политика конфиденциальности»). */
+.link-button{
+  @apply text-corp underline underline-offset-2 cursor-pointer;
+}
+
+/* Сообщение об ошибке формы над полями. */
+.form-error{
+  @apply flex items-start gap-2 text-danger text-sm rounded-xl px-3 py-2.5 mb-5;
+  background-color: rgb(239 68 68 / 0.08);
+  border: 1px solid rgb(239 68 68 / 0.25);
 }
 
 .card-bg{
@@ -2035,6 +2330,29 @@ input:disabled + .slider {
   @apply bg-danger text-white border-danger;
 }
 
+.modal:focus{
+  outline: none;
+}
+
+/* Телефоны: окно по центру, почти на всю ширину, с компактными отступами. */
+@media (max-width: 639px) {
+  .modal-backdrop{
+    @apply p-3;
+  }
+
+  .modal{
+    @apply p-4 pt-5;
+  }
+
+  .modal-body{
+    max-height: calc(85dvh - 4rem);
+  }
+
+  .modal-close-button{
+    @apply right-3 top-4;
+  }
+}
+
 .full-overlay {
   @apply fixed w-full h-full left-0 top-0 bg-inactive z-50 flex flex-col justify-center items-center duration-200;
 }
@@ -2062,56 +2380,93 @@ input:disabled + .slider {
   @apply w-6 h-6 border-2;
 }
 
+/* Хлебные крошки: одна строка, на телефоне прокручивается по горизонтали.
+   Работают и со ссылками (layout), и с кнопками (модалки выбора задания). */
+.breadcrumb-nav{
+  @apply overflow-x-auto;
+  scrollbar-width: none;
+}
+
+.breadcrumb-nav::-webkit-scrollbar{
+  display: none;
+}
+
 .breadcrumb{
-  @apply text-inactive flex flex-wrap list-none px-0 relative z-10;
+  @apply flex items-center list-none p-0 m-0 text-sm text-inactive relative z-10 whitespace-nowrap;
+}
+
+.breadcrumb > li{
+  @apply flex items-center min-w-0;
+}
+
+.breadcrumb > li + li::before{
+  content: "";
+  @apply inline-block w-1.5 h-1.5 mx-2.5 shrink-0 border-t-[1.5px] border-r-[1.5px] rotate-45 opacity-60;
+  border-color: currentColor;
 }
 
 .breadcrumb a, .breadcrumb button{
-  @apply inline-block mr-6 relative text-corp;
+  @apply inline-flex items-center max-w-[16rem] truncate rounded-md px-1 -mx-1 text-inactive duration-200;
+}
+
+.breadcrumb a:hover, .breadcrumb button:hover{
+  @apply text-corp;
 }
 
 .breadcrumb a.inactive, .breadcrumb button.inactive{
-  @apply text-inactive pointer-events-none;
+  @apply text-active pointer-events-none;
 }
 
-.breadcrumb a:after, .breadcrumb button:after{
-  content: "\203A";
-  @apply absolute -right-3.5 text-inactive pointer-events-none;
+.breadcrumb-current{
+  @apply text-active max-w-[20rem] truncate;
 }
 
-.breadcrumb a.inactive:after, .breadcrumb button.inactive:after{
-  content: "";
+.breadcrumb > li > span:not(.breadcrumb-current){
+  @apply text-active;
 }
 
 .db__header{
-  @apply fixed top-0 left-0 w-full bg-active flex justify-between items-center px-3 border-b-inactive z-20;
+  @apply fixed top-0 left-0 w-full bg-active flex justify-between items-center px-3 border-b-inactive z-[45];
   height: 80px;
 }
 
 .db__sidebar__menu{
-  @apply bg-active px-3.5 fixed z-50 border-r-inactive;
+  @apply bg-active px-2 fixed z-[42] border-r-inactive;
   height: calc(100vh - 79px);
   top: 79px;
 }
 
-.db__sidebar__menu a{
-  @apply py-3 duration-200 text-active border-b-inactive flex items-center;
+/* Пункты бокового меню: «таблетки», активный — синяя подложка и полоска */
+.db__sidebar__menu{
+  @apply flex flex-col gap-1 py-3 !px-2 overflow-y-auto overflow-x-hidden;
+  transition: box-shadow 0.3s ease;
 }
 
-.db__sidebar__menu a.router-link-exact-active{
-  @apply text-corp;
+.db__sidebar__menu.expanded{
+  box-shadow: 12px 0 32px -16px rgb(15 23 42 / 0.25);
+}
+
+.db__sidebar__menu a{
+  @apply relative flex items-center px-1.5 py-2 rounded-xl text-active duration-200;
 }
 
 .db__sidebar__menu a:hover{
   @apply text-corp;
+  background-color: rgb(59 130 246 / 0.07);
 }
 
-.db__sidebar__menu a:last-child{
-  @apply pb-0 border-none;
+.db__sidebar__menu a.active{
+  @apply text-corp;
+  background-color: rgb(59 130 246 / 0.12);
+}
+
+.db__sidebar__menu a.active::before{
+  content: "";
+  @apply absolute -left-2 top-2 bottom-2 w-1 rounded-r-full bg-corp;
 }
 
 .db__sidebar__menu i{
-  @apply text-xl;
+  @apply text-xl w-6 text-center shrink-0;
 }
 
 .db__sidebar__menu span{
@@ -2119,7 +2474,105 @@ input:disabled + .slider {
 }
 
 .db__sidebar__menu span.show{
-  @apply ml-1.5 max-w-[400px] opacity-100
+  @apply ml-2.5 max-w-[400px] opacity-100 pr-2;
+}
+
+/* «Идёт видеоконференция»: зелёная пульсирующая точка в правом верхнем углу
+   иконки. Иконка начинается после px-1.5 ссылки и шириной w-6 (1.5rem). */
+.db__sidebar__menu .menu-live-dot{
+  @apply absolute w-2.5 h-2.5 bg-success border-2 border-white dark:border-slate-800;
+  top: 0.35rem;
+  left: calc(0.375rem + 1.5rem - 0.5rem);
+  box-sizing: content-box;
+}
+
+.db__sidebar__menu .menu-live-dot::after{
+  @apply bg-success;
+}
+
+/* Правая часть шапки */
+.db__header__actions{
+  @apply flex items-center gap-2 sm:gap-3;
+}
+
+.db__header__divider{
+  @apply hidden sm:block w-px h-7 bg-gray-200 dark:bg-slate-700;
+}
+
+/* Меню пользователя */
+.user-menu-btn{
+  @apply flex items-center gap-2 select-none rounded-xl py-1 pl-1 pr-1.5 duration-200;
+}
+
+.user-menu-btn:hover{
+  background-color: rgb(59 130 246 / 0.07);
+}
+
+.user-menu{
+  @apply flex flex-col gap-1 py-3 w-72 max-w-[85vw];
+}
+
+.user-menu-head{
+  @apply flex items-center gap-3 pb-3 mb-1 border-b;
+  border-bottom-color: var(--surface-border);
+}
+
+.user-menu-school{
+  @apply flex items-center gap-3 p-2.5 rounded-xl text-active duration-200;
+  background-color: rgb(59 130 246 / 0.07);
+}
+
+.user-menu-school:hover{
+  @apply text-active;
+  background-color: rgb(59 130 246 / 0.12);
+}
+
+.user-menu-school-icon{
+  @apply shrink-0 w-9 h-9 rounded-lg flex items-center justify-center bg-corp text-white;
+}
+
+.user-menu-section{
+  @apply py-2 my-1 border-y;
+  border-color: var(--surface-border);
+}
+
+.user-menu-label{
+  @apply mb-1.5 px-2 text-xs font-semibold uppercase tracking-wide text-inactive;
+}
+
+.user-menu-role{
+  @apply w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-sm text-active text-left duration-200;
+}
+
+.user-menu-role:hover:not(:disabled){
+  background-color: rgb(59 130 246 / 0.07);
+}
+
+.user-menu-role.active{
+  @apply text-corp font-semibold;
+  background-color: rgb(59 130 246 / 0.1);
+}
+
+.user-menu-role:disabled{
+  @apply cursor-wait;
+}
+
+.user-menu-link{
+  @apply flex items-center gap-2.5 px-2 py-2 rounded-lg text-sm text-active duration-200;
+}
+
+.user-menu-link:hover{
+  @apply text-corp;
+  background-color: rgb(59 130 246 / 0.07);
+}
+
+.user-menu-link.danger{
+  @apply text-danger;
+}
+
+.user-menu-link.danger:hover{
+  @apply text-danger;
+  background-color: rgb(239 68 68 / 0.08);
 }
 
 .db__content{
@@ -2128,23 +2581,151 @@ input:disabled + .slider {
 }
 
 .db__footer__menu{
-  @apply py-3 pr-3 pl-14 bg-active fixed bottom-0 left-0 right-0 border-t-inactive flex gap-x-0.5 md:gap-x-3 justify-between md:justify-center;
+  @apply py-2 pr-2 pl-14 bg-active fixed bottom-0 left-0 right-0 border-t-inactive flex items-center gap-x-0.5 sm:gap-x-1.5 justify-between md:justify-center z-40;
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom));
 }
 
-.db__footer__menu button{
-  @apply duration-200 text-active flex items-center flex-col md:min-w-14 relative;
+/* ===== Панель управления конференцией ===== */
+.conf-toolbar .ctrl{
+  @apply relative flex flex-col items-center gap-0.5 min-w-0 sm:min-w-14 px-0.5 text-active;
 }
 
-.db__footer__menu button:hover{
-  @apply text-corp;
+.conf-toolbar .ctrl-icon{
+  @apply relative w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center text-base sm:text-lg bg-inactive duration-200;
 }
 
-.db__footer__menu button span{
-  @apply text-[8px] sm:text-xs;
+.conf-toolbar .ctrl:hover:not(:disabled) .ctrl-icon{
+  @apply bg-corp-100 text-corp;
 }
 
-.db__footer__menu i{
-  @apply md:text-2xl;
+.dark .conf-toolbar .ctrl:hover:not(:disabled) .ctrl-icon{
+  background-color: rgb(59 130 246 / 0.2);
+}
+
+.conf-toolbar .ctrl-label{
+  @apply text-[9px] sm:text-[11px] leading-tight whitespace-nowrap max-w-full truncate;
+}
+
+/* Выключено (микрофон, камера) — красная кнопка, видно сразу */
+.conf-toolbar .ctrl.off .ctrl-icon,
+.conf-toolbar .ctrl.off:hover:not(:disabled) .ctrl-icon{
+  @apply bg-danger text-white;
+}
+
+.conf-toolbar .ctrl.off .ctrl-label{
+  @apply text-danger;
+}
+
+/* Активно (демонстрация экрана) */
+.conf-toolbar .ctrl.on .ctrl-icon,
+.conf-toolbar .ctrl.on:hover:not(:disabled) .ctrl-icon{
+  @apply bg-success text-white;
+}
+
+/* Выйти */
+.conf-toolbar .ctrl.danger .ctrl-icon{
+  @apply bg-danger text-white;
+}
+
+.conf-toolbar .ctrl.danger:hover .ctrl-icon{
+  @apply bg-red-600 text-white;
+}
+
+.conf-toolbar .ctrl.danger .ctrl-label{
+  @apply text-danger;
+}
+
+.conf-toolbar .ctrl:disabled{
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Кнопка + стрелка настроек (микрофон, камера) */
+.conf-toolbar .ctrl-group{
+  @apply relative;
+}
+
+.conf-toolbar .ctrl-group > .dropdown{
+  @apply absolute -top-1.5 right-0 sm:right-1 z-10;
+}
+
+.conf-toolbar .ctrl-caret{
+  @apply w-[18px] h-[18px] rounded-full flex items-center justify-center text-[9px] bg-active text-active border shadow-sm duration-200;
+  border-color: var(--surface-border);
+}
+
+.conf-toolbar .ctrl-caret:hover{
+  @apply bg-corp text-white;
+}
+
+.conf-toolbar .ctrl-group .dropdown-menu.up{
+  @apply bottom-8 py-3 max-w-[90vw];
+}
+
+/* Счётчики на кнопках */
+.conf-toolbar .ctrl-badge{
+  @apply absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-corp text-white text-[9px] font-semibold flex items-center justify-center leading-none;
+}
+
+.conf-toolbar .ctrl-badge.muted{
+  @apply bg-active text-active border;
+  border-color: var(--surface-border);
+}
+
+.conf-toolbar .ctrl-divider{
+  @apply hidden md:block w-px h-7 mx-1 bg-gray-200 dark:bg-slate-700;
+}
+
+/* Шапка конференции */
+.conf-head{
+  @apply flex items-center justify-between gap-3;
+}
+
+.conf-title{
+  @apply mb-0 flex items-center gap-2 text-base sm:text-xl min-w-0;
+}
+
+.conf-modes{
+  @apply inline-flex shrink-0 p-1 rounded-xl bg-inactive gap-1;
+}
+
+.conf-mode{
+  @apply flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm text-inactive duration-200;
+}
+
+.conf-mode:hover{
+  @apply text-active;
+}
+
+.conf-mode.active{
+  @apply bg-active text-corp shadow-sm;
+}
+
+/* Экраны состояний: ожидание, завершена, ошибка, запрос доступа */
+.conf-state{
+  @apply flex flex-col items-center justify-center gap-4 text-center px-6 py-12;
+}
+
+.conf-state-icon{
+  @apply w-16 h-16 rounded-full flex items-center justify-center text-3xl text-corp;
+  background-color: rgb(59 130 246 / 0.1);
+}
+
+.conf-state-icon.success{
+  @apply text-success;
+  background-color: rgb(34 197 94 / 0.12);
+}
+
+.conf-state-icon.danger{
+  @apply text-danger;
+  background-color: rgb(239 68 68 / 0.1);
+}
+
+.conf-state-icon.pulse{
+  @apply animate-pulse;
+}
+
+.conf-countdown{
+  @apply flex flex-col items-center gap-1 rounded-2xl px-6 py-4 bg-inactive;
 }
 
 .content-center{
@@ -2156,100 +2737,202 @@ input:disabled + .slider {
   @apply relative;
 }
 
-.dropdown-menu, .multiple-select-menu-wrap{
-  @apply hidden absolute z-30 rounded-xl shadow-xl bg-active text-sm border-inactive px-4 my-2 w-max;
+/* ===== Выпадающее меню (components/ui/dropdownMenu.vue) ===== */
+.dropdown-menu{
+  @apply hidden absolute z-30 rounded-2xl border bg-active text-sm p-1.5 my-2 w-max min-w-[11rem] list-none;
+  max-width: calc(100vw - 1.5rem);
+  max-height: min(70vh, 32rem);
+  overflow-y: auto;
   border-color: var(--surface-border);
   box-shadow: var(--shadow-medium);
+  transform-origin: top;
 }
 
 .dropdown-menu.up{
   @apply bottom-12;
+  transform-origin: bottom;
 }
 
 .dropdown-menu.no-absolute{
   @apply relative;
 }
 
-.multiple-select-menu-wrap{
-  @apply w-full;
-}
-
-.dropdown-menu.right, .multiple-select-menu-wrap.right{
+.dropdown-menu.right{
   @apply !right-0;
 }
 
-.dropdown-menu.show, .multiple-select-menu-wrap.show{
+/* Плавное появление */
+.dropdown-menu.show{
   @apply block;
+  animation: dropdown-in 0.16s ease-out;
 }
 
-.multiple-select-menu{
-  @apply max-h-28 mt-3 overflow-x-hidden overflow-y-auto w-full p-0;
+@keyframes dropdown-in{
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.dropdown-menu li, .multiple-select-menu li{
-  @apply border-b-inactive py-2 list-none flex gap-1.5 items-center;
+.dropdown-menu.up.show{
+  animation-name: dropdown-in-up;
 }
 
-.dropdown-menu li:empty, .multiple-select-menu li:empty{
+@keyframes dropdown-in-up{
+  from { opacity: 0; transform: translateY(4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.dropdown-menu li{
+  @apply list-none flex items-center gap-1.5;
+}
+
+.dropdown-menu li:empty{
   @apply hidden;
 }
 
-.dropdown-menu li:first-child {
-  @apply pt-3;
+/* Пункт-ссылка / пункт-кнопка — строка с подсветкой при наведении */
+.dropdown-menu li > a,
+.dropdown-menu li > button{
+  @apply flex items-center gap-2 w-full px-3 py-2 rounded-lg text-left text-active duration-150;
 }
 
-.multiple-select-menu li:first-child{
-  @apply pt-0;
+.dropdown-menu li > a:hover,
+.dropdown-menu li > button:hover,
+.dropdown-menu li > a:focus-visible,
+.dropdown-menu li > button:focus-visible{
+  @apply text-corp;
+  background-color: rgb(59 130 246 / 0.08);
 }
 
-.dropdown-menu li:last-child, .multiple-select-menu li:last-child{
-  @apply border-b-0 pb-3;
+.dropdown-menu li > a > i,
+.dropdown-menu li > button > i{
+  @apply w-4 text-center text-inactive;
 }
 
-.dropdown-menu li > a, .multiple-select-menu li > a,
-.dropdown-menu li > button, .multiple-select-menu li > button{
+.dropdown-menu li > a:hover > i,
+.dropdown-menu li > button:hover > i{
+  @apply text-corp;
+}
+
+/* Пункт со сложным содержимым (переключатели, радио, эффекты) — просто отступы */
+.dropdown-menu li:not(:has(> a, > button)){
+  @apply px-2.5 py-2;
+}
+
+/* Разделитель между такими блоками */
+.dropdown-menu li:not(:has(> a, > button)) + li:not(:has(> a, > button)){
+  border-top: 1px solid var(--surface-border);
+}
+
+/* ===== Список multipleSelect (стили прежние) ===== */
+.multiple-select-menu-wrap{
+  @apply hidden absolute left-0 top-full z-30 rounded-2xl shadow-xl bg-active text-sm border px-3 pb-2 mt-2 w-full;
+  border-color: var(--surface-border);
+  box-shadow: var(--shadow-medium);
+}
+
+.multiple-select-menu-wrap.right{
+  @apply !right-0;
+}
+
+.multiple-select-menu-wrap.show{
+  @apply block;
+  animation: dropdown-in 0.16s ease-out;
+}
+
+.multiple-select-menu{
+  @apply max-h-56 mt-2 overflow-x-hidden overflow-y-auto w-full p-0;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.multiple-select-menu li{
+  @apply px-2 py-1.5 list-none flex gap-1.5 items-center rounded-lg duration-150;
+}
+
+.multiple-select-menu li:hover{
+  background-color: rgb(59 130 246 / 0.07);
+}
+
+.multiple-select-menu li:empty{
+  @apply hidden;
+}
+
+
+
+.multiple-select-menu li > a,
+.multiple-select-menu li > button{
   @apply flex items-center gap-1.5 text-active duration-200 w-full;
 }
 
-.dropdown-menu li > a:hover, .multiple-select-menu li > a:hover,
-.dropdown-menu li > button:hover, .multiple-select-menu li > button:hover{
+.multiple-select-menu li > a:hover,
+.multiple-select-menu li > button:hover{
   @apply text-corp;
+}
+
+/* Меню пользователя внутри выпадающего меню: свои отступы */
+.dropdown-menu > .user-menu{
+  @apply px-1.5;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .dropdown-menu.show{ animation: none; }
 }
 
 .tab-header{
   @apply flex gap-2 mb-6;
 }
 
+/* Переключатель вкладок (components/ui/tabs.vue): сегменты на подложке,
+   на телефоне прокручивается по горизонтали. */
+.tabs-bar-wrap{
+  @apply flex md:justify-end;
+}
+
+.tabs-bar{
+  @apply inline-flex max-w-full gap-1 p-1 rounded-2xl overflow-x-auto;
+  /* подложка темнее и карточки, и фона страницы + тонкая обводка */
+  background-color: rgba(185, 199, 218, 0.2);
+  box-shadow: inset 0 0 0 1px rgb(148 163 184 / 0.18);
+  scrollbar-width: none;
+}
+
+.dark .tabs-bar{
+  background-color: #263347;
+  box-shadow: inset 0 0 0 1px var(--surface-border);
+}
+
+.tabs-bar::-webkit-scrollbar{
+  display: none;
+}
+
 .tab-header-item{
-  @apply px-3 py-2 border-inactive bg-active rounded-xl hover:cursor-pointer text-inactive flex items-center relative font-medium;
-  box-shadow: var(--shadow-soft);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+  @apply shrink-0 px-3 md:px-4 py-2 rounded-xl text-inactive flex items-center gap-1.5 relative font-medium whitespace-nowrap;
+  transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .tab-header-item:hover{
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-medium);
+  @apply text-active;
 }
 
 .tab-header-item.active{
-  @apply border-active text-active cursor-default; 
+  @apply bg-active text-active cursor-default;
+  box-shadow: var(--shadow-soft);
 }
 
-
 .tab-header-item.primary{
-  @apply border-corp text-corp; 
+  @apply text-corp;
 }
 
 .tab-header-item.active.primary{
-  @apply bg-corp text-white cursor-default; 
+  @apply bg-corp text-white;
 }
 
 .tab-header-item.active.success{
-  @apply border-success text-success; 
+  @apply text-success;
 }
 
 .tab-header-item > span{
-  @apply ml-1;
+  @apply ml-0;
 }
 
 .tab-header-item > i{
@@ -2268,24 +2951,34 @@ input:disabled + .slider {
   @apply block;
 }
 
+/* Полоса прогресса (components/ui/progressBar.vue) */
+.progress-wrap{
+  @apply flex items-center gap-3 w-full my-2 select-none;
+}
+
 .progress{
-  @apply w-full bg-inactive rounded-xl my-2 overflow-hidden select-none;
+  @apply relative flex-1 h-2.5 rounded-full overflow-hidden bg-gray-200 dark:bg-slate-700;
 }
 
 .progress.active{
   @apply bg-active;
 }
 
-.progress.success{
-  @apply bg-success border-0;
-}
-
 .progress-bar{
-  @apply h-full bg-corp py-1 duration-200 text-center overflow-hidden text-white rounded-xl;
+  @apply relative h-full rounded-full bg-corp;
+  transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.progress-bar.sm{
-  @apply py-0.5 text-xs;
+/* Лёгкий блик сверху — полоса не выглядит плоской */
+.progress-bar::after{
+  content: "";
+  @apply absolute inset-0 rounded-full;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.25), transparent 60%);
+}
+
+/* Тонкая версия */
+.progress:has(> .progress-bar.sm){
+  @apply h-1.5;
 }
 
 .progress-bar.danger{
@@ -2297,11 +2990,15 @@ input:disabled + .slider {
 }
 
 .progress-bar.warning{
-  @apply bg-warning text-black;
+  @apply bg-warning;
 }
 
 .progress-bar.orange{
   @apply bg-orange;
+}
+
+.progress-value{
+  @apply shrink-0 min-w-[2.75rem] text-right text-sm font-semibold text-active tabular-nums;
 }
 
 .logo > img{
@@ -2561,4 +3258,2428 @@ input:disabled + .slider {
   .modal-body {
     height: 64vh;
   }
+}
+
+/* ===== Главная кабинета (pages/dashboard/index.vue) ===== */
+.db-hello{
+  @apply flex flex-wrap items-end justify-between gap-4;
+}
+
+.db-hello-title{
+  @apply mb-1 text-2xl md:text-3xl;
+}
+
+.db-hello-date{
+  @apply mb-0 text-inactive;
+}
+
+.db-section-head{
+  @apply flex flex-wrap items-center justify-between gap-3 mb-3;
+}
+
+.db-section-title{
+  @apply mb-0 text-xl md:text-2xl flex items-center gap-2;
+}
+
+.db-count{
+  @apply inline-flex items-center justify-center min-w-7 h-7 px-2 rounded-full text-sm font-semibold bg-corp-100 text-corp;
+}
+
+.dark .db-count{
+  background-color: rgb(59 130 246 / 0.18);
+}
+
+/* Пульсирующая точка «идёт сейчас» */
+.live-dot{
+  @apply relative inline-block w-3 h-3 rounded-full bg-danger;
+}
+
+.live-dot::after{
+  content: "";
+  @apply absolute inset-0 rounded-full bg-danger;
+  animation: live-dot-pulse 1.6s ease-out infinite;
+}
+
+@keyframes live-dot-pulse{
+  0% { transform: scale(1); opacity: 0.7; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+/* Компактное уведомление с действием (неоплаченные занятия) */
+.db-notice{
+  @apply flex flex-wrap items-center gap-3 rounded-xl p-4 border;
+  background-color: rgb(59 130 246 / 0.07);
+  border-color: rgb(59 130 246 / 0.25);
+}
+
+.db-notice-icon{
+  @apply w-10 h-10 shrink-0 rounded-full flex items-center justify-center bg-corp text-white text-lg;
+}
+
+/* Баннер Telegram */
+.db-telegram{
+  @apply relative flex flex-wrap md:flex-nowrap items-center gap-4 rounded-xl p-4 pr-12;
+  background-image: linear-gradient(225deg, #3c8ce7 10%, #00eaff 100%);
+}
+
+.db-telegram-logo{
+  @apply w-12 h-12 shrink-0 max-sm:hidden;
+}
+
+.db-telegram-close{
+  @apply absolute top-2 right-2 w-8 h-8 rounded-lg flex items-center justify-center text-white duration-200;
+}
+
+.db-telegram-close:hover{
+  background-color: rgb(255 255 255 / 0.2);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .live-dot::after{ animation: none; }
+}
+
+/* ===== Карточка занятия (scheduleTable, mode="stack") ===== */
+.lesson-card{
+  @apply relative flex bg-active border rounded-2xl overflow-hidden cursor-pointer select-none;
+  border-color: var(--cell-border);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.lesson-card:hover{
+  transform: translateY(-2px);
+  border-color: rgb(59 130 246 / 0.35);
+  box-shadow: 0 18px 34px -22px rgb(15 23 42 / 0.45);
+}
+
+/* Цветная полоска слева: сегодня — синяя, идёт сейчас — зелёная */
+.lesson-card.is-today{
+  border-left: 4px solid theme('colors.corp.DEFAULT');
+}
+
+.lesson-card.is-live{
+  border-left: 4px solid theme('colors.success.DEFAULT');
+}
+
+/* Календарный листок */
+.lesson-date{
+  @apply flex flex-col items-center justify-center shrink-0 w-20 py-4 text-center text-corp;
+  background-color: rgb(59 130 246 / 0.08);
+  border-right: 1px dashed rgb(59 130 246 / 0.3);
+}
+
+.lesson-card.is-today .lesson-date{
+  @apply bg-corp text-white;
+  border-right-color: transparent;
+}
+
+.lesson-card.is-live .lesson-date{
+  @apply bg-success text-white;
+  border-right-color: transparent;
+}
+
+.lesson-date-weekday{
+  @apply text-xs font-semibold uppercase tracking-wide opacity-80;
+}
+
+.lesson-date-day{
+  @apply text-3xl font-bold leading-none my-1;
+}
+
+.lesson-date-month{
+  @apply text-xs font-semibold uppercase tracking-wide;
+}
+
+/* Постер (AI-школа) */
+.lesson-poster{
+  @apply relative shrink-0 w-full md:w-56 min-h-[220px] overflow-hidden bg-gray-950 flex items-center justify-center p-4;
+}
+
+.lesson-poster-date{
+  @apply absolute left-3 top-3 z-20 rounded-lg px-2 py-1 text-xs bg-white/90 text-gray-900;
+}
+
+.lesson-card:has(.lesson-poster){
+  @apply max-md:flex-col;
+}
+
+/* Содержимое */
+.lesson-body{
+  @apply flex-1 min-w-0 flex flex-col gap-2.5 p-4;
+}
+
+.lesson-head{
+  @apply flex flex-wrap items-start justify-between gap-2;
+}
+
+.lesson-title{
+  @apply mb-0 text-lg leading-snug;
+}
+
+.lesson-badges{
+  @apply flex flex-wrap gap-1.5;
+}
+
+.lesson-badge{
+  @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border;
+  border-color: var(--surface-border);
+}
+
+.lesson-badge.success{
+  @apply text-success;
+  border-color: rgb(34 197 94 / 0.4);
+  background-color: rgb(34 197 94 / 0.08);
+}
+
+.lesson-badge.premium{
+  @apply text-amber-600 dark:text-amber-400;
+  border-color: rgb(245 158 11 / 0.4);
+  background-color: rgb(245 158 11 / 0.08);
+}
+
+.lesson-badge.live{
+  @apply text-success;
+  border-color: rgb(34 197 94 / 0.4);
+  background-color: rgb(34 197 94 / 0.08);
+}
+
+.lesson-badge.live .live-dot,
+.lesson-badge.live .live-dot::after{
+  @apply bg-success;
+}
+
+.lesson-meta{
+  @apply flex flex-wrap gap-x-4 gap-y-1 text-sm text-inactive;
+}
+
+.lesson-meta > span{
+  @apply inline-flex items-center gap-1.5;
+}
+
+.lesson-meta i{
+  @apply text-xs;
+}
+
+.lesson-foot{
+  @apply flex flex-wrap items-end justify-between gap-3 mt-auto pt-2.5 border-t border-dashed;
+  border-top-color: var(--surface-border);
+}
+
+.lesson-when{
+  @apply flex flex-col gap-1.5 min-w-0;
+}
+
+.lesson-time{
+  @apply inline-flex flex-wrap items-center gap-1.5 text-sm;
+}
+
+.lesson-time > i{
+  @apply text-corp;
+}
+
+.lesson-mentor{
+  @apply inline-flex items-center gap-1.5 text-sm min-w-0;
+}
+
+/* Узкие места (мини-режим в квизе, телефоны) */
+.lesson-card.is-mini .lesson-date{
+  @apply w-16;
+}
+
+@media (max-width: 480px) {
+  .lesson-date{
+    @apply w-16;
+  }
+
+  .lesson-date-day{
+    @apply text-2xl;
+  }
+}
+
+.lesson-card.is-mini .lesson-title{
+  @apply text-base;
+}
+
+/* ===== Календарь расписания (components/schedule/scheduleGrid.vue) ===== */
+.sg{
+  @apply flex flex-col gap-4;
+}
+
+.sg-toolbar{
+  @apply flex flex-wrap items-center justify-between gap-3;
+}
+
+.sg-nav{
+  @apply flex items-center gap-1.5 min-w-0;
+}
+
+.sg-title{
+  @apply mb-0 ml-2 text-lg md:text-2xl truncate;
+}
+
+.sg-right{
+  @apply flex flex-wrap items-center gap-2;
+}
+
+/* Год */
+.sg-year{
+  @apply grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2;
+}
+
+.sg-month-card{
+  @apply flex flex-col items-start gap-0.5 px-3 py-2.5 rounded-xl border bg-active text-left duration-200;
+  border-color: var(--cell-border);
+}
+
+.sg-month-card:hover{
+  border-color: rgb(59 130 246 / 0.4);
+  transform: translateY(-1px);
+}
+
+.sg-month-card.current{
+  border-color: theme('colors.corp.DEFAULT');
+  box-shadow: inset 0 0 0 1px theme('colors.corp.DEFAULT');
+}
+
+.sg-month-card.empty .sg-month-count b{
+  @apply text-inactive;
+}
+
+.sg-month-count{
+  @apply flex items-baseline gap-1;
+}
+
+.sg-month-count b{
+  @apply text-xl text-corp;
+}
+
+/* Месяц */
+.sg-weekdays{
+  @apply grid grid-cols-7 gap-1 mb-1 text-xs font-semibold uppercase tracking-wide text-inactive text-center;
+}
+
+.sg-month{
+  @apply grid grid-cols-7 gap-1 auto-rows-min;
+}
+
+.sg-day{
+  @apply relative flex flex-col gap-1 p-1 md:p-1.5 rounded-lg border bg-active cursor-pointer duration-200 min-h-[44px] md:min-h-[72px] overflow-hidden;
+  border-color: var(--cell-border);
+}
+
+.sg-day:hover{
+  border-color: rgb(59 130 246 / 0.45);
+}
+
+.sg-day.blank{
+  @apply bg-transparent border-transparent cursor-default;
+}
+
+.sg-day.weekend:not(.today){
+  background-color: var(--cell-tint);
+}
+
+/* Прошедшие дни приглушены, но рамка остаётся различимой */
+.sg-day.past{
+  @apply opacity-75;
+}
+
+.sg-day.past:hover{
+  @apply opacity-100;
+}
+
+.sg-day-num{
+  @apply inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold;
+}
+
+.sg-day.today{
+  border-color: theme('colors.corp.DEFAULT');
+  box-shadow: inset 0 0 0 1px theme('colors.corp.DEFAULT');
+}
+
+.sg-day.today .sg-day-num,
+.sg-week-col.today .sg-day-num{
+  @apply bg-corp text-white;
+}
+
+.sg-chips{
+  @apply flex flex-col gap-1 min-w-0;
+}
+
+.sg-chip{
+  @apply flex items-center gap-1.5 w-full min-w-0 px-1.5 py-0.5 rounded-md text-xs text-left duration-200 text-corp;
+  background-color: rgb(59 130 246 / 0.1);
+  border-left: 3px solid theme('colors.corp.DEFAULT');
+}
+
+.sg-chip:hover{
+  background-color: rgb(59 130 246 / 0.2);
+}
+
+.sg-chip.live{
+  @apply text-success;
+  background-color: rgb(34 197 94 / 0.12);
+  border-left-color: theme('colors.success.DEFAULT');
+}
+
+.sg-chip.past{
+  @apply text-inactive;
+  background-color: rgb(148 163 184 / 0.12);
+  border-left-color: rgb(148 163 184 / 0.6);
+}
+
+.sg-chip.tall{
+  @apply flex-col items-start gap-0 py-1;
+}
+
+.sg-chip-title{
+  @apply leading-snug break-words;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.sg-more{
+  @apply text-xs font-medium text-inactive px-1;
+}
+
+.sg-dots{
+  @apply flex items-center gap-0.5 mt-auto;
+}
+
+.sg-dots > span{
+  @apply w-1.5 h-1.5 rounded-full bg-corp;
+}
+
+/* Неделя */
+.sg-week{
+  @apply grid grid-cols-1 md:grid-cols-7 gap-2;
+}
+
+.sg-week-col{
+  @apply flex flex-col gap-1.5 p-1.5 rounded-xl border bg-active md:min-h-[120px];
+  border-color: var(--cell-border);
+}
+
+.sg-week-col.today{
+  border-color: theme('colors.corp.DEFAULT');
+  box-shadow: inset 0 0 0 1px theme('colors.corp.DEFAULT');
+}
+
+.sg-week-col.past{
+  @apply opacity-75;
+}
+
+.sg-week-col.weekend:not(.today){
+  background-color: var(--cell-tint);
+}
+
+.sg-week-head{
+  @apply flex md:flex-col items-center gap-2 md:gap-0.5 rounded-lg p-1 duration-200;
+}
+
+.sg-week-head:hover{
+  background-color: rgb(59 130 246 / 0.08);
+}
+
+/* Список «метка — значение» (окно урока и т.п.) */
+.info-list{
+  @apply grid gap-2 mb-0;
+}
+
+.info-list > div{
+  @apply grid grid-cols-[minmax(0,10rem)_1fr] max-sm:grid-cols-1 gap-x-4 gap-y-0.5 py-2 border-b border-dashed;
+  border-bottom-color: var(--surface-border);
+}
+
+.info-list > div:last-child{
+  @apply border-b-0;
+}
+
+.info-list dt{
+  @apply flex items-center gap-1.5 text-sm text-inactive;
+}
+
+.info-list dd{
+  @apply m-0 font-medium min-w-0;
+}
+
+/* ===== Карточка текущего занятия (currentConferenceCard.vue) ===== */
+.live-card{
+  @apply relative flex max-md:flex-col bg-active border rounded-2xl overflow-hidden;
+  border-color: rgb(34 197 94 / 0.35);
+  box-shadow: 0 18px 40px -28px rgb(34 197 94 / 0.55);
+}
+
+/* Зелёная полоса сверху — «идёт сейчас» */
+.live-card::before{
+  content: "";
+  @apply absolute left-0 right-0 top-0 h-1 bg-success z-20;
+}
+
+.live-card-poster{
+  @apply relative shrink-0 w-full md:w-2/5 lg:w-1/3 min-h-[260px] overflow-hidden bg-gray-950 flex items-center justify-center p-4;
+}
+
+.live-card-body{
+  @apply flex-1 min-w-0 flex flex-col gap-4 p-5;
+}
+
+.live-progress{
+  @apply flex flex-col gap-2 rounded-xl p-3;
+  background-color: rgb(34 197 94 / 0.07);
+}
+
+.live-progress-track{
+  @apply h-2 w-full rounded-full overflow-hidden;
+  background-color: rgb(34 197 94 / 0.18);
+}
+
+.live-progress-fill{
+  @apply h-full rounded-full bg-success;
+  transition: width 1s ease;
+}
+
+.live-card-foot{
+  @apply flex flex-wrap items-center justify-between gap-3;
+}
+
+/* Стопка аватаров */
+.avatar-stack{
+  @apply flex items-center;
+}
+
+.avatar-stack > *{
+  @apply bg-active rounded-full;
+}
+
+.avatar-stack > * + *{
+  @apply -ml-2.5;
+}
+
+.avatar-stack-more{
+  @apply w-8 h-8 flex items-center justify-center rounded-full text-[10px] font-semibold bg-inactive border-2;
+  border-color: var(--surface-border);
+}
+
+/* ===== Шапка страницы: заголовок слева, действия справа ===== */
+.page-head{
+  @apply flex flex-wrap items-center justify-between gap-3;
+}
+
+.page-title{
+  @apply mb-0 flex items-center gap-2 text-2xl md:text-3xl;
+}
+
+/* ===== Карточка-обложка (курс, уровень) ===== */
+.cover-card{
+  @apply relative overflow-hidden rounded-2xl bg-inactive border;
+  aspect-ratio: 3 / 2;
+  border-color: var(--surface-border);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+a:hover > .cover-card,
+button:hover > .cover-card,
+a:focus-visible > .cover-card{
+  transform: translateY(-3px);
+  box-shadow: 0 22px 40px -26px rgb(15 23 42 / 0.55);
+}
+
+.cover-card-img{
+  @apply absolute inset-0 w-full h-full object-cover;
+  transition: transform 0.5s ease;
+}
+
+.cover-card:not(.locked):hover .cover-card-img{
+  transform: scale(1.05);
+}
+
+/* Затемнение снизу, чтобы текст читался на любой картинке */
+.cover-card-shade{
+  @apply absolute inset-0 pointer-events-none;
+  background: linear-gradient(to top, rgb(2 6 23 / 0.85) 0%, rgb(2 6 23 / 0.35) 45%, transparent 75%);
+}
+
+.cover-card-content{
+  @apply absolute left-0 right-0 bottom-0 flex items-end justify-between gap-3 p-4 text-white;
+}
+
+.cover-card-title{
+  @apply mb-0 text-white text-lg md:text-xl font-semibold leading-tight;
+  text-shadow: 0 1px 6px rgb(0 0 0 / 0.35);
+}
+
+.cover-card-sub{
+  @apply mb-0 mt-1 text-sm text-white/80;
+}
+
+.cover-card-arrow{
+  @apply shrink-0 w-9 h-9 rounded-full flex items-center justify-center bg-white/20 backdrop-blur-sm text-white duration-200;
+}
+
+.cover-card:hover .cover-card-arrow{
+  @apply bg-white text-gray-900;
+}
+
+.cover-card-progress{
+  @apply h-1.5 w-full rounded-full overflow-hidden bg-white/25;
+}
+
+.cover-card-progress > div{
+  @apply h-full rounded-full bg-success;
+  transition: width 0.3s ease;
+}
+
+/* Недоступный уровень */
+.cover-card.locked .cover-card-img{
+  filter: grayscale(1);
+}
+
+.cover-card.locked .cover-card-shade{
+  background: rgb(2 6 23 / 0.7);
+}
+
+.cover-card-lock{
+  @apply absolute inset-0 flex flex-col items-center justify-center gap-1 p-4 text-center text-white;
+}
+
+.cover-card-lock > i{
+  @apply text-2xl mb-1 w-11 h-11 rounded-full flex items-center justify-center bg-white/15;
+}
+
+/* ===== Уровень курса: прогресс и разделы ===== */
+.level-progress{
+  @apply flex flex-wrap sm:flex-nowrap items-center gap-4 p-4 md:p-5 rounded-2xl border bg-active;
+  border-color: var(--surface-border);
+  box-shadow: var(--shadow-soft);
+}
+
+.unit-card{
+  @apply flex items-center gap-4 p-4 rounded-2xl border bg-active text-active;
+  border-color: var(--surface-border);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.unit-card:hover{
+  @apply text-active;
+  transform: translateY(-2px);
+  border-color: rgb(59 130 246 / 0.4);
+  box-shadow: 0 18px 34px -24px rgb(15 23 42 / 0.45);
+}
+
+.unit-card.empty{
+  @apply opacity-70;
+}
+
+/* Следующий к прохождению раздел */
+.unit-card.next{
+  border-color: theme('colors.corp.DEFAULT');
+  box-shadow: inset 0 0 0 1px theme('colors.corp.DEFAULT');
+}
+
+.unit-num{
+  @apply shrink-0 w-11 h-11 rounded-xl flex items-center justify-center text-lg font-bold text-corp;
+  background-color: rgb(59 130 246 / 0.1);
+}
+
+.unit-card.next .unit-num{
+  @apply bg-corp text-white;
+}
+
+.unit-card.done .unit-num{
+  @apply bg-success text-white;
+}
+
+.unit-progress{
+  @apply h-1.5 w-full max-w-xs rounded-full overflow-hidden bg-gray-200 dark:bg-slate-700;
+}
+
+.unit-progress > div{
+  @apply h-full rounded-full bg-success;
+}
+
+.unit-percent{
+  @apply shrink-0 font-semibold tabular-nums text-sm;
+}
+
+.db-notice.danger{
+  background-color: rgb(239 68 68 / 0.07);
+  border-color: rgb(239 68 68 / 0.3);
+}
+
+.db-notice.danger .db-notice-icon{
+  @apply bg-danger;
+}
+
+/* ===== Раздел: уроки маршрутом (pages/.../[section]/index.vue) ===== */
+.lesson-path{
+  @apply relative flex flex-col gap-2 list-none p-0 m-0;
+}
+
+/* Вертикальная линия «маршрута» за номерами уроков */
+.lesson-path::before{
+  content: "";
+  @apply absolute top-6 bottom-6 w-0.5 bg-gray-200 dark:bg-slate-700;
+  left: calc(1rem + 1.375rem - 1px);
+}
+
+.lesson-row{
+  @apply relative w-full flex items-center gap-4 p-4 rounded-2xl border bg-active text-active;
+  border-color: var(--surface-border);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lesson-row:hover{
+  @apply text-active;
+  transform: translateX(3px);
+  border-color: rgb(59 130 246 / 0.4);
+  box-shadow: 0 14px 30px -24px rgb(15 23 42 / 0.45);
+}
+
+.lesson-row .unit-num{
+  @apply relative z-10;
+}
+
+.lesson-row.next{
+  border-color: theme('colors.corp.DEFAULT');
+  box-shadow: inset 0 0 0 1px theme('colors.corp.DEFAULT');
+}
+
+.lesson-row.next .unit-num{
+  @apply bg-corp text-white;
+}
+
+.lesson-row.done .unit-num{
+  @apply bg-success text-white;
+}
+
+.lesson-row.locked{
+  @apply bg-inactive;
+}
+
+.lesson-row.locked .unit-num{
+  @apply bg-gray-200 text-gray-500 dark:bg-slate-700 dark:text-slate-400;
+}
+
+.lesson-row.locked > div{
+  @apply opacity-60;
+}
+
+/* ===== Шапка урока ===== */
+.lesson-hero{
+  @apply flex flex-col gap-2;
+}
+
+.lesson-back{
+  @apply inline-flex items-center gap-1.5 w-fit text-sm text-inactive;
+}
+
+.lesson-back:hover{
+  @apply text-corp;
+}
+
+/* ===== Вкладка «Задания» урока (components/lesson/tabs/tasks.vue) ===== */
+.tasks-summary{
+  @apply flex flex-col gap-4 p-5 rounded-2xl border bg-active;
+  border-color: var(--surface-border);
+  box-shadow: var(--shadow-soft);
+}
+
+.task-list{
+  @apply flex flex-col gap-2 list-none p-0 m-0;
+}
+
+.task-row{
+  @apply flex flex-wrap items-center gap-x-3 pr-3 rounded-2xl border bg-active;
+  border-color: var(--surface-border);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.task-row:hover:not(.locked){
+  border-color: rgb(59 130 246 / 0.4);
+  box-shadow: 0 14px 30px -24px rgb(15 23 42 / 0.45);
+}
+
+.task-row.next{
+  border-color: theme('colors.corp.DEFAULT');
+  box-shadow: inset 0 0 0 1px theme('colors.corp.DEFAULT');
+}
+
+.task-row.locked{
+  @apply bg-inactive;
+}
+
+.task-row-main{
+  @apply flex-1 min-w-[14rem] flex items-center gap-3 p-3 text-active rounded-2xl overflow-hidden;
+}
+
+.task-row-main:disabled{
+  @apply cursor-not-allowed opacity-60;
+}
+
+.task-icon{
+  @apply shrink-0 w-11 h-11 rounded-xl flex items-center justify-center text-2xl text-corp;
+  background-color: rgb(59 130 246 / 0.1);
+}
+
+.task-row.done .task-icon{
+  @apply text-success;
+  background-color: rgb(34 197 94 / 0.12);
+}
+
+.task-row.next .task-icon{
+  @apply bg-corp text-white;
+}
+
+/* Кнопки «вверх» у первого и «вниз» у последнего задания не нужны */
+.task-list > li:first-child .btn-up,
+.task-list > li:last-child .btn-down{
+  @apply invisible;
+}
+
+/* Материалы: текстовые блоки/таблицы — фиолетовая плитка, файлы — синяя */
+.task-icon.block{
+  @apply text-violet-600 dark:text-violet-400;
+  background-color: rgb(139 92 246 / 0.12);
+}
+
+/* ===== Вкладка «Словарь» (components/lesson/tabs/dictionary.vue) ===== */
+.dict-cat{
+  @apply rounded-2xl border bg-active overflow-hidden;
+  border-color: var(--surface-border);
+}
+
+.dict-cat.open{
+  box-shadow: var(--shadow-soft);
+}
+
+.dict-cat-head{
+  @apply w-full flex items-center gap-3 p-4 text-active duration-200;
+}
+
+.dict-cat-head:hover{
+  background-color: rgb(59 130 246 / 0.05);
+}
+
+.dict-cat-badge{
+  @apply shrink-0 min-w-11 h-11 px-2 rounded-xl flex items-center justify-center font-bold text-corp;
+  background-color: rgb(59 130 246 / 0.1);
+}
+
+.dict-cat.open .dict-cat-badge{
+  @apply bg-corp text-white;
+}
+
+.dict-cat-chevron{
+  @apply text-inactive duration-300;
+}
+
+.dict-cat.open .dict-cat-chevron{
+  @apply rotate-180;
+}
+
+.dict-words{
+  @apply grid sm:grid-cols-2 xl:grid-cols-3 gap-2 p-4 pt-0;
+}
+
+.dict-word{
+  @apply flex items-center gap-3 p-3 rounded-xl bg-inactive;
+}
+
+.dict-word-img{
+  @apply shrink-0 w-11 h-11 rounded-lg bg-cover bg-center bg-no-repeat;
+}
+
+/* Кнопки управления и результат справа; если места мало — уходят на
+   вторую строку (выравниваются вправо), а не налезают на название. */
+.task-row-actions{
+  @apply flex items-center gap-1.5 shrink-0 ml-auto pl-3 py-2;
+}
+
+.task-row-actions > div{
+  flex-wrap: nowrap;
+}
+
+/* У ученика кнопок управления нет — пустой блок не должен занимать место */
+.task-row-actions:empty{
+  display: none;
+}
+
+/* ===== Задания в конференции ===== */
+
+/* Запущенное для учеников задание — зелёная плитка, как выполненное */
+.task-row.launched .task-icon,
+.task-icon.launched{
+  @apply text-success;
+  background-color: rgb(34 197 94 / 0.12);
+}
+
+/* Строка недоступна для нажатия, но не «заблокирована» (ученик ещё не выполнил
+   задание) — не приглушаем её, как .locked */
+.task-row:not(.locked) > .task-row-main:disabled{
+  @apply opacity-100 cursor-default;
+}
+
+/* Сводка и общие действия ментора над списком заданий */
+.tasks-toolbar{
+  @apply flex flex-wrap items-center gap-3;
+}
+
+.tasks-toolbar > .btn-wrap{
+  @apply gap-2;
+}
+
+/* Сколько учеников выполнило задание: «3/5» и тонкая полоска */
+.task-completion{
+  @apply shrink-0 flex flex-col items-end gap-1 w-16;
+}
+
+.task-completion-bar{
+  @apply block w-full h-1 rounded-full overflow-hidden bg-gray-200 dark:bg-slate-700;
+}
+
+.task-completion-bar > span{
+  @apply block h-full rounded-full bg-success;
+  transition: width 0.3s ease;
+}
+
+/* Маленькая пульсирующая точка внутри бейджа статуса */
+.live-dot.task-live-dot{
+  @apply w-2 h-2;
+}
+
+.lesson-badge.primary{
+  @apply text-corp;
+  border-color: rgb(59 130 246 / 0.4);
+  background-color: rgb(59 130 246 / 0.08);
+}
+
+.lesson-badge.warning{
+  @apply text-amber-600 dark:text-amber-400;
+  border-color: rgb(245 158 11 / 0.4);
+  background-color: rgb(245 158 11 / 0.08);
+}
+
+.lesson-badge.warning .live-dot,
+.lesson-badge.warning .live-dot::after{
+  @apply bg-amber-500;
+}
+
+/* Итог над списком (успеваемость ученика): кольцо прогресса + название */
+.grade-summary{
+  @apply flex items-center gap-4 p-4 rounded-2xl border bg-active;
+  border-color: var(--surface-border);
+}
+
+/* Аватар ученика с точкой «в сети» */
+.learner-avatar{
+  @apply relative shrink-0;
+}
+
+.presence-dot{
+  /* Обводка цвета фона строки (.bg-active), чтобы точка «вырезалась» из аватара */
+  @apply absolute right-0 bottom-0 w-3 h-3 rounded-full border-2 border-white dark:border-slate-800 bg-gray-300 dark:bg-slate-500;
+}
+
+.presence-dot.online{
+  @apply bg-success;
+}
+
+/* ===== Списки сущностей (пользователи, группы) ===== */
+.list-toolbar{
+  @apply flex flex-wrap items-center gap-3;
+}
+
+/* Статус «таблеткой»: цвет берётся из класса статуса (text-success и т.п.) */
+.status-pill{
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap;
+  background-color: color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.entity-list{
+  @apply flex flex-col gap-2 list-none p-0 m-0;
+}
+
+.entity-card{
+  @apply w-full flex items-center gap-3 p-3 rounded-2xl border bg-active text-active;
+  border-color: var(--surface-border);
+  transition: border-color 0.2s ease;
+}
+
+.entity-card:active,
+.entity-card:hover{
+  border-color: rgb(59 130 246 / 0.4);
+}
+
+/* ===== AI-чат (components/lesson/components/ai/aiExplainer.vue) ===== */
+.ai-chat{
+  @apply flex flex-col;
+}
+
+.ai-chat-head{
+  @apply flex items-center gap-3 p-4 border-b;
+  border-bottom-color: var(--surface-border);
+}
+
+.ai-avatar{
+  @apply shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-white text-lg;
+  background-image: linear-gradient(135deg, #3b82f6, #8b5cf6);
+}
+
+.ai-avatar.sm{
+  @apply w-8 h-8 rounded-lg text-sm;
+}
+
+.ai-online-dot{
+  @apply inline-block w-2 h-2 rounded-full bg-success;
+}
+
+.ai-msg{
+  @apply flex items-start gap-2.5;
+}
+
+.ai-bubble{
+  @apply rounded-2xl rounded-tl-md px-4 py-3 bg-inactive text-active max-w-full break-words;
+}
+
+/* Ответ AI: аккуратная типографика вложенного HTML */
+.ai-content :where(p){
+  @apply mb-2;
+}
+
+.ai-content :where(p:last-child){
+  @apply mb-0;
+}
+
+.ai-content :where(ul, ol){
+  @apply pl-5 mb-2;
+}
+
+.ai-content :where(ul){
+  @apply list-disc;
+}
+
+.ai-content :where(ol){
+  @apply list-decimal;
+}
+
+.ai-content :where(b, strong){
+  @apply font-semibold;
+}
+
+.user-msg{
+  @apply flex justify-end pl-10;
+}
+
+.user-bubble{
+  @apply rounded-2xl rounded-tr-md px-4 py-2.5 bg-corp text-white max-w-full break-words;
+}
+
+.ai-actions{
+  @apply flex items-center gap-1;
+}
+
+.ai-action{
+  @apply w-8 h-8 rounded-lg flex items-center justify-center text-sm text-inactive duration-200;
+}
+
+.ai-action:hover,
+.ai-action.active{
+  @apply text-corp;
+  background-color: rgb(59 130 246 / 0.1);
+}
+
+/* «Печатает…» */
+.ai-typing{
+  @apply flex items-center gap-1 py-3.5;
+}
+
+.ai-typing > span{
+  @apply w-2 h-2 rounded-full bg-gray-400;
+  animation: ai-typing 1.2s ease-in-out infinite;
+}
+
+.ai-typing > span:nth-child(2){ animation-delay: 0.15s; }
+.ai-typing > span:nth-child(3){ animation-delay: 0.3s; }
+
+@keyframes ai-typing{
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* Подсказки-заготовки */
+.ai-chip{
+  @apply px-3 py-1.5 rounded-full text-sm border bg-active text-active duration-200;
+  border-color: var(--surface-border);
+}
+
+.ai-chip:hover{
+  @apply text-corp;
+  border-color: rgb(59 130 246 / 0.4);
+  background-color: rgb(59 130 246 / 0.06);
+}
+
+/* Поле ввода */
+.ai-input{
+  @apply flex items-center gap-2 p-1.5 pl-3 rounded-full border bg-inactive;
+  border-color: var(--surface-border);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ai-input:focus-within{
+  border-color: theme('colors.corp.DEFAULT');
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.15);
+}
+
+.ai-input input{
+  @apply py-1.5 outline-none;
+}
+
+.ai-send{
+  @apply relative shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-lg duration-200 select-none touch-none bg-active-inverse;
+  color: white;
+}
+
+.dark .ai-send{
+  color: #0f172a;
+}
+
+.ai-send.primary{
+  @apply bg-corp text-white;
+}
+
+.ai-send.recording{
+  @apply bg-danger text-white scale-110;
+  box-shadow: 0 0 0 6px rgb(239 68 68 / 0.2);
+}
+
+.ai-send.disabled{
+  @apply opacity-60 pointer-events-none;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .ai-typing > span{ animation: none; }
+}
+
+/* ===== Кнопки-иконки в шапке (тема, язык) ===== */
+.header-icon-btn{
+  @apply w-9 h-9 rounded-xl flex items-center justify-center text-lg text-active duration-200;
+}
+
+.header-icon-btn:hover{
+  @apply text-corp;
+  background-color: rgb(59 130 246 / 0.08);
+}
+
+.theme-icon-enter-active,
+.theme-icon-leave-active{
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.theme-icon-enter-from{
+  transform: rotate(-90deg) scale(0.6);
+  opacity: 0;
+}
+
+.theme-icon-leave-to{
+  transform: rotate(90deg) scale(0.6);
+  opacity: 0;
+}
+
+/* Плавная смена цветов только в момент переключения темы */
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after{
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease !important;
+}
+
+/* Выбор языка */
+.locale-item{
+  @apply w-full flex items-center gap-2.5 py-0.5 text-left;
+}
+
+.locale-item.active{
+  @apply text-corp font-semibold;
+}
+
+.locale-code{
+  @apply w-9 h-6 rounded-md flex items-center justify-center text-[11px] font-bold bg-inactive text-active;
+}
+
+.locale-item.active .locale-code{
+  @apply bg-corp text-white;
+}
+
+/* Лоадер: прогресс загрузки файла */
+.loader-progress{
+  @apply pt-3 flex flex-col items-center gap-2 text-center;
+}
+
+.loader-progress-track{
+  @apply w-48 max-w-full h-2 rounded-full overflow-hidden bg-gray-200 dark:bg-slate-700;
+}
+
+.loader-progress-fill{
+  @apply h-full rounded-full bg-corp;
+  transition: width 0.2s ease;
+}
+
+/* Плавающая подпись у select (используется в textEditor.vue) */
+.per-page-select{
+  @apply relative w-48;
+}
+
+.per-page-select::after{
+  content: "›";
+  writing-mode: vertical-rl;
+  @apply absolute right-0 text-inactive text-2xl top-3 w-3 h-3;
+}
+
+.per-page-select > select {
+  @apply border border-corp rounded-lg bg-transparent w-full text-active px-3 py-0.5;
+}
+
+.per-page-select.active > select {
+  @apply border-inactive;
+}
+
+.per-page-select > label {
+  @apply absolute left-8 top-2 pointer-events-none duration-200 z-0 bg-inherit text-inactive;
+}
+
+.per-page-select > select:focus ~ label,
+.per-page-select > select:not(:placeholder-shown) ~ label
+{
+  @apply -top-2.5 text-xs left-2 text-inactive bg-inactive px-1.5;
+}
+
+.per-page-select.bg_active > select:focus ~ label,
+.per-page-select.bg_active > select:not(:placeholder-shown) ~ label
+{
+  @apply bg-active;
+}
+
+/* Статус, который может переноситься (карточки на телефоне) */
+.status-pill.wrap{
+  @apply w-fit max-w-full whitespace-normal leading-snug py-1 rounded-xl;
+}
+
+/* Активный сегмент переключателей в тёмной теме — светлее подложки */
+.dark .tab-header-item.active:not(.primary),
+.dark .conf-mode.active{
+  background-color: #334155; /* slate-700 */
+}
+
+.dark .tab-header-item.active:not(.primary){
+  @apply text-slate-100;
+}
+
+/* ===== Пошаговая форма (conferenceStructureForm.vue и т.п.) ===== */
+.form-steps{
+  @apply flex flex-col gap-3 pt-1;
+}
+
+.form-step{
+  @apply rounded-2xl border p-4;
+  border-color: var(--surface-border);
+}
+
+.form-step-title{
+  @apply flex items-center gap-2 mb-3 font-semibold;
+}
+
+.form-step-title > span{
+  @apply w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold bg-corp text-white;
+}
+
+/* Шаг заполнен — номер становится зелёным */
+.form-step.done .form-step-title > span{
+  @apply bg-success;
+}
+
+.form-actions{
+  @apply flex flex-wrap items-center justify-end gap-3 pt-1;
+}
+
+/* Неделя на телефоне: пустой день — одна компактная строка */
+@media (max-width: 767px) {
+  .sg-week-col{
+    @apply flex-row flex-wrap items-center gap-2;
+  }
+
+  .sg-week-col .sg-chips{
+    @apply w-full;
+  }
+}
+
+/* ===== Шаги мастера (components/ui/steps.vue) ===== */
+.stepper{
+  @apply mb-5 mt-2;
+}
+
+.stepper-list{
+  @apply flex items-start list-none p-0 m-0;
+}
+
+.stepper-item{
+  @apply relative flex-1 flex flex-col items-center gap-2 text-center min-w-0;
+}
+
+/* Соединительная линия от центра текущего кружка к центру следующего */
+.stepper-line{
+  @apply absolute top-[18px] h-0.5 rounded-full bg-gray-200 dark:bg-slate-700 overflow-hidden;
+  left: calc(50% + 24px);
+  right: calc(-50% + 24px);
+}
+
+.stepper-line::after{
+  content: "";
+  @apply absolute inset-0 bg-success origin-left scale-x-0;
+  transition: transform 0.4s ease;
+}
+
+.stepper-item.completed .stepper-line::after{
+  @apply scale-x-100;
+}
+
+.stepper-dot{
+  @apply relative z-10 w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold border-2 bg-active text-inactive;
+  border-color: var(--surface-border);
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stepper-item.current .stepper-dot{
+  @apply bg-corp text-white border-transparent;
+  box-shadow: 0 0 0 5px rgb(59 130 246 / 0.18);
+}
+
+.stepper-item.completed .stepper-dot{
+  @apply bg-success text-white border-transparent;
+}
+
+.stepper-label{
+  @apply text-xs md:text-sm font-medium text-inactive leading-snug px-1 max-w-[12rem];
+}
+
+.stepper-item.current .stepper-label{
+  @apply text-active font-semibold;
+}
+
+.stepper-item.completed .stepper-label{
+  @apply text-active;
+}
+
+/* Подпись текущего шага — только на телефоне */
+.stepper-current{
+  @apply hidden mb-0 mt-3 text-sm text-inactive text-center;
+}
+
+@media (max-width: 639px) {
+  .stepper-label{
+    @apply hidden;
+  }
+
+  .stepper-current{
+    @apply block;
+  }
+}
+
+/* Много шагов — компактнее и на компьютере */
+.stepper.compact .stepper-dot{
+  @apply w-8 h-8 text-xs;
+}
+
+.stepper.compact .stepper-line{
+  @apply top-4;
+  left: calc(50% + 22px);
+  right: calc(-50% + 22px);
+}
+
+.stepper.compact .stepper-label{
+  @apply text-xs;
+}
+
+/* Роль пользователя — мягкая «таблетка» без яркой обводки */
+.role-chip{
+  @apply inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold text-corp leading-none;
+  background-color: rgb(59 130 246 / 0.12);
+}
+
+.dark .role-chip{
+  @apply text-blue-300;
+  background-color: rgb(59 130 246 / 0.18);
+}
+
+/* ===== Аватар (components/ui/userAvatar.vue) ===== */
+.avatar-ring{
+  @apply rounded-full border shrink-0;
+  border-color: var(--surface-border);
+}
+
+.avatar-face{
+  @apply rounded-full flex items-center justify-center overflow-hidden select-none;
+}
+
+.avatar-initials{
+  @apply text-white font-semibold leading-none;
+  letter-spacing: 0.02em;
+}
+
+/* ===== Кольцо прогресса (components/ui/circleProgressBar.vue) ===== */
+.ring-progress{
+  @apply relative flex flex-none items-center justify-center rounded-full pointer-events-none;
+}
+
+.ring-progress-svg{
+  @apply absolute inset-0 w-full h-full -rotate-90;
+}
+
+.ring-progress-track{
+  @apply fill-none stroke-gray-200 dark:stroke-slate-700;
+  stroke-width: 9;
+}
+
+.ring-progress-arc{
+  @apply fill-none;
+  stroke-width: 9;
+  stroke-linecap: round;
+  transition-property: stroke-dashoffset, stroke;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ring-progress-arc.is-empty{
+  stroke: transparent;
+}
+
+.ring-progress-arc.is-low{
+  stroke: theme('colors.danger.DEFAULT');
+}
+
+.ring-progress-arc.is-mid{
+  stroke: theme('colors.amber.500');
+}
+
+.ring-progress-arc.is-high{
+  stroke: theme('colors.success.DEFAULT');
+}
+
+.ring-progress-value{
+  @apply relative font-bold text-active tabular-nums leading-none;
+}
+
+.ring-progress-value > small{
+  @apply text-[0.7em] font-semibold opacity-70 ml-px;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .ring-progress-arc{ transition: none; }
+}
+
+/* ===== Таймер задания (components/ui/countdownCircleTimer.vue) ===== */
+.timer-ring{
+  @apply relative flex flex-none items-center justify-center w-16 h-16 rounded-full bg-active;
+  box-shadow: var(--shadow-soft);
+}
+
+/* Дуга убывает равномерно — линейный переход длиной в секунду */
+.timer-arc{
+  @apply fill-none;
+  stroke-width: 9;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear, stroke 0.4s ease;
+}
+
+.timer-ring.is-high .timer-arc{
+  stroke: theme('colors.success.DEFAULT');
+}
+
+.timer-ring.is-mid .timer-arc{
+  stroke: theme('colors.amber.500');
+}
+
+.timer-ring.is-low .timer-arc{
+  stroke: theme('colors.danger.DEFAULT');
+}
+
+.timer-value{
+  @apply relative text-sm font-bold text-active tabular-nums;
+}
+
+/* Последняя треть: красное время и мягкая пульсация кольца */
+.timer-ring.is-urgent .timer-value{
+  @apply text-danger;
+}
+
+.timer-ring.is-urgent{
+  animation: timer-urgent 1s ease-in-out infinite;
+}
+
+@keyframes timer-urgent{
+  0%, 100% { box-shadow: 0 0 0 0 rgb(239 68 68 / 0.35); }
+  50% { box-shadow: 0 0 0 8px rgb(239 68 68 / 0); }
+}
+
+/* Итог: ✓ / ✕ */
+.timer-result{
+  @apply text-2xl text-white;
+}
+
+.timer-result.is-ok{
+  @apply bg-success;
+  box-shadow: 0 10px 24px -12px rgb(34 197 94 / 0.7);
+}
+
+.timer-result.is-fail{
+  @apply bg-danger;
+  box-shadow: 0 10px 24px -12px rgb(239 68 68 / 0.7);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .timer-ring.is-urgent{ animation: none; }
+  .timer-arc{ transition: none; }
+}
+
+/* ===== Тег пользователя (components/ui/userTag.vue) ===== */
+.user-tag{
+  @apply inline-flex items-center gap-1.5 max-w-full py-0.5 pl-0.5 pr-2.5 rounded-full border bg-active text-sm text-active select-none;
+  border-color: var(--surface-border);
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.user-tag-name{
+  @apply truncate max-w-[14rem];
+}
+
+/* Кликабельный (например, «посмотреть успеваемость») */
+.user-tag.selectable{
+  @apply cursor-pointer;
+}
+
+.user-tag.selectable:hover{
+  @apply text-corp;
+  border-color: rgb(59 130 246 / 0.45);
+  background-color: rgb(59 130 246 / 0.07);
+}
+
+/* С кнопкой удаления — справа место под крестик */
+.user-tag.closable{
+  @apply pr-1;
+}
+
+.user-tag-remove{
+  @apply shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[9px] text-inactive duration-200;
+}
+
+.user-tag-remove:hover{
+  @apply bg-danger text-white;
+}
+
+/* ===== Аудиоплеер с волной (components/ui/audioPlayerWithWave.vue) ===== */
+.audio-wave{
+  @apply flex items-center gap-3 w-full;
+}
+
+.audio-wave-btn{
+  @apply shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-xl text-white bg-corp duration-200;
+  box-shadow: 0 8px 18px -10px rgb(59 130 246 / 0.8);
+}
+
+.audio-wave-btn:hover:not(:disabled){
+  transform: scale(1.05);
+}
+
+.audio-wave-btn.playing{
+  @apply bg-active text-corp border-2 border-corp;
+  box-shadow: none;
+}
+
+.audio-wave-btn:disabled{
+  @apply cursor-default;
+}
+
+.audio-wave.has-error .audio-wave-btn{
+  @apply bg-danger;
+  box-shadow: none;
+}
+
+.audio-wave-body{
+  @apply relative flex-1 min-w-0 h-9 flex items-center;
+}
+
+.audio-wave-canvas{
+  @apply absolute inset-0;
+}
+
+.audio-wave-skeleton{
+  @apply flex items-center gap-0.5 w-full h-full;
+}
+
+.audio-wave-skeleton > span{
+  @apply flex-1 rounded-full bg-gray-200 dark:bg-slate-700 animate-pulse;
+  max-width: 3px;
+}
+
+.audio-wave-time{
+  @apply shrink-0 text-xs font-medium text-inactive tabular-nums min-w-[2.5rem] text-right;
+}
+
+/* Кнопка «послушать» (audioButton / audioButtonMini): играет — мягкая пульсация */
+.audio-btn.playing{
+  animation: audio-btn-pulse 1.4s ease-out infinite;
+}
+
+@keyframes audio-btn-pulse{
+  0% { box-shadow: 0 0 0 0 rgb(59 130 246 / 0.35); }
+  100% { box-shadow: 0 0 0 10px rgb(59 130 246 / 0); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .audio-btn.playing{ animation: none; }
+}
+
+/* ===== Результаты заданий (taskResultChart.vue, tasks/results/*) ===== */
+.result-summary{
+  @apply flex flex-wrap items-center gap-4 p-4 rounded-2xl border bg-active;
+  border-color: var(--surface-border);
+}
+
+.result-stats{
+  @apply flex-1 grid grid-cols-2 sm:grid-cols-3 gap-2 min-w-[12rem];
+}
+
+.result-stat{
+  @apply flex flex-col gap-0.5 px-3 py-2 rounded-xl;
+}
+
+.result-stat > b{
+  @apply text-2xl leading-none tabular-nums;
+}
+
+.result-stat > span{
+  @apply text-xs text-inactive leading-snug;
+}
+
+.result-stat.ok{ background-color: rgb(34 197 94 / 0.1); }
+.result-stat.ok > b{ @apply text-success; }
+.result-stat.partly{ background-color: rgb(245 158 11 / 0.12); }
+.result-stat.partly > b{ @apply text-amber-500; }
+.result-stat.bad{ background-color: rgb(239 68 68 / 0.1); }
+.result-stat.bad > b{ @apply text-danger; }
+
+.result-section{
+  @apply flex flex-col gap-2;
+}
+
+.result-head{
+  @apply flex items-center gap-2 mb-0 font-semibold text-base;
+}
+
+.result-head-dot{
+  @apply w-2.5 h-2.5 rounded-full;
+}
+
+.result-head-count{
+  @apply ml-0.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-inactive text-inactive;
+}
+
+.result-head.ok{ @apply text-success; }
+.result-head.ok .result-head-dot{ @apply bg-success; }
+.result-head.partly{ @apply text-amber-500; }
+.result-head.partly .result-head-dot{ @apply bg-amber-500; }
+.result-head.bad{ @apply text-danger; }
+.result-head.bad .result-head-dot{ @apply bg-danger; }
+.result-head.pending{ @apply text-amber-500; }
+.result-head.pending .result-head-dot{ @apply bg-amber-500; }
+
+.result-list{
+  @apply flex flex-col gap-2 list-none p-0 m-0;
+}
+
+/* Карточка ответа с цветной полосой слева */
+.result-item{
+  @apply flex items-center gap-3 p-3 rounded-xl border bg-active;
+  border-color: var(--surface-border);
+  border-left-width: 4px;
+}
+
+.result-item.ok{ border-left-color: theme('colors.success.DEFAULT'); }
+.result-item.partly{ border-left-color: theme('colors.amber.500'); }
+.result-item.bad{ border-left-color: theme('colors.danger.DEFAULT'); }
+.result-item.pending{ border-left-color: theme('colors.amber.500'); }
+
+.result-thumb{
+  @apply shrink-0 w-14 h-14 rounded-lg bg-contain bg-no-repeat bg-center bg-inactive;
+}
+
+.result-label{
+  @apply mb-0.5 text-xs text-inactive flex items-center gap-1;
+}
+
+.result-answer{
+  @apply font-medium break-words;
+}
+
+.result-answer.strike{
+  @apply text-danger line-through decoration-2;
+  text-decoration-color: rgb(239 68 68 / 0.5);
+}
+
+.result-comment{
+  @apply px-3 py-2 rounded-lg text-sm;
+  background-color: rgb(59 130 246 / 0.07);
+}
+
+/* Значок статуса справа */
+.result-status{
+  @apply w-7 h-7 rounded-full flex items-center justify-center text-xs text-white;
+}
+
+.result-status.ok{ @apply bg-success; }
+.result-status.partly{ @apply bg-amber-500; }
+.result-status.bad{ @apply bg-danger; }
+.result-status.pending{ @apply bg-amber-500; }
+
+/* Проверка учителем: «Верно / Неверно» */
+.result-verdict{
+  @apply inline-flex flex-wrap gap-2;
+}
+
+.result-verdict-option{
+  @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-medium cursor-pointer text-inactive duration-200;
+  border-color: var(--surface-border);
+}
+
+.result-verdict-option:has(input:focus-visible){
+  box-shadow: var(--shadow-focus);
+}
+
+.result-verdict-option.ok.active{
+  @apply text-white bg-success border-transparent;
+}
+
+.result-verdict-option.bad.active{
+  @apply text-white bg-danger border-transparent;
+}
+
+.result-verdict-option.ok:not(.active):hover{ @apply text-success; }
+.result-verdict-option.bad:not(.active):hover{ @apply text-danger; }
+
+/* ===== Выполнение заданий: общие элементы ===== */
+.task-status-bar{
+  @apply flex items-center justify-between gap-3;
+}
+
+.task-actions{
+  @apply flex flex-wrap justify-end gap-2;
+}
+
+@media (max-width: 639px) {
+  .task-actions > .btn{
+    @apply flex-1;
+  }
+}
+
+/* Банк слов / варианты ответа */
+.word-bank{
+  @apply flex flex-wrap justify-center gap-2 p-3 rounded-2xl bg-inactive;
+}
+
+.word-chip{
+  @apply inline-flex items-center px-3.5 py-1.5 rounded-xl border bg-active text-active font-medium duration-200 select-none;
+  border-color: var(--surface-border);
+  box-shadow: 0 2px 0 0 var(--surface-border);
+}
+
+.word-chip:hover:not(:disabled){
+  @apply text-corp;
+  border-color: rgb(59 130 246 / 0.5);
+  transform: translateY(-1px);
+}
+
+.word-chip:active:not(:disabled){
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.word-chip[draggable="true"]{
+  @apply cursor-grab;
+}
+
+/* Слово уже вставлено — остаётся «тенью» на месте */
+.word-chip.used,
+.word-chip.selected{
+  @apply text-transparent border-dashed bg-transparent;
+  box-shadow: none;
+}
+
+.word-chip.used{
+  @apply cursor-default;
+}
+
+.word-chip.error{
+  @apply border-danger text-danger;
+  animation: task-shake 0.4s ease;
+}
+
+/* Карточка предложения с пропусками */
+.blank-card{
+  @apply flex items-start gap-3 p-4 rounded-2xl border bg-active;
+  border-color: var(--surface-border);
+}
+
+.blank-card.shake{
+  animation: task-shake 0.4s ease;
+}
+
+.blank-card-num{
+  @apply shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold text-corp mt-0.5;
+  background-color: rgb(59 130 246 / 0.1);
+}
+
+.blank-sentence{
+  @apply flex flex-wrap items-center gap-x-1.5 gap-y-2 text-lg font-medium leading-relaxed;
+}
+
+.blank-filled{
+  @apply px-2 py-0.5 rounded-lg text-corp;
+  background-color: rgb(59 130 246 / 0.1);
+}
+
+.blank-empty{
+  @apply inline-block w-16 h-7 rounded-lg border-2 border-dashed align-middle;
+  border-color: rgb(148 163 184 / 0.6);
+}
+
+.blank-empty.error{
+  @apply border-danger;
+  background-color: rgb(239 68 68 / 0.08);
+}
+
+/* Поле пропуска */
+.blank-input{
+  @apply inline-flex items-center gap-0.5 px-1.5 rounded-lg border-2 bg-active duration-200;
+  border-color: rgb(148 163 184 / 0.6);
+}
+
+.blank-input:focus-within{
+  border-color: theme('colors.corp.DEFAULT');
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.15);
+}
+
+.blank-input input{
+  @apply bg-transparent text-center text-corp font-semibold outline-none py-0.5 min-w-[3ch];
+}
+
+.blank-input.underline-only{
+  @apply rounded-none border-0 border-b-2 px-0.5 bg-transparent;
+}
+
+.blank-input.underline-only:focus-within{
+  box-shadow: none;
+}
+
+.blank-input.underline-only input{
+  @apply text-left;
+}
+
+.blank-input.error{
+  @apply border-danger;
+  background-color: rgb(239 68 68 / 0.08);
+  animation: task-shake 0.4s ease;
+}
+
+.blank-clear{
+  @apply w-5 h-5 rounded-full flex items-center justify-center text-[9px] text-inactive duration-200;
+}
+
+.blank-clear:hover{
+  @apply bg-danger text-white;
+}
+
+@keyframes task-shake{
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .blank-card.shake, .blank-input.error, .word-chip.error{ animation: none; }
+}
+
+/* ===== Задание «Пропущенные буквы» ===== */
+.letters-thumb{
+  @apply shrink-0 w-16 h-16 rounded-xl bg-cover bg-no-repeat bg-center bg-inactive;
+}
+
+.letter-tiles{
+  @apply flex flex-wrap items-center gap-1;
+}
+
+.letter-gap{
+  @apply w-3;
+}
+
+/* Клетка-буква: готовая — серая, пропуск — поле ввода */
+.letter-tile{
+  @apply w-9 h-10 sm:w-10 sm:h-11 rounded-lg flex items-center justify-center text-lg font-semibold bg-inactive text-active select-none;
+}
+
+.letter-tile.input{
+  @apply bg-active border-2 border-dashed cursor-text duration-200;
+  border-color: rgb(59 130 246 / 0.5);
+}
+
+.letter-tile.input:focus-within{
+  @apply border-solid;
+  border-color: theme('colors.corp.DEFAULT');
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.15);
+}
+
+.letter-tile.input.filled{
+  @apply border-solid;
+  border-color: rgb(59 130 246 / 0.5);
+  background-color: rgb(59 130 246 / 0.06);
+}
+
+.letter-tile.input.error{
+  @apply border-danger border-solid;
+  background-color: rgb(239 68 68 / 0.08);
+  animation: task-shake 0.4s ease;
+}
+
+.letter-tile input{
+  @apply w-full h-full bg-transparent text-center text-corp font-bold outline-none lowercase;
+  caret-color: theme('colors.corp.DEFAULT');
+}
+
+@media (prefers-reduced-motion: reduce){
+  .letter-tile.input.error{ animation: none; }
+}
+
+/* ===== Задание «Составь слово из букв» ===== */
+.attempt-hearts{
+  @apply flex items-center gap-1 text-sm text-danger;
+}
+
+.attempt-hearts .lost{
+  @apply text-gray-300 dark:text-slate-600;
+}
+
+.letter-tile.big{
+  @apply w-10 h-12 sm:w-11 sm:h-14 text-2xl;
+}
+
+/* Пустая клетка в слове; следующая к заполнению — подсвечена */
+.letter-tile.slot{
+  @apply w-10 h-12 sm:w-11 sm:h-14 bg-transparent border-2 border-dashed;
+  border-color: rgb(148 163 184 / 0.6);
+}
+
+.letter-tile.slot.next{
+  border-color: theme('colors.corp.DEFAULT');
+  background-color: rgb(59 130 246 / 0.06);
+  animation: slot-blink 1.2s ease-in-out infinite;
+}
+
+@keyframes slot-blink{
+  0%, 100% { box-shadow: 0 0 0 0 rgb(59 130 246 / 0.25); }
+  50% { box-shadow: 0 0 0 4px rgb(59 130 246 / 0); }
+}
+
+/* Слово собрано — все клетки зелёные */
+.letter-tiles.is-complete .letter-tile{
+  @apply text-white bg-success;
+}
+
+/* Кнопки-буквы */
+.letter-keys{
+  @apply flex flex-wrap justify-center gap-2 max-w-md;
+}
+
+.letter-key{
+  @apply w-12 h-12 rounded-xl border bg-active text-xl font-semibold lowercase text-active duration-150 select-none;
+  border-color: var(--surface-border);
+  box-shadow: 0 3px 0 0 var(--surface-border);
+}
+
+.letter-key:hover:not(:disabled){
+  @apply text-corp;
+  border-color: rgb(59 130 246 / 0.5);
+  transform: translateY(-1px);
+}
+
+.letter-key:active:not(:disabled){
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.letter-key.is-correct{
+  @apply bg-success text-white border-transparent;
+  box-shadow: none;
+}
+
+.letter-key.is-wrong{
+  @apply bg-danger text-white border-transparent;
+  box-shadow: none;
+  animation: task-shake 0.4s ease;
+}
+
+/* Буква использована — остаётся пунктирной «тенью» */
+.letter-key.is-used{
+  @apply text-transparent bg-transparent border-dashed cursor-default;
+  box-shadow: none;
+}
+
+/* Правильный ответ, когда слово не удалось */
+.answer-reveal{
+  @apply text-center p-6 rounded-2xl border;
+  border-color: rgb(239 68 68 / 0.25);
+  background-color: rgb(239 68 68 / 0.06);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .letter-tile.slot.next, .letter-key.is-wrong{ animation: none; }
+}
+
+/* ===== Задание «Соотнеси предложения с материалами» ===== */
+.match-card{
+  @apply relative rounded-2xl border bg-active overflow-hidden;
+  border-color: var(--surface-border);
+}
+
+/* Аудио: номер слева, плеер справа в одну строку */
+.match-card.audio{
+  @apply flex items-center gap-3 p-3;
+}
+
+.match-media{
+  @apply w-full;
+}
+
+.match-media img,
+.match-media video{
+  @apply block w-full;
+}
+
+/* Поле номера — поверх картинки/видео в левом верхнем углу */
+.match-number{
+  @apply flex items-center justify-center w-12 h-12 rounded-xl border-2 border-dashed bg-active cursor-text shrink-0 duration-200;
+  border-color: rgb(59 130 246 / 0.55);
+  box-shadow: var(--shadow-soft);
+}
+
+.match-card:not(.audio) .match-number{
+  @apply absolute left-3 top-3 z-10;
+}
+
+.match-number:focus-within{
+  @apply border-solid;
+  border-color: theme('colors.corp.DEFAULT');
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.2);
+}
+
+.match-number.filled{
+  @apply border-solid bg-corp;
+  border-color: transparent;
+}
+
+.match-number.filled input{
+  @apply text-white;
+}
+
+.match-number.error{
+  @apply border-danger border-solid;
+  background-color: rgb(239 68 68 / 0.12);
+  animation: task-shake 0.4s ease;
+}
+
+.match-number input{
+  @apply w-full h-full bg-transparent text-center text-xl font-bold text-corp outline-none;
+}
+
+.match-number input::placeholder{
+  @apply text-gray-300 dark:text-slate-600;
+}
+
+/* Материала нет */
+.match-missing{
+  @apply flex items-center justify-center gap-2 min-h-[10rem] w-full p-6 text-sm text-inactive bg-inactive;
+}
+
+.match-card.audio .match-missing{
+  @apply min-h-0 p-3 rounded-xl;
+}
+
+/* Список предложений */
+.match-sentences{
+  @apply flex flex-col gap-2 list-none p-0 m-0;
+}
+
+.match-sentences > li{
+  @apply flex items-start gap-3 p-3 rounded-xl bg-inactive;
+}
+
+.match-sentence-num{
+  @apply shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-bold text-white bg-corp;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .match-number.error{ animation: none; }
+}
+
+/* ===== Задание «Сопоставь слова с картинками» ===== */
+.picture-card{
+  @apply relative rounded-2xl border bg-active overflow-hidden;
+  border-color: var(--surface-border);
+}
+
+.picture-num{
+  @apply absolute left-2 top-2 z-10 w-7 h-7 rounded-lg flex items-center justify-center text-sm font-bold text-white bg-corp;
+  box-shadow: var(--shadow-soft);
+}
+
+.picture-answer{
+  @apply p-3 pt-0;
+}
+
+.picture-answer .blank-input{
+  @apply py-1;
+}
+
+.picture-answer .blank-input input{
+  @apply text-base;
+}
+
+.picture-answer .blank-input input::placeholder{
+  @apply font-normal text-sm text-gray-400 dark:text-slate-500;
+}
+
+.word-row{
+  @apply flex items-center gap-3 p-3 rounded-2xl border bg-active;
+  border-color: var(--surface-border);
+}
+
+/* ===== Задание «Найди одинаковые / парные слова» ===== */
+.pair-row{
+  @apply flex flex-wrap items-center gap-2;
+}
+
+.pair-link{
+  @apply text-inactive font-bold;
+}
+
+.pair-word{
+  @apply inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-inactive font-semibold text-lg;
+}
+
+.pair-row .blank-input{
+  @apply py-1;
+}
+
+.pair-row .blank-input input:disabled{
+  @apply cursor-default;
+}
+
+/* ===== Задание «Изучение слов» ===== */
+.word-prompt{
+  @apply flex flex-col items-center gap-3 p-5 rounded-2xl border bg-active text-center;
+  border-color: var(--surface-border);
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.word-prompt.is-right{
+  border-color: rgb(34 197 94 / 0.5);
+  background-color: rgb(34 197 94 / 0.06);
+}
+
+.word-prompt-text{
+  @apply mb-0 text-3xl font-bold;
+}
+
+.word-prompt.is-right .word-prompt-text{
+  @apply text-success;
+}
+
+/* Вариант ответа (components/ui/trainingButton.vue) */
+.answer-option{
+  @apply relative w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl border bg-active text-left text-lg font-medium text-active duration-150;
+  border-color: var(--surface-border);
+  box-shadow: 0 3px 0 0 var(--surface-border);
+}
+
+.answer-option:hover:not(:disabled){
+  border-color: rgb(59 130 246 / 0.5);
+  transform: translateY(-1px);
+}
+
+.answer-option:active:not(:disabled){
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.answer-option-key{
+  @apply hidden lg:flex shrink-0 w-8 h-8 rounded-lg items-center justify-center text-sm font-bold bg-inactive text-inactive;
+  font-family: inherit;
+}
+
+.answer-option-text{
+  @apply flex-1 min-w-0 break-words;
+}
+
+.answer-option-mark{
+  @apply shrink-0 text-lg;
+}
+
+.answer-option.is-correct{
+  @apply bg-success text-white border-transparent;
+  box-shadow: 0 10px 24px -14px rgb(34 197 94 / 0.8);
+}
+
+.answer-option.is-correct .answer-option-key{
+  @apply bg-white/25 text-white;
+}
+
+.answer-option.is-wrong{
+  @apply bg-danger text-white border-transparent;
+  box-shadow: none;
+  animation: task-shake 0.4s ease;
+}
+
+.answer-option.is-wrong .answer-option-key{
+  @apply bg-white/25 text-white;
+}
+
+.answer-option.is-locked{
+  @apply opacity-60 cursor-default;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .answer-option.is-wrong{ animation: none; }
+}
+
+/* ===== Задание «Найдите лишнее слово» ===== */
+/* Выбранное «лишнее» слово — синее и зачёркнутое (не красное: это ещё не ошибка) */
+.word-chip.extra-pick.picked{
+  @apply text-corp;
+  border-color: theme('colors.corp.DEFAULT');
+  background-color: rgb(59 130 246 / 0.08);
+  box-shadow: none;
+}
+
+.word-chip.extra-pick.picked .extra-pick-text{
+  @apply line-through decoration-2;
+}
+
+/* Итог: какое слово было лишним */
+.extra-word-mark{
+  @apply line-through decoration-2;
+}
+
+.extra-word-mark.ok{
+  @apply text-success;
+  background-color: rgb(34 197 94 / 0.12);
+}
+
+.extra-word-mark.bad{
+  @apply text-danger;
+  background-color: rgb(239 68 68 / 0.1);
+}
+
+/* ===== Задание «Составьте предложение из слов» ===== */
+.sentence-build{
+  @apply flex flex-wrap items-center justify-center gap-2 min-h-[4.5rem] p-4 rounded-2xl border-2 border-dashed;
+  border-color: rgb(148 163 184 / 0.5);
+  transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.sentence-build.is-complete{
+  @apply border-solid;
+  border-color: rgb(34 197 94 / 0.5);
+  background-color: rgb(34 197 94 / 0.06);
+}
+
+.sentence-word{
+  @apply text-2xl font-semibold text-active;
+}
+
+.sentence-build.is-complete .sentence-word{
+  @apply text-success;
+}
+
+/* Пустое место под следующее слово */
+.sentence-slot{
+  @apply inline-block w-12 h-1.5 rounded-full self-end mb-2 bg-gray-200 dark:bg-slate-700;
+}
+
+.sentence-slot.next{
+  @apply bg-corp;
+  animation: slot-blink 1.2s ease-in-out infinite;
+}
+
+/* Неверно выбранное слово — краткая красная вспышка */
+.word-chip.is-wrong-chip{
+  @apply bg-danger text-white border-transparent;
+  box-shadow: none;
+  animation: task-shake 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce){
+  .sentence-slot.next, .word-chip.is-wrong-chip{ animation: none; }
+}
+
+/* ===== Задание «Найдите ударный слог» ===== */
+.syllables{
+  @apply inline-flex flex-wrap rounded-xl border overflow-hidden w-fit;
+  border-color: var(--surface-border);
+}
+
+.syllable{
+  @apply relative px-4 py-2.5 text-xl font-medium bg-active text-active duration-150;
+}
+
+.syllable + .syllable{
+  border-left: 1px dashed var(--surface-border);
+}
+
+.syllable:hover:not(.picked){
+  @apply text-corp;
+  background-color: rgb(59 130 246 / 0.07);
+}
+
+/* Выбранный ударный слог: синий фон и знак ударения сверху */
+.syllable.picked{
+  @apply bg-corp text-white font-bold;
+}
+
+.syllable.picked::before{
+  content: "´";
+  @apply absolute left-1/2 -translate-x-1/2 top-0 text-sm leading-none;
+}
+
+.syllable.error{
+  background-color: rgb(239 68 68 / 0.1);
+  @apply text-danger;
+}
+
+.blank-card.shake .syllables{
+  border-color: theme('colors.danger.DEFAULT');
+}
+
+/* Утверждение, на которое ответили неверно */
+.word-prompt.is-wrong-prompt{
+  border-color: rgb(239 68 68 / 0.45);
+  background-color: rgb(239 68 68 / 0.05);
+}
+
+/* ===== Вариант ответа: выбор до проверки (chooseTheRightAnswer) ===== */
+.answer-option.is-selected{
+  @apply text-corp;
+  border-color: theme('colors.corp.DEFAULT');
+  background-color: rgb(59 130 246 / 0.08);
+  box-shadow: 0 3px 0 0 rgb(59 130 246 / 0.35);
+}
+
+.answer-option.is-selected .answer-option-key{
+  @apply bg-corp text-white;
+}
+
+/* Правильный вариант, который не выбрали */
+.answer-option.is-missed{
+  @apply text-success border-dashed border-2 cursor-default;
+  border-color: rgb(34 197 94 / 0.6);
+  background-color: rgb(34 197 94 / 0.05);
+  box-shadow: none;
+}
+
+.answer-option.is-correct,
+.answer-option.is-wrong,
+.answer-option.is-locked{
+  @apply cursor-default;
+}
+
+/* Индикатор выбора без подписи: кружок / квадрат */
+.answer-option-check{
+  @apply shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center duration-150;
+  border-color: rgb(148 163 184 / 0.7);
+}
+
+.answer-option-check.square{
+  @apply rounded-md;
+}
+
+.answer-option-check.on{
+  @apply border-corp bg-corp;
+  box-shadow: inset 0 0 0 3px theme('colors.white');
+}
+
+.dark .answer-option-check.on{
+  box-shadow: inset 0 0 0 3px theme('colors.slate.800');
+}
+
+/* «Выберите ответ» / «слишком много» — подсветка всех вариантов */
+.answer-option.select-error:not(.is-selected){
+  border-color: rgb(239 68 68 / 0.6);
+  animation: task-shake 0.4s ease;
+}
+
+.answer-option:has(input:focus-visible){
+  box-shadow: var(--shadow-focus);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .answer-option.select-error{ animation: none; }
+}
+
+/* Скелетон бокового меню (layouts/dashboard.vue, слот #fallback) —
+   те же размеры, что у настоящих пунктов */
+.sidebar-skeleton-item{
+  @apply flex items-center px-1.5 py-2;
+}
+
+/* ===== Ответы на вопросы ===== */
+.answer-card{
+  @apply duration-200;
+}
+
+.answer-card.filled .blank-card-num{
+  @apply bg-success text-white;
+}
+
+.answer-card.missing{
+  @apply border-danger;
+}
+
+.answer-textarea textarea{
+  @apply w-full min-h-[96px] px-3.5 py-2.5 rounded-xl border-2 bg-inactive text-base leading-relaxed resize-y outline-none duration-200;
+  border-color: transparent;
+}
+
+.answer-textarea textarea::placeholder{
+  @apply text-inactive;
+}
+
+.answer-textarea textarea:focus{
+  @apply bg-active;
+  border-color: theme('colors.corp.DEFAULT');
+  box-shadow: 0 0 0 3px rgb(59 130 246 / 0.15);
+}
+
+.answer-card.missing .answer-textarea textarea{
+  @apply border-danger;
+  background-color: rgb(239 68 68 / 0.06);
+}
+
+.answer-textarea-error{
+  @apply mt-1.5 mb-0 text-sm text-danger flex items-center gap-1.5;
+}
+
+.answer-kbd{
+  @apply inline-block px-1.5 py-0.5 rounded-md border text-[11px] font-semibold font-sans bg-inactive;
+  border-color: var(--surface-border);
 }

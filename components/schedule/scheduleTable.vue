@@ -123,126 +123,143 @@
   </div>
 
   <template v-if="props.mode === 'stack'">
-    <div class="flex flex-col gap-y-2">
-      <div
+    <div class="flex flex-col gap-y-3">
+      <article
         v-for="e in schedule"
         :key="e.uuid"
-        class="bg-active border-inactive rounded-xl overflow-hidden"
+        class="lesson-card"
+        :class="{
+          'is-live': e.is_active === true,
+          'is-today': dayInfo(e)?.isToday,
+          'is-mini': props.miniTable,
+        }"
+        @click="openEventModal && openEventModal(e.uuid)"
       >
-        <div class="flex max-md:flex-col">
+        <!-- Постер (AI-школа) -->
+        <div
+          v-if="
+            schoolStore.isAiSchoolDomain &&
+            props.showPoster === true &&
+            e.poster_file
+          "
+          class="lesson-poster group"
+        >
+          <img
+            :src="`${config.public.apiBase}/media/get/${e.poster_file}`"
+            class="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-50 transition-transform duration-700 group-hover:scale-125"
+            alt=""
+          />
           <div
-            v-if="schoolStore.isAiSchoolDomain && props.showPoster === true && e.poster_file"
-            class="relative w-full md:w-64 md:h-auto min-h-[240px] overflow-hidden rounded-lg bg-gray-950 flex items-center justify-center p-4 group"
-          >
-            <!-- 1. Размытый фоновый слой с плавной анимацией -->
-            <img
-              :src="`${config.public.apiBase}/media/get/${e.poster_file}`"
-              class="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-50 transition-transform duration-700 group-hover:scale-125"
-              alt=""
-            />
-
-            <!-- 2. Темный градиент для виньетирования -->
-            <div
-              class="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-transparent to-gray-950/40"
-            ></div>
-
-            <!-- 3. Основной постер с тенью и аккуратными рамками -->
-            <img
-              :src="`${config.public.apiBase}/media/get/${e.poster_file}`"
-              class="relative z-10 max-w-full max-h-full object-contain rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-300 group-hover:scale-[1.02]"
-              alt="Conference Poster"
-            />
+            class="absolute inset-0 bg-gradient-to-t from-gray-950/80 via-transparent to-gray-950/40"
+          ></div>
+          <img
+            v-skeleton.parent
+            :src="`${config.public.apiBase}/media/get/${e.poster_file}`"
+            class="relative z-10 max-w-full max-h-full object-contain rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-300 group-hover:scale-[1.02]"
+            alt=""
+          />
+          <!-- Дата поверх постера -->
+          <div v-if="dayInfo(e)" class="lesson-poster-date">
+            <b>{{ dayInfo(e).day }}</b> {{ dayInfo(e).month }}
           </div>
+        </div>
 
-          <div class="py-3 px-4 text-left flex flex-col gap-y-2 select-none">
-            <p class="mb-0" :class="props.miniTable === false ? 'text-lg' : ''">
-              <b>{{ e.topic || e.lesson_name }}</b>
-            </p>
+        <!-- Календарный листок с датой -->
+        <div v-else-if="dayInfo(e)" class="lesson-date" aria-hidden="true">
+          <span class="lesson-date-weekday">{{ dayInfo(e).weekday }}</span>
+          <span class="lesson-date-day">{{ dayInfo(e).day }}</span>
+          <span class="lesson-date-month">{{ dayInfo(e).month }}</span>
+        </div>
 
-            <template v-if="!schoolStore.isAiSchoolDomain">
-              <roleProvider :roles="[1, 2, 3, 4]">
-                <p class="mb-0">
-                  {{ $t("pages.lessons.lesson_type") }}:
-                  <b>{{ e.lesson_type_name }}</b>
-                </p>
-                <p class="mb-0">
-                  {{ $t("pages.groups.group") }}: <b>{{ e.group_name }}</b>
-                </p>
-                <p class="mb-0">
-                  {{ $t("pages.courses.course") }}: <b>{{ e.course_name }}</b>
-                </p>
-                <p class="mb-0">
-                  {{ $t("pages.groups.group_category") }}:
-                  <b>{{ e.level_name }}</b>
-                </p>
-              </roleProvider>
-            </template>
-            <template v-else>
-              <p class="mb-0" v-if="props.miniTable === false">
-                {{ $t("pages.courses.title") }}:
-                <span class="text-list text-nowrap font-medium">
-                  <span v-for="(level, lIndex) in e.levels" :key="lIndex">
-                    {{ level.level_name }}
-                  </span>
-                </span>
-              </p>
-            </template>
-
-            <div class="flex gap-x-1 items-center">
-              {{ $t("mentor") }}:
-
-              <userTag
-                :user="{
-                  last_name: e.mentor_last_name || e.moderator_last_name || '',
-                  first_name:
-                    e.mentor_first_name || e.moderator_first_name || '',
-                  avatar: e.mentor_avatar || e.moderator_avatar || '',
-                }"
-                :closable="false"
-              />
-            </div>
-
-            <div class="flex flex-wrap gap-2">
-              <div
-                class="px-2 py-1 bg-inactive border-inactive w-fit rounded-md flex gap-1 items-center text-xs font-medium"
-              >
-                <i class="pi pi-calendar-clock"></i>
-                {{ e.start_time_formatted }}
-              </div>
-
-              <div
+        <div class="lesson-body">
+          <!-- Название + статусы -->
+          <div class="lesson-head">
+            <h4 class="lesson-title">{{ e.topic || e.lesson_name }}</h4>
+            <div class="lesson-badges">
+              <span v-if="e.is_active === true" class="lesson-badge live">
+                <span class="live-dot !w-2 !h-2" aria-hidden="true"></span>
+                {{ $t("already_started") }}
+              </span>
+              <span
                 v-if="schoolStore.isAiSchoolDomain"
-                class="px-2 py-1 w-fit rounded-md flex gap-1 items-center text-xs font-medium border"
-                :class="
-                  e.is_free
-                    ? 'text-success border-success'
-                    : 'text-danger border-danger'
-                "
+                class="lesson-badge"
+                :class="e.is_free ? 'success' : 'premium'"
               >
                 <i class="pi" :class="e.is_free ? 'pi-gift' : 'pi-crown'"></i>
                 {{ e.is_free ? "Free" : "Premium" }}
-              </div>
-
-              <div
-                v-if="e.is_member"
-                class="px-2 py-1 text-success border border-success w-fit rounded-md flex gap-1 items-center text-xs font-medium"
-              >
+              </span>
+              <span v-if="e.is_member" class="lesson-badge success">
                 <i class="pi pi-check"></i>
                 {{ $t("pages.conference.accept.already_exists_alt") }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Детали занятия — компактными метками вместо столбца «Метка: значение» -->
+          <template v-if="!schoolStore.isAiSchoolDomain">
+            <roleProvider :roles="[1, 2, 3, 4]">
+              <div class="lesson-meta">
+                <span v-if="e.course_name" :title="$t('pages.courses.course')">
+                  <i class="pi pi-book" aria-hidden="true"></i>
+                  {{ e.course_name
+                  }}<template v-if="e.level_name"> · {{ e.level_name }}</template>
+                </span>
+                <span v-if="e.group_name" :title="$t('pages.groups.group')">
+                  <i class="pi pi-users" aria-hidden="true"></i>
+                  {{ e.group_name }}
+                </span>
+                <span
+                  v-if="e.lesson_type_name"
+                  :title="$t('pages.lessons.lesson_type')"
+                >
+                  <i class="pi pi-tag" aria-hidden="true"></i>
+                  {{ e.lesson_type_name }}
+                </span>
               </div>
+            </roleProvider>
+          </template>
+          <div
+            v-else-if="props.miniTable === false && e.levels?.length"
+            class="lesson-meta"
+          >
+            <span :title="$t('pages.courses.title')">
+              <i class="pi pi-book" aria-hidden="true"></i>
+              <span class="text-list">
+                <span v-for="(level, lIndex) in e.levels" :key="lIndex">
+                  {{ level.level_name }}
+                </span>
+              </span>
+            </span>
+          </div>
+
+          <!-- Низ: время и преподаватель слева, действия справа -->
+          <div class="lesson-foot">
+            <div class="lesson-when">
+              <span class="lesson-time">
+                <i class="pi pi-clock" aria-hidden="true"></i>
+                <template v-if="dayInfo(e)?.relative">
+                  <b>{{ dayInfo(e).relative }}</b>
+                  <span class="text-inactive">·</span>
+                </template>
+                {{ dayInfo(e) ? timeRange(e) : e.start_time_formatted }}
+              </span>
+              <span class="lesson-mentor">
+                <userAvatar
+                  :padding="0.5"
+                  :className="'w-6 h-6 text-[10px]'"
+                  :user="mentorOf(e)"
+                />
+                <span class="truncate"
+                  >{{ mentorOf(e).last_name }} {{ mentorOf(e).first_name }}</span
+                >
+              </span>
             </div>
 
-            <div class="btn-wrap">
-              <button type="button"
-                class="btn btn-primary btn-sm"
-                @click="openEventModal(e.uuid)"
-              >
-                <i class="pi pi-arrow-up-right"></i>
-                {{ $t("more") }}
-              </button>
-
-              <button type="button"
+            <div class="btn-wrap sm shrink-0" @click.stop>
+              <button
+                type="button"
                 v-if="
+                  props.acceptConference &&
                   schoolStore.isAiSchoolDomain &&
                   e.is_active === false &&
                   e.is_learner === true &&
@@ -251,13 +268,22 @@
                 @click="acceptConference(e.uuid)"
                 class="btn btn-success btn-sm"
               >
-                <i class="pi pi-check"></i>
+                <i class="pi pi-check" aria-hidden="true"></i>
                 {{ $t("pages.conference.accept.title") }}
+              </button>
+              <button
+                type="button"
+                v-if="props.openEventModal"
+                class="btn btn-light btn-sm"
+                @click="openEventModal(e.uuid)"
+              >
+                {{ $t("more") }}
+                <i class="pi pi-arrow-right" aria-hidden="true"></i>
               </button>
             </div>
           </div>
         </div>
-      </div>
+      </article>
     </div>
   </template>
 </template>
@@ -265,10 +291,10 @@
 import { useRuntimeConfig } from "nuxt/app";
 import roleProvider from "../ui/roleProvider.vue";
 import userAvatar from "../ui/userAvatar.vue";
-import userTag from "../ui/userTag.vue";
 
 const config = useRuntimeConfig();
 const schoolStore = useSchoolStore();
+const { localeProperties } = useI18n();
 
 const props = defineProps({
   schedule: {
@@ -306,4 +332,64 @@ const props = defineProps({
 });
 
 const { schedule } = toRefs(props);
+
+const intlLocale = computed(() =>
+  localeProperties.value.code === "kk" ? "kk-KZ" : "ru-RU",
+);
+
+const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+// Дата начала занятия из полей date (YYYY-MM-DD) и time (HH:MM[:SS]).
+const startOf = (e) => {
+  if (!e?.date || !e?.time) return null;
+  const d = new Date(`${e.date}T${e.time}`);
+  return isNaN(d) ? null : d;
+};
+
+// Данные для календарного листка и подписи «через 2 часа» / «завтра».
+const dayInfo = (e) => {
+  const start = startOf(e);
+  if (!start) return null;
+  const loc = intlLocale.value;
+  const now = new Date();
+  const startDay = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.round((startDay - today) / 86400000);
+
+  let relative = "";
+  if (e.is_active !== true) {
+    const rtf = new Intl.RelativeTimeFormat(loc, { numeric: "auto" });
+    const diffMin = Math.round((start - now) / 60000);
+    if (diffMin > 0 && diffMin < 60) relative = rtf.format(diffMin, "minute");
+    else if (diffMin >= 60 && diffDays === 0)
+      relative = rtf.format(Math.round(diffMin / 60), "hour");
+    else if (diffDays === 1) relative = rtf.format(1, "day");
+    relative = capitalize(relative);
+  }
+
+  return {
+    day: start.getDate(),
+    month: new Intl.DateTimeFormat(loc, { month: "short" })
+      .format(start)
+      .replace(".", ""),
+    weekday: capitalize(
+      new Intl.DateTimeFormat(loc, { weekday: "short" }).format(start),
+    ),
+    isToday: diffDays === 0,
+    relative,
+  };
+};
+
+// «18:00 – 19:00»
+const timeRange = (e) => {
+  if (!e?.time) return "";
+  const hhmm = (t) => (t ? String(t).slice(0, 5) : "");
+  return e.time_end ? `${hhmm(e.time)} – ${hhmm(e.time_end)}` : hhmm(e.time);
+};
+
+const mentorOf = (e) => ({
+  last_name: e.mentor_last_name || e.moderator_last_name || "",
+  first_name: e.mentor_first_name || e.moderator_first_name || "",
+  avatar: e.mentor_avatar || e.moderator_avatar || "",
+});
 </script>

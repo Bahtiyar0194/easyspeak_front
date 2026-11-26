@@ -4,6 +4,14 @@
     :className="'full-overlay'"
     :showPendingText="true"
   />
+  <div class="col-span-12">
+    <div class="page-head">
+      <h2 class="page-title">
+        <i class="bi bi-camera-video text-corp" aria-hidden="true"></i>
+        {{ $t("pages.conference.title") }}
+      </h2>
+    </div>
+  </div>
   <client-only>
     <tabs :tabs="tabs_data" />
   </client-only>
@@ -27,8 +35,11 @@ import planned from "../../../components/conference/tabs/planned.vue";
 
 import loader from "../../../components/ui/loader.vue";
 import { onMounted } from "vue";
+import { useRouter } from "nuxt/app";
 
 const { $axiosPlugin } = useNuxtApp();
+// Раньше router не был объявлен — при ошибке загрузки страница падала
+const router = useRouter();
 
 const pendingPage = ref(true);
 const attributes = ref([]);

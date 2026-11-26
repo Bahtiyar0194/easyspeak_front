@@ -1,41 +1,34 @@
 <template>
+  <!-- Таймер не запущен / задание выполнено (✓) или время вышло (✕) -->
   <div
     v-if="!props.startCommand || timeIsUp"
-    class="rounded-full flex flex-none items-center justify-center text-5xl text-success p-1 shadow-xl border-inactive w-16 h-16"
+    class="timer-ring timer-result"
+    :class="timeIsUp ? 'is-fail' : 'is-ok'"
+    role="img"
+    :aria-label="timeIsUp ? $t('time_is_up') : ''"
   >
-    <div
-      class="w-full h-full border-2 rounded-full flex items-center justify-center text-3xl"
-      :class="
-        timeIsUp ? 'border-danger text-danger' : 'border-success text-success'
-      "
-    >
-      <i class="pi" :class="timeIsUp ? 'pi-times' : 'pi-check'"></i>
-    </div>
+    <i class="pi" :class="timeIsUp ? 'pi-times' : 'pi-check'" aria-hidden="true"></i>
   </div>
+
+  <!-- Идёт отсчёт -->
   <div
     v-else
-    class="rounded-full flex flex-none shadow-xl justify-center items-center relative w-16 h-16"
+    class="timer-ring"
+    :class="[stageClass, { 'is-urgent': isUrgent }]"
+    role="timer"
+    :aria-label="$t('remaining_time') + ': ' + formattedTime"
   >
-    <svg
-      class="w-full h-full absolute left-0 right-0 -rotate-90"
-      viewBox="0 0 100 100"
-    >
+    <svg class="ring-progress-svg" viewBox="0 0 100 100" aria-hidden="true">
+      <circle class="ring-progress-track" cx="50" cy="50" r="42" />
       <circle
-        class="background-circle fill-none stroke-inactive"
+        class="timer-arc"
         cx="50"
         cy="50"
-        r="45"
-      />
-      <circle
-        class="progress-circle fill-none"
-        :class="progressClass"
-        cx="50"
-        cy="50"
-        r="45"
+        r="42"
         :style="circleStyle"
       />
     </svg>
-    <div class="font-medium" :class="timerClass">{{ formattedTime }}</div>
+    <span class="timer-value">{{ formattedTime }}</span>
   </div>
 </template>
 
@@ -47,7 +40,7 @@ const props = defineProps({
   totalSeconds: {
     type: Number,
     required: true,
-    default: 30, // Дефолтное значение
+    default: 30,
   },
   startCommand: {
     type: Boolean,
@@ -60,81 +53,70 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["timeIsUp"]);
-const timeRemaining = ref(props.totalSeconds); // Время, оставшееся для таймера
+const timeRemaining = ref(props.totalSeconds);
 const intervalId = ref(null);
 const timeIsUp = ref(false);
 
-// Флаг для контроля аудио
+// Звонок «осталась треть времени» — один раз за запуск
 const hasPlayedAudio = ref(false);
 
-// Вычисляем длину окружности для прогресс-бара
-const circumference = 2 * Math.PI * 45;
+const circumference = 2 * Math.PI * 42;
 
-const circleStyle = computed(() => {
-  const progress = timeRemaining.value / props.totalSeconds;
-  return {
-    strokeDasharray: `${circumference}`,
-    strokeDashoffset: `${circumference * (1 - progress)}`,
-  };
-});
+const fraction = computed(() =>
+  props.totalSeconds > 0 ? timeRemaining.value / props.totalSeconds : 0,
+);
 
-// Форматируем оставшееся время в mm:ss
+const circleStyle = computed(() => ({
+  strokeDasharray: `${circumference}`,
+  strokeDashoffset: `${circumference * (1 - fraction.value)}`,
+}));
+
+// mm:ss
 const formattedTime = computed(() => {
   const minutes = Math.floor(timeRemaining.value / 60);
   const seconds = timeRemaining.value % 60;
-  return `${minutes.toString().padStart(2, "0")}:${seconds
-    .toString()
-    .padStart(2, "0")}`;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 });
 
-const progressClass = computed(() => {
-  const progress = timeRemaining.value / props.totalSeconds;
-
-  if (progress <= 0.33) {
-    return "stroke-danger";
-  } else if (progress <= 0.66) {
-    return "stroke-warning";
-  } else {
-    return "stroke-success";
-  }
+// Цвет дуги: больше 2/3 — зелёный, больше 1/3 — янтарный, дальше — красный
+const stageClass = computed(() => {
+  if (fraction.value <= 0.33) return "is-low";
+  if (fraction.value <= 0.66) return "is-mid";
+  return "is-high";
 });
 
-const timerClass = computed(() => {
-  const progress = timeRemaining.value / props.totalSeconds;
+const isUrgent = computed(() => fraction.value <= 0.33);
 
-  if (progress <= 0.33 && !hasPlayedAudio.value) {
+// Побочный эффект (звук) — в watch, а не внутри computed
+watch(isUrgent, (urgent) => {
+  if (urgent && intervalId.value !== null && !hasPlayedAudio.value) {
     stopAudio();
-    // Проигрываем аудио только один раз при достижении 33% времени
     playAudio("/audio/magical-bell.aac", {
       onEnded: () => {},
-      onLoading: (state) => {},
+      onLoading: () => {},
     });
-    hasPlayedAudio.value = true; // Устанавливаем флаг, чтобы не проигрывать аудио снова
-  }
-
-  if (progress <= 0.33) {
-    return "pulse text-danger";
+    hasPlayedAudio.value = true;
   }
 });
 
 const startTimer = () => {
   timeIsUp.value = false;
-  hasPlayedAudio.value = false; // Сбрасываем флаг перед стартом таймера
-  if (intervalId.value !== null) return; // Таймер уже работает
-  timeRemaining.value = props.totalSeconds; // Сбрасываем оставшееся время
+  hasPlayedAudio.value = false;
+  if (intervalId.value !== null) return; // уже работает
+  timeRemaining.value = props.totalSeconds;
   intervalId.value = setInterval(() => {
     if (timeRemaining.value > 0) {
       timeRemaining.value -= 1;
     }
     if (timeRemaining.value === 0) {
-      stopTimer(); // Вызывает завершение и emit
+      stopTimer();
       timeIsUp.value = true;
-      emit("timeIsUp"); // Отправляем событие завершения
+      emit("timeIsUp");
 
       stopAudio();
       playAudio("/audio/game-over.mp3", {
         onEnded: () => {},
-        onLoading: (state) => {},
+        onLoading: () => {},
       });
     }
   }, 1000);
@@ -147,7 +129,6 @@ const stopTimer = () => {
   }
 };
 
-// Слушаем изменение команды старта
 watch(
   () => props.startCommand,
   (newVal) => {
@@ -160,7 +141,7 @@ watch(
   { immediate: true },
 );
 
-// Если props.totalSeconds будет меняться сбрасывать таймер.
+// Смена длительности, пока таймер стоит, — сбрасываем время
 watch(
   () => props.totalSeconds,
   (newVal) => {
@@ -182,17 +163,3 @@ onUnmounted(() => {
   stopTimer();
 });
 </script>
-
-<style scoped>
-.background-circle {
-  stroke-width: 4;
-}
-
-.progress-circle {
-  stroke-width: 4;
-  stroke-linecap: round;
-  transition:
-    stroke-dashoffset 1s ease-in-out,
-    stroke 0.5s ease-in-out;
-}
-</style>

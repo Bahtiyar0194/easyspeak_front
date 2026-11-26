@@ -1,24 +1,34 @@
 <template>
-  <div :class="props.className" ref="selectWrapper" tabindex="0">
+  <div
+    :class="[props.className, { 'ms-open': selectMenuOpen }]"
+    ref="selectWrapper"
+    tabindex="0"
+    role="combobox"
+    :aria-expanded="selectMenuOpen"
+    aria-haspopup="listbox"
+    @keydown.enter.self.prevent="toggleSelect"
+    @keydown.space.self.prevent="toggleSelect"
+    @keydown.down.self.prevent="selectMenuOpen = true"
+  >
     <i :class="props.icon"></i>
     <input
       class="!cursor-pointer"
-      :value="
-        checkedCount > 0
-          ? $t('selected') + ': ' + checkedCount
-          : $t('not_selected')
-      "
+      :value="summary"
+      :title="summaryTitle || undefined"
+      tabindex="-1"
       @click="toggleSelect"
       readonly
     />
 
     <button
-      :class="checkedCount > 0 ? 'block' : 'hidden'"
+      v-show="selected.length > 0"
       type="button"
-      @click="resetAllCheckboxes"
+      @click.stop="resetAllCheckboxes"
       class="clear mr-5 -mt-1"
+      :title="$t('reset_search_filter')"
+      :aria-label="$t('reset_search_filter')"
     >
-      <i class="pi pi-times text-xs text-danger"></i>
+      <i class="pi pi-times text-xs text-danger" aria-hidden="true"></i>
     </button>
 
     <div
@@ -27,33 +37,41 @@
       :class="{ show: selectMenuOpen === true }"
       ref="selectMenu"
     >
-      <div class="form-group-border mt-4 active label-active w-full">
+      <div class="form-group-border mt-3 active label-active w-full">
         <i class="pi pi-search"></i>
         <input
+          ref="searchInput"
           v-model="searchTerm"
           type="text"
           placeholder=" "
-          @input="filterOptions"
+          autocomplete="off"
         />
         <label>
           {{ $t("search") }}
         </label>
         <button
-          :class="searchTerm != '' ? 'block' : 'hidden'"
+          v-show="searchTerm != ''"
           type="button"
           @click="searchTerm = ''"
           class="clear -mt-1"
+          :aria-label="$t('reset_search_filter')"
         >
-          <i class="pi pi-times text-xs text-danger"></i>
+          <i class="pi pi-times text-xs text-danger" aria-hidden="true"></i>
         </button>
       </div>
 
-      <p class="text-inactive mt-2" v-if="filteredItems?.length === 0">
+      <p class="text-inactive text-sm mt-2 mb-0" v-if="visibleCount === 0">
         {{ $t("nothing_was_found_for_your_query") }}
       </p>
 
-      <ul class="multiple-select-menu">
-        <li v-for="(item, index) in filteredItems" :key="index">
+      <!-- Все пункты остаются в DOM (v-show), иначе поиск «терял» выбранные
+           значения: скрытые галочки не попадали в FormData фильтра. -->
+      <ul class="multiple-select-menu" role="listbox" aria-multiselectable="true">
+        <li
+          v-for="(item, index) in props.items"
+          :key="item[props.optionValue] ?? index"
+          v-show="matches(item)"
+        >
           <label
             class="custom-radio-checkbox w-full whitespace-nowrap"
             :class="props.avatar && 'avatar'"
@@ -62,14 +80,15 @@
               type="checkbox"
               :name="props.optionName"
               :value="item[props.optionValue]"
-              @change="handleCheckboxChange"
+              v-model="selected"
+              @change="props.onChange()"
             />
             <span v-if="!props.avatar">{{ item[props.optionLabel] }}</span>
             <span v-else>
-              <div class="flex gap-x-1 items-center">
+              <div class="flex gap-x-1.5 items-center">
                 <userAvatar
                   :padding="0.5"
-                  :className="'w-5 h-5 text-[10px]'"
+                  :className="'w-5 h-5 text-[9px]'"
                   :user="item"
                   :isChecked="isCheckboxChecked(item[props.optionValue])"
                 />
@@ -85,14 +104,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from "vue";
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from "vue";
 import userAvatar from "./userAvatar.vue";
+
+const { t } = useI18n();
 
 const selectWrapper = ref(null);
 const selectMenu = ref(null);
+const searchInput = ref(null);
 const selectMenuOpen = ref(false);
-const checkedCount = ref(0);
 const searchTerm = ref("");
+// Выбранные значения — единственный источник правды
+const selected = ref([]);
 
 const props = defineProps({
   icon: {
@@ -134,104 +157,95 @@ const props = defineProps({
   },
 });
 
-// Фильтр для поиска по опциям
-const filteredItems = computed(() => {
-  if (!searchTerm.value) return props.items;
-  return props.items.filter((item) =>
-    item[props.optionLabel]
-      .toLowerCase()
-      .includes(searchTerm.value.toLowerCase()),
-  );
+const matches = (item) => {
+  const q = searchTerm.value.trim().toLowerCase();
+  if (!q) return true;
+  return String(item[props.optionLabel] ?? "")
+    .toLowerCase()
+    .includes(q);
+};
+
+const visibleCount = computed(
+  () => (props.items || []).filter((item) => matches(item)).length,
+);
+
+const isCheckboxChecked = (value) => selected.value.includes(value);
+
+// В поле — названия выбранных (до двух) и «+N», а не просто «Выбрано: 3»
+const selectedLabels = computed(() =>
+  (props.items || [])
+    .filter((item) => selected.value.includes(item[props.optionValue]))
+    .map((item) => String(item[props.optionLabel] ?? "")),
+);
+
+const summary = computed(() => {
+  const labels = selectedLabels.value;
+  if (!labels.length) return t("not_selected");
+  if (labels.length <= 2) return labels.join(", ");
+  return `${labels.slice(0, 2).join(", ")} +${labels.length - 2}`;
 });
 
-const isCheckboxChecked = (value) => {
-  const checkbox = selectMenu.value?.querySelector(
-    `input[type="checkbox"][value="${value}"]`,
-  );
-  return checkbox ? checkbox.checked : false;
-};
-
-// Обработчик изменения состояния чекбоксов
-const handleCheckboxChange = (event) => {
-  const target = event.target;
-
-  if (target && target.matches('input[type="checkbox"]')) {
-    // Обновляем количество checked чекбоксов
-    const allCheckboxes = selectMenu.value.querySelectorAll(
-      'input[type="checkbox"]',
-    );
-    const checkedCheckboxes = Array.from(allCheckboxes).filter(
-      (checkbox) => checkbox.checked,
-    );
-    checkedCount.value = checkedCheckboxes.length;
-
-    props.onChange();
-  }
-};
+const summaryTitle = computed(() => selectedLabels.value.join(", "));
 
 const resetAllCheckboxes = () => {
-  const allCheckboxes = selectMenu.value.querySelectorAll(
-    'input[type="checkbox"]',
-  );
-
-  allCheckboxes.forEach((checkbox) => {
-    checkbox.checked = false;
-  });
-
-  checkedCount.value = 0;
-  props.onChange();
+  if (!selected.value.length) return;
+  selected.value = [];
+  // Дождёмся снятия галочек в DOM, чтобы FormData фильтра была уже пустой
+  nextTick(() => props.onChange());
 };
 
-// Обработчик кликов вне компонента
+// Клик вне компонента закрывает список
 const handleClickOutside = (event) => {
   if (selectWrapper.value && !selectWrapper.value.contains(event.target)) {
     selectMenuOpen.value = false;
   }
 };
 
-// Обработчик для сброса формы
+// Сброс формы (кнопка «Сбросить фильтр»)
 const handleFormReset = () => {
-  checkedCount.value = 0;
+  selected.value = [];
   searchTerm.value = "";
 };
 
-// Закрытие меню по клавише Escape
 const handleKeyPress = (event) => {
-  if (event.key === "Escape") {
+  if (event.key === "Escape" && selectMenuOpen.value) {
     selectMenuOpen.value = false;
+    selectWrapper.value?.focus();
   }
 };
+
+let formElement = null;
 
 onMounted(() => {
   window.addEventListener("click", handleClickOutside);
   window.addEventListener("keydown", handleKeyPress);
 
-  if (selectMenu.value) {
-    selectMenu.value.addEventListener("change", handleCheckboxChange);
-  }
-
-  // Отслеживаем сброс формы
-  const formElement = selectWrapper.value.closest("form");
-  if (formElement) {
-    formElement.addEventListener("reset", handleFormReset); // Слушаем сброс формы
-  }
+  formElement = selectWrapper.value?.closest("form") || null;
+  formElement?.addEventListener("reset", handleFormReset);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("click", handleClickOutside);
   window.removeEventListener("keydown", handleKeyPress);
-
-  if (selectMenu.value) {
-    selectMenu.value.removeEventListener("change", handleCheckboxChange);
-  }
-
-  const formElement = selectWrapper.value.closest("form");
-  if (formElement) {
-    formElement.removeEventListener("reset", handleFormReset);
-  }
+  formElement?.removeEventListener("reset", handleFormReset);
 });
 
 const toggleSelect = () => {
   selectMenuOpen.value = !selectMenuOpen.value;
 };
+
+// При открытии — фокус в поиск, чтобы сразу печатать
+watch(selectMenuOpen, (open) => {
+  if (open) nextTick(() => searchInput.value?.focus({ preventScroll: true }));
+});
+
+// Если список вариантов сменился (например, другой курс) — убираем
+// выбранные значения, которых в нём больше нет
+watch(
+  () => props.items,
+  (items) => {
+    const values = new Set((items || []).map((i) => i[props.optionValue]));
+    selected.value = selected.value.filter((v) => values.has(v));
+  },
+);
 </script>

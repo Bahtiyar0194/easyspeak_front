@@ -18,26 +18,42 @@
       :taskResult="taskResult"
     >
       <template v-slot:task_content>
+        <!-- Статус: сколько осталось / итог + попытки + таймер -->
         <div class="col-span-12">
-          <p v-if="timeIsUp" class="font-medium text-center text-danger">
-            {{ $t("time_is_up") }}
-          </p>
-          <p
-            v-else-if="isComplete"
-            class="font-medium text-center text-success"
-          >
-            {{ $t("right") }}
-          </p>
-          <p v-else-if="isWrong" class="font-medium text-center text-danger">
-            {{ $t("wrong") }}
-          </p>
-          <p v-else-if="wordsLeft > 0" class="text-center">
-            {{ $t("pages.dictionary.words_left") }}: <b>{{ wordsLeft }}</b>
-          </p>
-        </div>
+          <div class="task-status-bar">
+            <div class="flex flex-col gap-1 min-w-0">
+              <p v-if="timeIsUp" class="mb-0 font-semibold text-danger flex items-center gap-1.5">
+                <i class="pi pi-clock" aria-hidden="true"></i>
+                {{ $t("time_is_up") }}
+              </p>
+              <p v-else-if="isComplete" class="mb-0 font-semibold text-success flex items-center gap-1.5">
+                <i class="pi pi-check-circle" aria-hidden="true"></i>
+                {{ $t("right") }}
+              </p>
+              <p v-else-if="isWrong" class="mb-0 font-semibold text-danger flex items-center gap-1.5">
+                <i class="pi pi-times-circle" aria-hidden="true"></i>
+                {{ $t("wrong") }}
+              </p>
+              <p v-else-if="wordsLeft > 0" class="mb-0 text-inactive">
+                {{ $t("pages.dictionary.words_left") }}:
+                <b class="text-active">{{ wordsLeft }}</b>
+              </p>
 
-        <div class="col-span-12">
-          <div class="flex justify-center">
+              <div
+                v-if="currentWord && isStarted"
+                class="attempt-hearts"
+                :title="$t('pages.tasks.attempts_left')"
+                :aria-label="$t('pages.tasks.attempts_left') + ': ' + (currentWord.wrongWordAttempts ?? 0)"
+              >
+                <i
+                  v-for="n in maxWrongWordAttempts"
+                  :key="n"
+                  class="bi"
+                  :class="n <= (currentWord.wrongWordAttempts ?? 0) ? 'bi-heart-fill' : 'bi-heart lost'"
+                  aria-hidden="true"
+                ></i>
+              </div>
+            </div>
             <countdownCircleTimer
               :totalSeconds="time"
               :startCommand="isStarted"
@@ -47,71 +63,63 @@
           </div>
         </div>
 
-        <div
-          v-if="currentWord?.image_file && taskData?.options.show_image"
-          class="col-span-12"
-        >
-          <img
-            v-if="currentWord?.image_file && taskData?.options.show_image"
-            class="w-32 lg:w-36 h-auto mx-auto rounded-xl"
-            :src="
-              config.public.apiBase + '/media/get/' + currentWord?.image_file
-            "
-          />
-        </div>
-
+        <!-- Карточка слова: картинка, слово, транскрипция, озвучка -->
         <div class="col-span-12">
-          <div class="flex flex-wrap justify-center items-center gap-2">
-            <audioButton
+          <div class="word-prompt" :class="{ 'is-right': isComplete }">
+            <img
+              v-if="currentWord?.image_file && taskData?.options.show_image"
+              v-skeleton="'1/1'"
+              class="w-28 lg:w-36 h-auto mx-auto rounded-2xl"
+              :src="config.public.apiBase + '/media/get/' + currentWord?.image_file"
+              alt=""
+            />
+
+            <div class="flex flex-wrap justify-center items-center gap-3">
+              <audioButton
+                v-if="
+                  currentWord?.audio_file &&
+                  taskData?.options.show_audio_button &&
+                  (taskData?.options.show_image || taskData?.options.show_word)
+                "
+                :key="currentWord?.audio_file"
+                :src="config.public.apiBase + '/media/get/' + currentWord?.audio_file"
+              />
+              <h2 v-if="taskData?.options.show_word" class="word-prompt-text">
+                {{
+                  taskData?.options.in_the_main_lang
+                    ? currentWord?.word
+                    : currentWord?.word_translate
+                }}
+              </h2>
+            </div>
+
+            <!-- Только звук: плеер во всю ширину -->
+            <div
               v-if="
                 currentWord?.audio_file &&
-                taskData?.options.show_image &&
-                taskData?.options.show_audio_button
-              "
-              :key="currentWord?.audio_file"
-              :src="
-                config.public.apiBase + '/media/get/' + currentWord?.audio_file
-              "
-            />
-            <div
-              v-else-if="
-                currentWord?.audio_file && taskData?.options.show_audio_button
+                taskData?.options.show_audio_button &&
+                !taskData?.options.show_image &&
+                !taskData?.options.show_word
               "
               class="w-full"
             >
               <audioPlayerWithWave
                 :key="currentWord?.audio_file"
-                :src="
-                  config.public.apiBase +
-                  '/media/get/' +
-                  currentWord?.audio_file
-                "
+                :src="config.public.apiBase + '/media/get/' + currentWord?.audio_file"
               />
             </div>
-            <h2
-              :class="isComplete && 'text-success'"
-              v-if="taskData?.options.show_word"
-              class="text-center mb-0"
-            >
-              {{
-                taskData?.options.in_the_main_lang
-                  ? currentWord?.word
-                  : currentWord?.word_translate
-              }}
-            </h2>
+
+            <p v-if="taskData?.options.show_transcription" class="mb-0 text-inactive">
+              [{{ currentWord?.transcription }}]
+            </p>
           </div>
-          <p
-            v-if="taskData?.options.show_transcription"
-            class="text-center text-inactive mt-2"
-          >
-            [{{ currentWord?.transcription }}]
-          </p>
         </div>
 
+        <!-- Не получилось / время вышло -->
         <div v-if="timeIsUp || isWrong" class="col-span-12">
-          <div class="bg-danger-100 p-6 rounded-xl text-center">
-            <p class="text-danger mb-2">{{ $t("right_answer") }}</p>
-            <p class="text-2xl text-danger mb-0 font-medium">
+          <div class="answer-reveal">
+            <p class="text-inactive text-sm mb-1">{{ $t("right_answer") }}</p>
+            <p class="text-2xl mb-0 font-bold">
               {{
                 taskData?.options.in_the_main_lang
                   ? currentWord?.word_translate
@@ -121,57 +129,48 @@
           </div>
         </div>
 
+        <!-- Варианты ответа -->
         <div v-else class="col-span-12">
-          <div class="custom-grid">
-            <div
-              v-for="(answer, index) in currentWord?.answer_options"
-              :key="`${currentWord?.word}-${index}-${currentWord?.task_word_id}`"
-              class="col-span-12 lg:col-span-6"
-            >
+          <div class="flex flex-col gap-3">
+            <div class="grid gap-2 lg:grid-cols-2">
               <trainingButton
-                :text="
-                  taskData?.options.in_the_main_lang
-                    ? answer.word_translate
-                    : answer.word
-                "
+                v-for="(answer, index) in currentWord?.answer_options"
+                :key="`${currentWord?.word}-${index}-${currentWord?.task_word_id}`"
+                :text="taskData?.options.in_the_main_lang ? answer.word_translate : answer.word"
                 :number="index + 1"
-                :className="
+                :state="
                   successButtonIndex === index
-                    ? 'btn-success disabled'
+                    ? 'correct'
                     : errorButtonIndex === index
-                      ? 'btn-danger wobble'
+                      ? 'wrong'
                       : checkingStatus
-                        ? 'btn-inactive disabled'
-                        : 'btn-inactive'
+                        ? 'locked'
+                        : 'idle'
                 "
                 v-motion="{
-                  initial: { opacity: 0 },
+                  initial: { opacity: 0, y: 8 },
                   enter: {
                     opacity: 1,
-                    transition: {
-                      delay: index * 50,
-                      type: 'spring',
-                      stiffness: 500,
-                      damping: 20,
-                    },
+                    y: 0,
+                    transition: { delay: index * 50, type: 'spring', stiffness: 500, damping: 22 },
                   },
                 }"
                 @click="checkAnswer(index)"
               />
             </div>
 
-            <div class="col-span-12">
-              <p class="text-inactive text-center hidden lg:block mb-0">
-                {{ $t("pages.training.keyboard.numbers") }}
-              </p>
-            </div>
+            <p class="text-inactive text-sm text-center hidden lg:flex items-center justify-center gap-1.5 mb-0">
+              <i class="bi bi-keyboard" aria-hidden="true"></i>
+              {{ $t("pages.training.keyboard.numbers") }}
+            </p>
           </div>
         </div>
 
         <div v-if="timeIsUp || isWrong" class="col-span-12">
-          <div class="flex justify-center">
+          <div class="task-actions justify-center">
             <button type="button" class="btn btn-primary btn-lg" @click="setWord()">
-              <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
+              {{ $t("continue") }}
+              <i class="pi pi-arrow-right" aria-hidden="true"></i>
             </button>
           </div>
         </div>
@@ -373,8 +372,9 @@ const moveToEnd = (answerIndex) => {
     taskResultCollection.value.push({
       is_correct: false,
       user_answer:
-        "<b class='text-danger'>" + currentWord.value.userInput ||
-        "______" + "</b>",
+        "<b class='text-danger'>" +
+        (currentWord.value.userInput || "______") +
+        "</b>",
       right_answer:
         "<b class='text-success'>" +
         currentWord.value.word +
@@ -389,6 +389,10 @@ const moveToEnd = (answerIndex) => {
 };
 
 const checkAnswer = (answerIndex) => {
+  // Слово уже засчитано (верно/неверно) или время вышло — повторная проверка
+  // по клавише 1–4 раньше снова штрафовала и дублировала слово в результатах
+  if (isStarted.value !== true || checkingStatus.value === true) return;
+  if (!currentWord.value?.answer_options?.[answerIndex]) return;
   checkingStatus.value = true;
   if (
     currentWord.value.task_word_id ===
@@ -471,13 +475,15 @@ const timerIsUp = () => {
 const logKey = (event) => {
   if (!isFinished.value) {
     const key = event.key;
+    const optionNumber = /^[1-9]$/.test(key) ? Number(key) : 0;
     if (
+      isStarted.value === true &&
       checkingStatus.value === false &&
       currentWord.value &&
-      key >= "1" &&
-      key <= currentWord.value.answer_options.length
+      optionNumber >= 1 &&
+      optionNumber <= currentWord.value.answer_options.length
     ) {
-      checkAnswer(parseInt(key - 1));
+      checkAnswer(optionNumber - 1);
     } else if (event.key === "Enter") {
       if (timeIsUp.value === true || isWrong.value === true) {
         setWord();

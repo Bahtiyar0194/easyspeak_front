@@ -1,26 +1,34 @@
 <template>
   <button
     type="button"
-    class="btn btn-square btn-lg btn-primary"
-    :class="props.className"
-    @click="toggleAudio"
-    :title="
-      $t(
-        isPlaying
-          ? 'file.audio.click_to_stop_to_the_audio'
-          : 'file.audio.click_to_listen_to_the_audio',
-      )
-    "
+    class="btn btn-square btn-lg audio-btn"
+    :class="[
+      props.className,
+      hasError ? 'btn-danger' : isPlaying ? 'btn-outline-primary playing' : 'btn-primary',
+    ]"
+    @click="toggle"
+    :title="label"
+    :aria-label="label"
+    :aria-pressed="isPlaying"
   >
-    <i class="pi" :class="isPlaying ? 'pi-pause' : 'pi-volume-up'"></i>
+    <i
+      class="pi"
+      :class="
+        isLoading
+          ? 'pi-spinner btn-loading-circle'
+          : hasError
+            ? 'pi-exclamation-triangle'
+            : isPlaying
+              ? 'pi-pause'
+              : 'pi-volume-up'
+      "
+      aria-hidden="true"
+    ></i>
   </button>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from "vue";
-
-// Глобальная переменная для хранения текущего активного аудио
-let currentAudioInstance = null;
+import { useAudioToggle } from "~/composables/useAudioToggle";
 
 const props = defineProps({
   src: {
@@ -33,49 +41,18 @@ const props = defineProps({
   },
 });
 
-let audio;
-const isPlaying = ref(false);
+const { t } = useI18n();
+const { isPlaying, isLoading, hasError, toggle } = useAudioToggle(
+  toRef(props, "src"),
+);
 
-const toggleAudio = () => {
-  if (audio) {
-    if (isPlaying.value) {
-      audio.pause();
-      isPlaying.value = false;
-    } else {
-      // Остановить другое активное аудио
-      if (currentAudioInstance && currentAudioInstance !== audio) {
-        currentAudioInstance.pause();
-        currentAudioInstance.currentTime = 0; // Сброс времени
-      }
-      // Установить текущее активное аудио
-      currentAudioInstance = audio;
-      audio.play();
-      isPlaying.value = true;
-    }
-  }
-};
-
-onMounted(() => {
-  if (typeof window !== "undefined") {
-    audio = new Audio(props.src);
-    audio.addEventListener("ended", () => {
-      isPlaying.value = false;
-      if (currentAudioInstance === audio) {
-        currentAudioInstance = null; // Очистить ссылку на активное аудио
-      }
-    });
-  }
-});
-
-onBeforeUnmount(() => {
-  if (audio) {
-    audio.pause();
-    audio.removeEventListener("ended", () => {
-      isPlaying.value = false;
-    });
-    if (currentAudioInstance === audio) {
-      currentAudioInstance = null;
-    }
-  }
-});
+const label = computed(() =>
+  hasError.value
+    ? t("file.audio.load_error")
+    : t(
+        isPlaying.value
+          ? "file.audio.click_to_stop_to_the_audio"
+          : "file.audio.click_to_listen_to_the_audio",
+      ),
+);
 </script>

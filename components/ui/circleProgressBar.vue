@@ -1,34 +1,28 @@
 <template>
   <div
-    class="rounded-full flex flex-none justify-center items-center relative pointer-events-none"
+    class="ring-progress"
     :class="props.className"
+    role="progressbar"
+    :aria-valuenow="Math.round(numericProgress)"
+    aria-valuemin="0"
+    aria-valuemax="100"
   >
-    <svg
-      class="w-full h-full absolute left-0 right-0 -rotate-90"
-      viewBox="0 0 100 100"
-    >
+    <svg class="ring-progress-svg" viewBox="0 0 100 100" aria-hidden="true">
+      <!-- Дорожка -->
+      <circle class="ring-progress-track" cx="50" cy="50" r="42" />
+      <!-- Дуга прогресса -->
       <circle
-        class="background-circle fill-none stroke-inactive"
+        class="ring-progress-arc"
+        :class="levelClass"
         cx="50"
         cy="50"
-        r="45"
-      />
-      <circle
-        class="progress-circle fill-none"
-        :class="progressClass"
-        cx="50"
-        cy="50"
-        r="45"
-        :style="circleStyle"
+        r="42"
+        :style="arcStyle"
       />
     </svg>
-    <div class="font-bold text-active" :class="props.textClass">
-      {{
-        displayedProgress < 100
-          ? displayedProgress.toFixed(1)
-          : parseInt(displayedProgress)
-      }}%
-    </div>
+    <span class="ring-progress-value" :class="props.textClass">
+      {{ Math.round(displayedProgress) }}<small>%</small>
+    </span>
   </div>
 </template>
 
@@ -39,7 +33,7 @@ const props = defineProps({
   progress: {
     type: Number,
     required: true,
-    default: 0, // Дефолтное значение
+    default: 0,
   },
 
   className: {
@@ -61,71 +55,57 @@ const props = defineProps({
   },
 });
 
-const displayedProgress = ref(0); // текущий отображаемый процент
+const numericProgress = computed(() =>
+  Math.min(Math.max(Number(props.progress) || 0, 0), 100),
+);
+
+// Плавный счётчик числа (с замедлением к концу)
+const displayedProgress = ref(0);
+let frame = null;
 
 watch(
-  () => props.progress,
-  (newVal, oldVal) => {
+  numericProgress,
+  (end) => {
+    if (frame) cancelAnimationFrame(frame);
     const start = displayedProgress.value;
-    const end = Math.min(Math.max(Number(newVal), 0), 100);
-    const frameRate = 30;
-    const totalFrames = Math.round(props.duration / (1000 / frameRate));
-    let currentFrame = 0;
+    const startedAt = performance.now();
+    const duration = Math.max(1, props.duration);
 
-    const step = () => {
-      currentFrame++;
-      const progress = start + (end - start) * (currentFrame / totalFrames);
-      displayedProgress.value = Math.round(progress);
-      if (currentFrame < totalFrames) {
-        requestAnimationFrame(step);
-      } else {
-        displayedProgress.value = end;
-      }
+    const step = (now) => {
+      const t = Math.min(1, (now - startedAt) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      displayedProgress.value = start + (end - start) * eased;
+      if (t < 1) frame = requestAnimationFrame(step);
     };
 
-    step();
+    if (typeof requestAnimationFrame === "function") {
+      frame = requestAnimationFrame(step);
+    } else {
+      displayedProgress.value = end;
+    }
   },
   { immediate: true },
 );
 
-// Вычисляем длину окружности для прогресс-бара
-const circumference = 2 * Math.PI * 45;
-
-const numericProgress = computed(() =>
-  Math.min(Math.max(Number(props.progress), 0), 100),
-);
-
-const circleStyle = computed(() => {
-  return {
-    strokeDasharray: `${circumference}`,
-    strokeDashoffset: `${circumference * (1 - numericProgress.value / 100)}`,
-  };
+onBeforeUnmount(() => {
+  if (frame) cancelAnimationFrame(frame);
 });
 
-const progressClass = computed(() => {
+const circumference = 2 * Math.PI * 42;
+
+// Дуга рисуется CSS-переходом той же длительности, что и счётчик
+const arcStyle = computed(() => ({
+  strokeDasharray: `${circumference}`,
+  strokeDashoffset: `${circumference * (1 - numericProgress.value / 100)}`,
+  transitionDuration: `${props.duration}ms`,
+}));
+
+// Цвет по результату: <50 — красный, <75 — янтарный, иначе — зелёный
+const levelClass = computed(() => {
   const p = numericProgress.value;
-  if (p === 0) {
-    return "stroke-inactive";
-  } else if (p < 50) {
-    return "stroke-danger";
-  } else if (p < 75) {
-    return "stroke-warning";
-  } else {
-    return "stroke-success";
-  }
+  if (p === 0) return "is-empty";
+  if (p < 50) return "is-low";
+  if (p < 75) return "is-mid";
+  return "is-high";
 });
 </script>
-
-<style scoped>
-.background-circle {
-  stroke-width: 6;
-}
-
-.progress-circle {
-  stroke-width: 6;
-  stroke-linecap: round;
-  transition:
-    stroke-dashoffset 1s ease-in-out,
-    stroke 0.5s ease-in-out;
-}
-</style>

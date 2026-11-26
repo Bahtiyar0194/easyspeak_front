@@ -1,188 +1,199 @@
 <template>
-  <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
-
-  <div
-    v-if="
-      lessonsData && lessonsData.level.available_status.is_available === true
-    "
-    class="col-span-12"
-  >
-    <div class="custom-grid">
-      <div class="col-span-12">
-        <div
-          class="flex flex-wrap gap-x-2 gap-y-4 items-center justify-between"
-        >
-          <h2 class="mb-0">{{ lessonsData.section.section_name }}</h2>
-          <roleProvider :roles="[1]" :redirect="false">
-            <div class="btn-wrap justify-end">
-              <button
-                class="btn btn-primary"
-                type="button"
-                @click="showAddLessonModal()"
-              >
-                <i class="pi pi-plus-circle"></i>
-                {{ $t("pages.lessons.add_lesson") }}
-              </button>
-            </div>
-          </roleProvider>
-        </div>
-      </div>
-
-      <div
-        v-if="
-          schoolStore.isAiSchoolDomain &&
-          lessonsData &&
-          lessonsData.level.is_available_always === 0
-        "
-        class="col-span-12 lg:col-span-3"
-      >
-        <stickyBox>
-          <div
-            class="text-white p-5 rounded-xl select-none"
-            :class="
-              lessonsData.level.has_expired === 1 ? 'bg-danger' : 'bg-corp'
-            "
-          >
-            <p>
-              <b>
-                {{
-                  $t(
-                    lessonsData.level.has_expired === 1
-                      ? "pages.courses.has_expired"
-                      : "pages.courses.purchase",
-                  )
-                }}
-              </b>
-            </p>
-
-            <button type="button" class="btn btn-white" @click="openPaymentModal()">
-              {{ $t("pages.courses.purchase_button") }}
-            </button>
-          </div>
-        </stickyBox>
-      </div>
-
-      <div
-        v-if="lessonsData && lessonsData.section.lessons.length"
-        class="col-span-12"
-        :class="
-          schoolStore.isAiSchoolDomain &&
-          lessonsData &&
-          lessonsData.level.is_available_always === 0
-            ? 'lg:col-span-9'
-            : ''
-        "
-      >
-        <ul class="list-group active">
-          <li v-if="lessonsData && lessonsData.section.completed_percent > 0">
-            <p class="mb-2">
-              <b> {{ $t("pages.courses.section_overall_progress") }}:</b>
-            </p>
-            <progressBar
-              :progressPercentage="lessonsData.section.completed_percent"
-              :wrapClass="'!my-0'"
-              :showPercentage="true"
-              :className="'sm success'"
-            />
-          </li>
-
-          <li
-            v-for="(lesson, lessonIndex) in lessonsData.section.lessons"
-            :key="lessonIndex"
-            class="list-item cursor-pointer"
-            @click="
-              lesson.available_status.is_available === true
-                ? openLesson(
-                    '/dashboard/courses/' +
-                      course_slug +
-                      '/' +
-                      level_slug +
-                      '/' +
-                      section_id +
-                      '/' +
-                      lesson.lesson_id,
-                  )
-                : schoolStore.isAiSchoolDomain
-                  ? openPaymentModal()
-                  : openUnAvailableModal()
-            "
-          >
-            <div class="flex justify-between items-center gap-x-2">
-              <div class="flex flex-col">
-                <div
-                  class="font-medium"
-                  :class="
-                    lesson.available_status.is_available === true
-                      ? 'text-corp'
-                      : 'text-inactive line-through'
-                  "
-                >
-                  {{ lessonIndex + 1 }}. {{ lesson.lesson_name }}
-                </div>
-                <div class="flex gap-x-2 gap-y-0.5 flex-wrap">
-                  <div class="flex gap-2">
-                    <span
-                      v-if="lesson.lesson_type_slug !== 'file_test'"
-                      class="text-xs"
-                      :class="
-                        lesson.available_status.is_available === true
-                          ? 'text-active'
-                          : 'text-inactive'
-                      "
-                      >{{ $t("materials.materials_count") }}:
-                      <b>{{ lesson.materials.length }}</b></span
-                    >
-                    <span
-                      class="text-xs"
-                      :class="
-                        lesson.available_status.is_available === true
-                          ? 'text-active'
-                          : 'text-inactive'
-                      "
-                      >{{ $t("pages.tasks.tasks_count") }}:
-                      <b>{{ lesson.tasks.length }}</b></span
-                    >
-                  </div>
-                  <span
-                    v-if="!schoolStore.isAiSchoolDomain"
-                    class="text-xs text-inactive"
-                    >({{ lesson.lesson_type_name }})</span
-                  >
-
-                  <!-- <span
-                    v-if="lesson.available_status.is_bought_status != null"
-                    class="text-xs"
-                    :class="
-                      lesson.available_status.is_bought_status.is_bought === true
-                        ? 'text-success'
-                        : 'text-danger'
-                    "
-                    ><b>{{
-                      lesson.available_status.is_bought_status.is_bought === true
-                        ? (lesson.available_status.is_bought_status.is_free ? $t("pages.lessons.free_lesson") : $t("pages.payment-result.success_alt"))
-                        : $t("pages.payment-result.fail_alt")
-                    }}</b></span
-                  > -->
-                </div>
-              </div>
-
-              <circleProgressBar :progress="lesson.completed_tasks_percent" />
-            </div>
-          </li>
-        </ul>
-      </div>
-
-      <div v-else class="col-span-12">
-        <alert :className="'light'">
-          <p class="mb-0">{{ $t("pages.lessons.there_is_no_lessons_alt") }}</p>
-        </alert>
+  <!-- Загрузка: скелетон шапки, прогресса и уроков -->
+  <template v-if="!lessonsData">
+    <div class="col-span-12 flex flex-col gap-4">
+      <div class="skeleton h-9 w-64 max-w-full"></div>
+      <div class="skeleton h-28 w-full !rounded-2xl"></div>
+      <div class="flex flex-col gap-2">
+        <div v-for="i in 5" :key="i" class="skeleton h-20 w-full !rounded-2xl"></div>
       </div>
     </div>
-  </div>
+  </template>
+
+  <template v-else-if="lessonsData.level?.available_status?.is_available === true">
+    <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
+
+    <!-- Шапка -->
+    <div class="col-span-12">
+      <div class="page-head">
+        <h2 class="page-title">
+          {{ lessonsData.section.section_name }}
+          <span v-if="lessons.length" class="db-count">{{ lessons.length }}</span>
+        </h2>
+        <roleProvider :roles="[1]" :redirect="false">
+          <button
+            class="btn btn-primary"
+            type="button"
+            @click="showAddLessonModal()"
+          >
+            <i class="pi pi-plus" aria-hidden="true"></i>
+            {{ $t("pages.lessons.add_lesson") }}
+          </button>
+        </roleProvider>
+      </div>
+    </div>
+
+    <!-- AI-школа: покупка / продление доступа к уровню -->
+    <div
+      v-if="schoolStore.isAiSchoolDomain && lessonsData.level.is_available_always === 0"
+      class="col-span-12"
+    >
+      <div
+        class="db-notice"
+        :class="{ danger: lessonsData.level.has_expired === 1 }"
+      >
+        <div class="db-notice-icon" aria-hidden="true">
+          <i
+            class="pi"
+            :class="
+              lessonsData.level.has_expired === 1 ? 'pi-clock' : 'pi-crown'
+            "
+          ></i>
+        </div>
+        <p class="mb-0 flex-1 font-medium">
+          {{
+            $t(
+              lessonsData.level.has_expired === 1
+                ? "pages.courses.has_expired"
+                : "pages.courses.purchase",
+            )
+          }}
+        </p>
+        <button
+          type="button"
+          class="btn"
+          :class="lessonsData.level.has_expired === 1 ? 'btn-danger' : 'btn-primary'"
+          @click="openPaymentModal()"
+        >
+          <i class="pi pi-credit-card" aria-hidden="true"></i>
+          {{ $t("pages.courses.purchase_button") }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Прогресс раздела + «Продолжить» -->
+    <div v-if="lessons.length" class="col-span-12">
+      <div class="level-progress">
+        <circleProgressBar
+          :progress="sectionPercent"
+          :className="'w-16 h-16 shrink-0'"
+          :textClass="'text-sm'"
+        />
+        <div class="flex-1 min-w-0 flex flex-col gap-2">
+          <p class="mb-0 font-semibold">
+            {{ $t("pages.courses.section_overall_progress") }}
+          </p>
+          <div class="cover-card-progress !bg-gray-200 dark:!bg-slate-700">
+            <div :style="{ width: sectionPercent + '%' }"></div>
+          </div>
+          <p class="mb-0 text-sm text-inactive">
+            {{
+              $t("pages.lessons.lessons_completed", {
+                done: completedLessons,
+                total: lessons.length,
+              })
+            }}
+          </p>
+        </div>
+        <nuxt-link
+          v-if="nextLesson"
+          class="btn btn-primary max-sm:w-full"
+          :to="lessonLink(nextLesson)"
+        >
+          {{
+            sectionPercent > 0
+              ? $t("pages.courses.continue_learning")
+              : $t("pages.courses.start_learning")
+          }}
+          <i class="pi pi-arrow-right" aria-hidden="true"></i>
+        </nuxt-link>
+      </div>
+    </div>
+
+    <!-- Уроки -->
+    <div v-if="lessons.length" class="col-span-12">
+      <ol class="lesson-path">
+        <li
+          v-for="(lesson, lessonIndex) in lessons"
+          :key="lesson.lesson_id"
+        >
+          <component
+            :is="isLessonAvailable(lesson) ? NuxtLink : 'button'"
+            v-bind="
+              isLessonAvailable(lesson)
+                ? { to: lessonLink(lesson) }
+                : { type: 'button' }
+            "
+            class="lesson-row"
+            :class="{
+              locked: !isLessonAvailable(lesson),
+              done: isLessonAvailable(lesson) && percentOf(lesson) >= 100,
+              next: nextLesson && nextLesson.lesson_id === lesson.lesson_id,
+            }"
+            @click="!isLessonAvailable(lesson) && onLockedLesson()"
+          >
+            <span class="unit-num" aria-hidden="true">
+              <i v-if="!isLessonAvailable(lesson)" class="pi pi-lock"></i>
+              <i v-else-if="percentOf(lesson) >= 100" class="pi pi-check"></i>
+              <template v-else>{{ lessonIndex + 1 }}</template>
+            </span>
+
+            <div class="flex-1 min-w-0 flex flex-col gap-1 text-left">
+              <span class="font-semibold leading-snug">{{
+                lesson.lesson_name
+              }}</span>
+              <span class="lesson-meta !gap-x-3">
+                <span v-if="!schoolStore.isAiSchoolDomain && lesson.lesson_type_name">
+                  <i class="pi pi-tag" aria-hidden="true"></i>
+                  {{ lesson.lesson_type_name }}
+                </span>
+                <span v-if="lesson.lesson_type_slug !== 'file_test'">
+                  <i class="pi pi-file" aria-hidden="true"></i>
+                  {{ $t("materials.materials_count") }}: {{ lesson.materials.length }}
+                </span>
+                <span>
+                  <i class="pi pi-pencil" aria-hidden="true"></i>
+                  {{ $t("pages.tasks.tasks_count") }}: {{ lesson.tasks.length }}
+                </span>
+              </span>
+            </div>
+
+            <circleProgressBar
+              v-if="isLessonAvailable(lesson) && percentOf(lesson) > 0"
+              :progress="lesson.completed_tasks_percent"
+            />
+            <i
+              v-else
+              class="pi text-inactive"
+              :class="isLessonAvailable(lesson) ? 'pi-chevron-right' : 'pi-lock'"
+              aria-hidden="true"
+            ></i>
+          </component>
+        </li>
+      </ol>
+    </div>
+
+    <div v-else class="col-span-12">
+      <emptyState
+        :text="$t('pages.lessons.there_is_no_lessons_alt')"
+        icon="bi bi-inbox"
+      />
+    </div>
+  </template>
+
   <div v-else class="col-span-12">
-    <alert :className="'light'">
-      <p class="mb-0">{{ $t("pages.courses.course_is_not_available") }}</p>
-    </alert>
+    <emptyState
+      :text="$t('pages.courses.course_is_not_available')"
+      icon="bi bi-lock"
+    >
+      <nuxt-link
+        class="btn btn-light"
+        :to="localePath('/dashboard/courses/' + course_slug + '/' + level_slug)"
+      >
+        <i class="pi pi-arrow-left" aria-hidden="true"></i>
+        {{ $t("back") }}
+      </nuxt-link>
+    </emptyState>
   </div>
 
   <roleProvider :roles="[1]" :redirect="false">
@@ -265,8 +276,13 @@
               </div>
             </div>
           </div>
-          <button class="btn btn-primary mt-4" type="submit">
-            <i class="pi pi-plus"></i>
+          <button
+            class="btn btn-primary mt-4"
+            :class="{ loading: pendingAddLesson }"
+            :disabled="pendingAddLesson"
+            type="submit"
+          >
+            <i class="pi pi-plus" aria-hidden="true"></i>
             {{ $t("add") }}
           </button>
         </form>
@@ -362,11 +378,10 @@
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
 import { debounceHandler } from "../../../../../../utils/debounceHandler";
-import stickyBox from "../../../../../../components/ui/stickyBox.vue";
 import modal from "../../../../../../components/ui/modal.vue";
-import alert from "../../../../../../components/ui/alert.vue";
+import emptyState from "~/components/ui/emptyState.vue";
 import loader from "../../../../../../components/ui/loader.vue";
-import progressBar from "../../../../../../components/ui/progressBar.vue";
+import { NuxtLink } from "#components";
 import circleProgressBar from "../../../../../../components/ui/circleProgressBar.vue";
 import roleProvider from "../../../../../../components/ui/roleProvider.vue";
 import steps from "../../../../../../components/ui/steps.vue";
@@ -387,6 +402,47 @@ const section_id = route.params.section;
 
 const { $axiosPlugin } = useNuxtApp();
 const lessonsData = ref(null);
+const localePath = useLocalePath();
+
+const lessons = computed(() => lessonsData.value?.section?.lessons || []);
+
+const clampPercent = (v) => Math.round(Math.min(100, Math.max(0, Number(v) || 0)));
+
+const percentOf = (lesson) => clampPercent(lesson.completed_tasks_percent);
+
+const isLessonAvailable = (lesson) =>
+  lesson.available_status?.is_available === true;
+
+const sectionPercent = computed(() =>
+  clampPercent(lessonsData.value?.section?.completed_percent),
+);
+
+const completedLessons = computed(
+  () =>
+    lessons.value.filter((l) => isLessonAvailable(l) && percentOf(l) >= 100)
+      .length,
+);
+
+// Первый доступный и ещё не пройденный урок — куда ведёт «Продолжить».
+const nextLesson = computed(() =>
+  lessons.value.find((l) => isLessonAvailable(l) && percentOf(l) < 100),
+);
+
+const lessonLink = (lesson) =>
+  localePath(
+    "/dashboard/courses/" +
+      course_slug +
+      "/" +
+      level_slug +
+      "/" +
+      section_id +
+      "/" +
+      lesson.lesson_id,
+  );
+
+// Недоступный урок: в AI-школе — окно покупки, иначе — пояснение.
+const onLockedLesson = () =>
+  schoolStore.isAiSchoolDomain ? openPaymentModal() : openUnAvailableModal();
 const pending = ref(true);
 const pendingAddLesson = ref(false);
 
@@ -570,6 +626,7 @@ const getSection = async () => {
 };
 
 const addLessonSubmit = async () => {
+  if (pendingAddLesson.value) return;
   pendingAddLesson.value = true;
   const formData = new FormData(addLessonFormRef.value);
 

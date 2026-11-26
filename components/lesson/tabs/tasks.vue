@@ -1,13 +1,13 @@
 <template>
   <div class="custom-grid">
-    <div class="col-span-12">
-      <div class="btn-wrap">
-        <client-only>
-          <roleProvider :roles="[1]">
+    <roleProvider :roles="[1]">
+      <div class="col-span-12">
+        <div class="btn-wrap">
+          <client-only>
             <dropdownMenu :dropdownArrow="false" :position="'left'">
               <template v-slot:btn_content>
                 <button type="button" class="btn btn-outline-primary">
-                  <i class="pi pi-plus"></i>
+                  <i class="pi pi-plus" aria-hidden="true"></i>
                   {{ $t("pages.tasks.add_a_task") }}
                 </button>
               </template>
@@ -17,7 +17,8 @@
                   v-for="(task_type, index) in taskAttributes.all_task_types"
                   :key="index"
                 >
-                  <button type="button"
+                  <button
+                    type="button"
                     @click="
                       openTaskModal(task_type.task_type_component, 'create', {
                         lesson_id: props.lesson_id,
@@ -30,151 +31,180 @@
                 </li>
               </template>
             </dropdownMenu>
-          </roleProvider>
-        </client-only>
+          </client-only>
+        </div>
       </div>
-    </div>
+    </roleProvider>
 
-    <div v-if="tasks.length" class="col-span-12">
-      <div class="custom-grid">
-        <div class="col-span-12 lg:col-span-3">
-          <stickyBox>
-            <div class="card p-4">
-              <div class="flex justify-between items-center gap-x-2 mb-4">
-                <h2 class="mb-2">{{ props.lessonData.lesson_name }}</h2>
-                <circleProgressBar
-                  :progress="completedTasksPercent / tasks.length"
-                />
-              </div>
-              <div class="flex flex-wrap justify-between mb-1">
-                <span> {{ $t("pages.tasks.count") }}: </span>
-                <b>{{ tasks.length }}</b>
-              </div>
-
-              <div class="flex flex-wrap justify-between">
-                <span> {{ $t("passed") }}: </span>
-                <b>{{ completedTasksCount }}</b>
-              </div>
-
-              <div class="btn-wrap justify-end">
-                <button type="button"
-                  v-if="
-                    props.lessonData.lesson_type_slug === 'file_test' &&
-                    completedTasksCount < tasks.length
-                  "
-                  class="btn btn-primary mt-4"
-                  @click="startTheTest()"
-                >
-                  <i class="pi pi-arrow-right"></i>
-                  {{
-                    completedTasksCount > 0
-                      ? $t("pages.tasks.continue_the_test")
-                      : $t("pages.tasks.start_the_test")
-                  }}
-                </button>
+    <template v-if="tasks.length">
+      <!-- Прогресс по заданиям урока -->
+      <div class="col-span-12 lg:col-span-3">
+        <stickyBox>
+          <div class="tasks-summary">
+            <div class="flex items-center gap-4">
+              <circleProgressBar
+                :progress="averagePercent"
+                :className="'w-20 h-20 shrink-0'"
+                :textClass="'text-base'"
+              />
+              <div class="flex flex-col gap-1 min-w-0">
+                <span class="text-sm text-inactive">{{
+                  $t("pages.tasks.average_result")
+                }}</span>
+                <b class="text-lg leading-tight">{{
+                  $t("pages.tasks.completed_of", {
+                    done: completedTasksCount,
+                    total: tasks.length,
+                  })
+                }}</b>
               </div>
             </div>
-          </stickyBox>
-        </div>
 
-        <div class="col-span-12 lg:col-span-9">
-          <TransitionGroup
-            tag="ul"
-            class="list-group active overflow-hidden"
-            :move="{ transition: { duration: 0.3 } }"
-          >
-            <loader
-              v-if="pendingTasks"
-              :className="'overlay'"
-              :showPendingText="true"
-            />
-            <li v-for="(taskItem, taskIndex) in tasks" :key="taskItem.task_id">
-              <div class="flex items-center justify-between gap-4">
-                <div
-                  class="flex gap-2 items-center w-full"
-                  :class="
-                    props.lessonData.lesson_type_slug === 'file_test' &&
-                    props.lessonData.available_status.is_only_learner ===
-                      true &&
-                    !taskItem.task_result.answers
-                      ? ''
-                      : 'link'
-                  "
-                  @click="
-                    taskItem.task_result.answers
-                      ? openTaskResult(taskItem)
-                      : props.lessonData.lesson_type_slug === 'file_test' &&
-                          props.lessonData.available_status.is_only_learner ===
-                            true
-                        ? false
-                        : openTask(taskItem)
-                  "
-                >
-                  <i class="text-3xl text-active" :class="taskItem.icon"></i>
-                  <div class="flex flex-col gap-y-0.5">
-                    <span class="font-medium text-active">{{
-                      taskItem.task_slug
-                    }}</span>
-                    <span class="text-inactive text-xs">{{
-                      taskItem.task_type_name
-                    }}</span>
-                  </div>
-                </div>
+            <div class="cover-card-progress !bg-gray-200 dark:!bg-slate-700">
+              <div
+                :style="{
+                  width: (completedTasksCount / tasks.length) * 100 + '%',
+                }"
+              ></div>
+            </div>
 
-                <div>
-                  <div class="flex items-center gap-x-2">
-                    <roleProvider :roles="[1]">
-                      <div class="flex gap-x-1 justify-end">
-                        <button type="button"
-                          @click="order('up', taskIndex, $event.target)"
-                          class="btn btn-square btn-light btn-sm btn-up"
-                          :title="$t('move_up')"
-                        >
-                          <i class="pi pi-arrow-up"></i>
-                        </button>
-                        <button type="button"
-                          @click="order('down', taskIndex, $event.target)"
-                          class="btn btn-square btn-light btn-sm btn-down"
-                          :title="$t('move_down')"
-                        >
-                          <i class="pi pi-arrow-down"></i>
-                        </button>
-                        <button type="button"
-                          @click="openEditTask(taskItem)"
-                          class="btn btn-square btn-light btn-sm"
-                          :title="$t('edit')"
-                        >
-                          <i class="pi pi-pencil"></i>
-                        </button>
-                        <button type="button"
-                          @click="openDeleteModal(taskItem)"
-                          class="btn btn-square btn-outline-danger btn-sm"
-                          :title="$t('delete')"
-                        >
-                          <i class="pi pi-trash"></i>
-                        </button>
-                      </div>
-                    </roleProvider>
-                    <circleProgressBar
-                      v-if="
-                        taskItem.task_result &&
-                        taskItem.task_result.completed === true
-                      "
-                      :progress="taskItem.task_result.percentage"
-                    />
-                  </div>
-                </div>
-              </div>
-            </li>
-          </TransitionGroup>
-        </div>
+            <p
+              v-if="completedTasksCount === tasks.length"
+              class="mb-0 text-success font-medium flex items-center gap-1.5"
+            >
+              <i class="pi pi-check-circle" aria-hidden="true"></i>
+              {{ $t("pages.tasks.all_done") }}
+            </p>
+
+            <button
+              v-else-if="canStart"
+              type="button"
+              class="btn btn-primary full"
+              @click="startNext()"
+            >
+              {{
+                isTest
+                  ? completedTasksCount > 0
+                    ? $t("pages.tasks.continue_the_test")
+                    : $t("pages.tasks.start_the_test")
+                  : completedTasksCount > 0
+                    ? $t("pages.tasks.continue_tasks")
+                    : $t("pages.tasks.start_tasks")
+              }}
+              <i class="pi pi-arrow-right" aria-hidden="true"></i>
+            </button>
+          </div>
+        </stickyBox>
       </div>
-    </div>
+
+      <!-- Список заданий -->
+      <div class="col-span-12 lg:col-span-9 relative">
+        <loader
+          v-if="pendingTasks"
+          :className="'overlay !rounded-2xl'"
+          :showPendingText="true"
+        />
+        <TransitionGroup
+          tag="ul"
+          class="task-list"
+          :move="{ transition: { duration: 0.3 } }"
+        >
+          <li v-for="(taskItem, taskIndex) in tasks" :key="taskItem.task_id">
+            <div
+              class="task-row"
+              :class="{
+                done: isDone(taskItem),
+                locked: isLocked(taskItem),
+                next: nextTask && nextTask.task_id === taskItem.task_id,
+              }"
+            >
+              <button
+                type="button"
+                class="task-row-main"
+                :disabled="isLocked(taskItem)"
+                :title="isLocked(taskItem) ? $t('pages.tasks.locked_hint') : ''"
+                @click="onTaskClick(taskItem)"
+              >
+                <span class="task-icon" aria-hidden="true">
+                  <i :class="taskItem.icon"></i>
+                </span>
+                <span class="flex-1 min-w-0 flex flex-col gap-0.5 text-left">
+                  <span class="font-semibold leading-snug">{{
+                    taskItem.task_slug
+                  }}</span>
+                  <span class="text-xs text-inactive">{{
+                    taskItem.task_type_name
+                  }}</span>
+                </span>
+
+                <!-- Результат выполненного задания — внутри строки, справа -->
+                <circleProgressBar
+                  v-if="isDone(taskItem)"
+                  :progress="taskItem.task_result.percentage"
+                  :className="'w-11 h-11 shrink-0'"
+                  :textClass="'text-[10px]'"
+                />
+                <span
+                  v-else-if="isLocked(taskItem)"
+                  class="lesson-badge text-inactive"
+                >
+                  <i class="pi pi-lock" aria-hidden="true"></i>
+                </span>
+              </button>
+
+              <div class="task-row-actions">
+                <roleProvider :roles="[1]">
+                  <div class="flex gap-x-1">
+                    <button
+                      type="button"
+                      @click="order('up', taskIndex, $event.target)"
+                      class="btn btn-square btn-light btn-sm btn-up"
+                      :title="$t('move_up')"
+                      :aria-label="$t('move_up')"
+                    >
+                      <i class="pi pi-arrow-up"></i>
+                    </button>
+                    <button
+                      type="button"
+                      @click="order('down', taskIndex, $event.target)"
+                      class="btn btn-square btn-light btn-sm btn-down"
+                      :title="$t('move_down')"
+                      :aria-label="$t('move_down')"
+                    >
+                      <i class="pi pi-arrow-down"></i>
+                    </button>
+                    <button
+                      type="button"
+                      @click="openEditTask(taskItem)"
+                      class="btn btn-square btn-light btn-sm"
+                      :title="$t('edit')"
+                      :aria-label="$t('edit')"
+                    >
+                      <i class="pi pi-pencil"></i>
+                    </button>
+                    <button
+                      type="button"
+                      @click="confirmDeleteTask(taskItem)"
+                      class="btn btn-square btn-light btn-delete btn-sm"
+                      :title="$t('delete')"
+                      :aria-label="$t('delete')"
+                    >
+                      <i class="pi pi-trash"></i>
+                    </button>
+                  </div>
+                </roleProvider>
+              </div>
+            </div>
+          </li>
+        </TransitionGroup>
+      </div>
+    </template>
 
     <div v-else class="col-span-12">
-      <alert :className="'light'">
-        <p class="mb-0">{{ $t("pages.tasks.there_are_no_tasks") }}</p>
-      </alert>
+      <emptyState
+        :text="$t('pages.tasks.there_are_no_tasks')"
+        icon="bi bi-inbox"
+      />
     </div>
   </div>
 
@@ -192,31 +222,6 @@
     </template>
     <template v-slot:body_content>
       <component :is="currentModal" v-bind="modalProps" />
-    </template>
-  </modal>
-
-  <modal
-    :show="deleteModalIsVisible"
-    :onClose="() => (deleteModalIsVisible = false)"
-    :className="'modal-lg'"
-    :showLoader="pendingDelete"
-    :closeOnClickSelf="true"
-  >
-    <template v-slot:header_content>
-      <h5>{{ $t("pages.tasks.delete_task") }}</h5>
-    </template>
-    <template v-slot:body_content>
-      <p>{{ $t("pages.tasks.delete_confirm") }}</p>
-      <div class="btn-wrap justify-end mt-4">
-        <button type="button" @click="deleteTaskSubmit()" class="btn btn-outline-danger">
-          <i class="pi pi-trash"></i>
-          {{ $t("yes") }}
-        </button>
-        <button type="button" @click="deleteModalIsVisible = false" class="btn btn-light">
-          <i class="pi pi-ban"></i>
-          {{ $t("no") }}
-        </button>
-      </div>
     </template>
   </modal>
 
@@ -273,11 +278,13 @@ import { provide, shallowRef } from "vue";
 import roleProvider from "../../ui/roleProvider.vue";
 import dropdownMenu from "../../ui/dropdownMenu.vue";
 import modal from "../../ui/modal.vue";
-import alert from "../../ui/alert.vue";
+import emptyState from "~/components/ui/emptyState.vue";
 import { debounceHandler } from "../../../utils/debounceHandler";
 import taskResultChart from "../components/tasks/taskResultChart.vue";
 import circleProgressBar from "../../ui/circleProgressBar.vue";
 import stickyBox from "../../ui/stickyBox.vue";
+import { useConfirm } from "~/composables/useConfirm";
+import { useNotify } from "~/composables/useNotify";
 
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
@@ -296,7 +303,6 @@ const modalProps = ref({});
 const modalIsVisible = ref(false);
 const currentModal = shallowRef(null);
 const taskResultModalIsVisible = ref(false);
-const deleteModalIsVisible = ref(false);
 
 const props = defineProps({
   lesson_id: {
@@ -307,6 +313,49 @@ const props = defineProps({
     required: true,
   },
 });
+
+const { t } = useI18n();
+const confirm = useConfirm();
+const notify = useNotify();
+
+const isTest = computed(() => props.lessonData?.lesson_type_slug === "file_test");
+
+// Ученик в тесте проходит задания строго по порядку — по клику не открываются.
+const isOnlyLearnerTest = computed(
+  () =>
+    isTest.value && props.lessonData?.available_status?.is_only_learner === true,
+);
+
+const isDone = (taskItem) => taskItem.task_result?.completed === true;
+
+const isLocked = (taskItem) =>
+  isOnlyLearnerTest.value && !taskItem.task_result?.answers;
+
+// Средний результат по всем заданиям урока (невыполненные — как 0%).
+const averagePercent = computed(() =>
+  tasks.value.length
+    ? Math.round(completedTasksPercent.value / tasks.value.length)
+    : 0,
+);
+
+// Первое невыполненное задание — подсвечивается и открывается кнопкой.
+const nextTask = computed(() =>
+  isTest.value
+    ? tasks.value.find((t) => t.task_result && !t.task_result.answers)
+    : tasks.value.find((t) => !isDone(t)),
+);
+
+const canStart = computed(() => Boolean(nextTask.value));
+
+const startNext = () => {
+  if (isTest.value) startTheTest();
+  else if (nextTask.value) openTask(nextTask.value);
+};
+
+const onTaskClick = (taskItem) => {
+  if (taskItem.task_result?.answers) openTaskResult(taskItem);
+  else if (!isLocked(taskItem)) openTask(taskItem);
+};
 
 const onPending = (state) => {
   pendingModal.value = state;
@@ -455,28 +504,41 @@ const getTaskAttributes = async () => {
     });
 };
 
-const openDeleteModal = (task) => {
+const confirmDeleteTask = async (taskItem) => {
+  const ok = await confirm({
+    title: t("pages.tasks.delete_task"),
+    message: t("pages.tasks.delete_confirm"),
+    confirmText: t("delete"),
+    danger: true,
+  });
+  if (!ok) return;
   currentModal.value = null;
-  deleteTaskId.value = task.task_id;
-  deleteModalIsVisible.value = true;
+  deleteTaskId.value = taskItem.task_id;
+  deleteTaskSubmit();
 };
 
 const deleteTaskSubmit = async () => {
+  if (pendingDelete.value) return;
   pendingDelete.value = true;
+  pendingTasks.value = true;
 
   const form_data = new FormData();
   form_data.append("operation_type_id", 22);
 
   await $axiosPlugin
     .post("tasks/delete_task/" + props.lesson_id + "/" + deleteTaskId.value, form_data)
-    .then((response) => {
-      deleteModalIsVisible.value = false;
+    .then(() => {
       getLessonTasks();
     })
     .catch((err) => {
       if (err.response) {
         if (err.response.status == 422) {
-          errors.value = err.response.data;
+          // Раньше здесь была ссылка на несуществующую переменную errors.
+          pendingTasks.value = false;
+          notify(
+            "danger",
+            err.response.data?.message || t("an_error_occurred"),
+          );
         } else {
           router.push({
             path: "/error",
@@ -525,6 +587,7 @@ const debounceOrder = debounceHandler(orderTasks, 2000);
 
 const order = (direction, index, event) => {
   const parent = event.closest("li");
+  if (!parent) return;
 
   if (direction === "up" && index > 0) {
     [tasks.value[index - 1], tasks.value[index]] = [

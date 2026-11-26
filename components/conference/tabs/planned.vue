@@ -2,9 +2,13 @@
   <div class="custom-grid">
     <roleProvider :roles="[1, 2, 3, 4, 6]">
       <div class="col-span-12">
-        <div class="btn-wrap">
-          <button type="button" class="btn btn-primary" @click="addModalIsVisible = true">
-            <i class="pi pi-calendar"></i>
+        <div class="list-toolbar">
+          <button
+            type="button"
+            class="btn btn-primary ml-auto"
+            @click="addModalIsVisible = true"
+          >
+            <i class="pi pi-calendar-plus" aria-hidden="true"></i>
             {{ $t("pages.conference.plan") }}
           </button>
         </div>
@@ -22,16 +26,12 @@
         </div>
       </div>
 
-      <alert v-else :className="'light'">
-        <loader v-if="pending" :className="'overlay'" :showPendingText="true" />
-        <img
-          class="w-24 mx-auto mb-2"
-          src="~/public/images/calendar-search.svg"
-        />
-        <p class="mb-0">
-          <b>{{ $t("pages.conference.no_current_conferences") }}</b>
-        </p>
-      </alert>
+      <emptyState
+        v-else
+        :pending="pending"
+        :text="$t('pages.events.no_events')"
+        image="/images/calendar-search.svg"
+      />
     </div>
   </div>
 
@@ -92,8 +92,9 @@ import currentConferenceCard from "../currentConferenceCard.vue";
 import roleProvider from "../../ui/roleProvider.vue";
 import modal from "../../ui/modal.vue";
 import loader from "../../ui/loader.vue";
-import alert from "../../ui/alert.vue";
+import emptyState from "~/components/ui/emptyState.vue";
 import scheduleGrid from "../../schedule/scheduleGrid.vue";
+import { checkConferenceLiveNow } from "~/composables/useConferenceLive";
 
 const router = useRouter();
 const errors = ref([]);
@@ -156,6 +157,7 @@ const timeIsUp = () => {
 };
 
 const addConferenceSubmit = async () => {
+  if (pendingAdd.value) return;
   pendingAdd.value = true;
   const formData = new FormData(addFormRef.value);
   formData.append("operation_type_id", 27);
@@ -166,6 +168,8 @@ const addConferenceSubmit = async () => {
       pendingAdd.value = false;
       closeAddModal();
       getSchedule();
+      // Урок может начаться в ближайшие минуты — обновим меню и «Текущие» сразу
+      checkConferenceLiveNow();
     })
     .catch((err) => {
       if (err.response) {

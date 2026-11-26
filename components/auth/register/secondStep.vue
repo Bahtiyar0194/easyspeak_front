@@ -36,7 +36,7 @@
       <div class="form-group-border active">
         <i class="pi pi-user"></i>
         <input
-          autoComplete="new-user-first-name"
+          autocomplete="given-name"
           name="first_name"
           type="text"
           placeholder=" "
@@ -51,7 +51,7 @@
       <div class="form-group-border active">
         <i class="pi pi-user"></i>
         <input
-          autoComplete="new-user-last-name"
+          autocomplete="family-name"
           name="last_name"
           type="text"
           placeholder=" "
@@ -65,8 +65,10 @@
       <div class="form-group-border active">
         <i class="pi pi-mobile"></i>
         <input
-          autoComplete="register-phone"
+          autocomplete="tel"
           name="phone"
+          type="tel"
+          inputmode="tel"
           v-mask="'+7 (###) ###-####'"
           placeholder=" "
         />
@@ -79,9 +81,12 @@
       <div class="form-group-border active">
         <i class="pi pi-at"></i>
         <input
-          autoComplete="new-register-email"
+          autocomplete="email"
           name="email"
-          type="text"
+          type="email"
+          inputmode="email"
+          autocapitalize="none"
+          spellcheck="false"
           placeholder=" "
         />
         <label :class="{ 'label-error': errors.email }">
@@ -93,7 +98,7 @@
       <div class="form-group-border active">
         <i class="pi pi-lock"></i>
         <input
-          autoComplete="new-register-password"
+          autocomplete="new-password"
           name="password"
           :type="showPassword ? 'text' : 'password'"
           placeholder=" "
@@ -105,9 +110,12 @@
           type="button"
           @click="showPassword = !showPassword"
           class="show-password"
+          :title="$t(showPassword ? 'form.hide_password' : 'form.show_password')"
+          :aria-label="$t(showPassword ? 'form.hide_password' : 'form.show_password')"
+          :aria-pressed="showPassword"
         >
-          <i class="pi pi-eye" v-if="showPassword"></i>
-          <i class="pi pi-eye-slash" v-else></i>
+          <i class="pi pi-eye" v-if="showPassword" aria-hidden="true"></i>
+          <i class="pi pi-eye-slash" v-else aria-hidden="true"></i>
         </button>
       </div>
     </div>
@@ -115,7 +123,7 @@
       <div class="form-group-border active">
         <i class="pi pi-lock"></i>
         <input
-          autoComplete="new-register-password-confirmation"
+          autocomplete="new-password"
           name="password_confirmation"
           :type="showPassword ? 'text' : 'password'"
           placeholder=" "

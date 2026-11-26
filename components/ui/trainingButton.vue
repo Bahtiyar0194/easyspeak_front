@@ -1,26 +1,44 @@
 <template>
-    <button type="button"
-        class="btn full" :class="props.className">
-        <div v-if="props.number" class="hidden lg:flex rounded-lg w-8 h-8 border-inactive bg-active justify-center items-center" :class="props.className === 'btn-inactive disabled' ? 'text-inactive' : 'text-active'">{{ props.number }}</div>
-        <div class="w-full text-center">
-            <span>{{ props.text }}</span>
-        </div>
-    </button>
+  <button
+    type="button"
+    class="answer-option"
+    :class="[stateClass, props.className]"
+    :disabled="props.state === 'locked' || props.state === 'correct'"
+    :aria-pressed="props.state === 'correct' || undefined"
+  >
+    <!-- Номер = клавиша на клавиатуре -->
+    <kbd v-if="props.number" class="answer-option-key">{{ props.number }}</kbd>
+    <span class="answer-option-text">{{ props.text }}</span>
+    <i
+      v-if="props.state === 'correct' || props.state === 'wrong'"
+      class="pi answer-option-mark"
+      :class="props.state === 'correct' ? 'pi-check' : 'pi-times'"
+      aria-hidden="true"
+    ></i>
+  </button>
 </template>
 <script setup>
 const props = defineProps({
-    text: {
-        type: String,
-        required: true
-    },
-    number: {
-        type: Number,
-        required: false
-    },
-    className: {
-        default: 'btn-inactive',
-        type: String,
-        required: false
-    }
+  text: {
+    type: String,
+    required: true,
+  },
+  number: {
+    type: Number,
+    required: false,
+  },
+  // idle | correct | wrong | locked
+  state: {
+    type: String,
+    default: "idle",
+  },
+  // Дополнительные классы (обратная совместимость)
+  className: {
+    type: String,
+    required: false,
+    default: "",
+  },
 });
+
+const stateClass = computed(() => `is-${props.state}`);
 </script>

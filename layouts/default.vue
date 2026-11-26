@@ -142,6 +142,9 @@
         </div>
       </div>
     </div>
+    <client-only>
+      <confirmDialog />
+    </client-only>
   </div>
 </template>
 <script setup>
@@ -151,6 +154,7 @@ import loader from "../components/ui/loader.vue";
 import themeSwitcher from "../components/ui/themeSwitcher.vue";
 import selectLocale from "../components/ui/selectLocale.vue";
 import authUserMenu from "../components/auth/authUserMenu.vue";
+import confirmDialog from "../components/ui/confirmDialog.vue";
 import { onMounted } from "vue";
 
 const route = useRoute();

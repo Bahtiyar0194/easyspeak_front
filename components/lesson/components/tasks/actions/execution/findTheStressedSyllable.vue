@@ -18,18 +18,18 @@
       :taskResult="taskResult"
     >
       <template v-slot:task_content>
+        <!-- Статус: сколько осталось + таймер -->
         <div class="col-span-12">
-          <p v-if="timeIsUp" class="font-medium text-center text-danger">
-            {{ $t("time_is_up") }}
-          </p>
-          <p v-else-if="words.length > 0" class="text-center">
-            {{ $t("pages.dictionary.words_left") }}:
-            <b>{{ words.length }}</b>
-          </p>
-        </div>
-
-        <div class="col-span-12">
-          <div class="flex justify-center items-center">
+          <div class="task-status-bar">
+            <p v-if="timeIsUp" class="mb-0 font-semibold text-danger flex items-center gap-1.5">
+              <i class="pi pi-clock" aria-hidden="true"></i>
+              {{ $t("time_is_up") }}
+            </p>
+            <p v-else-if="words.length > 0" class="mb-0 text-inactive">
+              {{ $t("pages.dictionary.words_left") }}:
+              <b class="text-active">{{ words.length }}</b>
+            </p>
+            <span v-else></span>
             <countdownCircleTimer
               :totalSeconds="time"
               :startCommand="isStarted"
@@ -38,247 +38,186 @@
           </div>
         </div>
 
+        <!-- Разбор после проверки -->
         <div v-if="timeIsUp || isComplete" class="col-span-12">
-          <div class="flex flex-col gap-y-4">
-            <div
-              class="flex flex-col gap-y-2"
-              v-if="currentStudiedWords.length > 0"
-            >
-              <p class="text-xl font-medium mb-0 text-success">
-                {{
-                  currentReStudyWords.length > 0
-                    ? $t("right_answers")
-                    : $t("right")
-                }}
+          <div class="flex flex-col gap-5">
+            <section v-if="currentStudiedWords.length > 0" class="result-section">
+              <p class="result-head ok">
+                <span class="result-head-dot" aria-hidden="true"></span>
+                {{ currentReStudyWords.length > 0 ? $t("right_answers") : $t("right") }}
+                <span class="result-head-count">{{ currentStudiedWords.length }}</span>
               </p>
 
-              <ul class="list-group nowrap" ref="rightAnswers">
+              <ul class="result-list" ref="rightAnswers">
                 <li
                   v-for="(word, sIndex) in currentStudiedWords"
                   :key="sIndex"
-                  class="flex justify-between items-center gap-x-2"
+                  class="result-item ok"
                 >
-                  <div class="flex items-center gap-x-2">
-                    <audioButton
-                      v-if="
-                        word.audio_file && taskData?.options?.show_audio_button
-                      "
-                      :src="
-                        config.public.apiBase + '/media/get/' + word.audio_file
-                      "
-                    />
-
-                    <div class="flex flex-col">
-                      <div :id="'right_answer_' + word.task_word_id">
-                        <div class="text-xl font-medium">
-                          <span
-                            v-for="(syllable, syllableIndex) in word.syllables"
-                            :key="syllableIndex"
-                            :class="
-                              syllable.target == true &&
-                              'text-success underline'
-                            "
-                          >
-                            {{ syllable.syllable }}
-                          </span>
-                        </div>
+                  <div class="flex-1 min-w-0 flex flex-col">
+                    <!-- Содержимое этого блока сохраняется как HTML ответа -->
+                    <div :id="'right_answer_' + word.task_word_id">
+                      <div class="text-xl font-medium">
+                        <span
+                          v-for="(syllable, syllableIndex) in word.syllables"
+                          :key="syllableIndex"
+                          :class="syllable.target == true && 'text-success underline'"
+                        >
+                          {{ syllable.syllable }}
+                        </span>
                       </div>
-                      <span class="text-xs text-inactive">{{
-                        word.word_translate
-                      }}</span>
                     </div>
+                    <span class="text-sm text-inactive">{{ word.word_translate }}</span>
                   </div>
-
-                  <div class="step-item xs completed">
-                    <div class="step-icon">
+                  <div class="flex items-center gap-2 shrink-0">
+                    <audioButtonMini
+                      v-if="word.audio_file && taskData?.options?.show_audio_button"
+                      :src="config.public.apiBase + '/media/get/' + word.audio_file"
+                    />
+                    <span class="result-status ok" aria-hidden="true">
                       <i class="pi pi-check"></i>
-                    </div>
+                    </span>
                   </div>
                 </li>
               </ul>
-            </div>
+            </section>
 
-            <div
-              class="flex flex-col gap-y-2"
-              v-if="currentReStudyWords.length > 0"
-            >
-              <p class="text-xl font-medium mb-0 text-danger">
+            <section v-if="currentReStudyWords.length > 0" class="result-section">
+              <p class="result-head bad">
+                <span class="result-head-dot" aria-hidden="true"></span>
                 {{ $t("for_re_examination") }}
+                <span class="result-head-count">{{ currentReStudyWords.length }}</span>
               </p>
 
-              <ul class="list-group nowrap" ref="wrongAnswers">
+              <ul class="result-list" ref="wrongAnswers">
                 <li
                   v-for="(word, rIndex) in currentReStudyWords"
                   :key="rIndex"
-                  class="flex justify-between items-center gap-x-2"
+                  class="result-item bad"
                 >
-                  <div class="flex flex-wrap gap-4">
-                    <div class="flex flex-wrap items-start gap-x-2">
-                      <audioButton
-                        v-if="
-                          word.audio_file &&
-                          taskData?.options?.show_audio_button
-                        "
-                        :src="
-                          config.public.apiBase +
-                          '/media/get/' +
-                          word.audio_file
-                        "
-                      />
-
-                      <div class="flex flex-col">
-                        <div class="flex flex-wrap gap-2">
-                          <div class="flex flex-col">
-                            <p class="mb-0 text-xs text-inactive font-normal">
-                              {{ $t("your_answer") }}:
-                            </p>
-                            <div :id="'user_answer_' + word.task_word_id">
-                              <div class="text-xl font-medium">
-                                <span
-                                  v-for="(
-                                    syllable, syllableIndex
-                                  ) in word.syllables"
-                                  :key="syllableIndex"
-                                  :class="
-                                    word.userInput === syllableIndex &&
-                                    'text-danger underline'
-                                  "
-                                >
-                                  {{ syllable.syllable }}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div class="flex flex-col">
-                            <p class="mb-0 text-xs text-inactive font-normal">
-                              {{ $t("right_answer") }}:
-                            </p>
-                            <div :id="'right_answer_' + word.task_word_id">
-                              <div class="text-xl font-medium">
-                                <span
-                                  v-for="(
-                                    syllable, syllableIndex
-                                  ) in word.syllables"
-                                  :key="syllableIndex"
-                                  :class="
-                                    syllable.target == true &&
-                                    'text-success underline'
-                                  "
-                                >
-                                  {{ syllable.syllable }}
-                                </span>
-                              </div>
-                            </div>
+                  <div class="flex-1 min-w-0 flex flex-col gap-1">
+                    <div class="flex flex-wrap gap-x-6 gap-y-2">
+                      <div>
+                        <p class="result-label">{{ $t("your_answer") }}</p>
+                        <!-- Содержимое этого блока сохраняется как HTML ответа -->
+                        <div :id="'user_answer_' + word.task_word_id">
+                          <div class="text-xl font-medium">
+                            <span
+                              v-for="(syllable, syllableIndex) in word.syllables"
+                              :key="syllableIndex"
+                              :class="word.userInput === syllableIndex && 'text-danger underline'"
+                            >
+                              {{ syllable.syllable }}
+                            </span>
                           </div>
                         </div>
-                        <span class="text-xs text-inactive">{{
-                          word.word_translate
-                        }}</span>
+                      </div>
+
+                      <div>
+                        <p class="result-label">{{ $t("right_answer") }}</p>
+                        <!-- Содержимое этого блока сохраняется как HTML ответа -->
+                        <div :id="'right_answer_' + word.task_word_id">
+                          <div class="text-xl font-medium">
+                            <span
+                              v-for="(syllable, syllableIndex) in word.syllables"
+                              :key="syllableIndex"
+                              :class="syllable.target == true && 'text-success underline'"
+                            >
+                              {{ syllable.syllable }}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
+                    <span class="text-sm text-inactive">{{ word.word_translate }}</span>
                   </div>
-
-                  <div class="step-item xs failed">
-                    <div class="step-icon">
+                  <div class="flex items-center gap-2 shrink-0">
+                    <audioButtonMini
+                      v-if="word.audio_file && taskData?.options?.show_audio_button"
+                      :src="config.public.apiBase + '/media/get/' + word.audio_file"
+                    />
+                    <span class="result-status bad" aria-hidden="true">
                       <i class="pi pi-replay"></i>
-                    </div>
+                    </span>
                   </div>
                 </li>
               </ul>
-            </div>
+            </section>
 
-            <div class="btn-wrap right">
-              <button type="button"
+            <div class="task-actions">
+              <button
+                type="button"
                 v-if="words.length > 0"
-                class="btn btn-outline-primary"
+                class="btn btn-primary"
                 @click="setWords()"
               >
-                <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
+                {{ $t("continue") }}
+                <i class="pi pi-arrow-right" aria-hidden="true"></i>
               </button>
-              <button type="button" v-else class="btn btn-light" @click="isFinished = true">
-                <i class="pi pi-check"></i>
+              <button type="button" v-else class="btn btn-success" @click="isFinished = true">
+                <i class="pi pi-check" aria-hidden="true"></i>
                 {{ $t("pages.tasks.complete_the_task") }}
               </button>
             </div>
           </div>
         </div>
 
+        <!-- Выполнение -->
         <div v-else class="col-span-12">
-          <div class="custom-grid">
-            <div class="col-span-12">
-              <ul class="list-group nowrap">
-                <li
-                  v-for="(word, wordIndex) in currentWords"
-                  :key="wordIndex"
-                  class="list-item"
+          <div class="flex flex-col gap-3">
+            <p class="mb-0 text-sm text-inactive flex items-center gap-1.5">
+              <i class="pi pi-info-circle" aria-hidden="true"></i>
+              {{ $t("pages.tasks.stress_hint") }}
+            </p>
+
+            <div
+              v-for="(word, wordIndex) in currentWords"
+              :key="wordIndex"
+              class="blank-card items-center"
+              :class="{ shake: checkingStatus === true && word.userInput === '' }"
+            >
+              <audioButton
+                v-if="word.audio_file && taskData?.options?.show_audio_button"
+                :src="config.public.apiBase + '/media/get/' + word.audio_file"
+              />
+              <div class="flex-1 min-w-0 flex flex-col gap-2">
+                <div class="syllables" role="radiogroup">
+                  <button
+                    v-for="(syllable, syllableIndex) in word.syllables"
+                    :key="syllableIndex"
+                    type="button"
+                    role="radio"
+                    :aria-checked="word.userInput !== '' && word.userInput === syllableIndex"
+                    class="syllable"
+                    :class="{
+                      picked: word.userInput !== '' && word.userInput === syllableIndex,
+                      error: checkingStatus === true && word.userInput === '',
+                    }"
+                    @click="selectSyllable(syllableIndex, wordIndex)"
+                  >
+                    {{ syllable.syllable }}
+                  </button>
+                </div>
+                <div
+                  v-if="taskData?.options?.show_transcription || taskData?.options?.show_translate"
+                  class="flex flex-wrap gap-x-3 text-sm text-inactive"
                 >
-                  <div class="flex gap-3 items-center text-lg">
-                    <div class="flex gap-x-2 items-start">
-                      <audioButton
-                        v-if="
-                          word.audio_file &&
-                          taskData?.options?.show_audio_button
-                        "
-                        :src="
-                          config.public.apiBase +
-                          '/media/get/' +
-                          word.audio_file
-                        "
-                      />
-                      <div class="flex flex-col">
-                        <div class="btn-group mb-1">
-                          <button
-                            v-for="(syllable, syllableIndex) in word.syllables"
-                            :key="syllableIndex"
-                            type="button"
-                            class="btn btn-light"
-                            :class="
-                              word.userInput !== '' &&
-                              word.userInput === syllableIndex
-                                ? 'underline txt-corp font-medium'
-                                : checkingStatus === true &&
-                                  word.userInput === ''
-                                ? 'pulse btn-danger'
-                                : ''
-                            "
-                            @click="selectSyllable(syllableIndex, wordIndex)"
-                          >
-                            {{ syllable.syllable }}
-                          </button>
-                        </div>
-                        <div class="flex flex-wrap gap-x-2">
-                          <span
-                            v-if="taskData?.options?.show_transcription"
-                            class="text-xs"
-                          >
-                            [{{ word.transcription }}]
-                          </span>
-                          <span
-                            v-if="taskData?.options?.show_translate"
-                            class="text-inactive text-xs"
-                          >
-                            {{ word.word_translate }}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              </ul>
+                  <span v-if="taskData?.options?.show_transcription">[{{ word.transcription }}]</span>
+                  <span v-if="taskData?.options?.show_translate">{{ word.word_translate }}</span>
+                </div>
+              </div>
             </div>
 
-            <div class="col-span-12">
-              <div class="btn-wrap right">
-                <button type="button"
-                  class="btn btn-outline-primary"
-                  :class="checkingStatus && 'disabled'"
-                  @click="acceptAnswers()"
-                >
-                  <i class="pi pi-check"></i>
-                  {{ $t("check") }}
-                </button>
-              </div>
+            <div class="task-actions">
+              <button
+                type="button"
+                class="btn btn-primary"
+                :disabled="checkingStatus"
+                @click="acceptAnswers()"
+              >
+                <i class="pi pi-check" aria-hidden="true"></i>
+                {{ $t("check") }}
+              </button>
             </div>
           </div>
         </div>
@@ -297,6 +236,7 @@ import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
 import taskLayout from "../../taskLayout.vue";
 import audioButton from "../../../../../ui/audioButton.vue";
+import audioButtonMini from "../../../../../ui/audioButtonMini.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import result from "../../results/dictionary/result.vue";
 

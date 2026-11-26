@@ -227,10 +227,7 @@
         </div>
       </template>
 
-      <alert v-else :className="'light'">
-        <loader v-if="pending" :className="'overlay'" :showPendingText="true" />
-        <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
-      </alert>
+      <emptyState v-else :pending="pending" :text="$t('nothing_was_found_for_your_query')" icon="bi bi-search" />
     </div>
   </div>
 
@@ -575,7 +572,7 @@ import userAvatar from "../ui/userAvatar.vue";
 import userTag from "../ui/userTag.vue";
 import modal from "../ui/modal.vue";
 import loader from "../ui/loader.vue";
-import alert from "../ui/alert.vue";
+import emptyState from "~/components/ui/emptyState.vue";
 import stickyBox from "../ui/stickyBox.vue";
 import pagination from "../ui/pagination.vue";
 import tableToExcelButton from "../ui/tableToExcelButton.vue";

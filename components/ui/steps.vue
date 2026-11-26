@@ -1,32 +1,41 @@
 <template>
   <client-only>
-    <div class="steps">
-      <progressBar
-        :progressPercentage="progressPercentage"
-        :className="'success sm'"
-      />
-      <div class="steps-wrap">
-        <div
+    <div class="stepper" :class="{ compact: props.steps.length >= 4 }">
+      <ol class="stepper-list">
+        <li
           v-for="(step, index) in props.steps"
           :key="index"
-          class="step-item"
+          class="stepper-item"
           :class="{
             current: props.currentStep === index + 1,
             completed: props.currentStep > index + 1,
-            xs: props.steps.length >= 3,
           }"
+          :aria-current="props.currentStep === index + 1 ? 'step' : undefined"
         >
-          <div class="step-icon">
-            <i v-if="props.currentStep > index + 1" class="pi pi-check"></i>
-            <span v-else
-              ><b>{{ index + 1 }}</b></span
-            >
-          </div>
-          <div class="step-label">
-            <b>{{ step.title }}</b>
-          </div>
-        </div>
-      </div>
+          <!-- Линия к следующему шагу: заливается, когда шаг пройден -->
+          <span
+            v-if="index < props.steps.length - 1"
+            class="stepper-line"
+            aria-hidden="true"
+          ></span>
+
+          <span class="stepper-dot">
+            <i
+              v-if="props.currentStep > index + 1"
+              class="pi pi-check"
+              aria-hidden="true"
+            ></i>
+            <template v-else>{{ index + 1 }}</template>
+          </span>
+          <span class="stepper-label">{{ step.title }}</span>
+        </li>
+      </ol>
+
+      <!-- Телефон: подписи под кружками не помещаются — показываем текущий шаг -->
+      <p class="stepper-current">
+        {{ $t("step") }} {{ props.currentStep }} / {{ props.steps.length }}:
+        <b>{{ props.steps[props.currentStep - 1]?.title }}</b>
+      </p>
     </div>
 
     <slot />
@@ -34,7 +43,6 @@
 </template>
 
 <script setup>
-import progressBar from "./progressBar.vue";
 const props = defineProps({
   currentStep: {
     type: Number,
@@ -45,9 +53,5 @@ const props = defineProps({
     type: Array,
     required: true,
   },
-});
-
-const progressPercentage = computed(() => {
-  return ((props.currentStep - 1) / (props.steps.length - 1)) * 100;
 });
 </script>

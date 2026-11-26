@@ -1,18 +1,23 @@
 <template>
   <div v-if="props.showTabHeader === true" class="col-span-12">
-    <div class="btn-wrap md:justify-end">
-      <div
-        v-for="tab in props.tabs"
-        :key="tab.name"
-        @click="active_tab = tab.name"
-        class="tab-header-item"
-        :class="[
-          { active: active_tab === tab.name },
-          tab.className ? tab.className : '',
-        ]"
-      >
-        <i :class="tab.icon"></i>
-        <span>{{ tab.title }}</span>
+    <div class="tabs-bar-wrap">
+      <div class="tabs-bar" role="tablist">
+        <button
+          v-for="tab in props.tabs"
+          :key="tab.name"
+          type="button"
+          role="tab"
+          :aria-selected="active_tab === tab.name"
+          @click="active_tab = tab.name"
+          class="tab-header-item"
+          :class="[
+            { active: active_tab === tab.name },
+            tab.className ? tab.className : '',
+          ]"
+        >
+          <i :class="tab.icon" aria-hidden="true"></i>
+          <span>{{ tab.title }}</span>
+        </button>
       </div>
     </div>
   </div>
@@ -23,6 +28,7 @@
         :key="tab.name"
         class="tab-body-item"
         :class="active_tab === tab.name && 'active'"
+        role="tabpanel"
       >
         <!-- Здесь рендерится компонент выбранной вкладки -->
         <component

@@ -18,18 +18,18 @@
       :taskResult="taskResult"
     >
       <template v-slot:task_content>
+        <!-- Статус: сколько осталось + таймер -->
         <div class="col-span-12">
-          <p v-if="timeIsUp" class="font-medium text-center text-danger">
-            {{ $t("time_is_up") }}
-          </p>
-          <p v-else-if="words.length > 0" class="text-center">
-            {{ $t("pages.dictionary.words_left") }}:
-            <b>{{ words.length }}</b>
-          </p>
-        </div>
-
-        <div class="col-span-12">
-          <div class="flex justify-center items-center">
+          <div class="task-status-bar">
+            <p v-if="timeIsUp" class="mb-0 font-semibold text-danger flex items-center gap-1.5">
+              <i class="pi pi-clock" aria-hidden="true"></i>
+              {{ $t("time_is_up") }}
+            </p>
+            <p v-else-if="words.length > 0" class="mb-0 text-inactive">
+              {{ $t("pages.dictionary.words_left") }}:
+              <b class="text-active">{{ words.length }}</b>
+            </p>
+            <span v-else></span>
             <countdownCircleTimer
               :totalSeconds="time"
               :startCommand="isStarted"
@@ -38,454 +38,306 @@
           </div>
         </div>
 
+        <!-- Разбор после проверки -->
         <div v-if="timeIsUp || isComplete" class="col-span-12">
-          <div class="flex flex-col gap-y-4">
-            <div
-              class="flex flex-col gap-y-2"
-              v-if="currentStudiedWords.length > 0"
-            >
-              <p class="text-xl font-medium mb-0 text-success">
-                {{
-                  currentReStudyWords.length > 0
-                    ? $t("right_answers")
-                    : $t("right")
-                }}
+          <div class="flex flex-col gap-5">
+            <section v-if="currentStudiedWords.length > 0" class="result-section">
+              <p class="result-head ok">
+                <span class="result-head-dot" aria-hidden="true"></span>
+                {{ currentReStudyWords.length > 0 ? $t("right_answers") : $t("right") }}
+                <span class="result-head-count">{{ currentStudiedWords.length }}</span>
               </p>
 
-              <ul class="list-group nowrap">
+              <ul class="result-list">
                 <li
                   v-for="(word, sIndex) in currentStudiedWords"
                   :key="sIndex"
-                  class="flex justify-between items-center gap-x-2"
+                  class="result-item ok"
                 >
-                  <div class="flex items-center gap-x-2">
-                    <div
-                      v-if="word.image_file"
-                      :style="{
-                        backgroundImage:
-                          'url(' +
-                          config.public.apiBase +
-                          '/media/get/' +
-                          word.image_file +
-                          ')',
-                      }"
-                      class="w-16 h-16 bg-contain bg-no-repeat bg-center border-inactive rounded-xl"
-                    ></div>
-
-                    <div
-                      v-if="
-                        taskData.options.match_words_by_pictures_option ===
-                        'match_by_number'
-                      "
-                      class="btn btn-square btn-outline-success pointer-events-none font-medium"
-                    >
-                      {{ word.userInput }}
-                    </div>
-
-                    <div class="flex flex-col">
-                      <div class="font-medium">
-                        {{ word.word }}
-                      </div>
-                      <span class="text-xs text-inactive">{{
-                        word.word_translate
-                      }}</span>
-                    </div>
+                  <div
+                    v-if="word.image_file"
+                    class="result-thumb"
+                    :style="{
+                      backgroundImage:
+                        'url(' + config.public.apiBase + '/media/get/' + word.image_file + ')',
+                    }"
+                    aria-hidden="true"
+                  ></div>
+                  <span
+                    v-if="taskData.options.match_words_by_pictures_option === 'match_by_number'"
+                    class="match-sentence-num !bg-success"
+                    >{{ word.userInput }}</span
+                  >
+                  <div class="flex-1 min-w-0">
+                    <p class="mb-0 font-medium">{{ word.word }}</p>
+                    <p class="mb-0 text-sm text-inactive">{{ word.word_translate }}</p>
                   </div>
-
-                  <div class="step-item xs completed">
-                    <div class="step-icon">
-                      <i class="pi pi-check"></i>
-                    </div>
-                  </div>
+                  <span class="result-status ok shrink-0" aria-hidden="true">
+                    <i class="pi pi-check"></i>
+                  </span>
                 </li>
               </ul>
-            </div>
+            </section>
 
-            <div
-              class="flex flex-col gap-y-2"
-              v-if="currentReStudyWords.length > 0"
-            >
-              <p class="text-xl font-medium mb-0 text-danger">
+            <section v-if="currentReStudyWords.length > 0" class="result-section">
+              <p class="result-head bad">
+                <span class="result-head-dot" aria-hidden="true"></span>
                 {{ $t("for_re_examination") }}
+                <span class="result-head-count">{{ currentReStudyWords.length }}</span>
               </p>
 
-              <ul class="list-group nowrap">
+              <ul class="result-list">
                 <li
                   v-for="(word, rIndex) in currentReStudyWords"
                   :key="rIndex"
-                  class="flex justify-between items-center gap-x-2"
+                  class="result-item bad"
                 >
-                  <div class="flex flex-wrap gap-4 items-center">
-                    <div
-                      v-if="word.image_file"
-                      :style="{
-                        backgroundImage:
-                          'url(' +
-                          config.public.apiBase +
-                          '/media/get/' +
-                          word.image_file +
-                          ')',
-                      }"
-                      class="w-16 h-16 bg-contain bg-no-repeat bg-center border-inactive rounded-xl"
-                    ></div>
+                  <div
+                    v-if="word.image_file"
+                    class="result-thumb"
+                    :style="{
+                      backgroundImage:
+                        'url(' + config.public.apiBase + '/media/get/' + word.image_file + ')',
+                    }"
+                    aria-hidden="true"
+                  ></div>
+
+                  <div class="flex-1 min-w-0 flex flex-wrap gap-x-6 gap-y-2">
                     <div>
-                      <p class="mb-1 text-xs text-inactive font-normal">
-                        {{ $t("your_answer") }}:
-                      </p>
-
+                      <p class="result-label">{{ $t("your_answer") }}</p>
+                      <!-- По номеру -->
                       <div
-                        v-if="
-                          taskData.options.match_words_by_pictures_option ===
-                          'match_by_number'
-                        "
-                        class="flex items-center gap-x-2"
+                        v-if="taskData.options.match_words_by_pictures_option === 'match_by_number'"
+                        class="flex items-center gap-2"
                       >
-                        <div
-                          class="btn btn-square btn-outline-danger pointer-events-none font-medium"
-                        >
-                          {{ word.userInput }}
-                        </div>
-
-                        <div class="flex flex-col">
-                          <div class="font-medium">
-                            {{ word.word }}
-                          </div>
-                          <span class="text-xs text-inactive">{{
-                            word.word_translate
-                          }}</span>
-                        </div>
+                        <span class="match-sentence-num !bg-danger">{{ word.userInput || "–" }}</span>
+                        <span class="font-medium">{{ word.word }}</span>
                       </div>
-
-                      <div
-                        v-else-if="
-                          taskData.options.match_words_by_pictures_option ===
-                          'match_by_typing'
-                        "
-                        class="flex items-center gap-x-2 text-danger"
-                      >
-                        <div class="flex flex-col">
-                          <div class="font-medium">
-                            {{
-                              currentPictures.find(
-                                (p) => p.task_word_id === word.task_word_id
-                              ).userInput === "" ||
-                              currentPictures.find(
-                                (p) => p.task_word_id === word.task_word_id
-                              ).userInput === " "
-                                ? "_______"
-                                : currentPictures.find(
-                                    (p) => p.task_word_id === word.task_word_id
-                                  ).userInput
-                            }}
-                          </div>
-                          <span class="text-xs">
-                            {{
-                              findTranslate(
-                                currentPictures.find(
-                                  (p) => p.task_word_id === word.task_word_id
-                                ).userInput
-                              )
-                            }}
-                          </span>
-                        </div>
+                      <!-- Вписанное слово -->
+                      <div v-else>
+                        <p class="mb-0 font-medium result-answer strike">
+                          {{ typedAnswerFor(word) || "_______" }}
+                        </p>
+                        <p class="mb-0 text-sm text-inactive">
+                          {{ findTranslate(typedAnswerFor(word)) }}
+                        </p>
                       </div>
                     </div>
 
                     <div>
-                      <p class="mb-1 text-xs text-inactive font-normal">
-                        {{ $t("right_answer") }}:
-                      </p>
-
+                      <p class="result-label">{{ $t("right_answer") }}</p>
                       <div
-                        v-if="
-                          taskData.options.match_words_by_pictures_option ===
-                          'match_by_number'
-                        "
-                        class="flex items-center gap-x-2"
+                        v-if="taskData.options.match_words_by_pictures_option === 'match_by_number'"
+                        class="flex items-center gap-2"
                       >
-                        <div
-                          class="btn btn-square btn-outline-success pointer-events-none font-medium"
-                        >
-                          {{
-                            currentPictures.findIndex(
-                              (p) => p.task_word_id === word.task_word_id
-                            ) + 1
-                          }}
-                        </div>
-
-                        <div class="flex flex-col">
-                          <div class="font-medium">
-                            {{ word.word }}
-                          </div>
-                          <span class="text-xs text-inactive">{{
-                            word.word_translate
-                          }}</span>
-                        </div>
+                        <span class="match-sentence-num !bg-success">{{
+                          currentPictures.findIndex((p) => p.task_word_id === word.task_word_id) + 1
+                        }}</span>
+                        <span class="font-medium">{{ word.word }}</span>
                       </div>
-
-                      <div
-                        v-else-if="
-                          taskData.options.match_words_by_pictures_option ===
-                          'match_by_typing'
-                        "
-                        class="flex items-center gap-x-2 text-success"
-                      >
-                        <div class="flex flex-col">
-                          <div class="font-medium">
-                            {{ word.word }}
-                          </div>
-                          <span class="text-xs">{{ word.word_translate }}</span>
-                        </div>
+                      <div v-else>
+                        <p class="mb-0 font-medium text-success">{{ word.word }}</p>
+                        <p class="mb-0 text-sm text-inactive">{{ word.word_translate }}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div class="step-item xs failed">
-                    <div class="step-icon">
-                      <i class="pi pi-replay"></i>
-                    </div>
-                  </div>
+                  <span class="result-status bad shrink-0" aria-hidden="true">
+                    <i class="pi pi-replay"></i>
+                  </span>
                 </li>
               </ul>
-            </div>
+            </section>
 
-            <div class="btn-wrap right">
-              <button type="button"
+            <div class="task-actions">
+              <button
+                type="button"
                 v-if="words.length > 0"
-                class="btn btn-outline-primary"
+                class="btn btn-primary"
                 @click="setWords()"
               >
-                <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
+                {{ $t("continue") }}
+                <i class="pi pi-arrow-right" aria-hidden="true"></i>
               </button>
-              <button type="button" v-else class="btn btn-light" @click="isFinished = true">
-                <i class="pi pi-check"></i>
+              <button type="button" v-else class="btn btn-success" @click="isFinished = true">
+                <i class="pi pi-check" aria-hidden="true"></i>
                 {{ $t("pages.tasks.complete_the_task") }}
               </button>
             </div>
           </div>
         </div>
 
+        <!-- Выполнение -->
         <div v-else class="col-span-12">
-          <div class="custom-grid">
-            <div
-              v-if="
-                taskData.options.match_words_by_pictures_option ===
-                'match_by_number'
-              "
-              class="col-span-12"
-            >
-              <div class="custom-grid">
-                <div class="col-span-12 lg:col-span-6">
-                  <div class="custom-grid">
-                    <div
-                      v-for="(picture, pictureIndex) in currentPictures"
-                      :key="pictureIndex"
-                      class="col-span-3 lg:col-span-6 relative rounded-xl border-inactive overflow-hidden"
-                    >
-                      <div
-                        class="absolute left-2 top-2 w-6 h-6 bg-success rounded-full flex items-center justify-center text-white text-lg"
-                      >
-                        {{ pictureIndex + 1 }}
-                      </div>
-                      <img
-                        class="w-full p-3"
-                        :src="
-                          config.public.apiBase +
-                          '/media/get/' +
-                          picture.image_file
-                        "
-                      />
-                    </div>
+          <div class="flex flex-col gap-4">
+            <!-- ===== Режим «по номеру» ===== -->
+            <template v-if="taskData.options.match_words_by_pictures_option === 'match_by_number'">
+              <p class="mb-0 text-sm text-inactive flex items-center gap-1.5">
+                <i class="pi pi-info-circle" aria-hidden="true"></i>
+                {{ $t("pages.tasks.match_pictures_hint") }}
+              </p>
+
+              <div class="grid gap-4 lg:grid-cols-2">
+                <!-- Пронумерованные картинки -->
+                <div class="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-2 gap-2 content-start">
+                  <div
+                    v-for="(picture, pictureIndex) in currentPictures"
+                    :key="pictureIndex"
+                    class="picture-card"
+                  >
+                    <span class="picture-num">{{ pictureIndex + 1 }}</span>
+                    <img
+                      v-skeleton="'1/1'"
+                      class="w-full aspect-square object-contain p-2"
+                      :src="config.public.apiBase + '/media/get/' + picture.image_file"
+                      alt=""
+                    />
                   </div>
                 </div>
 
-                <div class="col-span-12 lg:col-span-6">
-                  <ul class="list-group nowrap">
-                    <li
-                      v-for="(word, wordIndex) in currentWords"
-                      :key="wordIndex"
-                      class="list-item"
-                    >
-                      <div class="flex gap-3 items-center text-lg">
-                        <div
-                          @click="focusInput($event)"
-                          class="btn btn-square btn-lg flex justify-center items-center"
-                          :class="
-                            checkingStatus === true &&
-                            (word.userInput === '' || word.userInput === ' ')
-                              ? 'pulse btn-danger'
-                              : 'btn-outline-primary'
-                          "
-                        >
-                          <input
-                            v-model="word.userInput"
-                            @input="changeFocus($event)"
-                            type="text"
-                            class="user_input"
-                            :style="{
-                              width:
-                                currentWords.length.toString().length +
-                                0.5 +
-                                'ch',
-                              textAlign: 'center',
-                            }"
-                            :maxlength="currentWords.length.toString().length"
-                          />
-                        </div>
-
-                        <div class="flex gap-x-2 items-center">
-                          <audioButton
-                            v-if="
-                              word.audio_file &&
-                              taskData?.options?.show_audio_button
-                            "
-                            :src="
-                              config.public.apiBase +
-                              '/media/get/' +
-                              word.audio_file
-                            "
-                          />
-                          <div class="flex flex-col">
-                            <span class="font-medium">{{ word.word }}</span>
-                            <div class="flex flex-wrap gap-x-2">
-                              <span
-                                v-if="taskData?.options?.show_transcription"
-                                class="text-xs"
-                              >
-                                [{{ word.transcription }}]
-                              </span>
-                              <span
-                                v-if="taskData?.options?.show_translate"
-                                class="text-inactive text-xs"
-                              >
-                                {{ word.word_translate }}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-            <div
-              class="col-span-12"
-              v-else-if="
-                taskData.options.match_words_by_pictures_option ===
-                'match_by_typing'
-              "
-            >
-              <div class="custom-grid">
-                <div class="col-span-12">
-                  <div class="btn-wrap items-start">
-                    <button
-                      v-for="(word, wordIndex) in currentWords"
-                      :key="wordIndex"
-                      type="button"
-                      class="btn btn btn-light draggable"
+                <!-- Слова с полем для номера картинки -->
+                <ul class="flex flex-col gap-2 list-none p-0 m-0">
+                  <li
+                    v-for="(word, wordIndex) in currentWords"
+                    :key="wordIndex"
+                    class="word-row"
+                  >
+                    <label
+                      class="match-number"
                       :class="{
-                        'disabled line-through': word.disabled,
-                      }"
-                      :draggable="true"
-                      @dragstart="onDragStart($event, wordIndex)"
-                      @click="insertWordToInput(word)"
-                    >
-                      <audioButtonMini
-                        v-if="
-                          word.audio_file && taskData.options.show_audio_button
-                        "
-                        :src="
-                          config.public.apiBase +
-                          '/media/get/' +
-                          word.audio_file
-                        "
-                        @click.stop
-                      />
-                      <div class="flex gap-y-0 flex-col items-start">
-                        <span class="font-medium">{{ word.word }}</span>
-                        <div class="flex flex-wrap gap-x-2">
-                          <span
-                            v-if="taskData?.options?.show_transcription"
-                            class="text-xs"
-                          >
-                            [{{ word.transcription }}]
-                          </span>
-                          <span
-                            v-if="taskData?.options?.show_translate"
-                            class="text-inactive text-xs"
-                          >
-                            {{ word.word_translate }}
-                          </span>
-                        </div>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-                <div class="col-span-12">
-                  <div class="custom-grid">
-                    <div
-                      v-for="(picture, pictureIndex) in currentPictures"
-                      :key="pictureIndex"
-                      class="col-span-12 lg:col-span-6 relative rounded-xl border-inactive overflow-hidden flex items-center justify-center"
-                    >
-                      <div
-                        class="absolute bottom-1.5 lg:bottom-4 left-1.5 lg:left-4 py-1.5 px-2 rounded-lg flex items-center border"
-                        :class="
+                        error:
                           checkingStatus === true &&
-                          (picture.userInput === '' ||
-                            picture.userInput === ' ')
-                            ? 'pulse border-danger bg-danger'
-                            : 'border-active bg-active'
-                        "
-                        @drop="onDrop($event, pictureIndex)"
-                        @dragover="onDragOver"
-                      >
-                        <input
-                          v-model="picture.userInput"
-                          :disabled="false"
-                          :style="{
-                            width:
-                              picture.userInput !== ''
-                                ? picture.userInput.length + 0.5 + 'ch'
-                                : '10ch',
-                            'text-align': 'center',
-                          }"
-                          @input="disableTheHiddenWord()"
-                          type="text"
-                        />
-                        <button type="button"
-                          v-if="picture.userInput !== ''"
-                          @click="clearInput(pictureIndex)"
-                          class="text-danger ml-0.5 mt-1"
-                        >
-                          <i class="pi pi-delete-left"></i>
-                        </button>
-                      </div>
-                      <img
-                        class="w-full p-3"
-                        :src="
-                          config.public.apiBase +
-                          '/media/get/' +
-                          picture.image_file
-                        "
+                          (word.userInput === '' || word.userInput === ' '),
+                        filled: word.userInput,
+                      }"
+                    >
+                      <span class="sr-only">{{ $t("pages.tasks.picture_number") }}</span>
+                      <input
+                        v-model="word.userInput"
+                        @input="changeFocus($event)"
+                        @focus="$event.target.select()"
+                        type="text"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
+                        autocomplete="off"
+                        class="user_input"
+                        placeholder="#"
+                        :maxlength="currentWords.length.toString().length"
                       />
+                    </label>
+
+                    <div class="flex-1 min-w-0">
+                      <p class="mb-0 font-semibold text-lg leading-tight">{{ word.word }}</p>
+                      <div class="flex flex-wrap gap-x-2 text-sm text-inactive">
+                        <span v-if="taskData?.options?.show_transcription">[{{ word.transcription }}]</span>
+                        <span v-if="taskData?.options?.show_translate">{{ word.word_translate }}</span>
+                      </div>
                     </div>
-                  </div>
-                </div>
+
+                    <audioButtonMini
+                      v-if="word.audio_file && taskData?.options?.show_audio_button"
+                      :src="config.public.apiBase + '/media/get/' + word.audio_file"
+                    />
+                  </li>
+                </ul>
               </div>
-            </div>
-            <div class="col-span-12">
-              <div class="btn-wrap right">
-                <button type="button"
-                  class="btn btn-outline-primary"
-                  :class="checkingStatus && 'disabled'"
-                  @click="acceptAnswers()"
+            </template>
+
+            <!-- ===== Режим «впиши слово» ===== -->
+            <template v-else-if="taskData.options.match_words_by_pictures_option === 'match_by_typing'">
+              <!-- Банк слов: нажать или перетащить на картинку -->
+              <div class="word-bank !justify-start">
+                <button
+                  v-for="(word, wordIndex) in currentWords"
+                  :key="wordIndex"
+                  type="button"
+                  class="word-chip gap-2"
+                  :class="{ used: word.disabled }"
+                  :disabled="word.disabled"
+                  :draggable="!word.disabled"
+                  @dragstart="onDragStart($event, wordIndex)"
+                  @click="insertWordToInput(word)"
                 >
-                  <i class="pi pi-check"></i>
-                  {{ $t("check") }}
+                  <audioButtonMini
+                    v-if="word.audio_file && taskData.options.show_audio_button && !word.disabled"
+                    :src="config.public.apiBase + '/media/get/' + word.audio_file"
+                    @click.stop
+                  />
+                  <span class="flex flex-col items-start leading-tight">
+                    <span>{{ word.word }}</span>
+                    <span
+                      v-if="taskData?.options?.show_transcription || taskData?.options?.show_translate"
+                      class="text-xs font-normal"
+                      :class="word.disabled ? 'text-transparent' : 'text-inactive'"
+                    >
+                      <template v-if="taskData?.options?.show_transcription">[{{ word.transcription }}]</template>
+                      <template v-if="taskData?.options?.show_translate"> {{ word.word_translate }}</template>
+                    </span>
+                  </span>
                 </button>
               </div>
+
+              <!-- Картинки с полем для слова -->
+              <div class="grid gap-3 grid-cols-1 sm:grid-cols-2">
+                <div
+                  v-for="(picture, pictureIndex) in currentPictures"
+                  :key="pictureIndex"
+                  class="picture-card"
+                  @drop="onDrop($event, pictureIndex)"
+                  @dragover="onDragOver"
+                >
+                  <img
+                    v-skeleton="'1/1'"
+                    class="w-full aspect-square object-contain p-3"
+                    :src="config.public.apiBase + '/media/get/' + picture.image_file"
+                    alt=""
+                  />
+                  <div class="picture-answer">
+                    <div
+                      class="blank-input w-full"
+                      :class="{
+                        error:
+                          checkingStatus === true &&
+                          (picture.userInput === '' || picture.userInput === ' '),
+                      }"
+                    >
+                      <input
+                        v-model="picture.userInput"
+                        class="!w-full"
+                        type="text"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="none"
+                        spellcheck="false"
+                        :placeholder="$t('pages.tasks.type_or_drop_word')"
+                        :aria-label="$t('pages.tasks.picture_n', { n: pictureIndex + 1 })"
+                        @input="disableTheHiddenWord()"
+                      />
+                      <button
+                        type="button"
+                        v-if="picture.userInput !== ''"
+                        @click="clearInput(pictureIndex)"
+                        class="blank-clear"
+                        :aria-label="$t('reset_search_filter')"
+                      >
+                        <i class="pi pi-times" aria-hidden="true"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <div class="task-actions">
+              <button
+                type="button"
+                class="btn btn-primary"
+                :disabled="checkingStatus"
+                @click="acceptAnswers()"
+              >
+                <i class="pi pi-check" aria-hidden="true"></i>
+                {{ $t("check") }}
+              </button>
             </div>
           </div>
         </div>
@@ -503,7 +355,6 @@ import alert from "../../../../../ui/alert.vue";
 import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
 import taskLayout from "../../taskLayout.vue";
-import audioButton from "../../../../../ui/audioButton.vue";
 import audioButtonMini from "../../../../../ui/audioButtonMini.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import result from "../../results/dictionary/result.vue";
@@ -833,9 +684,10 @@ const pushToCurrentReStudyWords = async (word) => {
         taskData.value.options.match_words_by_pictures_option ===
         "match_by_typing"
           ? "<b class='text-danger'>" +
-              currentPictures.value.find(
-                (p) => p.task_word_id === word.task_word_id
-              ).userInput || "______" + "</b>"
+            (currentPictures.value.find(
+              (p) => p.task_word_id === word.task_word_id
+            )?.userInput || "______") +
+            "</b>"
           : "<div class='flex items-center gap-x-2'><div class='btn btn-square btn-outline-danger pointer-events-none font-medium'>" +
             currentWords.value.find((w) => w.task_word_id === word.task_word_id)
               .userInput +
@@ -919,6 +771,13 @@ const focusInput = (event) => {
 
 const changeFocus = (event) => {
   const currentInput = event.target;
+  // в поле номера — только цифры
+  const digits = currentInput.value.replace(/\D/g, "");
+  if (digits !== currentInput.value) {
+    currentInput.value = digits;
+    currentInput.dispatchEvent(new Event("input"));
+    return false;
+  }
   const value = currentInput.value;
 
   if (value === "") {
@@ -963,9 +822,14 @@ const handleKeyPress = (event) => {
   }
 };
 
+// Что ученик вписал под картинкой этого слова
+const typedAnswerFor = (word) =>
+  currentPictures.value.find((p) => p.task_word_id === word.task_word_id)
+    ?.userInput?.trim() || "";
+
 const findTranslate = (w) => {
   for (const picture of currentPictures.value) {
-    if (w.toLowerCase() === picture.word.toLowerCase()) {
+    if (String(w || "").toLowerCase() === picture.word.toLowerCase()) {
       return picture.word_translate;
     }
   }

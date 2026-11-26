@@ -18,18 +18,18 @@
       :taskResult="taskResult"
     >
       <template v-slot:task_content>
+        <!-- Статус: сколько осталось + таймер -->
         <div class="col-span-12">
-          <p v-if="timeIsUp" class="font-medium text-center text-danger">
-            {{ $t("time_is_up") }}
-          </p>
-          <p v-else-if="sections.length > 0" class="text-center">
-            {{ $t("pages.sections.sections_left") }}:
-            <b>{{ sections.length }}</b>
-          </p>
-        </div>
-
-        <div class="col-span-12">
-          <div class="flex justify-center items-center">
+          <div class="task-status-bar">
+            <p v-if="timeIsUp" class="mb-0 font-semibold text-danger flex items-center gap-1.5">
+              <i class="pi pi-clock" aria-hidden="true"></i>
+              {{ $t("time_is_up") }}
+            </p>
+            <p v-else-if="sections.length > 0" class="mb-0 text-inactive">
+              {{ $t("pages.sections.sections_left") }}:
+              <b class="text-active">{{ sections.length }}</b>
+            </p>
+            <span v-else></span>
             <countdownCircleTimer
               :totalSeconds="time"
               :startCommand="isStarted"
@@ -38,101 +38,83 @@
           </div>
         </div>
 
+        <!-- Разбор после проверки -->
         <div v-if="timeIsUp || isComplete" class="col-span-12">
-          <div class="flex flex-col gap-y-4">
-            <div
-              class="flex flex-col gap-y-2"
-              v-if="currentStudiedSections.length > 0"
-            >
-              <p class="text-xl font-medium mb-0 text-success">
-                {{
-                  currentReStudySections.length > 0
-                    ? $t("right_answers")
-                    : $t("right")
-                }}
+          <div class="flex flex-col gap-5">
+            <section v-if="currentStudiedSections.length > 0" class="result-section">
+              <p class="result-head ok">
+                <span class="result-head-dot" aria-hidden="true"></span>
+                {{ currentReStudySections.length > 0 ? $t("right_answers") : $t("right") }}
+                <span class="result-head-count">{{ currentStudiedSections.length }}</span>
               </p>
 
-              <ul class="list-group nowrap" ref="rightAnswers">
+              <ul class="result-list" ref="rightAnswers">
                 <li
                   v-for="(section, sIndex) in currentStudiedSections"
                   :key="sIndex"
-                  class="flex justify-between items-center gap-x-2"
+                  class="result-item ok"
                 >
-                  <div :id="'right_answer_' + section.word_section_id">
-                    <div class="btn-wrap items-center">
-                      <div
-                        v-for="(word, wordIndex) in section.words"
-                        :key="wordIndex"
-                        class="text-success"
-                      >
-                        <div class="flex items-center gap-x-2">
-                          <div class="flex flex-col">
-                            <b class="mb-0">{{
-                              word.target === 1
-                                ? section.words.find(
-                                    (w) =>
-                                      w.word.toLowerCase() ===
-                                      word.userInput.toLowerCase()
-                                  ).word
-                                : word.word
-                            }}</b>
-                            <span class="text-xs text-inactive">
-                              {{
+                  <div class="flex-1 min-w-0">
+                    <!-- Содержимое этого блока сохраняется как HTML ответа -->
+                    <div :id="'right_answer_' + section.word_section_id">
+                      <div class="btn-wrap items-center">
+                        <div
+                          v-for="(word, wordIndex) in section.words"
+                          :key="wordIndex"
+                          class="text-success"
+                        >
+                          <div class="flex items-center gap-x-2">
+                            <div class="flex flex-col">
+                              <b class="mb-0">{{
                                 word.target === 1
                                   ? section.words.find(
-                                      (w) =>
-                                        w.word.toLowerCase() ===
-                                        word.userInput.toLowerCase()
-                                    ).word_translate
-                                  : word.word_translate
-                              }}
-                            </span>
+                                      (w) => w.word.toLowerCase() === word.userInput.toLowerCase(),
+                                    ).word
+                                  : word.word
+                              }}</b>
+                              <span class="text-xs text-inactive">
+                                {{
+                                  word.target === 1
+                                    ? section.words.find(
+                                        (w) => w.word.toLowerCase() === word.userInput.toLowerCase(),
+                                      ).word_translate
+                                    : word.word_translate
+                                }}
+                              </span>
+                            </div>
+                            <span v-if="wordIndex + 1 < section.words.length" class="text-active">-</span>
                           </div>
-                          <span
-                            v-if="wordIndex + 1 < section.words.length"
-                            class="text-active"
-                            >-</span
-                          >
                         </div>
                       </div>
                     </div>
                   </div>
-
-                  <div class="step-item xs completed">
-                    <div class="step-icon">
-                      <i class="pi pi-check"></i>
-                    </div>
-                  </div>
+                  <span class="result-status ok shrink-0" aria-hidden="true">
+                    <i class="pi pi-check"></i>
+                  </span>
                 </li>
               </ul>
-            </div>
+            </section>
 
-            <div
-              class="flex flex-col gap-y-2"
-              v-if="currentReStudySections.length > 0"
-            >
-              <p class="text-xl font-medium mb-0 text-danger">
+            <section v-if="currentReStudySections.length > 0" class="result-section">
+              <p class="result-head bad">
+                <span class="result-head-dot" aria-hidden="true"></span>
                 {{ $t("for_re_examination") }}
+                <span class="result-head-count">{{ currentReStudySections.length }}</span>
               </p>
 
-              <ul class="list-group nowrap" ref="wrongAnswers">
+              <ul class="result-list" ref="wrongAnswers">
                 <li
                   v-for="(section, rIndex) in currentReStudySections"
                   :key="rIndex"
-                  class="flex justify-between items-center gap-x-2"
+                  class="result-item bad"
                 >
-                  <div class="flex flex-col gap-4">
+                  <div class="flex-1 min-w-0 flex flex-col gap-3">
                     <div>
-                      <p class="mb-1 text-inactive font-normal text-xs">
-                        {{ $t("your_answer") }}:
-                      </p>
-
+                      <p class="result-label">{{ $t("your_answer") }}</p>
+                      <!-- Содержимое этого блока сохраняется как HTML ответа -->
                       <div :id="'user_answer_' + section.word_section_id">
                         <div class="btn-wrap items-center">
-                          <div
-                            v-for="(word, wordIndex) in section.words"
-                            :key="wordIndex"
-                          >
+                          <div v-for="(word, wordIndex) in section.words" :key="wordIndex">
                             <div class="flex items-center gap-x-2">
                               <div class="flex flex-col">
                                 <b
@@ -140,29 +122,24 @@
                                   :class="
                                     word.target === 0 ||
                                     section.words.find(
-                                      (w) =>
-                                        w.word.toLowerCase() ===
-                                        word.userInput.toLowerCase()
+                                      (w) => w.word.toLowerCase() === word.userInput.toLowerCase(),
                                     )
                                       ? 'text-success'
                                       : 'text-danger'
                                   "
                                   >{{
                                     word.target === 1
-                                      ? word.userInput === "" ||
-                                        word.userInput === " "
+                                      ? word.userInput === "" || word.userInput === " "
                                         ? "________"
                                         : !section.words.find(
-                                            (w) =>
-                                              w.word.toLowerCase() ===
-                                              word.userInput.toLowerCase()
-                                          )
-                                        ? word.userInput
-                                        : section.words.find(
-                                            (w) =>
-                                              w.word.toLowerCase() ===
-                                              word.userInput.toLowerCase()
-                                          ).word
+                                              (w) =>
+                                                w.word.toLowerCase() === word.userInput.toLowerCase(),
+                                            )
+                                          ? word.userInput
+                                          : section.words.find(
+                                              (w) =>
+                                                w.word.toLowerCase() === word.userInput.toLowerCase(),
+                                            ).word
                                       : word.word
                                   }}</b
                                 >
@@ -172,25 +149,17 @@
                                       ? word.userInput === "" ||
                                         word.userInput === " " ||
                                         !section.words.find(
-                                          (w) =>
-                                            w.word.toLowerCase() ===
-                                            word.userInput.toLowerCase()
+                                          (w) => w.word.toLowerCase() === word.userInput.toLowerCase(),
                                         )
                                         ? findTranslate(word.userInput)
                                         : section.words.find(
-                                            (w) =>
-                                              w.word.toLowerCase() ===
-                                              word.userInput.toLowerCase()
+                                            (w) => w.word.toLowerCase() === word.userInput.toLowerCase(),
                                           ).word_translate
                                       : word.word_translate
                                   }}
                                 </span>
                               </div>
-                              <span
-                                v-if="wordIndex + 1 < section.words.length"
-                                class="text-active"
-                                >-</span
-                              >
+                              <span v-if="wordIndex + 1 < section.words.length" class="text-active">-</span>
                             </div>
                           </div>
                         </div>
@@ -198,9 +167,8 @@
                     </div>
 
                     <div>
-                      <p class="mb-1 text-inactive font-normal text-xs">
-                        {{ $t("right_answer") }}:
-                      </p>
+                      <p class="result-label">{{ $t("right_answer") }}</p>
+                      <!-- Содержимое этого блока сохраняется как HTML ответа -->
                       <div :id="'right_answer_' + section.word_section_id">
                         <div class="btn-wrap items-center">
                           <div
@@ -211,206 +179,178 @@
                             <div class="flex items-center gap-x-2">
                               <div class="flex flex-col">
                                 <b class="mb-0">{{ word.word }}</b>
-                                <span class="text-xs text-inactive">
-                                  {{ word.word_translate }}
-                                </span>
+                                <span class="text-xs text-inactive">{{ word.word_translate }}</span>
                               </div>
-                              <span
-                                v-if="wordIndex + 1 < section.words.length"
-                                class="text-active"
-                                >-</span
-                              >
+                              <span v-if="wordIndex + 1 < section.words.length" class="text-active">-</span>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-
-                  <div class="step-item xs failed">
-                    <div class="step-icon">
-                      <i class="pi pi-replay"></i>
-                    </div>
-                  </div>
+                  <span class="result-status bad shrink-0" aria-hidden="true">
+                    <i class="pi pi-replay"></i>
+                  </span>
                 </li>
               </ul>
-            </div>
+            </section>
 
-            <div class="btn-wrap right">
-              <button type="button"
+            <div class="task-actions">
+              <button
+                type="button"
                 v-if="sections.length > 0"
-                class="btn btn-outline-primary"
+                class="btn btn-primary"
                 @click="setSections()"
               >
-                <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
+                {{ $t("continue") }}
+                <i class="pi pi-arrow-right" aria-hidden="true"></i>
               </button>
-              <button type="button" v-else class="btn btn-light" @click="isFinished = true">
-                <i class="pi pi-check"></i>
+              <button type="button" v-else class="btn btn-success" @click="isFinished = true">
+                <i class="pi pi-check" aria-hidden="true"></i>
                 {{ $t("pages.tasks.complete_the_task") }}
               </button>
             </div>
           </div>
         </div>
 
+        <!-- Выполнение -->
         <div v-else class="col-span-12">
-          <div class="custom-grid">
-            <div class="col-span-12">
-              <ul class="list-group nowrap">
-                <li>
-                  <div class="btn-wrap justify-center items-center">
-                    <button
-                      :draggable="taskData.options.match_by_drag_and_drop == 1"
-                      v-for="(word, wordIndex) in hiddenWords"
-                      :key="wordIndex"
-                      class="btn btn-light font-medium"
-                      :class="{
-                        'disabled line-through': word.disabled,
-                        draggable: taskData.options.match_by_drag_and_drop == 1,
-                        'pointer-events-none':
-                          taskData.options.match_by_drag_and_drop != 1 &&
-                          taskData.options.match_by_clicking != 1,
-                      }"
-                      type="button"
-                      @dragstart="onDragStart($event, wordIndex)"
-                      @click="insertWord(word)"
-                    >
-                      <audioButtonMini
-                        v-if="
-                          word.audio_file && taskData.options.show_audio_button
-                        "
-                        :src="
-                          config.public.apiBase +
-                          '/media/get/' +
-                          word.audio_file
-                        "
-                        @click.stop
-                      />
-                      <div>
-                        <span
-                          v-for="(letter, letterIndex) in word.word"
-                          :key="letterIndex"
-                          class="select-none"
-                          :class="
-                            word.missingLetters &&
-                            word.missingLetters.includes(letterIndex + 1) &&
-                            'text-corp'
-                          "
-                          >{{ letter }}</span
-                        >
-                      </div>
-                    </button>
-                  </div>
-                </li>
-                <li
-                  v-for="(section, sectionIndex) in currentSections"
-                  :key="sectionIndex"
-                  class="col-span-12"
-                >
-                  <div
-                    class="btn-wrap justify-center items-center gap-2 font-medium"
+          <div class="flex flex-col gap-4">
+            <!-- Банк слов -->
+            <div class="word-bank">
+              <button
+                v-for="(word, wordIndex) in hiddenWords"
+                :key="wordIndex"
+                type="button"
+                class="word-chip gap-2"
+                :class="{ used: word.disabled }"
+                :disabled="
+                  word.disabled ||
+                  (taskData.options.match_by_drag_and_drop != 1 &&
+                    taskData.options.match_by_clicking != 1)
+                "
+                :draggable="taskData.options.match_by_drag_and_drop == 1 && !word.disabled"
+                @dragstart="onDragStart($event, wordIndex)"
+                @click="insertWord(word)"
+              >
+                <audioButtonMini
+                  v-if="word.audio_file && taskData.options.show_audio_button && !word.disabled"
+                  :src="config.public.apiBase + '/media/get/' + word.audio_file"
+                  @click.stop
+                />
+                <span>
+                  <span
+                    v-for="(letter, letterIndex) in word.word"
+                    :key="letterIndex"
+                    :class="
+                      !word.disabled &&
+                      word.missingLetters &&
+                      word.missingLetters.includes(letterIndex + 1) &&
+                      'text-corp'
+                    "
+                    >{{ letter }}</span
                   >
-                    <span>{{ sectionIndex + 1 }}.</span>
-                    <div
-                      v-for="(word, wordIndex) in section.words"
-                      :key="wordIndex"
-                    >
-                      <div
-                        v-if="word.target == 1"
-                        class="btn flex justify-center items-center"
-                        :class="
-                          unFilledSections[sectionIndex] &&
-                          unFilledSections[sectionIndex].includes(wordIndex)
-                            ? 'pulse btn-danger'
-                            : 'btn-active'
-                        "
-                        @drop="onDrop($event, sectionIndex, wordIndex)"
-                        @dragover="onDragOver"
-                      >
-                        <audioButtonMini
-                          v-if="
-                            hiddenWords.find(
-                              (w) =>
-                                w.word.toLowerCase() ===
-                                word.userInput.toLowerCase()
-                            )
-                          "
-                          :src="
-                            config.public.apiBase +
-                            '/media/get/' +
-                            hiddenWords.find(
-                              (w) =>
-                                w.word.toLowerCase() ===
-                                word.userInput.toLowerCase()
-                            ).audio_file
-                          "
-                          @click.stop
-                        />
-                        <input
-                          v-model="word.userInput"
-                          :disabled="taskData.options.match_by_typing != 1"
-                          :style="{
-                            width:
-                              word.userInput !== ''
-                                ? word.userInput.length + 0.5 + 'ch'
-                                : '4ch',
-                            'text-align': 'center',
-                          }"
-                          @input="disableTheHiddenWord()"
-                          type="text"
-                        />
-                        <button type="button"
-                          v-if="word.userInput !== ''"
-                          @click="clearInput(sectionIndex, wordIndex)"
-                          class="text-danger ml-0.5 mt-0.5"
-                        >
-                          <i class="pi pi-delete-left"></i>
-                        </button>
-                      </div>
-
-                      <div v-else class="btn btn-active">
-                        <audioButtonMini
-                          v-if="
-                            word.audio_file &&
-                            taskData.options.show_audio_button
-                          "
-                          :src="
-                            config.public.apiBase +
-                            '/media/get/' +
-                            word.audio_file
-                          "
-                          @click.stop
-                        />
-                        <div>
-                          <span
-                            v-for="(letter, letterIndex) in word.word"
-                            :key="letterIndex"
-                            class="select-none"
-                            :class="
-                              word.missingLetters &&
-                              word.missingLetters.includes(letterIndex + 1) &&
-                              'text-corp'
-                            "
-                            >{{ letter }}</span
-                          >
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              </ul>
+                </span>
+              </button>
             </div>
 
-            <div class="col-span-12">
-              <div class="btn-wrap right">
-                <button type="button"
-                  class="btn btn-outline-primary"
-                  :class="checkingStatus && 'disabled'"
-                  @click="acceptAnswers()"
-                >
-                  <i class="pi pi-check"></i>
-                  {{ $t("check") }}
-                </button>
+            <!-- Группы слов: найдите пару -->
+            <div
+              v-for="(section, sectionIndex) in currentSections"
+              :key="sectionIndex"
+              class="blank-card items-center"
+            >
+              <span class="blank-card-num !mt-0" aria-hidden="true">{{ sectionIndex + 1 }}</span>
+              <div class="pair-row">
+                <template v-for="(word, wordIndex) in section.words" :key="wordIndex">
+                  <span v-if="wordIndex > 0" class="pair-link" aria-hidden="true">=</span>
+
+                  <!-- Пропуск: вписать, нажать слово или перетащить -->
+                  <div
+                    v-if="word.target == 1"
+                    class="blank-input"
+                    :class="{
+                      error:
+                        unFilledSections[sectionIndex] &&
+                        unFilledSections[sectionIndex].includes(wordIndex),
+                    }"
+                    @drop="onDrop($event, sectionIndex, wordIndex)"
+                    @dragover="onDragOver"
+                  >
+                    <audioButtonMini
+                      v-if="
+                        hiddenWords.find(
+                          (w) => w.word.toLowerCase() === word.userInput.toLowerCase(),
+                        )?.audio_file
+                      "
+                      :src="
+                        config.public.apiBase +
+                        '/media/get/' +
+                        hiddenWords.find(
+                          (w) => w.word.toLowerCase() === word.userInput.toLowerCase(),
+                        ).audio_file
+                      "
+                      @click.stop
+                    />
+                    <input
+                      v-model="word.userInput"
+                      :disabled="taskData.options.match_by_typing != 1"
+                      :style="{
+                        width: word.userInput !== '' ? word.userInput.length + 1 + 'ch' : '6ch',
+                      }"
+                      type="text"
+                      autocomplete="off"
+                      autocorrect="off"
+                      autocapitalize="none"
+                      spellcheck="false"
+                      :aria-label="$t('pages.tasks.blank_n', { n: sectionIndex + 1 })"
+                      @input="disableTheHiddenWord()"
+                    />
+                    <button
+                      type="button"
+                      v-if="word.userInput !== ''"
+                      @click="clearInput(sectionIndex, wordIndex)"
+                      class="blank-clear"
+                      :aria-label="$t('reset_search_filter')"
+                    >
+                      <i class="pi pi-times" aria-hidden="true"></i>
+                    </button>
+                  </div>
+
+                  <!-- Данное слово -->
+                  <span v-else class="pair-word">
+                    <audioButtonMini
+                      v-if="word.audio_file && taskData.options.show_audio_button"
+                      :src="config.public.apiBase + '/media/get/' + word.audio_file"
+                      @click.stop
+                    />
+                    <span>
+                      <span
+                        v-for="(letter, letterIndex) in word.word"
+                        :key="letterIndex"
+                        :class="
+                          word.missingLetters &&
+                          word.missingLetters.includes(letterIndex + 1) &&
+                          'text-corp'
+                        "
+                        >{{ letter }}</span
+                      >
+                    </span>
+                  </span>
+                </template>
               </div>
+            </div>
+
+            <div class="task-actions">
+              <button
+                type="button"
+                class="btn btn-primary"
+                :disabled="checkingStatus"
+                @click="acceptAnswers()"
+              >
+                <i class="pi pi-check" aria-hidden="true"></i>
+                {{ $t("check") }}
+              </button>
             </div>
           </div>
         </div>
@@ -419,112 +359,68 @@
       <template v-slot:task_result_content>
         <div class="col-span-12">
           <canvas id="confetti-canvas"></canvas>
-          <div class="flex flex-col gap-y-4">
-            <div
-              class="flex flex-col gap-y-2"
-              v-if="studiedSections.length > 0"
-            >
-              <p class="text-xl font-medium mb-0 text-success">
+          <div class="flex flex-col gap-5">
+            <section v-if="studiedSections.length > 0" class="result-section">
+              <p class="result-head ok">
+                <span class="result-head-dot" aria-hidden="true"></span>
                 {{ $t("pages.sections.studied_sections") }}
+                <span class="result-head-count">{{ studiedSections.length }}</span>
               </p>
-
-              <ul class="list-group nowrap">
+              <ul class="result-list">
                 <li
                   v-for="(section, sIndex) in studiedSections"
                   :key="sIndex"
-                  class="flex justify-between items-center gap-x-2"
+                  class="result-item ok"
                 >
-                  <div class="btn-wrap items-center">
-                    <div
-                      v-for="(word, wordIndex) in section.words"
-                      :key="wordIndex"
-                      class="text-success"
-                    >
-                      <div class="flex items-center gap-x-2">
-                        <div class="flex flex-col">
-                          <b class="mb-0">{{
-                            word.target === 1
-                              ? section.words.find(
-                                  (w) =>
-                                    w.word.toLowerCase() ===
-                                    word.userInput.toLowerCase()
-                                ).word
-                              : word.word
-                          }}</b>
-                          <span class="text-xs text-inactive">
-                            {{
-                              word.target === 1
-                                ? section.words.find(
-                                    (w) =>
-                                      w.word.toLowerCase() ===
-                                      word.userInput.toLowerCase()
-                                  ).word_translate
-                                : word.word_translate
-                            }}
-                          </span>
-                        </div>
-                        <span
-                          v-if="wordIndex + 1 < section.words.length"
-                          class="text-active"
-                          >-</span
-                        >
-                      </div>
-                    </div>
+                  <div class="flex-1 min-w-0 pair-row">
+                    <template v-for="(word, wordIndex) in section.words" :key="wordIndex">
+                      <span v-if="wordIndex > 0" class="pair-link" aria-hidden="true">=</span>
+                      <span class="flex flex-col">
+                        <b class="text-success">{{
+                          word.target === 1
+                            ? section.words.find(
+                                (w) => w.word.toLowerCase() === word.userInput.toLowerCase(),
+                              )?.word || word.word
+                            : word.word
+                        }}</b>
+                        <span class="text-xs text-inactive">{{ word.word_translate }}</span>
+                      </span>
+                    </template>
                   </div>
-
-                  <div class="step-item xs completed">
-                    <div class="step-icon">
-                      <i class="pi pi-check"></i>
-                    </div>
-                  </div>
+                  <span class="result-status ok shrink-0" aria-hidden="true">
+                    <i class="pi pi-check"></i>
+                  </span>
                 </li>
               </ul>
-            </div>
+            </section>
 
-            <div
-              class="flex flex-col gap-y-2"
-              v-if="reStudySections.length > 0"
-            >
-              <p class="text-xl font-medium mb-0 text-danger">
+            <section v-if="reStudySections.length > 0" class="result-section">
+              <p class="result-head bad">
+                <span class="result-head-dot" aria-hidden="true"></span>
                 {{ $t("pages.sections.unstudied_sections") }}
+                <span class="result-head-count">{{ reStudySections.length }}</span>
               </p>
-
-              <ul class="list-group nowrap">
+              <ul class="result-list">
                 <li
                   v-for="(section, rIndex) in reStudySections"
                   :key="rIndex"
-                  class="flex justify-between items-center gap-x-2"
+                  class="result-item bad"
                 >
-                  <div class="btn-wrap items-center">
-                    <div
-                      v-for="(word, wordIndex) in section.words"
-                      :key="wordIndex"
-                      class="text-danger"
-                    >
-                      <div class="flex items-center gap-x-2">
-                        <div class="flex flex-col">
-                          <b class="mb-0">{{ word.word }}</b>
-                          <span class="text-xs text-inactive">
-                            {{ word.word_translate }}
-                          </span>
-                        </div>
-                        <span
-                          v-if="wordIndex + 1 < section.words.length"
-                          class="text-active"
-                          >-</span
-                        >
-                      </div>
-                    </div>
+                  <div class="flex-1 min-w-0 pair-row">
+                    <template v-for="(word, wordIndex) in section.words" :key="wordIndex">
+                      <span v-if="wordIndex > 0" class="pair-link" aria-hidden="true">=</span>
+                      <span class="flex flex-col">
+                        <b>{{ word.word }}</b>
+                        <span class="text-xs text-inactive">{{ word.word_translate }}</span>
+                      </span>
+                    </template>
                   </div>
-
-                  <div class="step-item xs failed">
-                    <div class="step-icon">
-                      <i class="pi pi-replay"></i>
-                    </div>
-                  </div>
+                  <span class="result-status bad shrink-0" aria-hidden="true">
+                    <i class="pi pi-replay"></i>
+                  </span>
                 </li>
               </ul>
-            </div>
+            </section>
           </div>
         </div>
       </template>
@@ -900,7 +796,7 @@ const handleKeyPress = (event) => {
 const findTranslate = (w) => {
   for (const section of currentSections.value) {
     for (const word of section.words) {
-      if (w.toLowerCase() === word.word.toLowerCase()) {
+      if (String(w || "").toLowerCase() === word.word.toLowerCase()) {
         return word.word_translate;
       }
     }

@@ -7,14 +7,18 @@
       maxHeight: props.maxHeight + 'px',
       '--fade': props.fadeSize + 'px',
     }"
-    @scroll="onScroll"
+    :tabindex="isScrollable ? 0 : undefined"
+    @scroll.passive="onScroll"
   >
-    <slot />
+    <!-- Обёртка нужна, чтобы замечать рост содержимого (новые сообщения и т.п.) -->
+    <div ref="content">
+      <slot />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
 
 const props = defineProps({
   maxHeight: {
@@ -28,25 +32,22 @@ const props = defineProps({
 });
 
 const container = ref(null);
+const content = ref(null);
 const isAtTop = ref(true);
-const isAtBottom = ref(false);
+const isAtBottom = ref(true);
 
 let resizeObserver = null;
+let rafId = null;
 
 /* ---------- scroll helpers ---------- */
 
 const scrollToTop = (smooth = false) => {
   if (!container.value) return;
-
-  container.value.scrollTo({
-    top: 0,
-    behavior: smooth ? "smooth" : "auto",
-  });
+  container.value.scrollTo({ top: 0, behavior: smooth ? "smooth" : "auto" });
 };
 
 const scrollToBottom = (smooth = false) => {
   if (!container.value) return;
-
   container.value.scrollTo({
     top: container.value.scrollHeight,
     behavior: smooth ? "smooth" : "auto",
@@ -56,37 +57,47 @@ const scrollToBottom = (smooth = false) => {
 const isNearBottom = (offset = 40) => {
   const el = container.value;
   if (!el) return false;
-
   return el.scrollHeight - el.scrollTop - el.clientHeight < offset;
 };
 
-/* ---------- scroll handler ---------- */
+/* ---------- состояние краёв ---------- */
 
-const onScroll = () => {
+const update = () => {
   const el = container.value;
   if (!el) return;
-
-  isAtTop.value = el.scrollTop <= 0;
+  isAtTop.value = el.scrollTop <= 1;
   isAtBottom.value = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
 };
+
+// Не чаще одного пересчёта за кадр
+const onScroll = () => {
+  if (rafId) return;
+  rafId = requestAnimationFrame(() => {
+    rafId = null;
+    update();
+  });
+};
+
+const isScrollable = computed(() => !(isAtTop.value && isAtBottom.value));
 
 /* ---------- lifecycle ---------- */
 
 onMounted(async () => {
   await nextTick();
+  update();
 
-  onScroll();
-
-  // 👇 следим за изменением размеров контейнера
-  resizeObserver = new ResizeObserver(() => {
-    onScroll(); // пересчёт maskClass
-  });
-
-  resizeObserver.observe(container.value);
+  if (typeof ResizeObserver !== "undefined") {
+    resizeObserver = new ResizeObserver(() => update());
+    // и сам контейнер, и его содержимое: при росте контента после достижения
+    // maxHeight размер контейнера уже не меняется
+    resizeObserver.observe(container.value);
+    if (content.value) resizeObserver.observe(content.value);
+  }
 });
 
 onBeforeUnmount(() => {
   resizeObserver?.disconnect();
+  if (rafId) cancelAnimationFrame(rafId);
 });
 
 /* ---------- fade mask ---------- */
@@ -101,5 +112,6 @@ const maskClass = computed(() => {
 defineExpose({
   scrollToTop,
   scrollToBottom,
+  isNearBottom,
 });
 </script>

@@ -72,6 +72,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { useConfirm } from "~/composables/useConfirm";
 const { t } = useI18n();
 const tableData = ref(null); // Храним очищенную таблицу
 
@@ -151,8 +152,16 @@ const handlePaste = (e) => {
   tableData.value = newTableHTML; // Обновляем таблицу
 };
 
-const deleteTable = () => {
-  if (confirm(t("table.confirm_1"))) {
+const confirm = useConfirm();
+
+const deleteTable = async () => {
+  if (
+    await confirm({
+      message: t("table.confirm_1"),
+      confirmText: t("delete"),
+      danger: true,
+    })
+  ) {
     tableData.value = null;
   }
 };

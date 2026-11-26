@@ -1,0 +1,43 @@
+import { useToast } from "vue-toastification";
+
+// Единые длительности показа по типу уведомления (мс).
+export const NOTIFY_TIMEOUTS = {
+  success: 5000,
+  info: 7000,
+  warning: 10000,
+  danger: 10000,
+};
+
+// Уведомления, которые сейчас на экране: ключ -> id тоста.
+const activeToasts = new Map();
+
+// Единый способ показать уведомление в стиле приложения:
+//
+//   const notify = useNotify();
+//   notify("success", t("saved"));
+//   notify("danger", message, { timeout: 15000 });
+//
+// type: "success" | "info" | "warning" | "danger".
+// Одинаковое уведомление (тот же type + текст, или тот же options.key) не
+// дублируется, пока предыдущее ещё видно. Остальные options передаются в
+// vue-toastification как есть (onClick, closeOnClick и т.п.).
+export const useNotify = () => {
+  const toast = useToast();
+
+  return (type, message, options = {}) => {
+    const { key = `${type}:${message}`, timeout, onClose, ...rest } = options;
+    if (activeToasts.has(key)) return activeToasts.get(key);
+
+    const id = toast(message, {
+      toastClassName: ["custom-toast", type],
+      timeout: timeout ?? NOTIFY_TIMEOUTS[type] ?? NOTIFY_TIMEOUTS.info,
+      ...rest,
+      onClose: () => {
+        activeToasts.delete(key);
+        if (onClose) onClose();
+      },
+    });
+    activeToasts.set(key, id);
+    return id;
+  };
+};

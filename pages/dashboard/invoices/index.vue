@@ -247,14 +247,7 @@
           </div>
         </template>
 
-        <alert v-else :className="'light'">
-          <loader
-            v-if="pendingPayments"
-            :className="'overlay'"
-            :showPendingText="true"
-          />
-          <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
-        </alert>
+        <emptyState v-else :pending="pendingPayments" :text="$t('nothing_was_found_for_your_query')" icon="bi bi-search" />
       </div>
     </div>
   </div>
@@ -427,8 +420,7 @@ import stickyBox from "../../../components/ui/stickyBox.vue";
 import pagination from "../../../components/ui/pagination.vue";
 import multipleSelect from "../../../components/ui/multipleSelect.vue";
 import sortTableHead from "../../../components/ui/sortTableHead.vue";
-import alert from "../../../components/ui/alert.vue";
-
+import emptyState from "~/components/ui/emptyState.vue";
 const { t } = useI18n();
 const router = useRouter();
 

@@ -2,462 +2,148 @@
   <div class="custom-grid select-none">
     <slot name="header_content" />
     <div class="col-span-12">
-      <div class="flex flex-col gap-y-4">
+      <div class="flex flex-col gap-5">
+        <!-- Сводка: кольцо + плитки со счётчиками -->
         <div
           v-if="props.taskResult && props.taskResult.completed === true"
-          class="flex gap-x-4 items-center"
+          class="result-summary"
         >
           <circleProgressBar
             :progress="props.taskResult.percentage"
-            :className="'w-16 h-16'"
-            :textClass="'text-normal'"
+            :className="'w-20 h-20'"
+            :textClass="'text-lg'"
           />
-          <div class="w-full">
-            <p class="mb-0">
-              {{ $t("right_answers_count") }}:
-              <b class="text-success">{{
-                props.taskResult.correct_answers_count
-              }}</b>
-            </p>
-
-            <template v-if="props.taskResult.partly_correct_answers_count > 0">
-              <hr />
-              <p class="mb-0">
-                {{ $t("partly_correct_answers_count") }}:
-                <b class="text-warning">{{
-                  props.taskResult.partly_correct_answers_count
-                }}</b>
-              </p>
-            </template>
-            <hr />
-            <p class="mb-0">
-              {{ $t("wrong_answers_count") }}:
-              <b class="text-danger">{{
-                props.taskResult.incorrect_answers_count
-              }}</b>
-            </p>
+          <div class="result-stats">
+            <div class="result-stat ok">
+              <b>{{ props.taskResult.correct_answers_count }}</b>
+              <span>{{ $t("right_answers_count") }}</span>
+            </div>
+            <div
+              v-if="props.taskResult.partly_correct_answers_count > 0"
+              class="result-stat partly"
+            >
+              <b>{{ props.taskResult.partly_correct_answers_count }}</b>
+              <span>{{ $t("partly_correct_answers_count") }}</span>
+            </div>
+            <div class="result-stat bad">
+              <b>{{ props.taskResult.incorrect_answers_count }}</b>
+              <span>{{ $t("wrong_answers_count") }}</span>
+            </div>
           </div>
         </div>
-        <div
-          class="flex flex-col gap-y-2"
-          v-if="props.taskResult.answers.correct_answers.length > 0"
+
+        <!-- Группы ответов -->
+        <section
+          v-for="group in groups"
+          :key="group.key"
+          class="result-section"
         >
-          <p
-            v-if="
-              props.taskResult.answers.correct_answers.length > 0 &&
-              (props.taskResult.answers.partly_correct_answers.length > 0 ||
-                props.taskResult.answers.incorrect_answers.length > 0 ||
-                props.taskResult.answers.unverified_answers.length > 0)
-            "
-            class="text-xl font-medium mb-0 text-success"
-          >
-            {{ $t("right_answers") }}:
+          <p v-if="showGroupTitle(group)" class="result-head" :class="group.tone">
+            <span class="result-head-dot" aria-hidden="true"></span>
+            {{ $t(group.title) }}
+            <span class="result-head-count">{{ group.items.length }}</span>
           </p>
-          <ul class="list-group nowrap">
+
+          <ul class="result-list">
             <li
-              v-for="(answer, answerIndex) in props.taskResult.answers
-                .correct_answers"
+              v-for="(answer, answerIndex) in group.items"
               :key="answerIndex"
+              class="result-item"
+              :class="group.tone"
             >
-              <div class="flex gap-x-2 justify-between items-center">
-                <div class="flex gap-x-2 items-center">
-                  <div
-                    v-if="answer.word && answer.word.image_file"
-                    :key="answer.task_answer_id + '_' + answer.task_id"
-                    :style="{
-                      backgroundImage:
-                        'url(' +
-                        config.public.apiBase +
-                        '/media/get/' +
-                        (answer.word && answer.word.image_file) +
-                        ')',
-                    }"
-                    class="w-16 h-16 bg-contain bg-no-repeat bg-center border-inactive rounded-xl"
-                  ></div>
-                  <div class="flex flex-col gap-2">
-                    <div v-if="answer.question">
-                      <p class="mb-1 text-xs text-inactive font-normal">
-                        {{ $t("pages.questions.question.title") }}:
-                      </p>
-                      <p class="font-medium mb-0">
-                        {{
-                          answer.question.sentence || answer.question.question
-                        }}
-                      </p>
-                    </div>
-                    <div>
-                      <p
-                        v-if="answer.right_answer"
-                        class="mb-1 text-xs text-inactive font-normal"
-                      >
-                        {{
-                          authUser.user_id ===
-                          props.taskResult.completed_task.learner_id
-                            ? $t("your_answer")
-                            : $t("learner_answer")
-                        }}:
-                      </p>
-                      <div v-html="answer.right_answer"></div>
-                    </div>
-                  </div>
+              <!-- Картинка слова -->
+              <div
+                v-if="answer.word && answer.word.image_file"
+                class="result-thumb"
+                :style="{
+                  backgroundImage:
+                    'url(' + config.public.apiBase + '/media/get/' + answer.word.image_file + ')',
+                }"
+                aria-hidden="true"
+              ></div>
+
+              <div class="flex-1 min-w-0 flex flex-col gap-2">
+                <div v-if="answer.question">
+                  <p class="result-label">{{ $t("pages.questions.question.title") }}</p>
+                  <p class="font-medium mb-0">
+                    {{ answer.question.sentence || answer.question.question }}
+                  </p>
                 </div>
-                <div class="flex items-center">
-                  <audioButton
-                    v-if="answer.word || answer.sentence"
-                    :key="answer.task_answer_id + '_' + answer.task_id"
-                    :src="
-                      config.public.apiBase +
-                      '/media/get/' +
-                      ((answer.word && answer.word.audio_file) ||
-                        (answer.sentence && answer.sentence.audio_file))
-                    "
-                  />
-                  <div class="step-item xs completed">
-                    <div class="step-icon">
-                      <i class="pi pi-check"></i>
-                    </div>
-                  </div>
+
+                <!-- Правильный ответ (группа «правильные»): это и есть ответ ученика -->
+                <div v-if="group.key === 'correct'">
+                  <p v-if="answer.right_answer" class="result-label">{{ whoseAnswer }}</p>
+                  <div class="result-answer" v-html="answer.right_answer"></div>
                 </div>
-              </div>
-            </li>
-          </ul>
-        </div>
 
-        <div
-          class="flex flex-col gap-y-2"
-          v-if="props.taskResult.answers.partly_correct_answers.length > 0"
-        >
-          <p
-            v-if="
-              props.taskResult.answers.partly_correct_answers.length > 0 &&
-              (props.taskResult.answers.correct_answers.length > 0 ||
-                props.taskResult.answers.incorrect_answers.length > 0 ||
-                props.taskResult.answers.unverified_answers.length > 0)
-            "
-            class="text-xl font-medium mb-0 text-warning"
-          >
-            {{ $t("partly_correct_answers") }}:
-          </p>
-          <ul class="list-group nowrap">
-            <li
-              v-for="(answer, answerIndex) in props.taskResult.answers
-                .partly_correct_answers"
-              :key="answerIndex"
-            >
-              <div class="flex gap-x-2 justify-between items-center">
-                <div class="flex gap-x-2 justify-between items-center">
-                  <div
-                    v-if="answer.word && answer.word.image_file"
-                    :key="answer.task_answer_id + '_' + answer.task_id"
-                    :style="{
-                      backgroundImage:
-                        'url(' +
-                        config.public.apiBase +
-                        '/media/get/' +
-                        (answer.word && answer.word.image_file) +
-                        ')',
-                    }"
-                    class="w-16 h-16 bg-contain bg-no-repeat bg-center border-inactive rounded-xl"
-                  ></div>
-                  <div class="flex gap-2" :class="!answer.word && 'flex-col'">
-                    <div v-if="answer.question">
-                      <p class="mb-1 text-xs text-inactive font-normal">
-                        {{ $t("pages.questions.question.title") }}:
-                      </p>
-                      <p class="font-medium mb-0">
-                        {{
-                          answer.question.sentence || answer.question.question
-                        }}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p
-                        v-if="answer.user_answer"
-                        class="mb-1 text-xs text-inactive font-normal"
-                      >
-                        {{
-                          authUser.user_id ===
-                          props.taskResult.completed_task.learner_id
-                            ? $t("your_answer")
-                            : $t("learner_answer")
-                        }}
-                      </p>
-                      <div v-html="answer.user_answer"></div>
-                    </div>
-
-                    <div v-if="answer.right_answer">
-                      <p
-                        v-if="answer.user_answer"
-                        class="mb-1 text-xs text-inactive font-normal"
-                      >
-                        {{ $t("right_answer") }}:
-                      </p>
-                      <div v-html="answer.right_answer"></div>
-                    </div>
-
-                    <div v-if="answer.comment">
-                      <p class="mb-1 text-xs text-inactive font-normal">
-                        {{ $t("comment") }}:
-                      </p>
-                      <p class="mentor_comment" v-html="answer.comment"></p>
-                    </div>
-                  </div>
-                </div>
-                <div class="flex items-center">
-                  <audioButton
-                    v-if="answer.word || answer.sentence"
-                    :key="answer.task_answer_id + '_' + answer.task_id"
-                    :src="
-                      config.public.apiBase +
-                      '/media/get/' +
-                      ((answer.word && answer.word.audio_file) ||
-                        (answer.sentence && answer.sentence.audio_file))
-                    "
-                  />
-                  <div class="step-item xs warning">
-                    <div class="step-icon">
-                      <i class="pi pi-check"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </li>
-          </ul>
-        </div>
-
-        <div
-          class="flex flex-col gap-y-2"
-          v-if="props.taskResult.answers.incorrect_answers.length > 0"
-        >
-          <p
-            v-if="
-              props.taskResult.answers.incorrect_answers.length > 0 &&
-              (props.taskResult.answers.correct_answers.length > 0 ||
-                props.taskResult.answers.partly_correct_answers.length > 0 ||
-                props.taskResult.answers.unverified_answers.length > 0)
-            "
-            class="text-xl font-medium mb-0 text-danger"
-          >
-            {{ $t("wrong_answers") }}:
-          </p>
-          <ul class="list-group nowrap">
-            <li
-              v-for="(answer, answerIndex) in props.taskResult.answers
-                .incorrect_answers"
-              :key="answerIndex"
-            >
-              <div class="flex gap-x-2 justify-between items-center">
-                <div class="flex gap-x-2 justify-between items-center">
-                  <div
-                    v-if="answer.word && answer.word.image_file"
-                    :key="answer.task_answer_id + '_' + answer.task_id"
-                    :style="{
-                      backgroundImage:
-                        'url(' +
-                        config.public.apiBase +
-                        '/media/get/' +
-                        (answer.word && answer.word.image_file) +
-                        ')',
-                    }"
-                    class="w-16 h-16 bg-contain bg-no-repeat bg-center border-inactive rounded-xl"
-                  ></div>
-                  <div class="flex gap-2" :class="!answer.word && 'flex-col'">
-                    <div v-if="answer.question">
-                      <p class="mb-1 text-xs text-inactive font-normal">
-                        {{ $t("pages.questions.question.title") }}:
-                      </p>
-                      <p class="font-medium mb-0">
-                        {{
-                          answer.question.sentence || answer.question.question
-                        }}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p
-                        v-if="answer.user_answer"
-                        class="mb-1 text-xs text-inactive font-normal"
-                      >
-                        {{
-                          authUser.user_id ===
-                          props.taskResult.completed_task.learner_id
-                            ? $t("your_answer")
-                            : $t("learner_answer")
-                        }}
-                      </p>
-                      <div v-html="answer.user_answer"></div>
-                    </div>
-
-                    <div v-if="answer.right_answer">
-                      <p
-                        v-if="answer.user_answer"
-                        class="mb-1 text-xs text-inactive font-normal"
-                      >
-                        {{ $t("right_answer") }}:
-                      </p>
-                      <div v-html="answer.right_answer"></div>
-                    </div>
-
-                    <div v-if="answer.comment">
-                      <p class="mb-1 text-xs text-inactive font-normal">
-                        {{ $t("comment") }}:
-                      </p>
-                      <p class="mentor_comment" v-html="answer.comment"></p>
-                    </div>
-                  </div>
-                </div>
-                <div class="flex items-center">
-                  <audioButton
-                    v-if="answer.word || answer.sentence"
-                    :key="answer.task_answer_id + '_' + answer.task_id"
-                    :src="
-                      config.public.apiBase +
-                      '/media/get/' +
-                      ((answer.word && answer.word.audio_file) ||
-                        (answer.sentence && answer.sentence.audio_file))
-                    "
-                  />
-                  <div class="step-item xs failed">
-                    <div class="step-icon">
-                      <i class="pi pi-times"></i>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </li>
-          </ul>
-        </div>
-
-        <div
-          class="flex flex-col gap-y-2"
-          v-if="props.taskResult.answers.unverified_answers.length > 0"
-        >
-          <p class="text-xl font-medium mb-0 text-warning">
-            {{ $t("unverified_answers") }}:
-          </p>
-          <ul class="list-group nowrap">
-            <li
-              v-for="(answer, answerIndex) in props.taskResult.answers
-                .unverified_answers"
-              :key="answerIndex"
-            >
-              <div class="flex gap-x-4 items-center">
-                <div class="flex gap-x-2 w-full justify-between items-center">
-                  <div
-                    v-if="answer.word && answer.word.image_file"
-                    :key="answer.task_answer_id + '_' + answer.task_id"
-                    :style="{
-                      backgroundImage:
-                        'url(' +
-                        config.public.apiBase +
-                        '/media/get/' +
-                        (answer.word && answer.word.image_file) +
-                        ')',
-                    }"
-                    class="w-16 h-16 bg-contain bg-no-repeat bg-center border-inactive rounded-xl"
-                  ></div>
-                  <div
-                    class="flex gap-2 w-full"
-                    :class="!answer.word && 'flex-col'"
-                  >
-                    <div v-if="answer.question">
-                      <p class="mb-1 text-xs text-inactive font-normal">
-                        {{ $t("pages.questions.question.title") }}:
-                      </p>
-                      <p class="font-medium mb-0">
-                        {{
-                          answer.question.sentence || answer.question.question
-                        }}
-                      </p>
-                    </div>
-
-                    <div>
-                      <p
-                        v-if="answer.user_answer"
-                        class="mb-1 text-xs text-inactive font-normal"
-                      >
-                        {{
-                          authUser.user_id ===
-                          props.taskResult.completed_task.learner_id
-                            ? $t("your_answer")
-                            : $t("learner_answer")
-                        }}:
-                      </p>
-                      <b>{{ answer.user_answer }}</b>
-                    </div>
-
+                <template v-else>
+                  <div v-if="answer.user_answer !== undefined && answer.user_answer !== null">
+                    <p v-if="answer.user_answer" class="result-label">{{ whoseAnswer }}</p>
                     <div
-                      v-if="
-                        props.checkingTask === true &&
-                        authUser.user_id ===
-                          props.taskResult.completed_task.mentor_id
-                      "
-                      class="flex flex-col gap-y-3"
-                    >
-                      <div class="flex flex-col gap-y-1">
-                        <label class="custom-radio">
-                          <input
-                            type="radio"
-                            :value="1"
-                            v-model="answer.is_correct"
-                          />
-                          <span>{{ $t("right_answer") }}</span>
-                        </label>
+                      v-if="group.key !== 'unverified'"
+                      class="result-answer"
+                      :class="{ strike: group.key === 'incorrect' }"
+                      v-html="answer.user_answer"
+                    ></div>
+                    <b v-else class="result-answer">{{ answer.user_answer }}</b>
+                  </div>
 
-                        <label class="custom-radio">
-                          <input
-                            type="radio"
-                            :value="0"
-                            v-model="answer.is_correct"
-                          />
-                          <span>{{ $t("wrong_answer") }}</span>
-                        </label>
-                      </div>
-                      <div
-                        v-if="answer.is_correct === 0"
-                        class="form-group-border active"
-                      >
-                        <i class="pi pi-clock"></i>
-                        <input
-                          v-model="answer.comment"
-                          type="text"
-                          placeholder=" "
-                        />
-                        <label
-                          :class="{ 'label-error': answer.comment === '' }"
-                        >
-                          {{
-                            answer.comment === ""
-                              ? $t("write_a_comment")
-                              : $t("comment")
-                          }}
-                        </label>
-                      </div>
-                    </div>
+                  <div v-if="answer.right_answer && group.key !== 'unverified'">
+                    <p v-if="answer.user_answer" class="result-label">{{ $t("right_answer") }}</p>
+                    <div class="result-answer text-success" v-html="answer.right_answer"></div>
                   </div>
-                </div>
-                <div class="flex items-center">
-                  <audioButton
-                    v-if="answer.word || answer.sentence"
-                    :key="answer.task_answer_id + '_' + answer.task_id"
-                    :src="
-                      config.public.apiBase +
-                      '/media/get/' +
-                      ((answer.word && answer.word.audio_file) ||
-                        (answer.sentence && answer.sentence.audio_file))
+
+                  <div v-if="answer.comment && group.key !== 'unverified'" class="result-comment">
+                    <p class="result-label">
+                      <i class="pi pi-comment" aria-hidden="true"></i> {{ $t("comment") }}
+                    </p>
+                    <p class="mentor_comment mb-0" v-html="answer.comment"></p>
+                  </div>
+
+                  <!-- Проверка учителем -->
+                  <div
+                    v-if="
+                      group.key === 'unverified' &&
+                      props.checkingTask === true &&
+                      authUser.user_id === props.taskResult.completed_task.mentor_id
                     "
-                  />
-                  <div class="step-item xs warning">
-                    <div class="step-icon">
-                      <i class="pi pi-clock"></i>
+                    class="flex flex-col gap-3"
+                  >
+                    <div class="result-verdict" role="radiogroup">
+                      <label class="result-verdict-option ok" :class="{ active: answer.is_correct === 1 }">
+                        <input type="radio" class="sr-only" :value="1" v-model="answer.is_correct" />
+                        <i class="pi pi-check" aria-hidden="true"></i>
+                        {{ $t("right_answer") }}
+                      </label>
+                      <label class="result-verdict-option bad" :class="{ active: answer.is_correct === 0 }">
+                        <input type="radio" class="sr-only" :value="0" v-model="answer.is_correct" />
+                        <i class="pi pi-times" aria-hidden="true"></i>
+                        {{ $t("wrong_answer") }}
+                      </label>
+                    </div>
+                    <div v-if="answer.is_correct === 0" class="form-group-border active">
+                      <i class="pi pi-comment"></i>
+                      <input v-model="answer.comment" type="text" placeholder=" " />
+                      <label :class="{ 'label-error': answer.comment === '' }">
+                        {{ answer.comment === "" ? $t("write_a_comment") : $t("comment") }}
+                      </label>
                     </div>
                   </div>
-                </div>
+                </template>
+              </div>
+
+              <div class="flex items-center gap-2 shrink-0">
+                <audioButtonMini
+                  v-if="audioOf(answer)"
+                  :src="config.public.apiBase + '/media/get/' + audioOf(answer)"
+                />
+                <span class="result-status" :class="group.tone" aria-hidden="true">
+                  <i class="pi" :class="group.icon"></i>
+                </span>
               </div>
             </li>
           </ul>
-        </div>
+        </section>
       </div>
     </div>
     <slot name="footer_content" />
@@ -466,9 +152,12 @@
 <script setup>
 import { useRuntimeConfig } from "nuxt/app";
 import circleProgressBar from "../../../ui/circleProgressBar.vue";
-import audioButton from "../../../ui/audioButton.vue";
+import audioButtonMini from "../../../ui/audioButtonMini.vue";
+
 const config = useRuntimeConfig();
 const authUser = useSanctumUser();
+const { t } = useI18n();
+
 const props = defineProps({
   taskResult: {
     type: Object,
@@ -481,4 +170,30 @@ const props = defineProps({
     default: false,
   },
 });
+
+const answers = computed(() => props.taskResult?.answers || {});
+
+// Порядок и оформление групп ответов
+const groups = computed(() =>
+  [
+    { key: "correct", title: "right_answers", tone: "ok", icon: "pi-check", items: answers.value.correct_answers || [] },
+    { key: "partly", title: "partly_correct_answers", tone: "partly", icon: "pi-check", items: answers.value.partly_correct_answers || [] },
+    { key: "incorrect", title: "wrong_answers", tone: "bad", icon: "pi-times", items: answers.value.incorrect_answers || [] },
+    { key: "unverified", title: "unverified_answers", tone: "pending", icon: "pi-clock", items: answers.value.unverified_answers || [] },
+  ].filter((g) => g.items.length > 0),
+);
+
+// Заголовок группы нужен, только если групп несколько (непроверенные — всегда)
+const showGroupTitle = (group) => group.key === "unverified" || groups.value.length > 1;
+
+const whoseAnswer = computed(() =>
+  authUser.value?.user_id === props.taskResult?.completed_task?.learner_id
+    ? t("your_answer")
+    : t("learner_answer"),
+);
+
+const audioOf = (answer) =>
+  (answer.word && answer.word.audio_file) ||
+  (answer.sentence && answer.sentence.audio_file) ||
+  null;
 </script>

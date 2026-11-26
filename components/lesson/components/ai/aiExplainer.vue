@@ -1,310 +1,217 @@
 <template>
-  <div class="card">
+  <div class="card ai-chat !rounded-2xl">
     <loader v-if="pendingChat" :className="'overlay'" :showPendingText="true" />
-    <div class="border-b-inactive p-4">
-      <div class="flex flex-wrap justify-between items-center gap-4">
-        <h3 class="mb-0"><i class="bi bi-stars text-corp"></i> EasySpeak AI</h3>
 
-        <!-- <button
-          @click="toggleMute()"
-          class="btn btn-circle btn-lg relative"
-          :class="isMuted ? 'btn-light' : 'btn-success'"
-        >
-          <i
-            class="bi"
-            :class="isMuted ? 'bi-volume-mute-fill' : 'bi-broadcast'"
-          ></i>
-        </button> -->
+    <!-- Шапка -->
+    <div class="ai-chat-head">
+      <span class="ai-avatar" aria-hidden="true"><i class="bi bi-stars"></i></span>
+      <div class="min-w-0">
+        <h4 class="mb-0 leading-tight">EasySpeak AI</h4>
+        <p class="mb-0 text-xs text-inactive flex items-center gap-1.5">
+          <span class="ai-online-dot" aria-hidden="true"></span>
+          {{ $t("online") }}
+        </p>
       </div>
     </div>
-    <div class="p-4">
+
+    <!-- Сообщения -->
+    <div class="px-4 pt-4">
       <scrollFadeContainer ref="scrollBox" :maxHeight="400" :fadeSize="60">
-        <div class="custom-grid">
-          <div class="col-span-12">
-            <h4 class="mb-0">
-              {{
-                $t("materials.chat.title", {
-                  name: authUser.first_name,
-                })
-              }}
-            </h4>
-          </div>
-          <div v-if="chat.length === 0" class="col-span-12">
-            <p class="whitespace-pre-line">
-              {{ $t("materials.chat." + props.explainMode + ".description") }}
-            </p>
+        <div ref="chatContainer" class="flex flex-col gap-4 pb-2" aria-live="polite">
+          <!-- Приветствие, пока чат пустой -->
+          <div v-if="chat.length === 0" class="ai-msg">
+            <span class="ai-avatar sm" aria-hidden="true"><i class="bi bi-stars"></i></span>
+            <div class="ai-bubble">
+              <p class="mb-2 font-semibold">
+                {{ $t("materials.chat.title", { name: authUser?.first_name }) }}
+              </p>
+              <p class="mb-0 whitespace-pre-line text-sm">
+                {{ $t("materials.chat." + props.explainMode + ".description") }}
+              </p>
+            </div>
           </div>
 
-          <div v-if="chat.length" class="col-span-12 select-none">
-            <div ref="chatContainer" class="flex flex-col gap-y-4">
-              <template v-for="message in chat" :key="message.uuid">
+          <template v-for="message in chat" :key="message.uuid">
+            <!-- Сообщение пользователя -->
+            <div v-if="message.user_prompt" class="user-msg">
+              <div
+                class="user-bubble"
+                :data-u-message-id="message.uuid"
+                v-html="sanitize(message.user_prompt)"
+              ></div>
+            </div>
+
+            <!-- Ответ AI -->
+            <div v-if="message.ai_content" class="ai-msg">
+              <span class="ai-avatar sm" aria-hidden="true"><i class="bi bi-stars"></i></span>
+              <div class="flex-1 min-w-0 flex flex-col gap-2">
                 <div
-                  v-if="message.user_prompt"
-                  class="w-full flex justify-end pl-4"
-                >
-                  <div
-                    class="bg-corp text-white px-3 py-2 rounded-2xl text-right w-fit"
-                    :data-u-message-id="message.uuid"
-                    v-html="sanitize(message.user_prompt)"
-                  ></div>
+                  class="ai-bubble ai-content"
+                  :data-ai-message-id="message.uuid"
+                  v-html="sanitize(message.ai_content)"
+                ></div>
+
+                <audioPlayerWithWave
+                  v-if="message.ai_content !== '...'"
+                  :src="
+                    config.public.apiBase +
+                    '/' +
+                    props.explainMode +
+                    '/audio_explain/' +
+                    message.uuid
+                  "
+                />
+
+                <div v-if="message.ai_content !== '...'" class="ai-actions">
+                  <button
+                    type="button"
+                    class="ai-action"
+                    @click="copyText(message.uuid)"
+                    :title="message.copied ? $t('copied') : $t('copy')"
+                    :aria-label="message.copied ? $t('copied') : $t('copy')"
+                  >
+                    <i
+                      class="pi"
+                      :class="message.copied ? 'pi-check text-success' : 'pi-clone'"
+                    ></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="ai-action"
+                    :class="{ active: message.like === 1 }"
+                    @click="sendFeedback(message.like === 1 ? null : 1, message.uuid)"
+                    :title="$t('like')"
+                    :aria-label="$t('like')"
+                    :aria-pressed="message.like === 1"
+                  >
+                    <i
+                      class="pi"
+                      :class="message.like === 1 ? 'pi-thumbs-up-fill' : 'pi-thumbs-up'"
+                    ></i>
+                  </button>
+                  <button
+                    type="button"
+                    class="ai-action"
+                    :class="{ active: message.like === 0 }"
+                    @click="sendFeedback(message.like === 0 ? null : 0, message.uuid)"
+                    :title="$t('dislike')"
+                    :aria-label="$t('dislike')"
+                    :aria-pressed="message.like === 0"
+                  >
+                    <i
+                      class="pi"
+                      :class="message.like === 0 ? 'pi-thumbs-down-fill' : 'pi-thumbs-down'"
+                    ></i>
+                  </button>
                 </div>
+              </div>
+            </div>
+          </template>
 
-                <div
-                  v-if="message.ai_content"
-                  class="w-full flex flex-col gap-y-2"
-                >
-                  <div
-                    class="text-justify"
-                    :data-ai-message-id="message.uuid"
-                    v-html="sanitize(message.ai_content)"
-                  ></div>
-
-                  <div class="mb-4">
-                    <audioPlayerWithWave
-                      :src="
-                        config.public.apiBase +
-                        '/' +
-                        props.explainMode +
-                        '/audio_explain/' +
-                        message.uuid
-                      "
-                    />
-                  </div>
-
-                  <div v-if="message.ai_content !== '...'" class="btn-wrap">
-                    <button
-                      type="button"
-                      class="btn btn-light btn-sm btn-square"
-                      @click="copyText(message.uuid)"
-                      :title="message.copied ? $t('copied') : $t('copy')"
-                    >
-                      <i
-                        class="pi"
-                        :class="message.copied ? 'pi-check' : 'pi-clone'"
-                      ></i>
-                    </button>
-
-                    <button
-                      type="button"
-                      class="btn btn-light btn-sm btn-square"
-                      @click="
-                        sendFeedback(
-                          message.like === 1 ? null : 1,
-                          message.uuid,
-                        )
-                      "
-                      :title="$t('like')"
-                    >
-                      <i
-                        class="pi"
-                        :class="
-                          message.like === 1
-                            ? 'pi-thumbs-up-fill'
-                            : 'pi-thumbs-up'
-                        "
-                      ></i>
-                    </button>
-
-                    <button
-                      type="button"
-                      class="btn btn-light btn-sm btn-square"
-                      @click="
-                        sendFeedback(
-                          message.like === 0 ? null : 0,
-                          message.uuid,
-                        )
-                      "
-                      :title="$t('dislike')"
-                    >
-                      <i
-                        class="pi"
-                        :class="
-                          message.like === 0
-                            ? 'pi-thumbs-down-fill'
-                            : 'pi-thumbs-down'
-                        "
-                      ></i>
-                    </button>
-
-                    <!-- <button
-                              class="btn btn-light btn-sm btn-square"
-                              v-if="
-                                currentExplainId === message.uuid &&
-                                message.target
-                              "
-                              @click="backwardExplain()"
-                              :title="$t('file.video.player.backward')"
-                            >
-                              <i class="bi bi-skip-backward"></i>
-                            </button>
-
-                            <button
-                              class="btn btn-light btn-sm btn-square"
-                              :class="
-                                currentExplainId === message.uuid &&
-                                pendingAudioExplain === true
-                                  ? 'disabled'
-                                  : ''
-                              "
-                              :title="
-                                currentExplainId === message.uuid
-                                  ? pendingAudioExplain === true
-                                    ? $t('loading')
-                                    : audioExplainStatus === 'play'
-                                      ? $t('file.video.player.pause')
-                                      : $t('file.video.player.play')
-                                  : $t('listen')
-                              "
-                              @click="
-                                toggleAudioExplain(
-                                  message.uuid,
-                                  currentExplainId === message.uuid &&
-                                    audioExplainStatus === 'play'
-                                    ? 'pause'
-                                    : 'play',
-                                )
-                              "
-                            >
-                              <i
-                                :class="[
-                                  currentExplainId === message.uuid
-                                    ? pendingAudioExplain === true
-                                      ? 'pi pi-spinner btn-loading-circle'
-                                      : audioExplainStatus === 'play'
-                                        ? 'bi bi-pause'
-                                        : 'bi bi-play'
-                                    : 'bi bi-volume-up',
-                                ]"
-                              />
-                            </button> -->
-                  </div>
-                </div>
-              </template>
+          <!-- «Печатает…» пока ждём ответ -->
+          <div v-if="pendingPrompt && !pendingAudio" class="ai-msg">
+            <span class="ai-avatar sm" aria-hidden="true"><i class="bi bi-stars"></i></span>
+            <div class="ai-bubble ai-typing" :aria-label="$t('thinking')">
+              <span></span><span></span><span></span>
             </div>
           </div>
         </div>
       </scrollFadeContainer>
     </div>
 
-    <div class="px-4 pb-4">
-      <div
-        v-if="chat.length === 0 && prompts.length"
-        class="flex flex-wrap gap-1.5 mb-4"
-      >
+    <!-- Ввод -->
+    <div class="p-4">
+      <div v-if="chat.length === 0 && prompts.length" class="flex flex-wrap gap-1.5 mb-3">
         <button
           type="button"
           v-for="prompt in prompts"
           :key="prompt"
-          @click="() => (promptInput = prompt)"
-          class="btn btn-sm btn-light !rounded-2xl"
+          @click="usePrompt(prompt)"
+          class="ai-chip"
         >
           {{ prompt }}
         </button>
       </div>
 
-      <div class="flex items-center gap-x-2 w-full">
-        <div class="bg-inactive border-inactive p-2 rounded-full w-full">
-          <div class="flex items-center gap-x-1">
-            <div
-              v-if="pendingPrompt === true || recording === true"
-              class="w-full pl-2"
-            >
-              <p class="text-inactive mb-0 dots select-none">
-                <span class="blink">
-                  {{
-                    pendingPrompt === true
-                      ? pendingAudio === true
-                        ? $t("handling")
-                        : $t("thinking")
-                      : $t("recording")
-                  }}</span
-                >
-                <span class="blink animation-delay:0s">.</span>
-                <span class="blink animation-delay:0.3s">.</span>
-                <span class="blink animation-delay:0.6s">.</span>
-              </p>
-            </div>
-            <input
-              v-else
-              class="w-full px-2"
-              type="text"
-              :placeholder="$t('type_your_message')"
-              v-model="promptInput"
-            />
-            <!-- <button
-                    @click="
-                      promptInput === ''
-                        ? recording === true
-                          ? stopRecord()
-                          : startRecord()
-                        : sendPrompt()
-                    "
-                    class="btn btn-circle btn-active-invert relative"
-                    :class="pendingPrompt === true ? 'disabled' : ''"
-                  >
-                    <i
-                      :class="
-                        pendingPrompt === true
-                          ? 'pi pi-spinner btn-loading-circle'
-                          : promptInput === ''
-                            ? recording === true
-                              ? 'bi bi-record-fill text-danger pulse'
-                              : 'bi bi-mic-fill'
-                            : 'pi pi-arrow-up'
-                      "
-                    ></i>
-
-                    <tooltip
-                      :show="tooltipIsShow"
-                      :title="tooltipTitle"
-                      :className="''"
-                    />
-                  </button> -->
-
-            <button
-              type="button"
-              @pointerdown="startRecord()"
-              @pointerup="stopRecord()"
-              @pointerleave="stopRecord()"
-              @pointercancel="stopRecord()"
-              v-if="promptInput === ''"
-              class="btn btn-circle btn-active-invert relative"
-              :class="pendingPrompt === true ? 'disabled' : ''"
-            >
-              <i
-                :class="
-                  pendingPrompt === true
-                    ? 'pi pi-spinner btn-loading-circle'
-                    : recording === true
-                      ? 'bi bi-record-fill text-danger pulse'
-                      : 'bi bi-mic-fill'
-                "
-              ></i>
-
-              <tooltip
-                :show="tooltipIsShow"
-                :title="tooltipTitle"
-                :className="''"
-              />
-            </button>
-            <button
-              type="button"
-              v-else
-              @click="sendPrompt()"
-              class="btn btn-circle btn-active-invert relative"
-              :class="pendingPrompt === true ? 'disabled' : ''"
-            >
-              <i
-                :class="
-                  pendingPrompt === true
-                    ? 'pi pi-spinner btn-loading-circle'
-                    : 'pi pi-arrow-up'
-                "
-              ></i>
-            </button>
-          </div>
+      <form class="ai-input" @submit.prevent="sendPrompt()">
+        <div v-if="pendingPrompt === true || recording === true" class="flex-1 pl-2">
+          <p class="mb-0 select-none flex items-center gap-2" :class="recording ? 'text-danger' : 'text-inactive'">
+            <span v-if="recording" class="live-dot !w-2.5 !h-2.5" aria-hidden="true"></span>
+            <span class="dots">
+              {{
+                pendingPrompt === true
+                  ? pendingAudio === true
+                    ? $t("handling")
+                    : $t("thinking")
+                  : $t("recording")
+              }}
+              <span class="blink animation-delay:0s">.</span>
+              <span class="blink animation-delay:0.3s">.</span>
+              <span class="blink animation-delay:0.6s">.</span>
+            </span>
+          </p>
         </div>
-      </div>
+        <input
+          v-else
+          ref="promptInputRef"
+          class="flex-1 min-w-0 px-2 bg-transparent"
+          type="text"
+          :placeholder="$t('type_your_message')"
+          :aria-label="$t('type_your_message')"
+          enterkeyhint="send"
+          autocomplete="off"
+          v-model="promptInput"
+        />
+
+        <!-- Пустое поле — микрофон (удерживать), иначе — отправить -->
+        <button
+          type="button"
+          v-if="promptInput === ''"
+          @pointerdown="startRecord()"
+          @pointerup="stopRecord()"
+          @pointerleave="stopRecord()"
+          @pointercancel="stopRecord()"
+          @contextmenu.prevent
+          class="ai-send"
+          :class="{ recording: recording, disabled: pendingPrompt === true }"
+          :title="$t('hold_to_record')"
+          :aria-label="$t('hold_to_record')"
+        >
+          <i
+            :class="
+              pendingPrompt === true
+                ? 'pi pi-spinner btn-loading-circle'
+                : recording === true
+                  ? 'bi bi-mic-fill'
+                  : 'bi bi-mic'
+            "
+          ></i>
+
+          <tooltip :show="tooltipIsShow" :title="tooltipTitle" :className="''" />
+        </button>
+        <button
+          type="submit"
+          v-else
+          class="ai-send primary"
+          :class="{ disabled: pendingPrompt === true }"
+          :disabled="pendingPrompt === true"
+          :title="$t('pages.conference.send')"
+          :aria-label="$t('pages.conference.send')"
+        >
+          <i
+            :class="
+              pendingPrompt === true ? 'pi pi-spinner btn-loading-circle' : 'pi pi-arrow-up'
+            "
+          ></i>
+        </button>
+      </form>
+      <p
+        v-if="promptInput === '' && !recording && !pendingPrompt"
+        class="mb-0 mt-2 text-xs text-inactive text-center"
+      >
+        <i class="bi bi-mic" aria-hidden="true"></i>
+        {{ $t("hold_to_record") }}
+      </p>
     </div>
   </div>
 </template>
@@ -361,6 +268,13 @@ const prompts =
 
 const isMuted = ref(true);
 const promptInput = ref("");
+const promptInputRef = ref(null);
+
+// Подсказка-заготовка: подставляем в поле и ставим курсор — можно дописать.
+const usePrompt = (prompt) => {
+  promptInput.value = prompt;
+  nextTick(() => promptInputRef.value?.focus());
+};
 const chatContainer = ref(null);
 const chat = ref([]);
 const pendingChat = ref(false);
@@ -439,14 +353,14 @@ const showTooltip = (title, duration = 2000) => {
 
 const getRecordingErrorMessage = (error) => {
   if (error?.name === "NotAllowedError") {
-    return "Microphone access denied";
+    return t("mic_access_denied");
   }
 
   if (error?.name === "NotFoundError") {
-    return "Microphone not found";
+    return t("mic_not_found");
   }
 
-  return "Could not record audio";
+  return t("mic_record_failed");
 };
 
 const startRecord = async () => {
@@ -669,7 +583,8 @@ const debounceFeedback = debounceHandler(async (like, uuid) => {
 }, 1000);
 
 const sendPrompt = async () => {
-  if (promptInput.value !== "") {
+  if (pendingPrompt.value) return;
+  if (promptInput.value.trim() !== "") {
     // Add the user message to the chat.
     chat.value.push({
       uuid: crypto.randomUUID(),
@@ -785,15 +700,8 @@ const getChat = async () => {
     });
 };
 
-const handleKeyPress = (event) => {
-  if (event.key === "Enter") {
-    sendPrompt();
-  }
-};
-
 onMounted(async () => {
   getChat();
-  window.addEventListener("keydown", handleKeyPress);
 });
 
 onBeforeUnmount(() => {
@@ -801,7 +709,6 @@ onBeforeUnmount(() => {
     typedInstance.destroy();
   }
   stopAudio();
-  window.removeEventListener("keydown", handleKeyPress);
 });
 
 watch(

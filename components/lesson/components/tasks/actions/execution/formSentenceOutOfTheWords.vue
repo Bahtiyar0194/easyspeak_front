@@ -18,27 +18,42 @@
       :taskResult="taskResult"
     >
       <template v-slot:task_content>
+        <!-- Статус: сколько осталось / итог + попытки + таймер -->
         <div class="col-span-12">
-          <p v-if="timeIsUp" class="font-medium text-center text-danger">
-            {{ $t("time_is_up") }}
-          </p>
-          <p
-            v-else-if="isComplete"
-            class="font-medium text-center text-success"
-          >
-            {{ $t("right") }}
-          </p>
-          <p v-else-if="isWrong" class="font-medium text-center text-danger">
-            {{ $t("wrong") }}
-          </p>
-          <p v-else-if="sentencesLeft > 0" class="text-center">
-            {{ $t("pages.sentences.sentences_left") }}:
-            <b>{{ sentencesLeft }}</b>
-          </p>
-        </div>
+          <div class="task-status-bar">
+            <div class="flex flex-col gap-1 min-w-0">
+              <p v-if="timeIsUp" class="mb-0 font-semibold text-danger flex items-center gap-1.5">
+                <i class="pi pi-clock" aria-hidden="true"></i>
+                {{ $t("time_is_up") }}
+              </p>
+              <p v-else-if="isComplete" class="mb-0 font-semibold text-success flex items-center gap-1.5">
+                <i class="pi pi-check-circle" aria-hidden="true"></i>
+                {{ $t("right") }}
+              </p>
+              <p v-else-if="isWrong" class="mb-0 font-semibold text-danger flex items-center gap-1.5">
+                <i class="pi pi-times-circle" aria-hidden="true"></i>
+                {{ $t("wrong") }}
+              </p>
+              <p v-else-if="sentencesLeft > 0" class="mb-0 text-inactive">
+                {{ $t("pages.sentences.sentences_left") }}:
+                <b class="text-active">{{ sentencesLeft }}</b>
+              </p>
 
-        <div class="col-span-12">
-          <div class="flex justify-center items-center">
+              <div
+                v-if="currentSentence && isStarted"
+                class="attempt-hearts"
+                :title="$t('pages.tasks.attempts_left')"
+                :aria-label="$t('pages.tasks.attempts_left') + ': ' + (currentSentence.wrongWordAttempts ?? 0)"
+              >
+                <i
+                  v-for="n in maxWrongWordAttempts"
+                  :key="n"
+                  class="bi"
+                  :class="n <= (currentSentence.wrongWordAttempts ?? 0) ? 'bi-heart-fill' : 'bi-heart lost'"
+                  aria-hidden="true"
+                ></i>
+              </div>
+            </div>
             <countdownCircleTimer
               :totalSeconds="time"
               :startCommand="isStarted"
@@ -48,23 +63,24 @@
           </div>
         </div>
 
+        <!-- Что нужно перевести -->
         <div class="col-span-12">
-          <div
-            class="bg-inactive p-4 rounded-xl font-medium text-center w-fit mx-auto"
-            :class="isComplete && 'text-success'"
-          >
-            {{
-              taskData?.options.in_the_main_lang
-                ? currentSentence?.sentence_translate
-                : currentSentence?.sentence
-            }}
+          <div class="word-prompt !p-4" :class="{ 'is-right': isComplete }">
+            <p class="mb-0 text-lg font-semibold">
+              {{
+                taskData?.options.in_the_main_lang
+                  ? currentSentence?.sentence_translate
+                  : currentSentence?.sentence
+              }}
+            </p>
           </div>
         </div>
 
+        <!-- Не получилось / время вышло -->
         <div v-if="timeIsUp || isWrong" class="col-span-12">
-          <div class="bg-inactive p-6 rounded-xl text-center">
-            <p class="text-inactive mb-2">{{ $t("right_answer") }}</p>
-            <p class="text-2xl mb-0 font-medium">
+          <div class="answer-reveal">
+            <p class="text-inactive text-sm mb-1">{{ $t("right_answer") }}</p>
+            <p class="text-2xl mb-0 font-bold">
               {{
                 taskData?.options.in_the_main_lang
                   ? currentSentence?.sentence
@@ -75,70 +91,58 @@
         </div>
 
         <div v-else class="col-span-12">
-          <div class="custom-grid">
-            <div class="col-span-12 border-b-inactive my-6 min-h-8">
-              <div
-                v-if="displayedSentence.length > 0"
-                class="flex flex-wrap gap-1.5 justify-center font-medium mb-0 text-center duration-200 text-2xl"
-                :class="isComplete && 'text-success'"
+          <div class="flex flex-col gap-4">
+            <!-- Собираемое предложение: собранные слова + пустые места -->
+            <div class="sentence-build" :class="{ 'is-complete': isComplete }">
+              <span
+                v-for="(word, wordIndex) in displayedSentence"
+                :key="'w' + wordIndex"
+                class="sentence-word"
+                v-motion="{ initial: { scale: 0.6, opacity: 0 }, enter: { scale: 1, opacity: 1 } }"
+                >{{ word }}</span
               >
-                <span
-                  v-for="(word, wordIndex) in displayedSentence"
-                  :key="wordIndex"
-                  v-motion="{
-                    initial: {
-                      scale: 0,
-                    },
-                    enter: {
-                      scale: 1,
-                    },
-                  }"
-                  >{{ word }}</span
-                >
-              </div>
+              <span
+                v-for="n in Math.max(0, totalWords - displayedSentence.length)"
+                :key="'s' + n"
+                class="sentence-slot"
+                :class="{ next: n === 1 }"
+                aria-hidden="true"
+              ></span>
             </div>
 
-            <div class="col-span-12">
-              <div class="flex justify-center">
-                <div class="btn-wrap justify-center mb-1 mx-0.5">
-                  <button type="button"
-                    v-for="(word, wordIndex) in cleanedSentenceWords"
-                    :key="`${word}-${wordIndex}-${currentSentence?.sentence_id}`"
-                    v-motion="{
-                      initial: { opacity: 0, scale: 0.5 },
-                      enter: {
-                        opacity: 1,
-                        scale: 1,
-                        transition: {
-                          delay: wordIndex * 50,
-                          type: 'spring',
-                          stiffness: 500,
-                          damping: 20,
-                        },
-                      },
-                    }"
-                    @click="checkSentence(word, wordIndex)"
-                    class="btn"
-                    :class="
-                      successButtonsIndex.includes(wordIndex)
-                        ? 'disabled text-hidden btn-outline-success'
-                        : errorButtonsIndex.includes(wordIndex)
-                        ? 'btn-danger wobble'
-                        : 'btn-light'
-                    "
-                  >
-                    {{ word }}
-                  </button>
-                </div>
-              </div>
+            <!-- Слова: нажимайте по порядку -->
+            <div class="word-bank">
+              <button
+                type="button"
+                v-for="(word, wordIndex) in cleanedSentenceWords"
+                :key="`${word}-${wordIndex}-${currentSentence?.sentence_id}`"
+                v-motion="{
+                  initial: { opacity: 0, y: 8 },
+                  enter: {
+                    opacity: 1,
+                    y: 0,
+                    transition: { delay: wordIndex * 40, type: 'spring', stiffness: 500, damping: 22 },
+                  },
+                }"
+                @click="checkSentence(word, wordIndex)"
+                class="word-chip"
+                :class="{
+                  used: successButtonsIndex.includes(wordIndex),
+                  'is-wrong-chip': errorButtonsIndex.includes(wordIndex),
+                }"
+                :disabled="successButtonsIndex.includes(wordIndex) || isComplete"
+              >
+                {{ word }}
+              </button>
             </div>
           </div>
         </div>
 
         <div v-if="timeIsUp || isWrong" class="col-span-12">
-          <div class="flex justify-center">
+          <div class="task-actions justify-center">
             <button type="button" class="btn btn-primary btn-lg" @click="setSentence()">
-              <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
+              {{ $t("continue") }}
+              <i class="pi pi-arrow-right" aria-hidden="true"></i>
             </button>
           </div>
         </div>
@@ -202,6 +206,10 @@ const maxWrongWordAttempts = ref(3);
 const isWrong = ref(false);
 
 const sentencesLeft = computed(() => sentences.value.length);
+
+const totalWords = computed(() =>
+  cleanedSentence.value ? cleanedSentence.value.split(" ").filter(Boolean).length : 0,
+);
 
 const progressPercentage = computed(() => {
   const totalSentences = taskData.value?.sentences?.length || 0; // Предотвращаем ошибки, если данные ещё не загружены
@@ -298,26 +306,27 @@ const setSentence = () => {
     currentSentence.value = sentences.value[0];
     currentSentence.value.wrongWordAttempts = maxWrongWordAttempts.value;
 
+    const source = String(
+      taskData.value.options.in_the_main_lang
+        ? currentSentence.value.sentence
+        : currentSentence.value.sentence_translate,
+    ).trim();
+
     // Очищаем текущее предложение от знаков препинания
-    cleanedSentence.value = taskData.value.options.in_the_main_lang
-      ? currentSentence.value.sentence
-          .toLowerCase()
-          .replace(/[{}|<>.,:;""!?\/]/g, "")
-          .replace(/\s+/g, " ")
-      : currentSentence.value.sentence_translate
-          .toLowerCase()
-          .replace(/[{}|<>.,:;""!?\/]/g, "")
-          .replace(/\s+/g, " ");
+    cleanedSentence.value = source
+      .toLowerCase()
+      .replace(/[{}|<>.,:;""!?\/]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
 
     cleanedSentenceWords.value = cleanedSentence.value
       .split(" ")
+      .filter(Boolean)
       .sort(() => Math.random() - 0.5);
 
     assembledWordsCount.value = 0;
 
-    originalSentence.value = taskData.value.options.in_the_main_lang
-      ? currentSentence.value.sentence.split(" ")
-      : currentSentence.value.sentence_translate.split(" ");
+    originalSentence.value = source.split(/\s+/).filter(Boolean);
     displayedSentence.value = [];
     isComplete.value = false;
     isStarted.value = true;
@@ -349,6 +358,7 @@ const moveToEnd = () => {
 };
 
 const checkSentence = (word, wordIndex) => {
+  if (isStarted.value !== true) return;
   if (word === cleanedSentence.value.split(" ")[assembledWordsCount.value]) {
     if (cleanedSentence.value.length > assembledWordsCount.value) {
       assembledWordsCount.value++;

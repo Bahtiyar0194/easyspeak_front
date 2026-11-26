@@ -14,7 +14,7 @@
           v-else-if="props.material.file_material_type_slug === 'audio'"
           :src="config.public.apiBase + '/media/get/' + props.material.target"
         />
-        <img
+        <img v-skeleton="'16/9'"
           v-else-if="props.material.file_material_type_slug === 'image'"
           :src="config.public.apiBase + '/media/get/' + props.material.target"
           class="w-full h-auto"

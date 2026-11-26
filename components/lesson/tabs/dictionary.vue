@@ -1,8 +1,24 @@
 <template>
   <div class="custom-grid">
-    <roleProvider :roles="[1]">
-      <div class="col-span-12">
-        <div class="btn-wrap">
+    <!-- Поиск по словам + добавление (админ) -->
+    <div class="col-span-12">
+      <div class="flex flex-wrap items-center gap-3">
+        <div
+          v-if="categories.length > 0"
+          class="form-group-border active flex-1 min-w-[220px] max-w-md"
+        >
+          <i class="pi pi-search"></i>
+          <input
+            v-model="search"
+            type="search"
+            placeholder=" "
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+          />
+          <label>{{ $t("pages.dictionary.search") }}</label>
+        </div>
+        <roleProvider :roles="[1]">
           <button
             type="button"
             class="btn btn-outline-primary"
@@ -12,110 +28,90 @@
               })
             "
           >
-            <i class="pi pi-plus"></i>
+            <i class="pi pi-plus" aria-hidden="true"></i>
             {{ $t("pages.dictionary.add") }}
           </button>
-        </div>
+        </roleProvider>
       </div>
-    </roleProvider>
-    <div class="col-span-12">
-      <ul v-if="categories.length > 0" class="list-group active">
-        <li
-          v-for="(category, categoryIndex) in categories"
-          :key="categoryIndex"
-          class="list-item"
+    </div>
+
+    <div class="col-span-12 relative">
+      <loader
+        v-if="pendingDictionary && categories.length"
+        :className="'overlay !rounded-2xl'"
+      />
+
+      <div v-if="filteredCategories.length > 0" class="flex flex-col gap-3">
+        <section
+          v-for="item in filteredCategories"
+          :key="item.categoryIndex"
+          class="dict-cat"
+          :class="{ open: isOpen(item.categoryIndex) }"
         >
-          <div>
-            <div
-              @click="toggleAccordion(categoryIndex)"
-              class="flex justify-between items-center gap-4 hover:cursor-pointer"
-            >
-              <div class="flex flex-col">
-                <h5
-                  class="mb-0"
-                  :class="activeSectionIndex === categoryIndex && 'text-corp'"
-                >
-                  {{ category.category_slug }} - {{ category.category_name }}
-                </h5>
-                <span
-                  v-if="category.dictionary.length"
-                  class="text-active text-sm"
-                  >{{ $t("pages.dictionary.count") }}:
-                  <b>{{ category.dictionary.length }}</b></span
-                >
-              </div>
-              <div class="btn btn-circle btn-light">
-                <i
-                  class="pi pi-angle-down duration-500"
-                  :class="categoryIndex === activeSectionIndex && 'rotate-180'"
-                ></i>
-              </div>
-            </div>
-          </div>
-
-          <div
-            class="transition-all duration-500 ease-in-out overflow-hidden"
-            :class="activeSectionIndex === categoryIndex ? 'h-auto' : 'h-0'"
+          <button
+            type="button"
+            class="dict-cat-head"
+            :aria-expanded="isOpen(item.categoryIndex)"
+            @click="toggleAccordion(item.categoryIndex)"
           >
-            <div class="table table-striped table-sm mt-4">
-              <table>
-                <thead>
-                  <tr>
-                    <th>{{ $t("pages.dictionary.word") }}</th>
-                    <th>
-                      {{
-                        $t(
-                          "pages.dictionary.translate." + localeProperties.code
-                        )
-                      }}
-                    </th>
-                    <th class="hidden md:block">
-                      {{ $t("pages.dictionary.transcription") }}
-                    </th>
-                    <th></th>
-                  </tr>
-                </thead>
+            <span class="dict-cat-badge">{{ item.category.category_slug }}</span>
+            <span class="flex-1 min-w-0 flex flex-col text-left">
+              <span class="font-semibold leading-snug">{{
+                item.category.category_name
+              }}</span>
+              <span class="text-xs text-inactive"
+                >{{ $t("pages.dictionary.count") }}:
+                {{ item.words.length }}</span
+              >
+            </span>
+            <i class="pi pi-angle-down dict-cat-chevron" aria-hidden="true"></i>
+          </button>
 
-                <tbody>
-                  <tr v-for="word in category.dictionary" :key="word.word_id">
-                    <td class="font-medium">{{ word.word }}</td>
-                    <td>{{ word.word_translate }}</td>
-                    <td class="hidden md:block">[{{ word.transcription }}]</td>
-                    <td>
-                      <div class="flex items-center gap-x-4">
-                        <audioButton
-                          v-if="word.audio_file"
-                          :src="
-                            config.public.apiBase +
-                            '/media/get/' +
-                            word.audio_file
-                          "
-                          @click.stop
-                        />
-                        <div
-                          v-if="word.image_file"
-                          :style="{
-                            backgroundImage:
-                              'url(' +
-                              config.public.apiBase +
-                              '/media/get/' +
-                              word.image_file +
-                              ')',
-                          }"
-                          class="h-9 w-9 bg-cover bg-no-repeat bg-center rounded-lg"
-                        ></div>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+          <div v-show="isOpen(item.categoryIndex)" class="dict-words">
+            <div v-for="word in item.words" :key="word.word_id" class="dict-word">
+              <div
+                v-if="word.image_file"
+                class="dict-word-img"
+                :style="{
+                  backgroundImage:
+                    'url(' + config.public.apiBase + '/media/get/' + word.image_file + ')',
+                }"
+                aria-hidden="true"
+              ></div>
+              <div class="flex-1 min-w-0">
+                <p class="mb-0 font-semibold leading-snug break-words">
+                  {{ word.word }}
+                  <span
+                    v-if="word.transcription"
+                    class="font-normal text-inactive text-sm"
+                    >[{{ word.transcription }}]</span
+                  >
+                </p>
+                <p class="mb-0 text-sm text-inactive break-words">
+                  {{ word.word_translate }}
+                </p>
+              </div>
+              <audioButton
+                v-if="word.audio_file"
+                :src="config.public.apiBase + '/media/get/' + word.audio_file"
+                @click.stop
+              />
             </div>
           </div>
-        </li>
-      </ul>
-      <alert v-else :className="'light'">
-        <p class="mb-0">{{ $t("pages.dictionary.there_are_no_words") }}</p>
-      </alert>
+        </section>
+      </div>
+
+      <emptyState
+        v-else-if="categories.length > 0"
+        :text="$t('nothing_was_found_for_your_query')"
+        icon="bi bi-search"
+      />
+      <emptyState
+        v-else
+        :pending="pendingDictionary"
+        :text="$t('pages.dictionary.there_are_no_words')"
+        icon="bi bi-inbox"
+      />
     </div>
   </div>
 
@@ -142,7 +138,7 @@ import { useRouter } from "nuxt/app";
 import loader from "../../ui/loader.vue";
 import roleProvider from "../../ui/roleProvider.vue";
 import modal from "../../ui/modal.vue";
-import alert from "../../ui/alert.vue";
+import emptyState from "~/components/ui/emptyState.vue";
 import audioButton from "../../ui/audioButton.vue";
 import { debounceHandler } from "../../../utils/debounceHandler";
 const config = useRuntimeConfig();
@@ -162,6 +158,29 @@ const modalIsVisible = ref(false);
 const currentModal = shallowRef(null);
 const deleteModalIsVisible = ref(false);
 const activeSectionIndex = ref(null);
+const search = ref("");
+
+// Поиск по слову, переводу и транскрипции. Во время поиска раскрыты все
+// категории, где что-то нашлось; пустые категории скрыты.
+const filteredCategories = computed(() => {
+  const q = search.value.trim().toLowerCase();
+  return categories.value
+    .map((category, categoryIndex) => ({
+      category,
+      categoryIndex,
+      words: q
+        ? category.dictionary.filter((w) =>
+            [w.word, w.word_translate, w.transcription].some((v) =>
+              String(v || "").toLowerCase().includes(q),
+            ),
+          )
+        : category.dictionary,
+    }))
+    .filter((item) => !q || item.words.length > 0);
+});
+
+const isOpen = (index) =>
+  search.value.trim() !== "" || activeSectionIndex.value === index;
 
 const props = defineProps({
   lesson_id: {
@@ -218,6 +237,9 @@ const getLessonDictionary = async () => {
     .then((response) => {
       categories.value = response.data;
       pendingDictionary.value = false;
+      if (activeSectionIndex.value === null && categories.value.length) {
+        activeSectionIndex.value = 0;
+      }
     })
     .catch((err) => {
       if (err.response) {
@@ -260,7 +282,7 @@ const deleteDictionarySubmit = async () => {
     .catch((err) => {
       if (err.response) {
         if (err.response.status == 422) {
-          errors.value = err.response.data;
+          deleteModalIsVisible.value = false;
         } else {
           router.push({
             path: "/error",
@@ -309,6 +331,7 @@ const debounceOrder = debounceHandler(orderCategories, 2000);
 
 const order = (direction, index, event) => {
   const parent = event.closest("li");
+  if (!parent) return;
 
   if (direction === "up" && index > 0) {
     [categories.value[index - 1], categories.value[index]] = [

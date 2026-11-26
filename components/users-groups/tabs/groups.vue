@@ -1,21 +1,33 @@
 <template>
   <div class="custom-grid">
+    <!-- Панель: фильтр слева, главное действие справа -->
     <div class="col-span-12">
-      <div class="btn-wrap">
+      <div class="list-toolbar">
+        <button
+          type="button"
+          @click="showHideGroupSearchFilter"
+          class="btn"
+          :class="searchFilter ? 'btn-outline-primary' : 'btn-light'"
+          :aria-pressed="searchFilter"
+          :title="searchFilter ? $t('hide_search_filter') : $t('show_search_filter')"
+        >
+          <i class="pi pi-filter" aria-hidden="true"></i>
+          {{ $t("filter") }}
+        </button>
+        <span v-if="groups.total" class="text-sm text-inactive">
+          {{ $t("found") }}: <b class="text-active">{{ groups.total }}</b>
+        </span>
+
         <roleProvider :roles="[1, 2, 3]">
-          <button type="button" @click="openCreateModal()" class="btn btn-outline-primary">
-            <i class="pi pi-plus"></i>
+          <button
+            type="button"
+            @click="openCreateModal()"
+            class="btn btn-primary ml-auto"
+          >
+            <i class="pi pi-plus" aria-hidden="true"></i>
             {{ $t("pages.groups.create_group") }}
           </button>
         </roleProvider>
-        <button type="button" @click="showHideGroupSearchFilter" class="btn btn-light">
-          <i class="pi pi-search"></i>
-          {{
-            searchFilter === true
-              ? $t("hide_search_filter")
-              : $t("show_search_filter")
-          }}
-        </button>
       </div>
     </div>
 
@@ -151,12 +163,10 @@
               </div>
 
               <div class="col-span-12">
-                <div class="btn-wrap">
-                  <button type="submit" class="btn btn-sm btn-outline-primary">
-                    <i class="pi pi-undo"></i>
-                    {{ $t("reset_search_filter") }}
-                  </button>
-                </div>
+                <button type="submit" class="btn btn-light full">
+                  <i class="pi pi-filter-slash" aria-hidden="true"></i>
+                  {{ $t("reset_search_filter") }}
+                </button>
               </div>
             </div>
           </form>
@@ -164,14 +174,14 @@
       </stickyBox>
     </div>
 
-    <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
+    <div class="col-span-12 relative" :class="searchFilter && 'lg:col-span-9'">
       <template v-if="groups.data?.length > 0">
-        <div class="table table-striped table-sm selectable">
-          <loader
-            v-if="pending"
-            :className="'overlay'"
-            :showPendingText="true"
-          />
+        <loader
+          v-if="pending"
+          :className="'overlay !rounded-xl'"
+          :showPendingText="true"
+        />
+        <div class="table table-striped table-sm selectable max-md:!hidden">
           <table ref="tableRef">
             <thead>
               <tr>
@@ -196,7 +206,7 @@
                 :key="group.group_id"
                 @click="getGroup(group.group_id)"
               >
-                <td>{{ group.group_name }}</td>
+                <td class="font-medium">{{ group.group_name }}</td>
                 <td>{{ group.course_name }}</td>
                 <td>{{ group.level_name }}</td>
                 <td>
@@ -250,13 +260,61 @@
                     })
                   }}
                 </td>
-                <td :class="group.status_color">
-                  {{ group.status_type_name }}
+                <td>
+                  <span class="status-pill" :class="group.status_color">
+                    {{ group.status_type_name }}
+                  </span>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
+
+        <!-- Телефон: карточки вместо широкой таблицы -->
+        <ul class="entity-list md:hidden">
+          <li v-for="group in groups.data" :key="group.group_id">
+            <button
+              type="button"
+              class="entity-card !items-start"
+              @click="getGroup(group.group_id)"
+            >
+              <span class="task-icon !w-10 !h-10 !text-lg" aria-hidden="true">
+                <i class="pi pi-users"></i>
+              </span>
+              <span class="flex-1 min-w-0 flex flex-col gap-1 text-left">
+                <span class="font-semibold leading-snug">{{
+                  group.group_name
+                }}</span>
+                <span class="text-xs text-inactive"
+                  >{{ group.course_name }} · {{ group.level_name }}</span
+                >
+                <span class="flex items-center gap-1.5 text-xs">
+                  <userAvatar
+                    :padding="0.5"
+                    :className="'w-5 h-5 text-[8px]'"
+                    :user="{
+                      last_name: group.mentor_last_name,
+                      first_name: group.mentor_first_name,
+                      avatar: group.mentor_avatar,
+                    }"
+                  />
+                  <span class="truncate"
+                    >{{ group.mentor_last_name }}
+                    {{ group.mentor_first_name }}</span
+                  >
+                  <span class="text-inactive whitespace-nowrap"
+                    >· <i class="pi pi-user text-[10px]"></i>
+                    {{ group.members_count }}</span
+                  >
+                </span>
+                <span class="status-pill wrap mt-0.5" :class="group.status_color">
+                  {{ group.status_type_name }}
+                </span>
+              </span>
+              <i class="pi pi-chevron-right text-inactive text-xs self-center" aria-hidden="true"></i>
+            </button>
+          </li>
+        </ul>
         <div class="btn-wrap mt-4">
           <pagination
             :items="groups"
@@ -265,10 +323,7 @@
           />
         </div>
       </template>
-      <alert v-else :className="'light'">
-        <loader v-if="pending" :className="'overlay'" :showPendingText="true" />
-        <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
-      </alert>
+      <emptyState v-else :pending="pending" :text="$t('nothing_was_found_for_your_query')" icon="bi bi-search" />
     </div>
   </div>
 
@@ -284,101 +339,96 @@
       <h4>{{ currentGroup?.group_name }}</h4>
     </template>
     <template v-slot:body_content>
-      <div v-if="currentGroup" class="flex flex-col gap-y-3">
-        <p v-if="currentGroup.group_description" class="mb-0">
-          <span class="text-inactive"
-            >{{ $t("pages.groups.group_description") }}:
-          </span>
-          <b>{{ currentGroup.group_description }}</b>
-        </p>
-        <p class="mb-0">
-          <span class="text-inactive"
-            >{{ $t("pages.groups.group_category") }}:
-          </span>
-          <b>{{ currentGroup.level.level_name }}</b>
+      <div v-if="currentGroup" class="flex flex-col gap-4">
+        <p
+          v-if="currentGroup.group_description"
+          class="mb-0 text-inactive whitespace-pre-line"
+        >
+          {{ currentGroup.group_description }}
         </p>
 
-        <div class="flex gap-x-2 items-center">
-          <p class="mb-0">
-            <span class="text-inactive">{{ $t("mentor") }}: </span>
+        <dl class="info-list">
+          <div>
+            <dt>
+              <i class="pi pi-book"></i> {{ $t("pages.groups.group_category") }}
+            </dt>
+            <dd>{{ currentGroup.level.level_name }}</dd>
+          </div>
+          <div v-if="currentGroup.mentor">
+            <dt><i class="pi pi-user"></i> {{ $t("mentor") }}</dt>
+            <dd><userTag :user="currentGroup.mentor" class="w-fit" /></dd>
+          </div>
+          <div v-if="currentGroup.operator">
+            <dt><i class="pi pi-headphones"></i> {{ $t("operator") }}</dt>
+            <dd><userTag :user="currentGroup.operator" class="w-fit" /></dd>
+          </div>
+          <div v-if="currentGroup.current_price">
+            <dt><i class="pi pi-wallet"></i> {{ $t("pages.lessons.price") }}</dt>
+            <dd>
+              {{ currentGroup.current_price.toLocaleString("ru-RU") }}
+              {{ $contacts.bank.currency.symbol }}
+            </dd>
+          </div>
+          <div>
+            <dt>
+              <i class="pi pi-credit-card"></i>
+              {{ $t("pages.payment.payment_form") }}
+            </dt>
+            <dd>
+              {{
+                currentGroup.is_legal === 1
+                  ? $t("pages.payment.forms.legal_entity")
+                  : $t("pages.payment.forms.natural_person")
+              }}
+            </dd>
+          </div>
+          <div>
+            <dt>
+              <i class="pi pi-gift"></i>
+              {{ $t("pages.lessons.first_lesson_free") }}
+            </dt>
+            <dd>
+              {{ currentGroup.first_lesson_free === 1 ? $t("yes") : $t("no") }}
+            </dd>
+          </div>
+        </dl>
+
+        <!-- Участники: клик — успеваемость ученика -->
+        <div v-if="currentGroup.group_members" class="flex flex-col gap-2">
+          <p class="mb-0 font-semibold flex items-center gap-2">
+            {{ $t("pages.groups.members") }}
+            <span class="db-count">{{ currentGroup.group_members.length }}</span>
           </p>
-          <userTag v-if="currentGroup.mentor" :user="currentGroup.mentor" />
-        </div>
-
-        <div class="flex gap-x-2 items-center">
-          <p class="mb-0">
-            <span class="text-inactive">{{ $t("operator") }}:</span>
-          </p>
-          <userTag v-if="currentGroup.operator" :user="currentGroup.operator" />
-        </div>
-
-        <p class="mb-0">
-          <span class="text-inactive"
-            >{{ $t("pages.lessons.first_lesson_free") }}:
-          </span>
-          <b>{{
-            currentGroup.first_lesson_free === 1 ? $t("yes") : $t("no")
-          }}</b>
-        </p>
-
-        <p v-if="currentGroup.current_price" class="mb-0">
-          <span class="text-inactive">{{ $t("pages.lessons.price") }}: </span>
-          <b
-            >{{ currentGroup.current_price.toLocaleString("ru-RU") }}
-            {{ $contacts.bank.currency.symbol }}</b
-          >
-        </p>
-
-        <p class="mb-0">
-          <span class="text-inactive"
-            >{{ $t("pages.payment.payment_form") }}:
-          </span>
-          <b>{{
-            currentGroup.is_legal === 1
-              ? $t("pages.payment.forms.legal_entity")
-              : $t("pages.payment.forms.natural_person")
-          }}</b>
-        </p>
-
-        <p class="mb-0" v-if="currentGroup.group_members">
-          <span class="text-inactive"
-            >{{ $t("pages.groups.members_count") }}:
-          </span>
-          <b>{{ currentGroup.group_members.length }}</b>
-        </p>
-
-        <p class="mb-0">
-          <span class="text-inactive">{{ $t("pages.groups.members") }}:</span>
-        </p>
-
-        <div v-if="currentGroup.group_members" class="btn-wrap">
-          <template
-            v-for="(member, index) in currentGroup.group_members"
-            :key="index"
-          >
+          <div class="btn-wrap">
             <userTag
+              v-for="(member, index) in currentGroup.group_members"
+              :key="index"
               :user="member"
               :selectable="true"
               :title="$t('pages.education-program.get_grade')"
               @click="getGrade(member)"
             />
-          </template>
+          </div>
+          <p class="mb-0 text-xs text-inactive">
+            <i class="pi pi-info-circle" aria-hidden="true"></i>
+            {{ $t("pages.groups.member_click_hint") }}
+          </p>
         </div>
 
-        <div class="btn-wrap">
+        <div class="btn-wrap pt-2 border-t border-dashed" style="border-top-color: var(--surface-border)">
           <button type="button" @click="openScheduleModal" class="btn btn-light">
-            <i class="pi pi-calendar-clock"></i>
+            <i class="pi pi-calendar-clock" aria-hidden="true"></i>
             {{ $t("pages.schedule.show_schedule") }}
           </button>
 
           <roleProvider :roles="[1, 2, 3]">
             <button type="button" @click="openPaymentsModal" class="btn btn-light">
-              <i class="pi pi-credit-card"></i>
+              <i class="pi pi-credit-card" aria-hidden="true"></i>
               {{ $t("pages.payment.title") }}
             </button>
 
             <button type="button" @click="getEditGroup" class="btn btn-light">
-              <i class="pi pi-pencil"></i>
+              <i class="pi pi-pencil" aria-hidden="true"></i>
               {{ $t("edit") }}
             </button>
           </roleProvider>
@@ -857,7 +907,7 @@ import modal from "../../ui/modal.vue";
 import subscription from "../../ui/subscription.vue";
 import scheduleGrid from "../../schedule/scheduleGrid.vue";
 import loader from "../../ui/loader.vue";
-import alert from "../../ui/alert.vue";
+import emptyState from "~/components/ui/emptyState.vue";
 import userAvatar from "../../ui/userAvatar.vue";
 import userTag from "../../ui/userTag.vue";
 import stickyBox from "../../ui/stickyBox.vue";

@@ -1,10 +1,5 @@
 <template>
   <div class="custom-grid">
-    <div class="col-span-12">
-      <h2>{{ props.lessonData?.lesson_name }}</h2>
-      <p class="mb-0">{{ props.lessonData?.lesson_description }}</p>
-    </div>
-
     <roleProvider :roles="[1]">
       <div class="col-span-12">
         <div class="btn-wrap">
@@ -16,7 +11,7 @@
             >
               <template v-slot:btn_content>
                 <button type="button" class="btn btn-outline-primary">
-                  <i class="pi pi-plus"></i>
+                  <i class="pi pi-plus" aria-hidden="true"></i>
                   {{ $t("materials.add_material") }}
                 </button>
               </template>
@@ -53,60 +48,76 @@
     >
       <TransitionGroup
         tag="ul"
-        class="list-group active"
+        class="task-list"
         :move="{ transition: { duration: 0.3 } }"
       >
         <li
           v-for="(material, materialIndex) in props.lessonData.materials"
           :key="material.lesson_material_id"
         >
-          <div class="flex items-center justify-between gap-4">
-            <div
-              class="flex gap-2 items-center link w-full"
+          <div class="task-row">
+            <button
+              type="button"
+              class="task-row-main"
               @click="openMaterial(material)"
             >
-              <i
-                class="text-3xl text-active"
-                :class="material.file_icon || material.block_icon"
-              ></i>
-              <div class="flex flex-col gap-y-0.5">
-                <span class="font-bold text-active">{{
+              <span
+                class="task-icon"
+                :class="material.block_material_type_slug ? 'block' : 'file'"
+                aria-hidden="true"
+              >
+                <i :class="material.file_icon || material.block_icon"></i>
+              </span>
+              <span class="flex-1 min-w-0 flex flex-col gap-0.5 text-left">
+                <span class="font-semibold leading-snug">{{
                   material.annotation
                 }}</span>
-                <span class="text-inactive text-xs">{{
+                <span class="text-xs text-inactive">{{
                   material.file_material_type_name ||
                   material.block_material_type_name
                 }}</span>
-              </div>
-            </div>
+              </span>
+              <i
+                class="pi pi-chevron-right text-inactive max-sm:hidden"
+                aria-hidden="true"
+              ></i>
+            </button>
 
             <roleProvider :roles="[1]">
-              <div class="flex gap-x-1 justify-end">
-                <button type="button"
+              <div class="task-row-actions">
+                <button
+                  type="button"
                   @click="order('up', materialIndex, $event.target)"
                   class="btn btn-square btn-light btn-sm btn-up"
                   :title="$t('move_up')"
+                  :aria-label="$t('move_up')"
                 >
                   <i class="pi pi-arrow-up"></i>
                 </button>
-                <button type="button"
+                <button
+                  type="button"
                   @click="order('down', materialIndex, $event.target)"
                   class="btn btn-square btn-light btn-sm btn-down"
                   :title="$t('move_down')"
+                  :aria-label="$t('move_down')"
                 >
                   <i class="pi pi-arrow-down"></i>
                 </button>
-                <button type="button"
+                <button
+                  type="button"
                   @click="openEditModal(material)"
                   class="btn btn-square btn-light btn-sm"
                   :title="$t('edit')"
+                  :aria-label="$t('edit')"
                 >
                   <i class="pi pi-pencil"></i>
                 </button>
-                <button type="button"
-                  @click="openDeleteModal(material)"
-                  class="btn btn-square btn-outline-danger btn-sm"
+                <button
+                  type="button"
+                  @click="confirmDeleteMaterial(material)"
+                  class="btn btn-square btn-light btn-delete btn-sm"
                   :title="$t('delete')"
+                  :aria-label="$t('delete')"
                 >
                   <i class="pi pi-trash"></i>
                 </button>
@@ -118,9 +129,10 @@
     </div>
 
     <div v-else class="col-span-12">
-      <alert :className="'light'">
-        <p class="mb-0">{{ $t("pages.lessons.there_are_no_materials") }}</p>
-      </alert>
+      <emptyState
+        :text="$t('pages.lessons.there_are_no_materials')"
+        icon="bi bi-inbox"
+      />
     </div>
   </div>
 
@@ -211,8 +223,13 @@
           />
         </div>
         <div class="btn-wrap justify-end mt-4">
-          <button class="btn btn-primary" type="submit">
-            <i class="pi pi-check"></i>
+          <button
+            class="btn btn-primary"
+            :class="{ loading: pendingAdd }"
+            :disabled="pendingAdd"
+            type="submit"
+          >
+            <i class="pi pi-check" aria-hidden="true"></i>
             {{ $t("add") }}
           </button>
         </div>
@@ -307,8 +324,13 @@
           />
         </div>
         <div class="btn-wrap justify-end mt-4">
-          <button class="btn btn-primary" type="submit">
-            <i class="pi pi-check"></i>
+          <button
+            class="btn btn-primary"
+            :class="{ loading: pendingEdit }"
+            :disabled="pendingEdit"
+            type="submit"
+          >
+            <i class="pi pi-check" aria-hidden="true"></i>
             {{ $t("save") }}
           </button>
         </div>
@@ -316,33 +338,6 @@
     </template>
   </modal>
 
-  <modal
-    :show="deleteModalIsVisible"
-    :onClose="() => (deleteModalIsVisible = false)"
-    :className="'modal-lg'"
-    :showLoader="pendingDelete"
-    :closeOnClickSelf="true"
-  >
-    <template v-slot:header_content>
-      <h5>{{ $t("materials.delete_material") }}</h5>
-    </template>
-    <template v-slot:body_content>
-      <p>{{ $t("materials.delete_confirm") }}</p>
-      <div class="btn-wrap justify-end mt-4">
-        <button type="button"
-          @click="deleteMaterialSubmit(currentMaterial.lesson_material_id)"
-          class="btn btn-outline-danger"
-        >
-          <i class="pi pi-trash"></i>
-          {{ $t("yes") }}
-        </button>
-        <button type="button" @click="deleteModalIsVisible = false" class="btn btn-light">
-          <i class="pi pi-ban"></i>
-          {{ $t("no") }}
-        </button>
-      </div>
-    </template>
-  </modal>
 </template>
 <script setup>
 import { scrollIntoView } from "seamless-scroll-polyfill";
@@ -355,8 +350,10 @@ import uploadOrSelectFile from "../../ui/uploadOrSelectFile.vue";
 import textEditor from "../../ui/textEditor.vue";
 import tableEditor from "../../ui/tableEditor.vue";
 import materialViewer from "../components/materialViewer.vue";
-import alert from "../../ui/alert.vue";
+import emptyState from "~/components/ui/emptyState.vue";
 import { debounceHandler } from "../../../utils/debounceHandler";
+import { useConfirm } from "~/composables/useConfirm";
+import { useNotify } from "~/composables/useNotify";
 
 const router = useRouter();
 const config = useRuntimeConfig();
@@ -364,7 +361,6 @@ const { $axiosPlugin } = useNuxtApp();
 const materialModalIsVisible = ref(false);
 const addModalIsVisible = ref(false);
 const editModalIsVisible = ref(false);
-const deleteModalIsVisible = ref(false);
 const addFormRef = ref(null);
 const editFormRef = ref(null);
 const pendingAdd = ref(false);
@@ -377,6 +373,9 @@ const errors = ref([]);
 const selectOtherFile = ref(false);
 
 const getLesson = inject("getLesson");
+const { t } = useI18n();
+const confirm = useConfirm();
+const notify = useNotify();
 
 const props = defineProps({
   lessonData: {
@@ -421,6 +420,7 @@ const closeAddModal = () => {
 };
 
 const addMaterialSubmit = async () => {
+  if (pendingAdd.value) return;
   pendingAdd.value = true;
   uploadProgress.value = 0;
   const formData = new FormData(addFormRef.value);
@@ -487,6 +487,7 @@ const closeEditModal = () => {
 };
 
 const editMaterialSubmit = async () => {
+  if (pendingEdit.value) return;
   pendingEdit.value = true;
   uploadProgress.value = 0;
   const formData = new FormData(editFormRef.value);
@@ -538,14 +539,18 @@ const editMaterialSubmit = async () => {
     });
 };
 
-const openDeleteModal = (material) => {
-  currentMaterial.value = null;
-  materialModalIsVisible.value = false;
-  currentMaterial.value = material;
-  deleteModalIsVisible.value = true;
+const confirmDeleteMaterial = async (material) => {
+  const ok = await confirm({
+    title: t("materials.delete_material"),
+    message: t("materials.delete_confirm"),
+    confirmText: t("delete"),
+    danger: true,
+  });
+  if (ok) deleteMaterialSubmit(material.lesson_material_id);
 };
 
 const deleteMaterialSubmit = async (lesson_material_id) => {
+  if (pendingDelete.value) return;
   pendingDelete.value = true;
   await $axiosPlugin
     .post(
@@ -557,14 +562,16 @@ const deleteMaterialSubmit = async (lesson_material_id) => {
         operation_type_id: 23, // Передача параметра в URL
       },
     )
-    .then((response) => {
-      deleteModalIsVisible.value = false;
+    .then(() => {
       getLesson();
     })
     .catch((err) => {
       if (err.response) {
         if (err.response.status == 422) {
-          errors.value = err.response.data;
+          notify(
+            "danger",
+            err.response.data?.message || t("an_error_occurred"),
+          );
         } else {
           router.push({
             path: "/error",
@@ -616,6 +623,7 @@ const debounceOrder = debounceHandler(orderMaterials, 2000);
 
 const order = (direction, index, event) => {
   const parent = event.closest("li");
+  if (!parent) return;
 
   if (direction === "up" && index > 0) {
     [props.lessonData.materials[index - 1], props.lessonData.materials[index]] =

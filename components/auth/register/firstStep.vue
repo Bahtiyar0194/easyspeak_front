@@ -3,7 +3,7 @@
     <div class="col-span-12 lg:col-span-6">
       <div class="form-group-border active">
         <i class="pi pi-graduation-cap"></i>
-        <input type="text" name="school_name" placeholder=" " />
+        <input type="text" name="school_name" autocomplete="organization" placeholder=" " />
         <label :class="{ 'label-error': errors.school_name }">
           {{
             errors.school_name ? errors.school_name[0] : $t("form.school_name")
@@ -27,7 +27,7 @@
     <div class="col-span-12 lg:col-span-6">
       <div class="form-group-border active">
         <i class="pi pi-id-card"></i>
-        <input name="bin" v-mask="'############'" placeholder=" " />
+        <input name="bin" v-mask="'############'" inputmode="numeric" autocomplete="off" placeholder=" " />
         <label :class="{ 'label-error': errors.bin }">
           {{ errors.bin ? errors.bin[0] : $t("form.bin") }}
         </label>
@@ -38,9 +38,12 @@
       <div class="form-group-border active">
         <i class="pi pi-at"></i>
         <input
-          autoComplete="new-school-email"
+          autocomplete="email"
           name="school_email"
-          type="text"
+          type="email"
+          inputmode="email"
+          autocapitalize="none"
+          spellcheck="false"
           placeholder=" "
         />
         <label :class="{ 'label-error': errors.school_email }">
@@ -98,7 +101,7 @@
         <div class="col-span-12 lg:col-span-8">
           <div class="form-group-border active">
             <i class="pi pi-map-marker"></i>
-            <input type="text" name="street" placeholder=" " />
+            <input type="text" name="street" autocomplete="address-line1" placeholder=" " />
             <label :class="{ 'label-error': errors.street }">
               {{ errors.street ? errors.street[0] : $t("form.street") }}
             </label>
@@ -126,6 +129,10 @@
             type="text"
             v-model="domainName"
             name="school_domain"
+            autocomplete="off"
+            autocapitalize="none"
+            autocorrect="off"
+            spellcheck="false"
             placeholder=" "
           />
           <label :class="{ 'label-error': errors.school_domain }">
@@ -141,6 +148,8 @@
             class="!pl-2"
             type="text"
             readonly
+            tabindex="-1"
+            aria-hidden="true"
             :value="'.' + origin"
             placeholder=""
           />

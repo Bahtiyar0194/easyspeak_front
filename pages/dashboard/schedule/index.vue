@@ -2,20 +2,6 @@
   <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
   <div class="col-span-12">
     <div class="custom-grid">
-      <roleProvider :roles="[1, 2, 3, 4]">
-        <div class="col-span-12">
-          <div class="btn-wrap">
-            <button type="button" @click="showHideScheduleSearchFilter" class="btn btn-light">
-              <i class="pi pi-search"></i>
-              {{
-                searchFilter === true
-                  ? $t("hide_search_filter")
-                  : $t("show_search_filter")
-              }}
-            </button>
-          </div>
-        </div>
-      </roleProvider>
       <div
         class="col-span-12 lg:col-span-3"
         :class="searchFilter ? 'block' : 'hidden'"
@@ -134,6 +120,13 @@
                     <label>{{ $t("pages.schedule.start_date_to") }}</label>
                   </div>
                 </div>
+
+                <div class="col-span-12">
+                  <button type="submit" class="btn btn-light full">
+                    <i class="pi pi-filter-slash" aria-hidden="true"></i>
+                    {{ $t("reset_search_filter") }}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -147,7 +140,27 @@
           :schedule="schedule"
           :pendingSchedule="pendingSchedule"
           :openEventModal="openEventModal"
-        />
+        >
+          <template #actions>
+            <roleProvider :roles="[1, 2, 3, 4]">
+              <button
+                type="button"
+                class="btn"
+                :class="searchFilter ? 'btn-outline-primary' : 'btn-light'"
+                :aria-pressed="searchFilter"
+                :title="
+                  searchFilter
+                    ? $t('hide_search_filter')
+                    : $t('show_search_filter')
+                "
+                @click="showHideScheduleSearchFilter"
+              >
+                <i class="pi pi-filter" aria-hidden="true"></i>
+                {{ $t("filter") }}
+              </button>
+            </roleProvider>
+          </template>
+        </scheduleGrid>
       </div>
     </div>
   </div>
@@ -165,27 +178,31 @@
     <template v-if="currentEvent" v-slot:body_content>
       <div class="custom-grid">
         <div class="col-span-12">
-          <template v-if="!schoolStore.isAiSchoolDomain">
-            <p class="text-inactive">
-              <i class="pi pi-book"></i> {{ $t("pages.courses.course") }}:
-              <b class="text-active"
-                >{{ currentEvent.course_name }} -
-                {{ currentEvent.level_name }}</b
-              >
-            </p>
-            <p class="text-inactive">
-              <i class="pi pi-users"></i> {{ $t("pages.groups.group") }}:
-              <b class="text-active">{{ currentEvent.group_name }}</b>
-            </p>
-            <p class="text-inactive">
-              <i class="pi pi-users"></i> {{ $t("pages.groups.group") }}:
-              <b class="text-active">{{ currentEvent.group_name }}</b>
-            </p>
-          </template>
-          <template v-else>
-            <p class="text-inactive">
-              <i class="pi pi-book"></i> {{ $t("pages.courses.title") }}:
-              <b class="text-active">
+          <dl class="info-list">
+            <template v-if="!schoolStore.isAiSchoolDomain">
+              <div>
+                <dt><i class="pi pi-book"></i> {{ $t("pages.courses.course") }}</dt>
+                <dd>
+                  {{ currentEvent.course_name }}
+                  <template v-if="currentEvent.level_name"
+                    >· {{ currentEvent.level_name }}</template
+                  >
+                </dd>
+              </div>
+              <div>
+                <dt><i class="pi pi-users"></i> {{ $t("pages.groups.group") }}</dt>
+                <dd>{{ currentEvent.group_name }}</dd>
+              </div>
+              <div v-if="currentEvent.lesson_type_name">
+                <dt>
+                  <i class="pi pi-tag"></i> {{ $t("pages.lessons.lesson_type") }}
+                </dt>
+                <dd>{{ currentEvent.lesson_type_name }}</dd>
+              </div>
+            </template>
+            <div v-else>
+              <dt><i class="pi pi-book"></i> {{ $t("pages.courses.title") }}</dt>
+              <dd>
                 <span class="text-list">
                   <span
                     v-for="(level, lIndex) in currentEvent.levels"
@@ -194,36 +211,54 @@
                     {{ level.level_name }}
                   </span>
                 </span>
-              </b>
-            </p>
-          </template>
+              </dd>
+            </div>
 
-          <p class="text-inactive">
-            <i class="pi pi-user"></i> {{ $t("mentor") }}:
-            <b class="text-active"
-              >{{
-                currentEvent.mentor_last_name ||
-                currentEvent.moderator_last_name ||
-                ""
-              }}
-              {{
-                currentEvent.mentor_first_name ||
-                currentEvent.moderator_first_name ||
-                ""
-              }}</b
-            >
-          </p>
-          <p class="text-inactive">
-            <i class="pi pi-clock"></i> {{ $t("start_time") }}:
-            <b class="text-active">{{ currentEvent.start_time_formatted }}</b>
-          </p>
-          <p class="text-inactive mb-0">
-            <i class="pi pi-clock"></i> {{ $t("end_time") }}:
-            <b class="text-active">{{ currentEvent.end_time_formatted }}</b>
-          </p>
+            <div>
+              <dt><i class="pi pi-user"></i> {{ $t("mentor") }}</dt>
+              <dd class="flex items-center gap-1.5">
+                <userAvatar
+                  :padding="0.5"
+                  :className="'w-6 h-6 text-[10px]'"
+                  :user="{
+                    last_name:
+                      currentEvent.mentor_last_name ||
+                      currentEvent.moderator_last_name ||
+                      '',
+                    first_name:
+                      currentEvent.mentor_first_name ||
+                      currentEvent.moderator_first_name ||
+                      '',
+                    avatar:
+                      currentEvent.mentor_avatar ||
+                      currentEvent.moderator_avatar ||
+                      '',
+                  }"
+                />
+                {{
+                  currentEvent.mentor_last_name ||
+                  currentEvent.moderator_last_name ||
+                  ""
+                }}
+                {{
+                  currentEvent.mentor_first_name ||
+                  currentEvent.moderator_first_name ||
+                  ""
+                }}
+              </dd>
+            </div>
+            <div>
+              <dt><i class="pi pi-clock"></i> {{ $t("start_time") }}</dt>
+              <dd>{{ currentEvent.start_time_formatted }}</dd>
+            </div>
+            <div>
+              <dt><i class="pi pi-clock"></i> {{ $t("end_time") }}</dt>
+              <dd>{{ currentEvent.end_time_formatted }}</dd>
+            </div>
+          </dl>
         </div>
         <div class="col-span-12">
-          <p>
+          <p class="font-medium">
             {{ $t("pages.groups.members") }}:
             <b>{{ currentEvent.members.length }}</b>
           </p>
@@ -259,7 +294,7 @@
                     currentEvent.operator_id === authUser.user_id)
                 "
                 class="btn btn-outline-danger"
-                @click="openDeleteModal()"
+                @click="confirmDeleteConference()"
               >
                 <i class="pi pi-trash"></i>{{ $t("delete") }}
               </button>
@@ -508,33 +543,6 @@
     </template>
   </modal>
 
-  <modal
-    :show="deleteModalIsVisible"
-    :onClose="() => closeDeleteModal()"
-    :className="'modal-lg'"
-    :showLoader="pendingDelete"
-    :closeOnClickSelf="false"
-  >
-    <template v-slot:header_content>
-      <h4>{{ $t("pages.conference.delete_conference") }}</h4>
-    </template>
-    <template v-slot:body_content>
-      <p>{{ $t("pages.conference.delete_confirm") }}</p>
-      <div class="btn-wrap justify-end mt-4">
-        <button type="button"
-          @click="deleteConferenceSubmit()"
-          class="btn btn-outline-danger"
-        >
-          <i class="pi pi-trash"></i>
-          {{ $t("yes") }}
-        </button>
-        <button type="button" @click="deleteModalIsVisible = false" class="btn btn-light">
-          <i class="pi pi-ban"></i>
-          {{ $t("no") }}
-        </button>
-      </div>
-    </template>
-  </modal>
 </template>
 <script setup>
 import { ref, computed } from "vue";
@@ -548,6 +556,9 @@ import roleProvider from "../../../components/ui/roleProvider.vue";
 import multipleSelect from "../../../components/ui/multipleSelect.vue";
 import userTag from "../../../components/ui/userTag.vue";
 import note from "../../../components/ui/note.vue";
+import userAvatar from "../../../components/ui/userAvatar.vue";
+import { useConfirm } from "~/composables/useConfirm";
+import { checkConferenceLiveNow } from "~/composables/useConferenceLive";
 
 const router = useRouter();
 const errors = ref([]);
@@ -570,7 +581,6 @@ const currentEvent = ref(null);
 
 const eventModalIsVisible = ref(false);
 const editModalIsVisible = ref(false);
-const deleteModalIsVisible = ref(false);
 
 const mentorOnlyForThisLesson = ref(1);
 const dateShiftByWeek = ref(0);
@@ -650,6 +660,8 @@ const editEventSubmit = async () => {
       pendingEdit.value = false;
       closeEditModal(true);
       getSchedule();
+      // Перенос мог сделать урок текущим или убрать его — обновим меню сразу
+      checkConferenceLiveNow();
     })
     .catch((err) => {
       if (err.response) {
@@ -672,23 +684,39 @@ const editEventSubmit = async () => {
     });
 };
 
+const confirm = useConfirm();
+
+const confirmDeleteConference = async () => {
+  const ok = await confirm({
+    title: t("pages.conference.delete_conference"),
+    message: t("pages.conference.delete_confirm"),
+    confirmText: t("delete"),
+    danger: true,
+  });
+  if (ok) deleteConferenceSubmit();
+};
+
 const deleteConferenceSubmit = async () => {
+  if (pendingDelete.value) return;
   pendingDelete.value = true;
+  pending.value = true;
   const formData = new FormData();
   formData.append("operation_type_id", 29);
   await $axiosPlugin
     .post("conferences/delete/" + currentEvent.value.uuid, formData)
-    .then((response) => {
+    .then(() => {
       pendingDelete.value = false;
-      closeDeleteModal();
+      pending.value = false;
       closeEventModal();
       getSchedule();
+      checkConferenceLiveNow();
     })
     .catch((err) => {
       if (err.response) {
         if (err.response.status == 422) {
           errors.value = err.response.data;
           pendingDelete.value = false;
+          pending.value = false;
         } else {
           router.push({
             path: "/error",
@@ -730,15 +758,6 @@ const closeEditModal = (state) => {
   if (state === false) {
     openEventModal(currentEvent.value.uuid);
   }
-};
-
-const openDeleteModal = () => {
-  deleteModalIsVisible.value = true;
-};
-
-const closeDeleteModal = () => {
-  deleteModalIsVisible.value = false;
-  pendingDelete.value = false;
 };
 
 const showHideScheduleSearchFilter = () => {

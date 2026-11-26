@@ -367,10 +367,7 @@
           </div>
         </template>
 
-        <alert v-else :className="'light'">
-          <loader v-if="pending" :className="'overlay'" :showPendingText="true"/>
-          <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
-        </alert>
+        <emptyState v-else :pending="pending" :text="$t('nothing_was_found_for_your_query')" icon="bi bi-search" />
       </div>
     </div>
   </div>
@@ -465,11 +462,11 @@
   </modal>
 </template>
 <script setup>
+import { useNotify } from "~/composables/useNotify";
 import { useRouter } from "nuxt/app";
-import { useToast } from "vue-toastification";
 import modal from "../../../components/ui/modal.vue";
 import loader from "../../../components/ui/loader.vue";
-import alert from "../../../components/ui/alert.vue";
+import emptyState from "~/components/ui/emptyState.vue";
 import userAvatar from "../../../components/ui/userAvatar.vue";
 import stickyBox from "../../../components/ui/stickyBox.vue";
 import pagination from "../../../components/ui/pagination.vue";
@@ -482,7 +479,7 @@ import sortTableHead from "../../../components/ui/sortTableHead.vue";
 
 const authUser = useSanctumUser();
 const router = useRouter();
-const toast = useToast();
+const notify = useNotify();
 const { $axiosPlugin } = useNuxtApp();
 const { t } = useI18n();
 const pending = ref(true);
@@ -666,10 +663,7 @@ const saveTaskResult = async () => {
     .catch((err) => {
       if (err.response) {
         if (err.response.status == 422) {
-          toast(err.response.data, {
-            toastClassName: ["custom-toast", "danger"],
-            timeout: 5000,
-          });
+          notify("danger", err.response.data);
           pendingTask.value = false;
         } else {
           router.push({

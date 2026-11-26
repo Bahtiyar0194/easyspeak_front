@@ -1,30 +1,71 @@
 <template>
-  <loader
-    v-if="pendingLesson"
-    :className="'full-overlay'"
-    :showPendingText="true"
-  />
-  <tabs
-    v-if="courseIsAvailable && lessonIsAvailable"
-    :tabs="tabs_data"
-    :activeTabIndex="1"
-    :showTabHeader="true"
-  />
+  <!-- Загрузка: скелетон шапки и вкладок -->
+  <template v-if="!loaded">
+    <div class="col-span-12 flex flex-col gap-4">
+      <div class="skeleton h-4 w-40"></div>
+      <div class="skeleton h-9 w-80 max-w-full"></div>
+      <div class="skeleton h-4 w-full max-w-xl"></div>
+      <div class="skeleton h-11 w-72 max-w-full !rounded-2xl md:ml-auto"></div>
+      <div class="skeleton h-64 w-full !rounded-2xl"></div>
+    </div>
+  </template>
+
+  <template v-else-if="courseIsAvailable && lessonIsAvailable">
+    <loader
+      v-if="pendingLesson"
+      :className="'full-overlay'"
+      :showPendingText="true"
+    />
+
+    <!-- Шапка урока -->
+    <div class="col-span-12">
+      <div class="lesson-hero">
+        <nuxt-link class="lesson-back" :to="sectionLink">
+          <i class="pi pi-arrow-left" aria-hidden="true"></i>
+          {{ sectionName }}
+        </nuxt-link>
+        <h2 class="mb-0 leading-tight">{{ lessonData.lesson_name }}</h2>
+        <p
+          v-if="lessonData.lesson_description"
+          class="mb-0 text-inactive max-w-3xl whitespace-pre-line"
+        >
+          {{ lessonData.lesson_description }}
+        </p>
+        <div class="lesson-meta">
+          <span v-if="!schoolStore.isAiSchoolDomain && lessonData.lesson_type_name">
+            <i class="pi pi-tag" aria-hidden="true"></i>
+            {{ lessonData.lesson_type_name }}
+          </span>
+          <span v-if="lessonData.materials">
+            <i class="pi pi-file" aria-hidden="true"></i>
+            {{ $t("materials.materials_count") }}: {{ lessonData.materials.length }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <tabs :tabs="tabs_data" :activeTabIndex="1" :showTabHeader="true" />
+  </template>
 
   <div v-else class="col-span-12">
-    <alert :className="'light'">
-      <p v-if="courseIsAvailable === false" class="mb-0">
-        {{ $t("pages.courses.course_is_not_available") }}
-      </p>
-      <p v-else-if="lessonIsAvailable === false" class="mb-0">
-        {{ $t("pages.lessons.is_unavailable_desc") }}
-      </p>
-    </alert>
+    <emptyState
+      :text="
+        courseIsAvailable === false
+          ? $t('pages.courses.course_is_not_available')
+          : $t('pages.lessons.is_unavailable_desc')
+      "
+      icon="bi bi-lock"
+    >
+      <nuxt-link class="btn btn-light" :to="sectionLink">
+        <i class="pi pi-arrow-left" aria-hidden="true"></i>
+        {{ $t("back") }}
+      </nuxt-link>
+    </emptyState>
   </div>
 </template>
 
 <script setup>
-import alert from "../../../../../../../components/ui/alert.vue";
+import emptyState from "../../../../../../../components/ui/emptyState.vue";
 import loader from "../../../../../../../components/ui/loader.vue";
 import tabs from "../../../../../../../components/ui/tabs.vue";
 import materials from "../../../../../../../components/lesson/tabs/materials.vue";
@@ -48,6 +89,15 @@ const lessonData = ref([]);
 const courseIsAvailable = ref(false);
 const lessonIsAvailable = ref(false);
 const pageTitle = ref("");
+// true после первой загрузки: до этого — скелетон, а не «курс недоступен».
+const loaded = ref(false);
+const sectionName = ref("");
+const localePath = useLocalePath();
+const sectionLink = computed(() =>
+  localePath(
+    "/dashboard/courses/" + course_slug + "/" + level_slug + "/" + section_id,
+  ),
+);
 
 const schoolStore = useSchoolStore();
 
@@ -175,12 +225,14 @@ const getLesson = async () => {
       }
 
       pageTitle.value = response.data.lesson.lesson_name;
+      sectionName.value = response.data.section.section_name;
 
       lessonData.value = response.data.lesson;
       courseIsAvailable.value =
         response.data.level.available_status.is_available;
       lessonIsAvailable.value =
         response.data.lesson.available_status.is_available;
+      loaded.value = true;
     })
     .catch((err) => {
       if (err.response) {

@@ -117,20 +117,16 @@
     </div>
   </div>
   <div v-else class="col-span-12">
-    <alert :className="'light'">
-      <img
-        class="w-24 mx-auto mb-2"
-        src="~/public/images/calendar-search.svg"
-      />
-      <p class="mb-0">
-        <b>{{ props.emptyMessage }}</b>
-      </p>
-    </alert>
+    <emptyState
+      :text="props.emptyMessage"
+      image="/images/calendar-search.svg"
+    />
   </div>
 </template>
 
 <script setup>
 import alert from "../../../ui/alert.vue";
+import emptyState from "~/components/ui/emptyState.vue";
 import scrollFadeContainer from "../../../ui/scrollFadeContainer.vue";
 
 const props = defineProps({

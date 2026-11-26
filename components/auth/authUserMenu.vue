@@ -2,125 +2,144 @@
   <template v-if="authUser">
     <dropdownMenu :dropdown-arrow="true">
       <template v-slot:btn_content>
-        <div class="flex items-center gap-x-1 sm:gap-x-1.5 select-none">
+        <div
+          class="user-menu-btn"
+          :title="authUser.last_name + ' ' + authUser.first_name"
+        >
           <userAvatar
             v-if="authUser"
             :padding="0.5"
-            :className="'w-8 h-8'"
+            :className="'w-8 h-8 text-xs'"
             :user="authUser"
           />
-          <div class="hidden sm:block text-left">
-            <span class="font-medium">{{ authUser.first_name }}</span>
-            <p
+          <div class="hidden sm:flex flex-col text-left leading-tight">
+            <span class="font-medium text-sm">{{ authUser.first_name }}</span>
+            <span
               v-if="props.showAuthMenu === true"
-              class="text-inactive mb-0 -mt-0.5 text-[10px]"
+              class="text-inactive text-[11px]"
             >
               {{ authUser.current_role_name }}
-            </p>
+            </span>
           </div>
         </div>
       </template>
 
       <template v-slot:menu_content>
-        <template v-if="props.showAuthMenu === true">
-          <div class="mt-3">
-            <div class="flex items-center gap-x-2">
+        <div class="user-menu">
+          <template v-if="props.showAuthMenu === true">
+            <!-- Кто вошёл -->
+            <div class="user-menu-head">
               <userAvatar
                 v-if="authUser"
                 :user="authUser"
-                :className="'w-10 h-10 text-xl'"
+                :className="'w-11 h-11 text-base'"
               />
-              <div>
-                <p class="text-active font-medium text-base mb-0">
+              <div class="min-w-0">
+                <p class="mb-0 font-semibold text-active truncate">
                   {{ authUser.last_name }} {{ authUser.first_name }}
                 </p>
                 <p
                   v-if="authUser.email || authUser.telegram_username"
-                  class="text-inactive text-xs mb-0"
+                  class="mb-0 text-xs text-inactive truncate"
                 >
                   {{ authUser.email || authUser.telegram_username }}
                 </p>
               </div>
             </div>
-          </div>
 
-          <client-only>
-            <template v-if="schoolStore.schoolData && !schoolStore.isAiSchoolDomain">
-              <roleProvider :roles="[1, 2, 3]">
-                <nuxt-link to="/dashboard/school">
-                  <div class="bg-corp text-white rounded-lg p-2 mt-2">
-                    <p class="mb-1">
-                      <b v-html="schoolStore.schoolData.full_school_name"></b>
-                    </p>
-
-                    <!-- <p class="mb-1">
-                      <b>{{ schoolStore.schoolData.school_domain }}.easyspeak.kz</b>
-                      
-                    </p> -->
-
-                    <p class="mb-0 text-xs">
-                      {{ $t("pages.subscription.expired_at") }}:
-                      <b
-                        ><u>{{
+            <!-- Школа и подписка -->
+            <client-only>
+              <template
+                v-if="schoolStore.schoolData && !schoolStore.isAiSchoolDomain"
+              >
+                <roleProvider :roles="[1, 2, 3]">
+                  <nuxt-link to="/dashboard/school" class="user-menu-school">
+                    <span class="user-menu-school-icon" aria-hidden="true">
+                      <i class="pi pi-building-columns"></i>
+                    </span>
+                    <span class="min-w-0 flex flex-col">
+                      <span
+                        class="font-semibold text-sm truncate"
+                        v-html="schoolStore.schoolData.full_school_name"
+                      ></span>
+                      <span class="text-xs text-inactive">
+                        {{ $t("pages.subscription.expired_at") }}:
+                        <b class="text-active">{{
                           new Date(
                             schoolStore.schoolData.subscription_expiration_at,
                           ).toLocaleDateString()
-                        }}</u></b
-                      >
-                    </p>
-                  </div>
-                </nuxt-link>
-              </roleProvider>
-            </template>
-          </client-only>
-          <li v-if="authUser && authUser.roles?.length > 1">
-            <div>
-              <p class="mb-2.5">{{ $t("pages.users.user_mode") }}:</p>
+                        }}</b>
+                      </span>
+                    </span>
+                  </nuxt-link>
+                </roleProvider>
+              </template>
+            </client-only>
 
-              <div
-                v-for="role in authUser.roles"
-                :key="role.role_type_id"
-                class="mt-1.5"
-              >
-                <label class="custom-radio">
-                  <input
-                    type="radio"
-                    @change="changeUserMode(role.role_type_id)"
-                    :checked="authUser.current_role_id == role.role_type_id"
-                    name="user_mode"
-                  />
+            <!-- Переключение роли -->
+            <div
+              v-if="authUser && authUser.roles?.length > 1"
+              class="user-menu-section"
+            >
+              <p class="user-menu-label">{{ $t("pages.users.user_mode") }}</p>
+              <div class="flex flex-col gap-0.5" role="radiogroup">
+                <button
+                  v-for="role in authUser.roles"
+                  :key="role.role_type_id"
+                  type="button"
+                  role="radio"
+                  class="user-menu-role"
+                  :class="{
+                    active: authUser.current_role_id == role.role_type_id,
+                  }"
+                  :aria-checked="authUser.current_role_id == role.role_type_id"
+                  :disabled="pendingRole"
+                  @click="changeUserMode(role.role_type_id)"
+                >
                   <span>{{ role.user_role_type_name }}</span>
-                </label>
+                  <i
+                    v-if="pendingRole && pendingRoleId === role.role_type_id"
+                    class="pi pi-spinner btn-loading-circle"
+                    aria-hidden="true"
+                  ></i>
+                  <i
+                    v-else-if="authUser.current_role_id == role.role_type_id"
+                    class="pi pi-check"
+                    aria-hidden="true"
+                  ></i>
+                </button>
               </div>
             </div>
-          </li>
-          <li>
-            <nuxt-link :to="localePath('/dashboard/profile')">
-              <i class="pi pi-user"></i>
+
+            <nuxt-link
+              :to="localePath('/dashboard/profile')"
+              class="user-menu-link"
+            >
+              <i class="pi pi-user" aria-hidden="true"></i>
               {{ $t("pages.profile.title") }}
             </nuxt-link>
-          </li>
-        </template>
-        <template v-else>
-          <li>
-            <nuxt-link :to="localePath('/dashboard')">
-              <i class="pi pi-sign-in"></i>
+          </template>
+          <template v-else>
+            <nuxt-link :to="localePath('/dashboard')" class="user-menu-link">
+              <i class="pi pi-home" aria-hidden="true"></i>
               {{ $t("pages.dashboard.title") }}
             </nuxt-link>
-          </li>
-        </template>
-        <li>
-          <nuxt-link :to="localePath('/auth/logout')">
-            <i class="pi pi-sign-out"></i>
+          </template>
+
+          <nuxt-link
+            :to="localePath('/auth/logout')"
+            class="user-menu-link danger"
+          >
+            <i class="pi pi-sign-out" aria-hidden="true"></i>
             {{ $t("pages.login.sign_out") }}
           </nuxt-link>
-        </li>
+        </div>
       </template>
     </dropdownMenu>
   </template>
   <template v-else>
     <nuxt-link class="btn btn-primary !px-3" :to="localePath('/auth/login')">
-      <i class="pi pi-sign-in"></i>
+      <i class="pi pi-sign-in" aria-hidden="true"></i>
       {{ $t("pages.login.sign_in") }}
     </nuxt-link>
   </template>
@@ -145,11 +164,25 @@ const props = defineProps({
   },
 });
 
+// Смена роли: пока запрос идёт, кнопки ролей неактивны, у выбранной — спиннер.
+const pendingRole = ref(false);
+const pendingRoleId = ref(null);
+
 const changeUserMode = async (role_type_id) => {
+  if (pendingRole.value || authUser.value?.current_role_id == role_type_id) {
+    return;
+  }
+  pendingRole.value = true;
+  pendingRoleId.value = role_type_id;
+
   await $axiosPlugin
     .post("auth/change_mode/" + role_type_id)
-    .then((response) => {
-      refreshIdentity();
+    .then(async () => {
+      await refreshIdentity();
+    })
+    .finally(() => {
+      pendingRole.value = false;
+      pendingRoleId.value = null;
     })
     .catch((err) => {
       if (err.response) {

@@ -1,35 +1,56 @@
 <template>
-  <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
   <div class="col-span-12">
-    <div class="custom-grid">
-      <div
-        v-for="(level, levelIndex) in levels"
-        :key="levelIndex"
-        class="col-span-12 lg:col-span-3"
-      >
-        <nuxt-link
-          :class="
-            level.available_status.is_available === false
-              ? 'cursor-not-allowed'
-              : ''
-          "
-          :to="
-            level.available_status.is_available === false
-              ? null
-              : localePath(
-                  '/dashboard/courses/' + course_slug + '/' + level.level_slug,
-                )
-          "
-        >
-          <levelCard :level="level" :showProgressBar="true" />
-        </nuxt-link>
-      </div>
+    <div class="page-head">
+      <h2 class="page-title">
+        <template v-if="pageTitle">{{ pageTitle }}</template>
+        <span v-else class="skeleton inline-block h-8 w-48"></span>
+        <span v-if="!pending && levels.length" class="db-count">{{
+          levels.length
+        }}</span>
+      </h2>
     </div>
+  </div>
+
+  <!-- Загрузка: скелетоны карточек -->
+  <template v-if="pending">
+    <div v-for="i in 4" :key="'sk' + i" class="col-span-12 sm:col-span-6 lg:col-span-4 xl:col-span-3">
+      <div class="skeleton aspect-[3/2] w-full !rounded-2xl"></div>
+    </div>
+  </template>
+
+  <template v-else-if="levels.length">
+    <div
+      v-for="level in levels"
+      :key="level.level_id || level.level_slug"
+      class="col-span-12 sm:col-span-6 lg:col-span-4 xl:col-span-3"
+    >
+      <!-- Недоступный уровень — не ссылка, а неактивная карточка -->
+      <div
+        v-if="level.available_status?.is_available === false"
+        class="cursor-not-allowed"
+        aria-disabled="true"
+      >
+        <levelCard :level="level" :showProgressBar="true" />
+      </div>
+      <nuxt-link
+        v-else
+        class="block rounded-2xl"
+        :to="
+          localePath('/dashboard/courses/' + course_slug + '/' + level.level_slug)
+        "
+      >
+        <levelCard :level="level" :showProgressBar="true" />
+      </nuxt-link>
+    </div>
+  </template>
+
+  <div v-else class="col-span-12">
+    <emptyState :text="$t('pages.courses.no_levels')" icon="bi bi-journal-x" />
   </div>
 </template>
 
 <script setup>
-import loader from "../../../../components/ui/loader.vue";
+import emptyState from "../../../../components/ui/emptyState.vue";
 import levelCard from "../../../../components/levels/levelCard.vue";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";

@@ -1,12 +1,16 @@
 <template>
-  <div class="col-span-12 lg:col-span-6 lg:col-start-3">
+  <div class="col-span-10 lg:col-span-6 lg:col-start-3">
     <authCard :pending="pending">
       <template v-slot:header_content>
-        <h2>{{ $t("pages.register.title") }}</h2>
+        <h3>{{ $t("pages.register.title") }}</h3>
       </template>
       <template v-slot:body_content>
         <client-only>
-          <form @submit.prevent="register" ref="formRef">
+          <form @submit.prevent="register" ref="formRef" novalidate>
+            <div v-if="errors.message" class="form-error" role="alert">
+              <i class="pi pi-exclamation-circle mt-0.5" aria-hidden="true"></i>
+              <span>{{ errors.message }}</span>
+            </div>
             <template v-if="schoolStore.schoolData === null">
               <steps :currentStep="currentStep" :steps="registerSteps">
                 <div
@@ -32,9 +36,11 @@
                 <span
                   ><p>
                     {{ $t("pages.home.demo_modal.consent.text") }}
-                    <a @click="policyModalIsVisible = true">{{
-                      $t("pages.home.demo_modal.consent.link")
-                    }}</a
+                    <button
+                      type="button"
+                      class="link-button"
+                      @click.prevent="policyModalIsVisible = true"
+                    >{{ $t("pages.home.demo_modal.consent.link") }}</button
                     >{{ $t("pages.home.demo_modal.consent.text_2") }}
                   </p></span
                 >
@@ -55,7 +61,8 @@
 
                 <button
                   class="btn btn-primary"
-                  :class="!accept ? 'disabled' : ''"
+                  :class="{ loading: pending }"
+                  :disabled="!accept || pending"
                   type="submit"
                 >
                   <template v-if="currentStep !== registerSteps.length">
@@ -72,12 +79,17 @@
             <button
               v-else
               class="btn btn-primary"
-              :class="!accept ? 'disabled' : ''"
+              :class="{ loading: pending }"
+              :disabled="!accept || pending"
               type="submit"
             >
               <i class="pi pi-arrow-right"></i>
               {{ $t("continue") }}
             </button>
+
+            <p v-if="!accept" class="text-xs text-inactive mt-2 mb-0">
+              {{ $t("pages.register.consent_required") }}
+            </p>
 
             <p class="mt-4 mb-0">
               {{ $t("pages.register.have_an_account") }}
@@ -164,6 +176,7 @@ definePageMeta({
 });
 
 const register = async () => {
+  if (pending.value || !accept.value) return;
   pending.value = true;
   const formData = new FormData(formRef.value);
   formData.append("lang", localeProperties.value.code);
@@ -203,7 +216,7 @@ const register = async () => {
       }
     })
     .catch((err) => {
-      errors.value = err.response.data;
+      errors.value = err.response?.data || { message: t("an_error_occurred") };
       pending.value = false;
       return;
     });

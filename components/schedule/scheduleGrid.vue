@@ -1,293 +1,197 @@
 <template>
-  <div class="custom-grid">
-    <!-- Переключатель режима -->
-    <div class="col-span-12 mt-1">
-      <div class="flex justify-between gap-x-1">
-        <button type="button"
-          v-for="m in modes"
-          :key="m"
-          class="btn !w-full max-md:!px-2 max-md:!py-1 max-md:!text-sm max-md:!rounded-lg !font-medium"
-          :class="mode === m ? 'btn-success' : 'btn-light'"
-          @click="mode = m"
+  <div class="sg">
+    <!-- Панель: навигация + заголовок периода + режимы -->
+    <div class="sg-toolbar">
+      <div class="sg-nav">
+        <button
+          type="button"
+          class="btn btn-light btn-square"
+          :title="$t('back')"
+          :aria-label="$t('back')"
+          @click="prev"
         >
-          {{ modeLabels[m] }}
+          <i class="pi pi-chevron-left" aria-hidden="true"></i>
         </button>
+        <button type="button" class="btn btn-light" @click="goToday">
+          {{ $t("today") }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-light btn-square"
+          :title="$t('continue')"
+          :aria-label="$t('continue')"
+          @click="next"
+        >
+          <i class="pi pi-chevron-right" aria-hidden="true"></i>
+        </button>
+        <h3 class="sg-title">{{ title }}</h3>
+      </div>
+
+      <div class="sg-right">
+        <slot name="actions" />
+        <div class="conf-modes" role="group">
+          <button
+            type="button"
+            v-for="m in modes"
+            :key="m"
+            class="conf-mode"
+            :class="{ active: mode === m }"
+            :aria-pressed="mode === m"
+            @click="mode = m"
+          >
+            {{ modeLabels[m] }}
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Общий заголовок -->
-    <div class="col-span-12">
-      <div class="flex items-center justify-between">
-        <button type="button" class="btn btn-circle btn-success" @click="prev">
-          <i class="pi pi-chevron-left"></i>
-        </button>
-        <span class="font-medium md:text-xl">{{ title }}</span>
-        <button type="button" class="btn btn-circle btn-success" @click="next">
-          <i class="pi pi-chevron-right"></i>
-        </button>
-      </div>
-    </div>
-
-    <div class="col-span-12 relative">
+    <div class="relative">
       <loader
         v-if="pendingSchedule"
-        :className="'overlay !rounded-lg'"
+        :className="'overlay !rounded-xl'"
         :showPendingText="true"
       />
-      <!-- Отображение по режиму -->
-      <div v-if="mode === 'year'" class="grid grid-cols-3 gap-0.5 md:gap-1">
-        <div
+
+      <!-- ГОД -->
+      <div v-if="mode === 'year'" class="sg-year">
+        <button
+          type="button"
           v-for="m in 12"
           :key="m"
-          class="card p-4 capitalize font-medium text-center cursor-pointer"
+          class="sg-month-card"
+          :class="{
+            current:
+              m - 1 === today.month() && currentDate.year() === today.year(),
+            empty: monthCount(m - 1) === 0,
+          }"
           @click="selectMonth(m - 1)"
         >
-          <span
-            :class="{
-              'text-success':
-                m - 1 === currentDate.month() &&
-                currentDate.year() === dayjs().year(),
-            }"
-          >
-            {{
-              dayjs()
-                .year(currentDate.year())
-                .month(m - 1)
-                .locale(localeProperties.code)
-                .format("MMMM")
-            }}
+          <span class="capitalize font-semibold">{{ monthName(m - 1) }}</span>
+          <span class="sg-month-count">
+            <b>{{ monthCount(m - 1) }}</b>
+            <span class="text-inactive text-xs lowercase">{{
+              $t("pages.lessons.lessons_count")
+            }}</span>
           </span>
-
-          <!-- количество событий -->
-          <div class="text-xs text-gray-500 mt-1">
-            {{ $t("pages.lessons.lessons_count") }}:
-            {{ eventsForMonth(m - 1).length }}
-          </div>
-        </div>
+        </button>
       </div>
 
-      <div v-if="mode === 'month'" class="grid grid-cols-7 gap-0.5 md:gap-1">
-        <div v-for="i in 7" :key="i" class="font-medium capitalize mb-1">
-          <span class="hidden md:inline">{{ fullWeekday(i) }}</span>
-          <span class="inline md:hidden">{{ shortWeekday(i) }}</span>
+      <!-- МЕСЯЦ -->
+      <div v-if="mode === 'month'">
+        <div class="sg-weekdays">
+          <span v-for="i in 7" :key="i">
+            <span class="max-md:hidden">{{ fullWeekday(i) }}</span>
+            <span class="md:hidden">{{ shortWeekday(i) }}</span>
+          </span>
         </div>
-
-        <div v-for="blank in blankDays" :key="'b' + blank" class="empty"></div>
-        <div
-          v-for="d in daysInMonth"
-          :key="d"
-          class="card p-2 !rounded-lg max-h-28 flex flex-col justify-between gap-y-2 cursor-pointer duration-200 hover:!border-green-500"
-          @click="selectDay(d)"
-        >
-          <div class="flex items-center">
+        <div class="sg-month">
+          <template v-for="cell in monthCells" :key="cell.key">
+            <div v-if="!cell.date" class="sg-day blank" aria-hidden="true"></div>
             <div
-              class="font-medium w-5 lg:w-6 h-5 lg:h-6 rounded-full flex justify-center items-center text-xs lg:text-sm"
-              :class="isToday(d) ? 'bg-danger text-white' : 'bg-inactive'"
-            >
-              {{ d }}
-            </div>
-          </div>
-
-          <div>
-            <div
-              v-if="eventsForDay(currentDate.date(d)).length > 0"
-              class="flex flex-col gap-y-0.5 text-[8px] md:text-xs overflow-hidden"
-            >
-              <div
-                v-for="e in eventsForDay(currentDate.date(d)).slice(0, 2)"
-                :key="e.uuid"
-                :class="[
-                  'py-0.5 px-1 rounded bg-success text-white',
-                  currentDate.date(d).isBefore(dayjs(), 'day')
-                    ? 'opacity-35'
-                    : '',
-                ]"
-              >
-                <div class="flex gap-1.5 text-nowrap">
-                  <span class="font-medium">{{ e.time }}</span>
-                  <span v-if="e.section_name && e.lesson_name"
-                    >{{ e.section_name }} - {{ e.lesson_name }}</span
-                  >
-                  <span v-if="e.topic">{{ e.topic }}</span>
-                </div>
-              </div>
-
-              <div
-                v-if="eventsForDay(currentDate.date(d)).length > 2"
-                class="text-nowrap font-medium cursor-pointer lowercase"
-              >
-                + {{ $t("yet_another") }}
-                {{ eventsForDay(currentDate.date(d)).length - 2 }}
-              </div>
-            </div>
-
-            <span
               v-else
-              class="text-inactive text-[8px] md:text-xs text-nowrap"
-              >{{ $t("no_events") }}</span
+              class="sg-day"
+              :class="dayClasses(cell.date)"
+              role="button"
+              tabindex="0"
+              @click="selectDay(cell.date)"
+              @keydown.enter="selectDay(cell.date)"
             >
-          </div>
+              <span class="sg-day-num">{{ cell.date.date() }}</span>
+
+              <!-- Компьютер: занятия плашками -->
+              <div v-if="eventsOn(cell.date).length" class="sg-chips max-md:hidden">
+                <button
+                  type="button"
+                  v-for="e in eventsOn(cell.date).slice(0, 3)"
+                  :key="e.uuid"
+                  class="sg-chip"
+                  :class="chipClass(e, cell.date)"
+                  :title="`${hhmm(e.time)} ${eventTitle(e)}`"
+                  @click.stop="openEvent(e, cell.date)"
+                >
+                  <b>{{ hhmm(e.time) }}</b>
+                  <span class="truncate">{{ eventTitle(e) }}</span>
+                </button>
+                <span
+                  v-if="eventsOn(cell.date).length > 3"
+                  class="sg-more"
+                >
+                  + {{ $t("yet_another") }} {{ eventsOn(cell.date).length - 3 }}
+                </span>
+              </div>
+
+              <!-- Телефон: точки по числу занятий -->
+              <div v-if="eventsOn(cell.date).length" class="sg-dots md:hidden">
+                <span
+                  v-for="n in Math.min(eventsOn(cell.date).length, 3)"
+                  :key="n"
+                ></span>
+                <b v-if="eventsOn(cell.date).length > 3" class="text-[9px]"
+                  >+{{ eventsOn(cell.date).length - 3 }}</b
+                >
+              </div>
+            </div>
+          </template>
         </div>
       </div>
 
-      <div
-        v-if="mode === 'week'"
-        class="grid grid-cols-1 md:grid-cols-7 gap-1 md:gap-1"
-      >
+      <!-- НЕДЕЛЯ -->
+      <div v-if="mode === 'week'" class="sg-week">
         <div
           v-for="d in currentWeek"
-          :key="d"
-          class="card p-2 !rounded-lg max-h-28 flex flex-col justify-between gap-y-2 cursor-pointer duration-200 hover:!border-green-500"
-          @click="selectDay(d.date())"
+          :key="d.format('YYYY-MM-DD')"
+          class="sg-week-col"
+          :class="dayClasses(d)"
         >
-          <div class="flex items-center gap-2">
-            <div
-              class="font-medium w-5 lg:w-6 h-5 lg:h-6 rounded-full flex justify-center items-center text-xs lg:text-sm"
-              :class="
-                isToday(d.date()) ? 'bg-danger text-white' : 'bg-inactive'
-              "
-            >
-              {{ d.date() }}
-            </div>
-
-            <div class="font-medium capitalize">
-              {{ d.locale(localeProperties.code).format("dd") }}
-            </div>
-          </div>
-
-          <div>
-            <div
-              v-if="eventsForDay(currentDate.date(d.date())).length > 0"
-              class="flex flex-col gap-y-0.5 text-[8px] md:text-xs overflow-hidden"
-            >
-              <div
-                v-for="e in eventsForDay(currentDate.date(d.date())).slice(
-                  0,
-                  2,
-                )"
-                :key="e.uuid"
-                :class="[
-                  'py-0.5 px-1 rounded bg-success text-white',
-                  currentDate.date(d.date()).isBefore(dayjs(), 'day')
-                    ? 'opacity-35'
-                    : '',
-                ]"
-              >
-                <div class="flex gap-1.5 text-nowrap">
-                  <span class="font-medium">{{ e.time }}</span>
-                  <span v-if="e.section_name && e.lesson_name"
-                    >{{ e.section_name }} - {{ e.lesson_name }}</span
-                  >
-                  <span v-if="e.topic">{{ e.topic }}</span>
-                </div>
-              </div>
-
-              <div
-                v-if="eventsForDay(currentDate.date(d.date())).length > 2"
-                class="text-nowrap font-medium cursor-pointer lowercase"
-              >
-                + {{ $t("yet_another") }}
-                {{ eventsForDay(currentDate.date(d.date())).length - 2 }}
-              </div>
-            </div>
-
-            <span v-else class="text-inactive text-xs">{{
-              $t("no_events")
+          <button type="button" class="sg-week-head" @click="selectDay(d)">
+            <span class="capitalize text-xs text-inactive">{{
+              d.locale(localeCode).format("dd")
             }}</span>
+            <span class="sg-day-num">{{ d.date() }}</span>
+          </button>
+
+          <div v-if="eventsOn(d).length" class="sg-chips">
+            <button
+              type="button"
+              v-for="e in eventsOn(d)"
+              :key="e.uuid"
+              class="sg-chip tall"
+              :class="chipClass(e, d)"
+              @click="openEvent(e, d)"
+            >
+              <b>{{ hhmm(e.time) }}</b>
+              <span class="sg-chip-title">{{ eventTitle(e) }}</span>
+            </button>
           </div>
+          <span v-else class="text-inactive text-xs px-1">{{
+            $t("no_events")
+          }}</span>
         </div>
       </div>
 
+      <!-- ДЕНЬ: карточки занятий -->
       <div v-if="mode === 'day'">
-        <div
-          v-if="eventsForDay(currentDate.format('YYYY-MM-DD')).length > 0"
-          class="table table-sm table-striped"
-          :class="props.openEventModal ? 'selectable' : ''"
-        >
-          <table>
-            <thead>
-              <tr>
-                <th>{{ $t("start_time") }}</th>
-                <th>{{ $t("pages.lessons.lesson_name") }}</th>
-                <template v-if="!schoolStore.isAiSchoolDomain">
-                  <th>{{ $t("pages.lessons.lesson_type") }}</th>
-                  <th>{{ $t("pages.groups.group") }}</th>
-                  <th>{{ $t("pages.courses.course") }}</th>
-                  <th>{{ $t("pages.groups.group_category") }}</th>
-                </template>
-                <template v-else>
-                  <th>{{ $t("pages.courses.title") }}</th>
-                </template>
-                <th>{{ $t("mentor") }}</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <tr
-                v-for="e in eventsForDay(currentDate.format('YYYY-MM-DD'))"
-                :key="e.uuid"
-                @click="props.openEventModal && props.openEventModal(e.uuid)"
-              >
-                <td>
-                  <b>{{ e.time }}</b>
-                </td>
-                <td v-if="e.section_name && e.lesson_name">
-                  {{ e.section_name }} - {{ e.lesson_name }}
-                </td>
-                <td v-if="e.topic">{{ e.topic }}</td>
-                <template v-if="!schoolStore.isAiSchoolDomain">
-                  <td>{{ e.lesson_type_name }}</td>
-                  <td>{{ e.group_name }}</td>
-                  <td>{{ e.course_name }}</td>
-                  <td>{{ e.level_name }}</td>
-                </template>
-                <template v-else>
-                  <td>
-                    <div class="text-list">
-                      <span v-for="(level, lIndex) in e.levels" :key="lIndex">
-                        {{ level.level_name }}
-                      </span>
-                    </div>
-                  </td>
-                </template>
-                <td>
-                  <div class="flex gap-x-1 items-center">
-                    <userAvatar
-                      :padding="0.5"
-                      :className="'w-6 h-6'"
-                      :user="{
-                        last_name: e.mentor_last_name || e.moderator_last_name || '',
-                        first_name:
-                          e.mentor_first_name || e.moderator_first_name || '',
-                        avatar: e.mentor_avatar || e.moderator_avatar || '',
-                      }"
-                    />
-                    {{ e.mentor_last_name || e.moderator_last_name || '' }}
-                    {{ e.mentor_first_name || e.moderator_first_name || '' }}
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <alert v-else :className="'light'">
-          <loader
-            v-if="pendingSchedule"
-            :className="'overlay'"
-            :showPendingText="true"
-          />
-          <p class="mb-0">{{ $t("pages.events.no_events") }}</p>
-        </alert>
+        <scheduleTable
+          v-if="dayEvents.length"
+          :schedule="dayEvents"
+          :openEventModal="props.openEventModal"
+          :showPoster="true"
+          :mode="'stack'"
+        />
+        <emptyState
+          v-else
+          :pending="pendingSchedule"
+          :text="$t('pages.events.no_events')"
+          icon="bi bi-calendar-x"
+        />
       </div>
     </div>
   </div>
 </template>
 <script setup>
 import loader from "../ui/loader.vue";
-import alert from "../ui/alert.vue";
-import userAvatar from "../ui/userAvatar.vue";
-import countBadge from "../ui/countBadge.vue";
+import emptyState from "~/components/ui/emptyState.vue";
+import scheduleTable from "./scheduleTable.vue";
 
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
@@ -295,8 +199,6 @@ import "dayjs/locale/kk";
 
 import weekday from "dayjs/plugin/weekday";
 import isoWeek from "dayjs/plugin/isoWeek";
-
-const schoolStore = useSchoolStore();
 
 const props = defineProps({
   schedule: {
@@ -317,8 +219,7 @@ const props = defineProps({
 
 const { schedule, pendingSchedule } = toRefs(props);
 
-const { t } = useI18n();
-const { localeProperties } = useI18n();
+const { t, localeProperties } = useI18n();
 
 dayjs.extend(weekday);
 dayjs.extend(isoWeek);
@@ -334,87 +235,115 @@ const modeLabels = computed(() => ({
 
 const mode = ref("month");
 const currentDate = ref(dayjs());
+const today = dayjs();
+
+const localeCode = computed(() => localeProperties.value.code.split("-")[0]);
 
 const title = computed(() => {
-  const locale = localeProperties.value.code.split("-")[0]; // на всякий случай обрезаем лишнее
-
+  const d = currentDate.value.locale(localeCode.value);
   switch (mode.value) {
     case "year":
-      return currentDate.value.locale(locale).format("YYYY");
-
+      return d.format("YYYY");
     case "month":
-      return currentDate.value.locale(locale).format("MMMM YYYY");
-
+      return capitalize(d.format("MMMM YYYY"));
     case "week": {
-      const start = currentDate.value.startOf("isoweek").locale(locale);
-      const end = currentDate.value.endOf("isoweek").locale(locale);
-      return `${start.format("D MMM")} - ${end.format("D MMM YYYY")}`;
+      const start = d.startOf("isoWeek");
+      const end = d.endOf("isoWeek");
+      return `${start.format("D MMM")} – ${end.format("D MMM YYYY")}`;
     }
-
     case "day":
-      return currentDate.value.locale(locale).format("D MMMM YYYY");
+      return capitalize(d.format("dddd, D MMMM YYYY"));
   }
+  return "";
 });
+
+const capitalize = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
 const fullWeekday = (i) =>
-  dayjs().day(i).locale(localeProperties.value.code).format("dddd");
+  dayjs().isoWeekday(i).locale(localeCode.value).format("dddd");
 
 const shortWeekday = (i) =>
-  dayjs().day(i).locale(localeProperties.value.code).format("dd");
+  dayjs().isoWeekday(i).locale(localeCode.value).format("dd");
 
-const daysInMonth = computed(() =>
-  Array.from({ length: currentDate.value.daysInMonth() }, (_, i) => i + 1),
-);
+const monthName = (m) =>
+  dayjs().year(currentDate.value.year()).month(m).locale(localeCode.value).format("MMMM");
 
-const blankDays = computed(() => {
-  const first = currentDate.value.startOf("month").day();
-  return Array.from({ length: first === 0 ? 6 : first - 1 });
+const hhmm = (time) => (time ? String(time).slice(0, 5) : "");
+
+const eventTitle = (e) =>
+  e.topic ||
+  (e.section_name && e.lesson_name
+    ? `${e.section_name} – ${e.lesson_name}`
+    : e.lesson_name || "");
+
+// Занятия, сгруппированные по дате (YYYY-MM-DD) и отсортированные по времени.
+const eventsByDate = computed(() => {
+  const map = {};
+  for (const e of schedule.value || []) {
+    const key = dayjs(e.date).format("YYYY-MM-DD");
+    (map[key] ||= []).push(e);
+  }
+  for (const key in map) {
+    map[key].sort((a, b) => String(a.time).localeCompare(String(b.time)));
+  }
+  return map;
 });
 
+const eventsOn = (d) => eventsByDate.value[d.format("YYYY-MM-DD")] || [];
+
+const dayEvents = computed(() => eventsOn(currentDate.value));
+
+const monthCount = (m) => {
+  const y = currentDate.value.year();
+  return (schedule.value || []).filter((e) => {
+    const d = dayjs(e.date);
+    return d.year() === y && d.month() === m;
+  }).length;
+};
+
+// Ячейки месяца: пустые до первого дня (неделя с понедельника) + все дни.
+const monthCells = computed(() => {
+  const start = currentDate.value.startOf("month");
+  const blanks = start.isoWeekday() - 1;
+  const cells = Array.from({ length: blanks }, (_, i) => ({ key: "b" + i }));
+  for (let i = 0; i < start.daysInMonth(); i++) {
+    const date = start.add(i, "day");
+    cells.push({ key: date.format("YYYY-MM-DD"), date });
+  }
+  return cells;
+});
+
+// Неделя с понедельника — дни берутся как даты, а не как число месяца,
+// поэтому неделя на стыке месяцев отображается правильно.
 const currentWeek = computed(() =>
   Array.from({ length: 7 }, (_, i) =>
-    dayjs(currentDate.value)
-      .startOf("isoWeek") // 👈 понедельник
-      .add(i, "day"),
+    currentDate.value.startOf("isoWeek").add(i, "day"),
   ),
 );
 
-const isToday = (day) => {
-  return currentDate.value.date(day).isSame(dayjs(), "day");
-};
+const dayClasses = (d) => ({
+  today: d.isSame(today, "day"),
+  past: d.isBefore(today, "day"),
+  weekend: d.isoWeekday() >= 6,
+});
+
+const chipClass = (e, d) => ({
+  live: e.is_active === true,
+  past: d.isBefore(today, "day"),
+});
+
+const step = { year: "year", month: "month", week: "week", day: "day" };
 
 const prev = () => {
-  switch (mode.value) {
-    case "year":
-      currentDate.value = currentDate.value.subtract(1, "year");
-      break;
-    case "month":
-      currentDate.value = currentDate.value.subtract(1, "month");
-      break;
-    case "week":
-      currentDate.value = currentDate.value.subtract(1, "week");
-      break;
-    case "day":
-      currentDate.value = currentDate.value.subtract(1, "day");
-      break;
-  }
+  currentDate.value = currentDate.value.subtract(1, step[mode.value]);
 };
 
 const next = () => {
-  switch (mode.value) {
-    case "year":
-      currentDate.value = currentDate.value.add(1, "year");
-      break;
-    case "month":
-      currentDate.value = currentDate.value.add(1, "month");
-      break;
-    case "week":
-      currentDate.value = currentDate.value.add(1, "week");
-      break;
-    case "day":
-      currentDate.value = currentDate.value.add(1, "day");
-      break;
-  }
+  currentDate.value = currentDate.value.add(1, step[mode.value]);
+};
+
+const goToday = () => {
+  currentDate.value = dayjs();
 };
 
 const selectMonth = (monthIndex) => {
@@ -422,19 +351,15 @@ const selectMonth = (monthIndex) => {
   mode.value = "month";
 };
 
-const eventsForMonth = (monthIndex) => {
-  return schedule.value.filter((event) => {
-    const d = dayjs(event.date);
-    return d.year() === currentDate.value.year() && d.month() === monthIndex;
-  });
-};
-
-const selectDay = (dayNumber) => {
-  currentDate.value = currentDate.value.date(dayNumber);
+const selectDay = (d) => {
+  currentDate.value = d;
   mode.value = "day";
 };
 
-const eventsForDay = (day) => {
-  return schedule.value.filter((s) => dayjs(s.date).isSame(day, "day"));
+// Клик по занятию: если есть обработчик — сразу открываем подробности,
+// иначе переходим к этому дню.
+const openEvent = (e, d) => {
+  if (props.openEventModal) props.openEventModal(e.uuid);
+  else selectDay(d);
 };
 </script>

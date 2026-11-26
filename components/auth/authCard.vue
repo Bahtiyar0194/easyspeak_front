@@ -1,5 +1,5 @@
 <template>
-  <div class="card card-xl mb-4">
+  <div class="card card-xl auth-card mb-4" :aria-busy="pending || undefined">
     <loader v-if="pending" :showPendingText="true" :className="'overlay'" />
     <div class="card-header">
       <div class="title-wrap items-center">

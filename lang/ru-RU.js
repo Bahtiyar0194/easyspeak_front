@@ -62,6 +62,8 @@ export default {
     or: 'Или',
     back: 'Назад',
     close: 'Закрыть',
+    cancel: 'Отмена',
+    confirmation: 'Подтверждение',
     check: 'Проверить',
     swap_places: 'Поменять местами',
     an_error_occurred: 'Произошла ошибка',
@@ -131,6 +133,10 @@ export default {
     recording_too_short: "Запись слишком короткая",
     recording_too_long: "Запись слишком длинная",
     recording_silent: "Запись слишком тихая",
+    hold_to_record: "Удерживайте микрофон, чтобы записать голос",
+    mic_access_denied: "Нет доступа к микрофону. Разрешите его в настройках браузера",
+    mic_not_found: "Микрофон не найден",
+    mic_record_failed: "Не удалось записать звук",
     handling: "Обрабатывается",
     number_of_options: "Количество вариантов",
     number_of_attempts: "Количество попыток на исправление ошибок",
@@ -157,10 +163,15 @@ export default {
     month: 'Месяц',
     week: 'Неделя',
     day: 'День',
+    today: 'Сегодня',
+    add_course: 'Добавить курс',
+    filter: 'Фильтр',
+    breadcrumb: 'Навигация',
+    found: 'Найдено',
 
     start_time: 'Время начала',
     end_time: 'Время окончания',
-    no_events: 'Нет мероприятии',
+    no_events: 'Нет мероприятий',
     add_to_calendar: 'Добавить в календарь',
     yet_another: 'Ещё',
 
@@ -253,6 +264,7 @@ export default {
             current: "Текущий загруженный файл изображения"
         },
         audio: {
+            load_error: "Не удалось загрузить аудио",
             select: "Выберите аудиофайл",
             current: "Текущий загруженный аудиофайл",
             loading: "Пожалуйста подождите, аудиофайл загружается",
@@ -387,6 +399,7 @@ export default {
     },
 
     pagination: {
+        pages: 'Страницы',
         first_page_title: "Перейти на первую страницу",
         previous_page_title: "Перейти на предыдущую страницу",
         next_page_title: "Перейти на следующую страницу",
@@ -434,6 +447,8 @@ export default {
     },
 
     form: {
+        show_password: "Показать пароль",
+        hide_password: "Скрыть пароль",
         email: 'Эл.почта',
         school_email: 'Эл.почта школы',
         first_name: 'Имя',
@@ -693,6 +708,7 @@ export default {
         login: {
             title: 'Вход в систему',
             sign_in: 'Войти',
+            back_to_login: 'Вернуться ко входу',
             dont_have_an_account: "Нет аккаунта?",
             forgot_password: "Забыли пароль?",
             password_recovery: "Восстановить",
@@ -716,7 +732,8 @@ export default {
 
         register: {
             title: 'Регистрация',
-            have_an_account: 'У меня есть акканут.',
+            have_an_account: 'У меня есть аккаунт.',
+            consent_required: 'Чтобы продолжить, отметьте согласие на обработку персональных данных',
         },
 
         "password-recovery": {
@@ -728,11 +745,14 @@ export default {
         "change-password": {
             title: 'Изменение пароля',
             inst_1: 'Здравствуйте {name}! Пожалуйста, придумайте новый пароль и подтвердите его. Убедитесь, что он надежный и содержит не менее 8 символов. После этого вы сможете снова войти в свой аккаунт.',
+            success: 'Пароль изменён. Войдите с новым паролем.',
         },
 
         dashboard: {
             title: 'Личный кабинет',
             go_to_dashboard: 'Перейти в личный кабинет',
+            live_now: 'Идут сейчас',
+            unpaid_lessons: 'Неоплаченных занятий: {count}',
         },
 
         "users-groups": {
@@ -753,6 +773,7 @@ export default {
         },
 
         groups: {
+            member_click_hint: 'Нажмите на участника, чтобы посмотреть его успеваемость',
             title: 'Группы',
             group: 'Группа',
             choose: 'Выберите группу',
@@ -918,6 +939,11 @@ export default {
         },
 
         conference: {
+            live_now: 'Идёт видеоконференция',
+            no_current_title: 'Сейчас занятий нет',
+            no_current_hint: 'Когда занятие начнётся, оно появится здесь. Можно начать конференцию прямо сейчас или посмотреть расписание.',
+            settings: 'Параметры',
+            start_now: 'Начать конференцию',
             title: 'Видеоконференция',
             create: 'Создать конференцию',
             create_conference: 'Создание конференции',
@@ -944,6 +970,8 @@ export default {
             participants: 'Участники',
             participants_count: 'Количество участников',
             chat: 'Сообщения',
+            no_messages: 'Сообщений пока нет. Напишите первым!',
+            send: 'Отправить',
             search_conference: 'Поиск конференции',
             join: 'Войти в конференцию',
             start_time: 'Дата и время начала конференции',
@@ -997,6 +1025,7 @@ export default {
             },
             leave: {
                 title: 'Выход из конференции',
+                short: 'Выйти',
                 confirm: 'Вы уверены, что хотите покинуть конференцию?',
                 yes: 'Да, покинуть',
                 no: 'Нет, остаться'
@@ -1050,6 +1079,12 @@ export default {
         courses: {
             title: 'Курсы',
             my_courses: 'Мои курсы',
+            levels_count: 'Уровней: {count}',
+            no_courses: 'Курсов пока нет',
+            sections_completed: 'Пройдено разделов: {done} из {total}',
+            continue_learning: 'Продолжить обучение',
+            start_learning: 'Начать обучение',
+            no_levels: 'В этом курсе пока нет уровней',
             course: 'Курс',
             go_to_courses: 'Перейти к курсам',
             choose_a_course: 'Выберите курс',
@@ -1076,6 +1111,7 @@ export default {
         },
 
         lessons: {
+            lessons_completed: 'Пройдено уроков: {done} из {total}',
             title: 'Уроки',
             lessons_count: 'Уроков',
             lessons_list: 'Список уроков',
@@ -1144,6 +1180,7 @@ export default {
         },
 
         dictionary: {
+            search: 'Поиск по словам',
             title: 'Словарь',
             word: 'Cлово',
             count: 'Количество слов',
@@ -1243,6 +1280,18 @@ export default {
         },
 
         tasks: {
+            stress_hint: 'Нажмите на ударный слог в каждом слове',
+            extra_word_hint: 'В каждой строке нажмите на слово, которое здесь лишнее',
+            match_pictures_hint: 'Впишите к каждому слову номер подходящей картинки',
+            picture_number: 'Номер картинки',
+            picture_n: 'Слово к картинке {n}',
+            type_or_drop_word: 'Впишите или перетащите слово',
+            match_hint: 'Впишите номер подходящего предложения к каждому материалу',
+            sentence_number: 'Номер предложения',
+            material_unavailable: 'Материал недоступен',
+            attempts_left: 'Можно ошибиться ещё',
+            letter_n: 'Буква {n}',
+            blank_n: 'Пропуск в предложении {n}',
             title: 'Задания',
             task_slug: 'Название задания на основном языке',
             task_name: 'Название задания',
@@ -1250,6 +1299,12 @@ export default {
             add_a_task: 'Добавить задание',
             adding_a_task: 'Добавление задания',
             delete_task: "Удаление задания",
+            start_tasks: 'Начать задания',
+            continue_tasks: 'Продолжить задания',
+            average_result: 'Средний результат',
+            completed_of: 'Выполнено: {done} из {total}',
+            all_done: 'Все задания выполнены!',
+            locked_hint: 'Задание откроется по ходу теста',
             delete_confirm: "Вы действительно хотите удалить данное задание?",
             start_the_task: 'Начать задание',
             start_an_other_task: 'Запустить другое задание',
@@ -1279,8 +1334,26 @@ export default {
             run: {
                 title: 'Запустить задание',
                 self: 'Запустить для себя',
-                learner: 'Запустить ученикам'
+                self_short: 'Пройти самому',
+                learner: 'Запустить ученикам',
+                learner_short: 'Запустить'
             },
+            status: {
+                launched: 'Запущено',
+                not_launched: 'Не запущено',
+                available: 'Доступно',
+                locked: 'Недоступно',
+                completed: 'Выполнено',
+                reviewing: 'На проверке',
+                in_process: 'Выполняет',
+                not_started: 'Ещё не начинал(а)',
+                not_completed: 'Не выполнено'
+            },
+            no_tasks_short: 'Нет заданий',
+            lesson_has_no_tasks: 'В этом уроке пока нет заданий — запустить нечего',
+            launched_of: 'Запущено: {done} из {total}',
+            learners_done: 'Выполнили: {done} из {total}',
+            learners_results: 'Результаты учеников',
             launched: {
                 title: 'Задание уже запущено',
                 learner: 'Уже запущено для учеников'
@@ -1383,6 +1456,8 @@ export default {
             answer_the_questions: {
                 answer_type: 'Выберите метод ответа на вопрос',
                 paste_prohibited: 'Пожалуйста, напишите ответ самостоятельно. Вставка скопированного текста запрещена правилами тестирования.',
+                filled: 'Заполнено',
+                sent_for_review: 'Ответы отправлены учителю на проверку',
                 options: {
                     option_1: 'Текстовый ответ',
                     option_2: 'Ответ с помощью видео',

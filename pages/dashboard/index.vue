@@ -1,6 +1,20 @@
 <template>
-  <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
-  <client-only v-if="dashboard">
+  <!-- Первая загрузка — скелетон раскладки, повторные — лоадер поверх -->
+  <loader v-if="pending && loaded" :className="'full-overlay'" :showPendingText="true" />
+  <template v-if="!loaded">
+    <div class="col-span-12">
+      <div class="skeleton h-9 w-80 max-w-full mb-2"></div>
+      <div class="skeleton h-4 w-44"></div>
+    </div>
+    <div class="col-span-12 lg:col-span-7 flex flex-col gap-3">
+      <div class="skeleton h-7 w-56"></div>
+      <div v-for="i in 3" :key="i" class="skeleton h-28 w-full !rounded-xl"></div>
+    </div>
+    <div class="col-span-12 lg:col-span-5">
+      <div class="skeleton h-96 w-full !rounded-xl"></div>
+    </div>
+  </template>
+  <client-only v-if="loaded">
     <template v-if="showQuiz && dashboard.quiz">
       <div class="col-span-12 relative">
         <div class="custom-grid">
@@ -369,7 +383,7 @@
                 >
                   <scrollFadeContainer :maxHeight="300" :fadeSize="60">
                     <scheduleTable
-                      :schedule="dashboard.upcoming_lessons"
+                      :schedule="upcomingLessons"
                       :miniTable="true"
                       :openEventModal="openEventModal"
                       :acceptConference="acceptConference"
@@ -488,138 +502,143 @@
       </div>
     </roleProvider> -->
 
+      <!-- 1. Приветствие + дата + быстрый переход к расписанию -->
+      <div class="col-span-12">
+        <div class="db-hello">
+          <div class="min-w-0">
+            <h2 class="db-hello-title">
+              {{ authUser?.first_name }},
+              <span class="lowercase">{{ $t("welcome") }}</span>
+            </h2>
+            <p class="db-hello-date">{{ todayLabel }}</p>
+          </div>
+          <nuxt-link
+            v-if="!schoolStore.isAiSchoolDomain"
+            class="btn btn-light"
+            :to="localePath('/dashboard/schedule')"
+          >
+            <i class="pi pi-calendar-clock" aria-hidden="true"></i>
+            {{ $t("pages.schedule.show_entire_schedule") }}
+          </nuxt-link>
+        </div>
+      </div>
+
+      <!-- 2. Занятия, которые идут прямо сейчас — самое важное действие -->
       <div
-        v-if="
-          dashboard &&
-          authUser &&
-          !authUser.telegram &&
-          !schoolStore.isAiSchoolDomain
-        "
+        v-if="dashboard.current_lessons && dashboard.current_lessons.length"
         class="col-span-12"
       >
-        <div
-          style="
-            background-image: linear-gradient(
-              225deg,
-              #3c8ce7 10%,
-              #00eaff 100%
-            );
-          "
-          class="p-6 rounded-xl overflow-hidden relative"
-        >
-          <div class="z-10 relative pr-32 max-md:pr-4">
-            <h3 class="text-white mb-2">{{ $t("telegram.banner.title") }}</h3>
-            <p class="text-white mb-4 font-medium">
-              {{ $t("telegram.banner.description") }}
-            </p>
-
-            <a
-              class="btn btn-white"
-              target="_blank"
-              :href="`https://t.me/${config.public.telegramBotName}?start=${localeProperties.code}`"
-            >
-              <i class="pi pi-telegram"></i>
-              {{ $t("telegram.connect.connect") }}</a
-            >
-          </div>
-
-          <img
-            class="absolute opacity-30 w-40 top-1/2 -translate-y-1/2 right-4 z-0"
-            src="~/public/images/telegram/telegram.png"
+        <div class="db-section-head">
+          <h3 class="db-section-title">
+            <span class="live-dot" aria-hidden="true"></span>
+            {{ $t("pages.dashboard.live_now") }}
+          </h3>
+        </div>
+        <div class="flex flex-col gap-4">
+          <currentConferenceCard
+            v-for="conference in dashboard.current_lessons"
+            :key="conference.uuid"
+            :conference="conference"
+            :timeIsUp="timeIsUp"
           />
         </div>
       </div>
 
-      <div class="col-span-12 lg:col-span-6">
-        <aiExplainer :explainMode="'speaking'" />
+      <!-- 3. Неоплаченные занятия — заметно, но компактно -->
+      <div v-if="paymentLessons.length > 0" class="col-span-12">
+        <div class="db-notice">
+          <div class="db-notice-icon" aria-hidden="true">
+            <i class="pi pi-credit-card"></i>
+          </div>
+          <p class="mb-0 flex-1 font-medium">
+            {{
+              $t("pages.dashboard.unpaid_lessons", {
+                count: paymentLessons.length,
+              })
+            }}
+          </p>
+          <button
+            type="button"
+            class="btn btn-primary"
+            @click="openPaymentModal()"
+          >
+            {{ $t("pages.lessons.pay_for_lessons") }}
+          </button>
+        </div>
       </div>
 
-      <div v-if="dashboard" class="col-span-12 lg:col-span-6">
-        <div class="custom-grid">
-          <div
-            v-if="dashboard.current_lessons && dashboard.current_lessons.length"
-            class="col-span-12"
+      <!-- 4. Баннер Telegram — компактный, его можно скрыть -->
+      <div v-if="showTelegramBanner" class="col-span-12">
+        <div class="db-telegram">
+          <img
+            class="db-telegram-logo"
+            src="~/public/images/telegram/telegram.png"
+            alt=""
+          />
+          <div class="flex-1 min-w-0">
+            <h4 class="text-white mb-1">{{ $t("telegram.banner.title") }}</h4>
+            <p class="text-white/90 text-sm mb-0">
+              {{ $t("telegram.banner.description") }}
+            </p>
+          </div>
+          <a
+            class="btn btn-white shrink-0"
+            target="_blank"
+            rel="noopener"
+            :href="`https://t.me/${config.public.telegramBotName}?start=${localeProperties.code}`"
           >
-            <div class="custom-grid">
-              <div class="col-span-12">
-                <h3 class="mb-0">
-                  📖 {{ $t("pages.lessons.current_lessons") }}
-                </h3>
-              </div>
-              <div
-                v-for="conference in dashboard.current_lessons"
-                :key="conference.uuid"
-                class="col-span-12"
-              >
-                <currentConferenceCard
-                  :conference="conference"
-                  :timeIsUp="timeIsUp"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div class="col-span-12">
-            <div class="custom-grid">
-              <div class="col-span-12">
-                <h3 class="mb-0">
-                  📅 {{ $t("pages.lessons.upcoming_lessons") }}
-                </h3>
-              </div>
-
-              <template
-                v-if="
-                  dashboard.upcoming_lessons &&
-                  dashboard.upcoming_lessons.length
-                "
-              >
-                <div class="col-span-12">
-                  <scrollFadeContainer :maxHeight="400" :fadeSize="120">
-                    <scheduleTable
-                      :schedule="dashboard.upcoming_lessons"
-                      :openEventModal="openEventModal"
-                      :acceptConference="acceptConference"
-                      :showPoster="true"
-                      :mode="'stack'"
-                    />
-                  </scrollFadeContainer>
-                </div>
-
-                <div class="col-span-12">
-                  <div class="btn-wrap justify-end">
-                    <button type="button"
-                      v-if="paymentLessons.length > 0"
-                      @click="openPaymentModal()"
-                      class="btn btn-primary"
-                    >
-                      <i class="pi pi-credit-card"></i>
-                      {{ $t("pages.lessons.pay_for_lessons") }}
-                    </button>
-                    <nuxt-link
-                      v-if="!schoolStore.isAiSchoolDomain"
-                      class="btn btn-light"
-                      :to="localePath('/dashboard/schedule')"
-                    >
-                      <i class="pi pi-calendar-clock"></i>
-                      {{ $t("pages.schedule.show_entire_schedule") }}
-                    </nuxt-link>
-                  </div>
-                </div>
-              </template>
-              <div v-else class="col-span-12">
-                <alert :className="'light'">
-                  <img
-                    class="w-24 mx-auto mb-2"
-                    src="~/public/images/calendar-search.svg"
-                  />
-                  <p class="mb-0">
-                    <b>{{ $t("pages.lessons.no_upcoming_lessons") }}</b>
-                  </p>
-                </alert>
-              </div>
-            </div>
-          </div>
+            <i class="pi pi-telegram" aria-hidden="true"></i>
+            {{ $t("telegram.connect.connect") }}
+          </a>
+          <button
+            type="button"
+            class="db-telegram-close"
+            :title="$t('close')"
+            :aria-label="$t('close')"
+            @click="hideTelegramBanner()"
+          >
+            <i class="bi bi-x-lg" aria-hidden="true"></i>
+          </button>
         </div>
+      </div>
+
+      <!-- 5. Ближайшие занятия (слева, шире) + AI-ассистент (справа) -->
+      <div class="col-span-12 lg:col-span-7">
+        <div class="db-section-head">
+          <h3 class="db-section-title">
+            <i class="pi pi-calendar text-corp" aria-hidden="true"></i>
+            {{ $t("pages.lessons.upcoming_lessons") }}
+            <span
+              v-if="upcomingLessons.length"
+              class="db-count"
+              >{{ upcomingLessons.length }}</span
+            >
+          </h3>
+        </div>
+
+        <scrollFadeContainer
+          v-if="upcomingLessons.length"
+          :maxHeight="560"
+          :fadeSize="120"
+        >
+          <scheduleTable
+            :schedule="upcomingLessons"
+            :openEventModal="openEventModal"
+            :acceptConference="acceptConference"
+            :showPoster="true"
+            :mode="'stack'"
+          />
+        </scrollFadeContainer>
+
+        <emptyState
+          v-else
+          :text="$t('pages.lessons.no_upcoming_lessons')"
+          image="/images/calendar-search.svg"
+        />
+      </div>
+
+      <div class="col-span-12 lg:col-span-5">
+        <aiExplainer :explainMode="'speaking'" />
       </div>
     </template>
 
@@ -676,7 +695,7 @@
               class="col-span-12"
               v-if="schoolStore.isAiSchoolDomain && currentEvent.poster_file"
             >
-              <img
+              <img v-skeleton
                 class="w-full rounded-xl"
                 :src="
                   currentEvent.poster_file
@@ -894,6 +913,7 @@
 </template>
 
 <script setup>
+import { useNotify } from "~/composables/useNotify";
 import { useRouter } from "nuxt/app";
 import { sanitize } from "../../utils/sanitize";
 import steps from "../../components/ui/steps.vue";
@@ -905,14 +925,17 @@ import circleProgressBar from "../../components/ui/circleProgressBar.vue";
 import userTag from "../../components/ui/userTag.vue";
 import animatedNumber from "../../components/ui/animatedNumber.vue";
 import currentConferenceCard from "../../components/conference/currentConferenceCard.vue";
+import {
+  onConferencesChanged,
+  checkConferenceLiveNow,
+} from "~/composables/useConferenceLive";
 import userAvatar from "../../components/ui/userAvatar.vue";
 import roleProvider from "../../components/ui/roleProvider.vue";
 import loader from "../../components/ui/loader.vue";
-import alert from "../../components/ui/alert.vue";
+import emptyState from "../../components/ui/emptyState.vue";
 import scrollFadeContainer from "../../components/ui/scrollFadeContainer.vue";
 import aiExplainer from "../../components/lesson/components/ai/aiExplainer.vue";
 import scheduleTable from "../../components/schedule/scheduleTable.vue";
-import { useToast } from "vue-toastification";
 import { startConfetti, stopConfetti } from "../../utils/confetti.js";
 
 const config = useRuntimeConfig();
@@ -920,10 +943,44 @@ const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
 const schoolStore = useSchoolStore();
 const pending = ref(true);
-const toast = useToast();
+const notify = useNotify();
 const { t, localeProperties } = useI18n();
 const authUser = useSanctumUser();
 const dashboard = ref([]);
+// true после первой успешной загрузки: до этого показываем скелетон раскладки.
+const loaded = ref(false);
+
+// «Понедельник, 24 ноября» на языке интерфейса.
+const todayLabel = computed(() => {
+  const label = new Intl.DateTimeFormat(
+    localeProperties.value.code === "kk" ? "kk-KZ" : "ru-RU",
+    { weekday: "long", day: "numeric", month: "long" },
+  ).format(new Date());
+  return label.charAt(0).toUpperCase() + label.slice(1);
+});
+
+// Баннер Telegram можно скрыть — он вернётся через 14 дней.
+const TG_BANNER_KEY = "tgBannerHiddenUntil";
+const TG_BANNER_HIDE_DAYS = 14;
+const telegramBannerHidden = ref(true); // до onMounted не мигаем баннером
+
+const showTelegramBanner = computed(
+  () =>
+    !telegramBannerHidden.value &&
+    authUser.value &&
+    !authUser.value.telegram &&
+    !schoolStore.isAiSchoolDomain,
+);
+
+const hideTelegramBanner = () => {
+  telegramBannerHidden.value = true;
+  try {
+    localStorage.setItem(
+      TG_BANNER_KEY,
+      String(Date.now() + TG_BANNER_HIDE_DAYS * 24 * 60 * 60 * 1000),
+    );
+  } catch {}
+};
 const paymentLessons = ref([]);
 
 const currentEvent = ref(null);
@@ -1011,6 +1068,69 @@ const recommendRoute = computed(() => {
     next: nextLevel, // Следующий уровень после рекомендуемого (объект, 'ielts' или null)
     isPassedCurrent: isPassed, // Флаг: набрал ли порог на текущем тесте
   };
+});
+
+// ===== Ближайшие уроки: закончившийся урок исчезает без перезагрузки =====
+// Бэкенд отдаёт ends_in_seconds — сколько осталось до конца урока на момент
+// ответа. Отсчитываем от времени загрузки, поэтому часовой пояс и часы
+// устройства ученика не влияют.
+const dashboardLoadedAt = ref(0);
+const clockNow = ref(0);
+const CLOCK_TICK = 30 * 1000;
+let clockTimer = null;
+
+const upcomingLessons = computed(() =>
+  (dashboard.value?.upcoming_lessons || []).filter(
+    (lesson) =>
+      lesson.ends_in_seconds == null ||
+      dashboardLoadedAt.value + lesson.ends_in_seconds * 1000 > clockNow.value,
+  ),
+);
+
+onMounted(() => {
+  clockTimer = setInterval(() => {
+    clockNow.value = Date.now();
+  }, CLOCK_TICK);
+});
+
+// ===== Начался / закончился урок — обновляем без перезагрузки страницы =====
+// Меню (layouts/dashboard.vue) раз в 30 секунд проверяет набор текущих
+// конференций. Если он изменился — тихо подтягиваем только уроки: без
+// лоадера и не трогая тест и оплату, которые ученик может проходить.
+let refreshingLessons = false;
+
+const refreshLessons = async () => {
+  // Пока идёт полная загрузка — она и так принесёт свежие уроки
+  if (refreshingLessons || pending.value || !loaded.value) return;
+  refreshingLessons = true;
+
+  try {
+    const response = await $axiosPlugin.get("dashboard/get");
+    dashboard.value.current_lessons = response.data.current_lessons;
+    dashboard.value.upcoming_lessons = response.data.upcoming_lessons;
+    dashboardLoadedAt.value = Date.now();
+    clockNow.value = Date.now();
+
+    // Список к оплате не меняем, пока открыто окно оплаты
+    if (!paymentModalIsVisible.value) {
+      paymentLessons.value = (response.data.upcoming_lessons || []).filter(
+        (l) =>
+          l.is_active === false &&
+          l.is_bought_status != null &&
+          l.is_bought_status.is_bought === false,
+      );
+    }
+  } catch (e) {
+    // Фоновое обновление: при ошибке оставляем то, что уже показано
+  } finally {
+    refreshingLessons = false;
+  }
+};
+
+onConferencesChanged(refreshLessons);
+
+onBeforeUnmount(() => {
+  clearInterval(clockTimer);
 });
 
 const freeLessons = computed(() => {
@@ -1166,6 +1286,8 @@ const getDashboard = async () => {
     .get("dashboard/get")
     .then((response) => {
       dashboard.value = response.data;
+      dashboardLoadedAt.value = Date.now();
+      clockNow.value = Date.now();
       createPaymentScript();
 
       paymentLessons.value = dashboard.value.upcoming_lessons.filter(
@@ -1196,6 +1318,7 @@ const getDashboard = async () => {
 
       pending.value = false;
       pendingQuiz.value = false;
+      loaded.value = true;
     })
     .catch((err) => {
       if (err.response) {
@@ -1225,10 +1348,7 @@ const goToDashboard = (forced) => {
     ) {
       showQuiz.value = false;
     } else {
-      toast(t("pages.quiz.marketing.choose_the_one"), {
-        toastClassName: ["custom-toast", "danger"],
-        timeout: 10000,
-      });
+      notify("danger", t("pages.quiz.marketing.choose_the_one"));
     }
   }
 };
@@ -1403,6 +1523,8 @@ const acceptConference = async (uuid) => {
       acceptedConference.value = true;
       startConfetti("confetti-canvas");
       getDashboard();
+      // Ученик записался — урок мог стать для него текущим
+      checkConferenceLiveNow();
 
       if (currentLevel.value) {
         saveQuizResult(true);
@@ -1414,19 +1536,13 @@ const acceptConference = async (uuid) => {
           pendingEvent.value = false;
 
           if (err.response.data.message) {
-            toast(
-              err.response.data.message === "not_bought"
+            notify("danger", err.response.data.message === "not_bought"
                 ? t("pages.conference.not_bought", {
                     courses: currentEvent.value.levels
                       .map((l) => l.level_name)
                       .join(", "),
                   })
-                : t("pages.conference.accept." + err.response.data.message),
-              {
-                toastClassName: ["custom-toast", "danger"],
-                timeout: 10000,
-              },
-            );
+                : t("pages.conference.accept." + err.response.data.message));
           }
         } else {
           router.push({
@@ -1513,6 +1629,13 @@ const selectLevel = (lesson_id) => {
 
 onMounted(async () => {
   getDashboard();
+
+  try {
+    const hiddenUntil = Number(localStorage.getItem(TG_BANNER_KEY) || 0);
+    telegramBannerHidden.value = hiddenUntil > Date.now();
+  } catch {
+    telegramBannerHidden.value = false;
+  }
 
   // Импортируем библиотеку только на стороне клиента (в браузере)
   await import("add-to-calendar-button");

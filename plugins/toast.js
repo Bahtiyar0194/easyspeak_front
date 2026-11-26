@@ -10,6 +10,9 @@ export default defineNuxtPlugin(nuxtApp => {
         closeButton: 'i',
         closeButtonClassName: "close-button",
         closeOnClick: true,
-        pauseOnHover: true
+        pauseOnHover: true,
+        // Не больше 4 уведомлений одновременно, новые — сверху.
+        maxToasts: 4,
+        newestOnTop: true,
     });
 });

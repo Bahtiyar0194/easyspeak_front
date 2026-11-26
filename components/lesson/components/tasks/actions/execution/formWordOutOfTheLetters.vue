@@ -18,26 +18,43 @@
       :taskResult="taskResult"
     >
       <template v-slot:task_content>
+        <!-- Статус: сколько осталось / итог слова + попытки + таймер -->
         <div class="col-span-12">
-          <p v-if="timeIsUp" class="font-medium text-center text-danger">
-            {{ $t("time_is_up") }}
-          </p>
-          <p
-            v-else-if="isComplete"
-            class="font-medium text-center text-success"
-          >
-            {{ $t("right") }}
-          </p>
-          <p v-else-if="isWrong" class="font-medium text-center text-danger">
-            {{ $t("wrong") }}
-          </p>
-          <p v-else-if="wordsLeft > 0" class="text-center">
-            {{ $t("pages.dictionary.words_left") }}: <b>{{ wordsLeft }}</b>
-          </p>
-        </div>
+          <div class="task-status-bar">
+            <div class="flex flex-col gap-1 min-w-0">
+              <p v-if="timeIsUp" class="mb-0 font-semibold text-danger flex items-center gap-1.5">
+                <i class="pi pi-clock" aria-hidden="true"></i>
+                {{ $t("time_is_up") }}
+              </p>
+              <p v-else-if="isComplete" class="mb-0 font-semibold text-success flex items-center gap-1.5">
+                <i class="pi pi-check-circle" aria-hidden="true"></i>
+                {{ $t("right") }}
+              </p>
+              <p v-else-if="isWrong" class="mb-0 font-semibold text-danger flex items-center gap-1.5">
+                <i class="pi pi-times-circle" aria-hidden="true"></i>
+                {{ $t("wrong") }}
+              </p>
+              <p v-else-if="wordsLeft > 0" class="mb-0 text-inactive">
+                {{ $t("pages.dictionary.words_left") }}:
+                <b class="text-active">{{ wordsLeft }}</b>
+              </p>
 
-        <div class="col-span-12">
-          <div class="flex justify-center">
+              <!-- Сколько ошибок ещё можно сделать -->
+              <div
+                v-if="currentWord && isStarted"
+                class="attempt-hearts"
+                :title="$t('pages.tasks.attempts_left')"
+                :aria-label="$t('pages.tasks.attempts_left') + ': ' + (currentWord.wrongLetterAttempts ?? 0)"
+              >
+                <i
+                  v-for="n in maxWrongLetterAttempts"
+                  :key="n"
+                  class="bi"
+                  :class="n <= (currentWord.wrongLetterAttempts ?? 0) ? 'bi-heart-fill' : 'bi-heart lost'"
+                  aria-hidden="true"
+                ></i>
+              </div>
+            </div>
             <countdownCircleTimer
               :totalSeconds="time"
               :startCommand="isStarted"
@@ -47,132 +64,112 @@
           </div>
         </div>
 
+        <!-- Подсказки: картинка и озвучка -->
         <div
           v-if="currentWord?.image_file && taskData?.options.show_image"
           class="col-span-12"
         >
           <img
-            v-if="currentWord?.image_file && taskData?.options.show_image"
-            class="w-36 lg:w-40 h-auto mx-auto rounded-xl"
-            :src="
-              config.public.apiBase + '/media/get/' + currentWord?.image_file
-            "
+            v-skeleton="'1/1'"
+            class="w-32 lg:w-40 h-auto mx-auto rounded-2xl"
+            :src="config.public.apiBase + '/media/get/' + currentWord?.image_file"
+            alt=""
           />
         </div>
 
-        <div class="col-span-12">
-          <div class="flex flex-wrap justify-center items-center gap-2">
+        <div
+          v-if="currentWord?.audio_file && taskData?.options.show_audio_button"
+          class="col-span-12"
+        >
+          <div class="flex justify-center">
             <audioButton
-              v-if="
-                currentWord?.audio_file &&
-                taskData?.options.show_image &&
-                taskData?.options.show_audio_button
-              "
+              v-if="taskData?.options.show_image"
               :key="currentWord?.audio_file"
-              :src="
-                config.public.apiBase + '/media/get/' + currentWord?.audio_file
-              "
+              :src="config.public.apiBase + '/media/get/' + currentWord?.audio_file"
             />
-            <div
-              v-else-if="
-                currentWord?.audio_file && taskData?.options.show_audio_button
-              "
-              class="w-full"
-            >
+            <div v-else class="w-full">
               <audioPlayerWithWave
                 :key="currentWord?.audio_file"
-                :src="
-                  config.public.apiBase +
-                  '/media/get/' +
-                  currentWord?.audio_file
-                "
+                :src="config.public.apiBase + '/media/get/' + currentWord?.audio_file"
               />
             </div>
           </div>
         </div>
 
+        <!-- Не получилось / время вышло: правильный ответ -->
         <div v-if="timeIsUp || isWrong" class="col-span-12">
-          <div class="bg-inactive p-6 rounded-xl text-center">
-            <p class="text-inactive mb-2">{{ $t("right_answer") }}</p>
-            <p class="text-2xl mb-0 font-medium">{{ currentWord?.word }}</p>
+          <div class="answer-reveal">
+            <p class="text-inactive text-sm mb-1">{{ $t("right_answer") }}</p>
+            <p class="text-3xl mb-1 font-bold tracking-wide">{{ currentWord?.word }}</p>
+            <p v-if="currentWord?.word_translate" class="mb-0 text-inactive">
+              {{ currentWord?.word_translate }}
+            </p>
           </div>
         </div>
 
         <div v-else class="col-span-12">
-          <div class="custom-grid">
-            <div class="col-span-12">
-              <div class="flex justify-center flex-wrap gap-x-1 mb-2">
-                <div
-                  v-for="(letter, letterIndex) in currentWord?.word"
-                  :key="letterIndex"
-                  class="text-3xl font-medium"
-                  :class="isComplete && 'text-success'"
-                >
-                  <div
-                    v-if="letter === ' ' || letter === ''"
-                    class="mx-1"
-                  ></div>
-                  <div
-                    class="text-inactive"
-                    v-else-if="missingLetters.includes(letterIndex + 1)"
-                  >
-                    _
-                  </div>
-                  <div v-else>
-                    {{ letter }}
-                  </div>
-                </div>
-              </div>
+          <div class="flex flex-col items-center gap-4">
+            <!-- Слово: готовые буквы и пропуски -->
+            <div class="letter-tiles justify-center" :class="{ 'is-complete': isComplete }">
+              <template v-for="(letter, letterIndex) in currentWord?.word" :key="letterIndex">
+                <span v-if="letter === ' ' || letter === ''" class="letter-gap"></span>
+                <span
+                  v-else-if="missingLetters.includes(letterIndex + 1)"
+                  class="letter-tile slot"
+                  :class="{ next: missingLetters[0] === letterIndex + 1 }"
+                  aria-hidden="true"
+                ></span>
+                <span v-else class="letter-tile big">{{ letter }}</span>
+              </template>
+            </div>
 
-              <p class="text-center text-lg text-inactive mb-1">
-                {{ currentWord?.word_translate }}
-              </p>
-              <p
-                v-if="taskData?.options.show_transcription"
-                class="text-center text-sm text-inactive"
-              >
+            <div class="text-center">
+              <p class="text-lg mb-0">{{ currentWord?.word_translate }}</p>
+              <p v-if="taskData?.options.show_transcription" class="text-sm text-inactive mb-0">
                 [{{ currentWord?.transcription }}]
               </p>
             </div>
 
-            <div v-if="currentWord" class="col-span-12">
-              <div class="flex flex-wrap justify-center gap-1">
-                <button type="button"
-                  v-for="(letter, lIndex) in displayedLetters"
-                  :key="`${currentWord?.word}-${lIndex}-${currentWord?.task_word_id}`"
-                  @click="checkWord(letter.toLowerCase(), $event)"
-                  class="letter-btn btn btn-square btn-lg btn-light font-medium lowercase"
-                  :class="isComplete && 'disabled text-hidden'"
-                  v-motion="{
-                    initial: { opacity: 0 },
-                    enter: {
-                      opacity: 1,
-                      transition: {
-                        delay: lIndex * 50,
-                        type: 'spring',
-                        stiffness: 500,
-                        damping: 20,
-                      },
+            <!-- Клавиатура из букв -->
+            <div v-if="currentWord" class="letter-keys">
+              <button
+                type="button"
+                v-for="(letter, lIndex) in displayedLetters"
+                :key="`${currentWord?.word}-${lIndex}-${currentWord?.task_word_id}`"
+                @click="checkWord(letter.toLowerCase(), $event)"
+                class="letter-btn letter-key"
+                :class="isComplete && 'is-used'"
+                :disabled="isComplete"
+                v-motion="{
+                  initial: { opacity: 0, y: 8 },
+                  enter: {
+                    opacity: 1,
+                    y: 0,
+                    transition: {
+                      delay: lIndex * 40,
+                      type: 'spring',
+                      stiffness: 500,
+                      damping: 22,
                     },
-                  }"
-                >
-                  {{ letter }}
-                </button>
-              </div>
+                  },
+                }"
+              >
+                {{ letter }}
+              </button>
             </div>
 
-            <div class="col-span-12">
-              <p class="text-inactive text-center hidden lg:block mb-0">
-                {{ $t("pages.training.keyboard.title") }}
-              </p>
-            </div>
+            <p class="text-inactive text-sm text-center hidden lg:flex items-center gap-1.5 mb-0">
+              <i class="bi bi-keyboard" aria-hidden="true"></i>
+              {{ $t("pages.training.keyboard.title") }}
+            </p>
           </div>
         </div>
 
         <div v-if="timeIsUp || isWrong" class="col-span-12">
-          <div class="flex justify-center">
+          <div class="task-actions justify-center">
             <button type="button" class="btn btn-primary btn-lg" @click="setWord()">
-              <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
+              {{ $t("continue") }}
+              <i class="pi pi-arrow-right" aria-hidden="true"></i>
             </button>
           </div>
         </div>
@@ -185,10 +182,10 @@
   </div>
 </template>
 <script setup>
+import { useNotify } from "~/composables/useNotify";
 import alert from "../../../../../ui/alert.vue";
 import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
-import { useToast } from "vue-toastification";
 import taskLayout from "../../taskLayout.vue";
 import audioButton from "../../../../../ui/audioButton.vue";
 import audioPlayerWithWave from "../../../../../ui/audioPlayerWithWave.vue";
@@ -204,7 +201,7 @@ import result from "../../results/dictionary/result.vue";
 
 const router = useRouter();
 const config = useRuntimeConfig();
-const toast = useToast();
+const notify = useNotify();
 const { t } = useI18n();
 const { $axiosPlugin } = useNuxtApp();
 const errors = ref([]);
@@ -389,37 +386,40 @@ const moveToEnd = () => {
   }
 };
 
+// Кнопка-буква: по клику — сама кнопка, с клавиатуры — первая свободная
+// кнопка с этой буквой
+const findLetterButton = (letter, event) => {
+  if (event?.currentTarget) return event.currentTarget;
+  const buttons = document.getElementsByClassName("letter-btn");
+  for (const button of buttons) {
+    if (
+      !button.classList.contains("is-used") &&
+      button.innerText.trim().toLowerCase() === letter.toLowerCase()
+    ) {
+      return button;
+    }
+  }
+  return null;
+};
+
 const checkWord = (letter, event) => {
+  if (!currentWord.value || missingLetters.value.length === 0) return;
+
+  const button = findLetterButton(letter, event);
+
   if (
     letter.toLowerCase() ===
     currentWord.value.word[missingLetters.value[0] - 1].toLowerCase()
   ) {
     missingLetters.value.shift();
 
-    if (event) {
-      event.target.classList.replace("btn-light", "btn-success");
+    if (button) {
+      button.classList.add("is-correct");
       setTimeout(() => {
-        event.target.classList.remove("btn-success");
-        event.target.classList.add("btn-inactive", "disabled", "text-hidden");
+        button.classList.remove("is-correct");
+        button.classList.add("is-used");
+        button.disabled = true;
       }, 300);
-    } else {
-      const letterButtons = document.getElementsByClassName("letter-btn");
-
-      for (let index = 0; index < letterButtons.length; index++) {
-        const button = letterButtons[index];
-
-        if (
-          !button.classList.contains("disabled") &&
-          button.innerText.toLowerCase() === letter.toLowerCase()
-        ) {
-          button.classList.replace("btn-light", "btn-success");
-          setTimeout(() => {
-            button.classList.remove("btn-success");
-            button.classList.add("btn-inactive", "disabled", "text-hidden");
-          }, 300);
-          break;
-        }
-      }
     }
 
     if (missingLetters.value.length === 0) {
@@ -462,30 +462,28 @@ const checkWord = (letter, event) => {
       }, 3000);
     }
   } else {
-    if (event) {
-      event.target.classList.remove("btn-light");
-      event.target.classList.add("btn-danger", "wobble");
+    // Неверная буква — одинаково для клика и клавиатуры (раньше с
+    // клавиатуры ошибка не считалась и буквы можно было подбирать перебором).
+    // Нажатие на клавиатуре буквы, которой нет среди кнопок, — опечатка, не штрафуем.
+    if (!button && !event) return;
 
-      if (
-        Boolean(
-          taskData.value.options.play_error_sound_with_the_incorrect_answer,
-        )
-      ) {
-        playErrorSound();
-      }
+    if (button) {
+      button.classList.add("is-wrong");
+      setTimeout(() => button.classList.remove("is-wrong"), 400);
+    }
 
-      setTimeout(() => {
-        event.target.classList.remove("btn-danger", "wobble");
-        event.target.classList.add("btn-light");
-      }, 300);
+    if (
+      Boolean(taskData.value.options.play_error_sound_with_the_incorrect_answer)
+    ) {
+      playErrorSound();
+    }
 
-      if (currentWord.value.wrongLetterAttempts >= 1) {
-        --currentWord.value.wrongLetterAttempts;
-      } else {
-        isWrong.value = true;
-        isStarted.value = false;
-        moveToEnd();
-      }
+    if (currentWord.value.wrongLetterAttempts >= 1) {
+      --currentWord.value.wrongLetterAttempts;
+    } else {
+      isWrong.value = true;
+      isStarted.value = false;
+      moveToEnd();
     }
   }
 };
@@ -524,19 +522,24 @@ const timerIsUp = () => {
 
 const debounceKeyboard = debounceHandler(
   () =>
-    toast(t("pages.training.keyboard.warning"), {
-      toastClassName: ["custom-toast", "warning"],
-      timeout: 5000,
-    }),
+    notify("warning", t("pages.training.keyboard.warning")),
   1000,
 );
 
 // Function to log key number and handle answer checking
 const logKey = (event) => {
   if (!isFinished.value) {
-    if (isComplete.value === false && isStarted.value === true) {
-      const regex = /^[a-zA-Z0-9]*$/;
-      if (!regex.test(event.key) && event.key.length === 1) {
+    if (
+      isComplete.value === false &&
+      isStarted.value === true &&
+      event.key.length === 1 &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.altKey &&
+      event.key !== " "
+    ) {
+      const regex = /^[a-zA-Z0-9]$/;
+      if (!regex.test(event.key)) {
         event.preventDefault();
         debounceKeyboard();
       } else {

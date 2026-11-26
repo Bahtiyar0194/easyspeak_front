@@ -18,18 +18,18 @@
       :taskResult="taskResult"
     >
       <template v-slot:task_content>
+        <!-- Статус: сколько осталось + таймер -->
         <div class="col-span-12">
-          <p v-if="timeIsUp" class="font-medium text-center text-danger">
-            {{ $t("time_is_up") }}
-          </p>
-          <p v-else-if="sentences.length > 0" class="text-center">
-            {{ $t("pages.sentences.sentences_left") }}:
-            <b>{{ sentences.length }}</b>
-          </p>
-        </div>
-
-        <div class="col-span-12">
-          <div class="flex justify-center items-center">
+          <div class="task-status-bar">
+            <p v-if="timeIsUp" class="mb-0 font-semibold text-danger flex items-center gap-1.5">
+              <i class="pi pi-clock" aria-hidden="true"></i>
+              {{ $t("time_is_up") }}
+            </p>
+            <p v-else-if="sentences.length > 0" class="mb-0 text-inactive">
+              {{ $t("pages.sentences.sentences_left") }}:
+              <b class="text-active">{{ sentences.length }}</b>
+            </p>
+            <span v-else></span>
             <countdownCircleTimer
               :totalSeconds="time"
               :startCommand="isStarted"
@@ -38,145 +38,38 @@
           </div>
         </div>
 
+        <!-- Разбор после проверки -->
         <div v-if="timeIsUp || isComplete" class="col-span-12">
-          <div class="flex flex-col gap-y-4">
-            <div
-              class="flex flex-col gap-y-2"
-              v-if="currentStudiedSentences.length > 0"
-            >
-              <p class="text-xl font-medium mb-0 text-success">
+          <div class="flex flex-col gap-5">
+            <section v-if="currentStudiedSentences.length > 0" class="result-section">
+              <p class="result-head ok">
+                <span class="result-head-dot" aria-hidden="true"></span>
                 {{
                   currentReStudySentences.length > 0
                     ? $t("right_answers")
                     : $t("right")
                 }}
+                <span class="result-head-count">{{ currentStudiedSentences.length }}</span>
               </p>
-              <ul class="list-group nowrap" ref="rightAnswers">
+              <ul class="result-list" ref="rightAnswers">
                 <li
-                  class="list-item"
+                  class="result-item ok"
                   v-for="(sentence, sIndex) in currentStudiedSentences"
                   :key="sIndex"
                 >
-                  <div class="flex justify-between items-center gap-x-2">
-                    <div>
-                      <div :id="'right_answer_' + sentence.task_sentence_id">
-                        <div class="flex flex-wrap gap-x-1 font-medium">
-                          <div
-                            v-for="(word, wordIndex) in sentence.sentence.split(
-                              ' ',
-                            )"
-                            :key="wordIndex"
-                          >
-                            <span
-                              :class="
-                                ((taskData?.options.find_word_option ==
-                                  'with_options' &&
-                                  sentence.missingWordPositionIndex ===
-                                    wordIndex) ||
-                                  ((taskData?.options.find_word_option ==
-                                    'with_hints' ||
-                                    taskData?.options.find_word_option ==
-                                      'without_hints') &&
-                                    sentence.missingWords
-                                      .find((w) => w.word_position == wordIndex)
-                                      ?.userInput.toLowerCase() ==
-                                      removePunctuation(word).toLowerCase()) ||
-                                  (taskData?.options.find_word_option ==
-                                    'with_first_letter' &&
-                                    removePunctuation(
-                                      sentence.missingWords.find(
-                                        (w) => w.word_position == wordIndex,
-                                      )?.userInput,
-                                    ).toLowerCase() ==
-                                      removePunctuation(word)
-                                        .toLowerCase()
-                                        .slice(1) &&
-                                    word.length > 1)) &&
-                                'text-success'
-                              "
-                              >{{ word }}</span
-                            >
-                          </div>
-                        </div>
-                      </div>
-                      <p class="mb-0 text-xs text-inactive font-medium">
-                        {{ sentence.sentence_translate }}
-                      </p>
-                    </div>
-
-                    <div class="flex items-center">
-                      <audioButton
-                        v-if="sentence.audio_file"
-                        :src="
-                          config.public.apiBase +
-                          '/media/get/' +
-                          sentence.audio_file
-                        "
-                      />
-                      <div class="step-item xs completed">
-                        <div class="step-icon">
-                          <i class="pi pi-check"></i>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              </ul>
-            </div>
-
-            <div
-              class="flex flex-col gap-y-2"
-              v-if="currentReStudySentences.length > 0"
-            >
-              <p class="text-xl font-medium mb-0 text-danger">
-                {{ $t("for_re_examination") }}
-              </p>
-              <ul class="list-group nowrap" ref="wrongAnswers">
-                <li
-                  class="list-item"
-                  v-for="(sentence, rIndex) in currentReStudySentences"
-                  :key="rIndex"
-                >
-                  <div class="flex justify-between items-center gap-x-2">
-                    <div>
-                      <p class="mb-0 text-xs text-inactive font-normal">
-                        {{ $t("your_answer") }}:
-                      </p>
-                      <div :id="'user_answer_' + sentence.task_sentence_id">
-                        <div class="flex flex-wrap gap-x-1 font-medium">
-                          <div
-                            v-for="(word, wordIndex) in sentence.sentence.split(
-                              ' ',
-                            )"
-                            :key="wordIndex"
-                          >
-                            <span
-                              class="underline text-danger"
-                              v-if="
-                                taskData?.options.find_word_option ==
-                                  'with_options' &&
-                                wordIndex ===
-                                  sentence.missingWordPositionIndex &&
-                                sentence.selectedOptionIndex !== undefined &&
-                                sentence.selectedOptionIndex >= 0
-                              "
-                            >
-                              {{
-                                sentence.missingWords[
-                                  sentence.selectedOptionIndex
-                                ]?.word_option
-                              }}
-                            </span>
-                            <span
-                              class="underline flex"
-                              v-else-if="
-                                taskData?.options.find_word_option !=
-                                  'with_options' &&
-                                sentence.missingWords.find(
-                                  (w) => w.word_position == wordIndex,
-                                )?.userInput
-                              "
-                              :class="
+                  <div class="flex-1 min-w-0">
+                    <!-- Содержимое этого блока сохраняется как HTML ответа -->
+                    <div :id="'right_answer_' + sentence.task_sentence_id">
+                      <div class="flex flex-wrap gap-x-1 font-medium">
+                        <div
+                          v-for="(word, wordIndex) in sentence.sentence.split(' ')"
+                          :key="wordIndex"
+                        >
+                          <span
+                            :class="
+                              ((taskData?.options.find_word_option ==
+                                'with_options' &&
+                                sentence.missingWordPositionIndex === wordIndex) ||
                                 ((taskData?.options.find_word_option ==
                                   'with_hints' ||
                                   taskData?.options.find_word_option ==
@@ -192,19 +85,95 @@
                                       (w) => w.word_position == wordIndex,
                                     )?.userInput,
                                   ).toLowerCase() ==
-                                    removePunctuation(word)
-                                      .toLowerCase()
-                                      .slice(1) &&
+                                    removePunctuation(word).toLowerCase().slice(1) &&
+                                  word.length > 1)) &&
+                              'text-success'
+                            "
+                            >{{ word }}</span
+                          >
+                        </div>
+                      </div>
+                    </div>
+                    <p class="mb-0 mt-0.5 text-sm text-inactive">
+                      {{ sentence.sentence_translate }}
+                    </p>
+                  </div>
+
+                  <div class="flex items-center gap-2 shrink-0">
+                    <audioButtonMini
+                      v-if="sentence.audio_file"
+                      :src="config.public.apiBase + '/media/get/' + sentence.audio_file"
+                    />
+                    <span class="result-status ok" aria-hidden="true">
+                      <i class="pi pi-check"></i>
+                    </span>
+                  </div>
+                </li>
+              </ul>
+            </section>
+
+            <section v-if="currentReStudySentences.length > 0" class="result-section">
+              <p class="result-head bad">
+                <span class="result-head-dot" aria-hidden="true"></span>
+                {{ $t("for_re_examination") }}
+                <span class="result-head-count">{{ currentReStudySentences.length }}</span>
+              </p>
+              <ul class="result-list" ref="wrongAnswers">
+                <li
+                  class="result-item bad"
+                  v-for="(sentence, rIndex) in currentReStudySentences"
+                  :key="rIndex"
+                >
+                  <div class="flex-1 min-w-0 flex flex-col gap-2">
+                    <div>
+                      <p class="result-label">{{ $t("your_answer") }}</p>
+                      <!-- Содержимое этого блока сохраняется как HTML ответа -->
+                      <div :id="'user_answer_' + sentence.task_sentence_id">
+                        <div class="flex flex-wrap gap-x-1 font-medium">
+                          <div
+                            v-for="(word, wordIndex) in sentence.sentence.split(' ')"
+                            :key="wordIndex"
+                          >
+                            <span
+                              class="underline text-danger"
+                              v-if="
+                                taskData?.options.find_word_option == 'with_options' &&
+                                wordIndex === sentence.missingWordPositionIndex &&
+                                sentence.selectedOptionIndex !== undefined &&
+                                sentence.selectedOptionIndex >= 0
+                              "
+                            >
+                              {{ sentence.missingWords[sentence.selectedOptionIndex]?.word_option }}
+                            </span>
+                            <span
+                              class="underline flex"
+                              v-else-if="
+                                taskData?.options.find_word_option != 'with_options' &&
+                                sentence.missingWords.find(
+                                  (w) => w.word_position == wordIndex,
+                                )?.userInput
+                              "
+                              :class="
+                                ((taskData?.options.find_word_option == 'with_hints' ||
+                                  taskData?.options.find_word_option == 'without_hints') &&
+                                  sentence.missingWords
+                                    .find((w) => w.word_position == wordIndex)
+                                    ?.userInput.toLowerCase() ==
+                                    removePunctuation(word).toLowerCase()) ||
+                                (taskData?.options.find_word_option == 'with_first_letter' &&
+                                  removePunctuation(
+                                    sentence.missingWords.find(
+                                      (w) => w.word_position == wordIndex,
+                                    )?.userInput,
+                                  ).toLowerCase() ==
+                                    removePunctuation(word).toLowerCase().slice(1) &&
                                   word.length > 1)
                                   ? 'text-success'
                                   : 'text-danger'
                               "
                             >
                               <span
-                                v-if="
-                                  taskData?.options.find_word_option ==
-                                  'with_first_letter'
-                                "
+                                v-if="taskData?.options.find_word_option == 'with_first_letter'"
                                 class="text-corp"
                                 >{{ word[0] }}</span
                               >
@@ -218,23 +187,17 @@
                             <span
                               class="text-danger"
                               v-else-if="
-                                (taskData?.options.find_word_option ==
-                                  'with_options' &&
-                                  wordIndex ===
-                                    sentence.missingWordPositionIndex &&
+                                (taskData?.options.find_word_option == 'with_options' &&
+                                  wordIndex === sentence.missingWordPositionIndex &&
                                   sentence.selectedOptionIndex === undefined) ||
-                                (taskData?.options.find_word_option !=
-                                  'task_options' &&
+                                (taskData?.options.find_word_option != 'task_options' &&
                                   sentence.missingWords.find(
                                     (w) => w.word_position == wordIndex,
                                   )?.userInput == '')
                               "
                             >
                               <span
-                                v-if="
-                                  taskData?.options.find_word_option ==
-                                  'with_first_letter'
-                                "
+                                v-if="taskData?.options.find_word_option == 'with_first_letter'"
                                 class="text-corp"
                                 >{{ word[0] }}</span
                               >_____
@@ -244,27 +207,23 @@
                           </div>
                         </div>
                       </div>
+                    </div>
 
-                      <p class="mb-0 text-xs text-inactive font-normal">
-                        {{ $t("right_answer") }}:
-                      </p>
+                    <div>
+                      <p class="result-label">{{ $t("right_answer") }}</p>
+                      <!-- Содержимое этого блока сохраняется как HTML ответа -->
                       <div :id="'right_answer_' + sentence.task_sentence_id">
                         <div class="flex flex-wrap gap-x-1 font-medium">
                           <div
-                            v-for="(word, wordIndex) in sentence.sentence.split(
-                              ' ',
-                            )"
+                            v-for="(word, wordIndex) in sentence.sentence.split(' ')"
                             :key="wordIndex"
                           >
                             <span
                               class="underline text-success"
                               v-if="
-                                (taskData?.options.find_word_option ==
-                                  'with_options' &&
-                                  sentence.missingWordPositionIndex ===
-                                    wordIndex) ||
-                                (taskData?.options.find_word_option !=
-                                  'with_options' &&
+                                (taskData?.options.find_word_option == 'with_options' &&
+                                  sentence.missingWordPositionIndex === wordIndex) ||
+                                (taskData?.options.find_word_option != 'with_options' &&
                                   sentence.missingWords.find(
                                     (w) => w.word_position == wordIndex,
                                   )?.word_position == wordIndex)
@@ -275,262 +234,259 @@
                           </div>
                         </div>
                       </div>
-                      <p class="mb-0 text-xs text-inactive font-medium">
+                      <p class="mb-0 mt-0.5 text-sm text-inactive">
                         {{ sentence.sentence_translate }}
                       </p>
                     </div>
+                  </div>
 
-                    <div class="flex items-center">
-                      <audioButton
-                        v-if="sentence.audio_file"
-                        :src="
-                          config.public.apiBase +
-                          '/media/get/' +
-                          sentence.audio_file
-                        "
-                      />
-                      <div class="step-item xs failed">
-                        <div class="step-icon">
-                          <i class="pi pi-replay"></i>
-                        </div>
-                      </div>
-                    </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <audioButtonMini
+                      v-if="sentence.audio_file"
+                      :src="config.public.apiBase + '/media/get/' + sentence.audio_file"
+                    />
+                    <span class="result-status bad" aria-hidden="true">
+                      <i class="pi pi-replay"></i>
+                    </span>
                   </div>
                 </li>
               </ul>
-            </div>
-            <div class="btn-wrap right">
-              <button type="button"
+            </section>
+
+            <div class="task-actions">
+              <button
+                type="button"
                 v-if="sentences.length > 0"
-                class="btn btn-outline-primary"
+                class="btn btn-primary"
                 @click="setSentences()"
               >
-                <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
+                {{ $t("continue") }}
+                <i class="pi pi-arrow-right" aria-hidden="true"></i>
               </button>
-              <button type="button" v-else class="btn btn-light" @click="isFinished = true">
-                <i class="pi pi-check"></i>
+              <button
+                type="button"
+                v-else
+                class="btn btn-success"
+                @click="isFinished = true"
+              >
+                <i class="pi pi-check" aria-hidden="true"></i>
                 {{ $t("pages.tasks.complete_the_task") }}
               </button>
             </div>
           </div>
         </div>
 
+        <!-- Выполнение -->
         <div v-else class="col-span-12">
-          <div class="custom-grid">
+          <div class="flex flex-col gap-4">
+            <!-- Банк слов-подсказок: нажать или перетащить в пропуск -->
             <div
               v-if="taskData?.options.find_word_option == 'with_hints'"
-              class="col-span-12 border-b-inactive"
+              class="word-bank"
             >
-              <div class="btn-wrap justify-center items-center mb-4">
-                <button
-                  v-for="(word, wordIndex) in hiddenWords"
-                  :key="wordIndex"
-                  type="button"
-                  class="btn btn btn-light draggable"
-                  :class="{
-                    'disabled line-through': word.disabled,
-                  }"
-                  :draggable="true"
-                  @dragstart="onDragStart($event, wordIndex)"
-                  @click="insertWordToInput(word)"
-                >
-                  {{ word.word }}
-                </button>
-              </div>
+              <button
+                v-for="(word, wordIndex) in hiddenWords"
+                :key="wordIndex"
+                type="button"
+                class="word-chip"
+                :class="{ used: word.disabled }"
+                :disabled="word.disabled"
+                :draggable="!word.disabled"
+                @dragstart="onDragStart($event, wordIndex)"
+                @click="insertWordToInput(word)"
+              >
+                {{ word.word }}
+              </button>
             </div>
+
             <div
               v-for="(sentence, sentenceIndex) in currentSentences"
               :key="sentenceIndex"
-              class="col-span-12"
+              class="blank-card"
+              :class="{ shake: unFilledSentences.includes(sentenceIndex) }"
             >
-              <div
-                class="flex flex-wrap items-center gap-1 font-medium text-lg mb-2"
-              >
-                <span>{{ sentenceIndex + 1 }}.</span>
-                <div
-                  class="select-none"
-                  v-for="(word, wordIndex) in sentence.sentence.split(' ')"
-                  :key="wordIndex"
-                >
-                  <span
-                    class="underline text-corp"
-                    v-if="
-                      taskData?.options.find_word_option == 'with_options' &&
-                      wordIndex === sentence.missingWordPositionIndex &&
-                      sentence.selectedOptionIndex >= 0
-                    "
-                    >{{
-                      sentence.missingWords[sentence.selectedOptionIndex]
-                        .word_option
-                    }}</span
-                  >
+              <span class="blank-card-num" aria-hidden="true">{{ sentenceIndex + 1 }}</span>
+              <div class="flex-1 min-w-0 flex flex-col gap-3">
+                <div class="blank-sentence">
                   <div
-                    v-else-if="
-                      taskData?.options.find_word_option == 'with_options' &&
-                      wordIndex === sentence.missingWordPositionIndex
-                    "
+                    class="select-none"
+                    v-for="(word, wordIndex) in sentence.sentence.split(' ')"
+                    :key="wordIndex"
                   >
-                    <span>_______</span>
-                  </div>
-                  <div
-                    v-else-if="
-                      (taskData?.options.find_word_option == 'with_hints' ||
-                        taskData?.options.find_word_option ==
-                          'without_hints') &&
-                      sentence.missingWords.find(
-                        (w) => w.word_position === wordIndex,
-                      )
-                    "
-                  >
-                    <div
-                      class="px-2 rounded-lg flex items-center border"
-                      :class="
-                        unFilledSentences.includes(sentenceIndex) &&
-                        sentence.missingWords.find(
-                          (w) => w.word_position == wordIndex,
-                        ).userInput === ''
-                          ? 'pulse border-danger bg-danger'
-                          : 'border-active'
+                    <!-- Выбранный вариант (with_options) -->
+                    <span
+                      class="blank-filled"
+                      v-if="
+                        taskData?.options.find_word_option == 'with_options' &&
+                        wordIndex === sentence.missingWordPositionIndex &&
+                        sentence.selectedOptionIndex >= 0
                       "
+                      >{{ sentence.missingWords[sentence.selectedOptionIndex].word_option }}</span
+                    >
+                    <!-- Пустой пропуск (with_options) -->
+                    <span
+                      v-else-if="
+                        taskData?.options.find_word_option == 'with_options' &&
+                        wordIndex === sentence.missingWordPositionIndex
+                      "
+                      class="blank-empty"
+                      :class="{ error: unFilledSentences.includes(sentenceIndex) }"
+                    ></span>
+
+                    <!-- Поле ввода (with_hints / without_hints) -->
+                    <div
+                      v-else-if="
+                        (taskData?.options.find_word_option == 'with_hints' ||
+                          taskData?.options.find_word_option == 'without_hints') &&
+                        sentence.missingWords.find((w) => w.word_position === wordIndex)
+                      "
+                      class="blank-input"
+                      :class="{
+                        error:
+                          unFilledSentences.includes(sentenceIndex) &&
+                          sentence.missingWords.find((w) => w.word_position == wordIndex)
+                            .userInput === '',
+                      }"
                       @drop="onDrop($event, sentenceIndex, wordIndex)"
                       @dragover="onDragOver"
                     >
                       <input
                         v-model="
-                          sentence.missingWords.find(
-                            (w) => w.word_position == wordIndex,
-                          ).userInput
+                          sentence.missingWords.find((w) => w.word_position == wordIndex)
+                            .userInput
                         "
-                        :disabled="false"
                         class="lowercase"
                         :style="{
                           width:
-                            sentence.missingWords.find(
-                              (w) => w.word_position == wordIndex,
-                            ).userInput !== ''
+                            sentence.missingWords.find((w) => w.word_position == wordIndex)
+                              .userInput !== ''
                               ? sentence.missingWords.find(
                                   (w) => w.word_position == wordIndex,
                                 ).userInput.length +
-                                0.5 +
+                                1 +
                                 'ch'
-                              : '4ch',
-                          'text-align': 'center',
+                              : '5ch',
                         }"
-                        @input="disableTheHiddenWord()"
                         type="text"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="none"
+                        spellcheck="false"
+                        :aria-label="$t('pages.tasks.blank_n', { n: sentenceIndex + 1 })"
+                        @input="disableTheHiddenWord()"
                       />
-                      <button type="button"
+                      <button
+                        type="button"
                         v-if="
-                          sentence.missingWords.find(
-                            (w) => w.word_position == wordIndex,
-                          ).userInput !== ''
+                          sentence.missingWords.find((w) => w.word_position == wordIndex)
+                            .userInput !== ''
                         "
                         @click="clearInput(sentenceIndex, wordIndex)"
-                        class="text-danger ml-0.5 mt-1"
+                        class="blank-clear"
+                        :aria-label="$t('reset_search_filter')"
                       >
-                        <i class="pi pi-delete-left"></i>
+                        <i class="pi pi-times" aria-hidden="true"></i>
                       </button>
                     </div>
-                  </div>
-                  <div
-                    v-else-if="
-                      taskData?.options.find_word_option ==
-                        'with_first_letter' &&
-                      sentence.missingWords.find(
-                        (w) => w.word_position == wordIndex,
-                      )
-                    "
-                    class="flex items-center"
-                  >
-                    <span class="text-corp">{{ word[0] }}</span>
-                    <div
-                      class="flex items-center"
-                      :class="
-                        unFilledSentences.includes(sentenceIndex) &&
-                        sentence.missingWords.find(
-                          (w) => w.word_position == wordIndex,
-                        ).userInput === ''
-                          ? 'pulse border-b-danger bg-danger'
-                          : 'border-b-active'
-                      "
-                    >
-                      <input
-                        v-model="
-                          sentence.missingWords.find(
-                            (w) => w.word_position == wordIndex,
-                          ).userInput
-                        "
-                        :disabled="false"
-                        class="lowercase"
-                        :style="{
-                          marginTop: '0.05rem',
-                          width:
-                            sentence.missingWords.find(
-                              (w) => w.word_position == wordIndex,
-                            ).userInput !== ''
-                              ? sentence.missingWords.find(
-                                  (w) => w.word_position == wordIndex,
-                                ).userInput.length +
-                                0.2 +
-                                'ch'
-                              : word.slice(1).length + 0.2 + 'ch',
-                        }"
-                        @input="disableTheHiddenWord()"
-                        type="text"
-                      />
-                      <button type="button"
-                        v-if="
-                          sentence.missingWords.find(
-                            (w) => w.word_position == wordIndex,
-                          ).userInput !== ''
-                        "
-                        @click="clearInput(sentenceIndex, wordIndex)"
-                        class="text-danger ml-0.5 mt-1"
-                      >
-                        <i class="pi pi-delete-left"></i>
-                      </button>
-                    </div>
-                    <span class="text-corp" v-if="endsWithPunctuation(word)">{{
-                      word[word.length - 1]
-                    }}</span>
-                  </div>
-                  <span v-else>{{ word }}</span>
-                </div>
-              </div>
 
-              <div
-                v-if="taskData?.options.find_word_option == 'with_options'"
-                class="btn-wrap"
-              >
-                <button
-                  v-for="(option, optionIndex) in sentence.missingWords"
-                  :key="optionIndex"
-                  type="button"
-                  class="btn btn-sm btn-light"
-                  :class="
-                    unFilledSentences.includes(sentenceIndex)
-                      ? 'pulse btn-danger'
-                      : sentence.selectedOptionIndex === optionIndex &&
-                        'text-hidden disabled'
-                  "
-                  @click="insertWord(sentenceIndex, optionIndex)"
+                    <!-- Первая буква дана (with_first_letter) -->
+                    <div
+                      v-else-if="
+                        taskData?.options.find_word_option == 'with_first_letter' &&
+                        sentence.missingWords.find((w) => w.word_position == wordIndex)
+                      "
+                      class="flex items-center"
+                    >
+                      <span class="text-corp font-semibold">{{ word[0] }}</span>
+                      <div
+                        class="blank-input underline-only"
+                        :class="{
+                          error:
+                            unFilledSentences.includes(sentenceIndex) &&
+                            sentence.missingWords.find((w) => w.word_position == wordIndex)
+                              .userInput === '',
+                        }"
+                      >
+                        <input
+                          v-model="
+                            sentence.missingWords.find((w) => w.word_position == wordIndex)
+                              .userInput
+                          "
+                          class="lowercase"
+                          :style="{
+                            width:
+                              sentence.missingWords.find((w) => w.word_position == wordIndex)
+                                .userInput !== ''
+                                ? sentence.missingWords.find(
+                                    (w) => w.word_position == wordIndex,
+                                  ).userInput.length +
+                                  0.5 +
+                                  'ch'
+                                : word.slice(1).length + 0.5 + 'ch',
+                          }"
+                          type="text"
+                          autocomplete="off"
+                          autocorrect="off"
+                          autocapitalize="none"
+                          spellcheck="false"
+                          :aria-label="$t('pages.tasks.blank_n', { n: sentenceIndex + 1 })"
+                          @input="disableTheHiddenWord()"
+                        />
+                        <button
+                          type="button"
+                          v-if="
+                            sentence.missingWords.find((w) => w.word_position == wordIndex)
+                              .userInput !== ''
+                          "
+                          @click="clearInput(sentenceIndex, wordIndex)"
+                          class="blank-clear"
+                          :aria-label="$t('reset_search_filter')"
+                        >
+                          <i class="pi pi-times" aria-hidden="true"></i>
+                        </button>
+                      </div>
+                      <span class="text-corp font-semibold" v-if="endsWithPunctuation(word)">{{
+                        word[word.length - 1]
+                      }}</span>
+                    </div>
+                    <span v-else>{{ word }}</span>
+                  </div>
+                </div>
+
+                <!-- Варианты ответа (with_options) -->
+                <div
+                  v-if="taskData?.options.find_word_option == 'with_options'"
+                  class="flex flex-wrap gap-2"
                 >
-                  {{ option.word_option }}
-                </button>
+                  <button
+                    v-for="(option, optionIndex) in sentence.missingWords"
+                    :key="optionIndex"
+                    type="button"
+                    class="word-chip"
+                    :class="{
+                      error: unFilledSentences.includes(sentenceIndex),
+                      selected: sentence.selectedOptionIndex === optionIndex,
+                    }"
+                    :aria-pressed="sentence.selectedOptionIndex === optionIndex"
+                    @click="insertWord(sentenceIndex, optionIndex)"
+                  >
+                    {{ option.word_option }}
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div class="col-span-12">
-              <div class="btn-wrap right">
-                <button type="button"
-                  class="btn btn-outline-primary"
-                  :class="checkingStatus && 'disabled'"
-                  @click="acceptAnswers()"
-                >
-                  <i class="pi pi-check"></i>
-                  {{ $t("check") }}
-                </button>
-              </div>
+            <div class="task-actions">
+              <button
+                type="button"
+                class="btn btn-primary"
+                
+                :disabled="checkingStatus"
+                @click="acceptAnswers()"
+              >
+                <i class="pi pi-check" aria-hidden="true"></i>
+                {{ $t("check") }}
+              </button>
             </div>
           </div>
         </div>
@@ -551,7 +507,7 @@ import alert from "../../../../../ui/alert.vue";
 import { ref, onMounted, inject, nextTick } from "vue";
 import { useRouter } from "nuxt/app";
 import taskLayout from "../../taskLayout.vue";
-import audioButton from "../../../../../ui/audioButton.vue";
+import audioButtonMini from "../../../../../ui/audioButtonMini.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import result from "../../results/sentences/result.vue";
 import {

@@ -1,74 +1,104 @@
 <template>
-  <div class="w-full mb-2 text-inactive">
-    {{
-      $t("pagination.shown", {
-        shown: props.items.data.length,
-        total: props.items.total,
-      })
-    }}
-  </div>
-  <div class="pagination-wrap">
-    <div v-if="props.items && props.items.last_page > 1" class="pagination">
+  <div class="pagination-bar">
+    <!-- Сколько показано -->
+    <p class="pagination-info">
+      {{
+        $t("pagination.shown", {
+          shown: props.items.data.length,
+          total: props.items.total,
+        })
+      }}
+    </p>
+
+    <!-- Страницы -->
+    <nav
+      v-if="props.items && props.items.last_page > 1"
+      class="pagination"
+      :aria-label="$t('pagination.pages')"
+    >
       <button
-        v-if="props.items.current_page > 1"
+        :disabled="props.items.current_page <= 1"
         @click="setItems(props.items.first_page_url)"
-        class="btn btn-square btn-sm btn-light"
+        class="page-btn max-sm:hidden"
         type="button"
         :title="$t('pagination.first_page_title')"
+        :aria-label="$t('pagination.first_page_title')"
       >
-        &#171;
+        <i class="pi pi-angle-double-left" aria-hidden="true"></i>
       </button>
 
-      <button
-        v-for="(link, index) in filteredLinks"
-        :key="index"
-        @click="setItems(link.url)"
-        :class="[
-          'btn btn-square btn-sm',
-          link.active ? 'btn-outline-primary pointer-events-none' : 'btn-light',
-        ]"
-        type="button"
-        :title="getButtonTitle(link.label)"
-      >
-        <template v-if="link.label === 'pagination.previous'">&#8249;</template>
-        <template v-else-if="link.label === 'pagination.next'"
-          >&#8250;</template
+      <template v-for="(link, index) in props.items.links" :key="index">
+        <!-- «…» между номерами страниц -->
+        <span
+          v-if="!link.url && link.label === '...'"
+          class="page-gap"
+          aria-hidden="true"
+          >…</span
         >
-        <template v-else>{{ link.label }}</template>
-      </button>
+        <button
+          v-else-if="link.url || isArrow(link.label)"
+          :disabled="!link.url"
+          @click="link.url && setItems(link.url)"
+          class="page-btn"
+          :class="{ active: link.active }"
+          :aria-current="link.active ? 'page' : undefined"
+          type="button"
+          :title="getButtonTitle(link.label)"
+          :aria-label="getButtonTitle(link.label)"
+        >
+          <i
+            v-if="link.label === 'pagination.previous'"
+            class="pi pi-angle-left"
+            aria-hidden="true"
+          ></i>
+          <i
+            v-else-if="link.label === 'pagination.next'"
+            class="pi pi-angle-right"
+            aria-hidden="true"
+          ></i>
+          <template v-else>{{ link.label }}</template>
+        </button>
+      </template>
 
       <button
-        v-if="props.items.last_page > props.items.current_page"
+        :disabled="props.items.last_page <= props.items.current_page"
         @click="setItems(props.items.last_page_url)"
-        class="btn btn-square btn-sm btn-light"
+        class="page-btn max-sm:hidden"
         type="button"
         :title="$t('pagination.last_page_title')"
+        :aria-label="$t('pagination.last_page_title')"
       >
-        &#187;
+        <i class="pi pi-angle-double-right" aria-hidden="true"></i>
       </button>
-    </div>
+    </nav>
 
-    <div class="per-page-select active" :class="bgClassName">
-      <select v-model="perPage" @change="handlePerPageChange($event)">
-        <option
-          v-for="(value, index) in perPageValues"
-          :key="index"
-          :value="value"
-        >
-          {{
-            index + 1 === perPageValues.length
-              ? $t("pagination.unlimit")
-              : value.toLocaleString("ru-RU")
-          }}
-        </option>
-      </select>
-      <label>{{ $t("pagination.limit_per_page") }}</label>
-    </div>
+    <!-- Сколько на странице -->
+    <label class="per-page" :class="bgClassName">
+      <span class="text-sm text-inactive whitespace-nowrap">{{
+        $t("pagination.limit_per_page")
+      }}</span>
+      <span class="per-page-select-wrap">
+        <select v-model="perPage" @change="handlePerPageChange($event)">
+          <option
+            v-for="(value, index) in perPageValues"
+            :key="index"
+            :value="value"
+          >
+            {{
+              index + 1 === perPageValues.length
+                ? $t("pagination.unlimit")
+                : value.toLocaleString("ru-RU")
+            }}
+          </option>
+        </select>
+        <i class="pi pi-angle-down" aria-hidden="true"></i>
+      </span>
+    </label>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref } from "vue";
 import { useI18n } from "vue-i18n";
 
 const perPageValues = [5, 10, 100, 1000, 10000, 100000, 1000000];
@@ -110,10 +140,8 @@ const handlePerPageChange = (event) => {
   }, 500);
 };
 
-// Фильтрация ссылок, чтобы убрать те, у которых нет URL
-const filteredLinks = computed(() =>
-  props.items.links.filter((link) => link.url),
-);
+const isArrow = (label) =>
+  label === "pagination.previous" || label === "pagination.next";
 
 const getButtonTitle = (label) => {
   if (label === "pagination.previous") {

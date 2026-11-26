@@ -201,10 +201,7 @@
             </div>
           </template>
 
-          <alert v-else :className="'light'">
-            <loader v-if="pending" :className="'overlay'" :showPendingText="true"/>
-            <p class="mb-0">{{ $t("nothing_was_found_for_your_query") }}</p>
-          </alert>
+          <emptyState v-else :pending="pending" :text="$t('nothing_was_found_for_your_query')" icon="bi bi-search" />
         </div>
         <div class="col-span-12">
           <p
@@ -260,15 +257,15 @@
 </template>
 
 <script setup>
+import { useNotify } from "~/composables/useNotify";
 import { useRouter } from "nuxt/app";
 import pagination from "../../../ui/pagination.vue";
-import alert from "../../../ui/alert.vue";
+import emptyState from "~/components/ui/emptyState.vue";
 import loader from "../../../ui/loader.vue";
 import userAvatar from "../../../ui/userAvatar.vue";
 import stickyBox from "../../../ui/stickyBox.vue";
 import note from "../../../ui/note.vue";
 import userTag from "../../../ui/userTag.vue";
-import { useToast } from "vue-toastification";
 import { watch } from "vue";
 
 const router = useRouter();
@@ -278,7 +275,7 @@ const emailInput = ref("");
 const phoneInput = ref("");
 const createdAtFromInput = ref("");
 const createdAtToInput = ref("");
-const toast = useToast();
+const notify = useNotify();
 const { t } = useI18n();
 
 const pending = ref(false);
@@ -334,10 +331,7 @@ const addToGroup = (user) => {
     //var 1
     //groupMembers.value = groupMembers.value.filter((member) => member.user_id !== user.user_id);
     //var 2
-    toast(t("pages.groups.warning_1"), {
-      toastClassName: ["custom-toast", "success"],
-      timeout: 5000,
-    });
+    notify("success", t("pages.groups.warning_1"));
   }
 };
 

@@ -1,28 +1,24 @@
 <template>
   <client-only>
-    <div class="progress relative" :class="props.wrapClass">
+    <div class="progress-wrap" :class="props.wrapClass">
       <div
-        class="progress-bar relative z-10"
-        :class="props.className"
-        :style="{ width: displayedProgress.toFixed(2) + '%' }"
+        class="progress"
+        role="progressbar"
+        :aria-valuenow="Math.round(target)"
+        aria-valuemin="0"
+        aria-valuemax="100"
       >
-        <!-- Белый текст поверх полоски -->
-        <b v-if="props.showPercentage" class="text-xs">
-          {{ displayedProgress.toFixed(2) }}%
-        </b>
+        <div
+          class="progress-bar"
+          :class="props.className"
+          :style="{ width: target + '%' }"
+        ></div>
       </div>
 
-      <b
-        v-if="props.showPercentage"
-        class="absolute top-1/2 -translate-y-1/2 text-xs text-active z-0"
-        :class="
-          props.progressPercentage === 0
-            ? 'text-center left-1/2 -translate-x-1/2'
-            : 'left-0'
-        "
-      >
-        {{ displayedProgress.toFixed(2) }}%
-      </b>
+      <!-- Процент — справа от полосы, целым числом -->
+      <span v-if="props.showPercentage" class="progress-value">
+        {{ Math.round(displayedProgress) }}%
+      </span>
     </div>
   </client-only>
 </template>
@@ -49,34 +45,39 @@ const props = defineProps({
   },
 });
 
+// Ширина полосы анимируется CSS-переходом, число — плавным счётчиком
+const target = computed(() =>
+  Math.min(Math.max(Number(props.progressPercentage) || 0, 0), 100),
+);
+
 const displayedProgress = ref(0);
+let frame = null;
 
 watch(
-  () => props.progressPercentage,
-  (newVal) => {
-
+  target,
+  (end) => {
+    if (frame) cancelAnimationFrame(frame);
     const start = displayedProgress.value;
-    const end = Math.min(Math.max(Number(newVal), 0), 100);
+    const duration = 1000;
+    const startedAt = performance.now();
 
-    const duration = 2000;
-    const frameRate = 30;
-    const totalFrames = Math.round(duration / (1000 / frameRate));
-    let currentFrame = 0;
-
-    const step = () => {
-      currentFrame++;
-      const progress = start + (end - start) * (currentFrame / totalFrames);
-      displayedProgress.value = Math.round(progress);
-
-      if (currentFrame < totalFrames) {
-        requestAnimationFrame(step);
-      } else {
-        displayedProgress.value = end;
-      }
+    const step = (now) => {
+      const t = Math.min(1, (now - startedAt) / duration);
+      const eased = 1 - Math.pow(1 - t, 3); // плавное замедление в конце
+      displayedProgress.value = start + (end - start) * eased;
+      if (t < 1) frame = requestAnimationFrame(step);
     };
 
-    step();
+    if (typeof requestAnimationFrame === "function") {
+      frame = requestAnimationFrame(step);
+    } else {
+      displayedProgress.value = end;
+    }
   },
-  { immediate: true }
+  { immediate: true },
 );
+
+onBeforeUnmount(() => {
+  if (frame) cancelAnimationFrame(frame);
+});
 </script>

@@ -18,33 +18,36 @@
       :taskResult="taskResult"
     >
       <template v-slot:task_content>
+        <!-- Статус: сколько осталось / итог + таймер -->
         <div class="col-span-12">
-          <p v-if="timeIsUp" class="font-medium text-center text-danger">
-            ⏱️ {{ $t("time_is_up") }}
-          </p>
-          <p
-            v-else-if="isPerfectMatch && isComplete"
-            class="font-medium text-center text-success"
-          >
-            🎉 {{ $t("right") }}
-          </p>
-          <p
-            v-else-if="userCorrectAnswers.length > 0 && isComplete"
-            class="font-medium text-center text-warning"
-          >
-            ⚠️ {{ $t("parthly_right") }}
-          </p>
-          <p v-else-if="isWrong" class="font-medium text-center text-danger">
-            ❌ {{ $t("wrong") }}
-          </p>
-          <p v-else-if="questionsLeft > 0" class="text-center">
-            {{ $t("pages.questions.questions_left") }}:
-            <b>{{ questionsLeft }}</b>
-          </p>
-        </div>
-
-        <div class="col-span-12">
-          <div class="flex justify-center items-center">
+          <div class="task-status-bar">
+            <p v-if="timeIsUp" class="mb-0 font-semibold text-danger flex items-center gap-1.5">
+              <i class="pi pi-clock" aria-hidden="true"></i>
+              {{ $t("time_is_up") }}
+            </p>
+            <p
+              v-else-if="isPerfectMatch && isComplete"
+              class="mb-0 font-semibold text-success flex items-center gap-1.5"
+            >
+              <i class="pi pi-check-circle" aria-hidden="true"></i>
+              {{ $t("right") }}
+            </p>
+            <p
+              v-else-if="userCorrectAnswers.length > 0 && isComplete"
+              class="mb-0 font-semibold text-amber-500 flex items-center gap-1.5"
+            >
+              <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+              {{ $t("parthly_right") }}
+            </p>
+            <p v-else-if="isWrong" class="mb-0 font-semibold text-danger flex items-center gap-1.5">
+              <i class="pi pi-times-circle" aria-hidden="true"></i>
+              {{ $t("wrong") }}
+            </p>
+            <p v-else-if="questionsLeft > 0" class="mb-0 text-inactive">
+              {{ $t("pages.questions.questions_left") }}:
+              <b class="text-active">{{ questionsLeft }}</b>
+            </p>
+            <span v-else></span>
             <countdownCircleTimer
               :totalSeconds="time"
               :startCommand="isStarted"
@@ -54,115 +57,94 @@
           </div>
         </div>
 
+        <!-- Вопрос -->
         <div class="col-span-12">
           <div
-            class="bg-inactive p-4 rounded-xl text-center"
-            :class="isComplete && 'text-success'"
+            class="word-prompt"
+            :class="{
+              'is-right': isComplete && isPerfectMatch,
+              'is-wrong-prompt': isWrong,
+            }"
           >
-            <div class="custom-grid">
-              <div class="col-span-12">
-                <p class="text-xl font-medium mb-0">
-                  {{ currentQuestion?.question }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div
-          class="col-span-12 text-center"
-          v-if="isComplete || isWrong || timeIsUp"
-        >
-          <!-- 2. Что выбрал пользователь (показываем, только если он что-то выбирал и ответ не идеален) -->
-          <div v-if="userSelectedAnswers.length > 0" class="mt-2">
-            {{ $t("your_answer") }}:
-            <strong :class="isWrong ? 'text-danger' : 'text-success'">{{
-              userAnswersText
-            }}</strong>
-          </div>
-
-          <div v-else class="mt-2">
-            {{ $t("your_answer") }}:
-            <strong class="text-danger">{{ $t("no_answer") }}</strong>
-          </div>
-
-          <!-- 3. Правильные ответы (показываем при частичном или неправильном ответе) -->
-          <div v-if="!isPerfectMatch" class="mt-1">
-            <hr />
-            {{ $t("right_answer") }}:
-            <strong class="text-success"> {{ rightAnswersText }}</strong>
-          </div>
-        </div>
-
-        <div v-if="isStarted" class="col-span-12">
-          <div class="custom-grid">
-            <div class="col-span-12">
-              <p class="text-center mb-0 font-medium">{{
+            <p class="text-xl font-semibold mb-0">{{ currentQuestion?.question }}</p>
+            <p v-if="isStarted" class="mb-0 text-sm text-inactive">
+              {{
                 realCorrectAnswers.length === 1
                   ? $t("pages.questions.answer.select_one_alt")
                   : $t("pages.questions.answer.select_few")
-              }}</p>
-            </div>
-            <div class="col-span-12">
-              <div class="flex flex-col gap-3">
-                <label
-                  v-for="(answer, answerIndex) in currentQuestion.answers"
-                  :key="answerIndex"
-                  class="custom-radio-button cursor-pointer"
-                  :class="selectError ? 'pulse !border-red-500' : ''"
-                >
-                  <!-- Динамический type: radio если правильный ответ 1, иначе checkbox -->
-                  <input
-                    :type="
-                      realCorrectAnswers.length === 1 ? 'radio' : 'checkbox'
-                    "
-                    :name="
-                      realCorrectAnswers.length === 1
-                        ? 'question_answers'
-                        : undefined
-                    "
-                    :checked="answer.is_selected"
-                    @change="selectAnswer(answer)"
-                  />
-
-                  <div class="flex gap-1.5 font-medium">
-                    <div
-                      v-if="
-                        taskData.options.option_label &&
-                        taskData.options.option_label !== 'hidden'
-                      "
-                      class="w-6 h-6 rounded-full flex justify-center items-center"
-                      :class="
-                        answer.is_selected
-                          ? 'bg-white text-corp'
-                          : 'bg-corp text-white'
-                      "
-                    >
-                      {{
-                        taskData.options.option_label === "with_letters"
-                          ? letters[answerIndex]
-                          : answerIndex + 1
-                      }}
-                    </div>
-                    {{ answer.title }}
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            <div class="col-span-12">
-              <button type="button" class="btn btn-primary" @click="checkQuestion(true)">
-                <i class="pi pi-arrow-right"></i>
-                {{ $t("check") }}
-              </button>
-            </div>
+              }}
+            </p>
           </div>
         </div>
 
-        <div v-if="timeIsUp || isWrong || isComplete" class="col-span-12">
-          <div class="flex justify-end">
-            <button type="button" class="btn btn-primary" @click="setQuestion()">
-              <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
+        <!-- Варианты: до проверки — выбор, после — подсветка правильных/ошибочных -->
+        <div v-if="currentQuestion" class="col-span-12">
+          <div
+            class="flex flex-col gap-2"
+            :role="realCorrectAnswers.length === 1 ? 'radiogroup' : 'group'"
+          >
+            <label
+              v-for="(answer, answerIndex) in currentQuestion.answers"
+              :key="answerIndex"
+              class="answer-option cursor-pointer"
+              :class="[optionClass(answer), { 'select-error': selectError }]"
+            >
+              <input
+                class="sr-only"
+                :type="realCorrectAnswers.length === 1 ? 'radio' : 'checkbox'"
+                :name="realCorrectAnswers.length === 1 ? 'question_answers' : undefined"
+                :checked="answer.is_selected"
+                :disabled="!isStarted"
+                @change="selectAnswer(answer)"
+              />
+              <kbd
+                v-if="taskData.options.option_label && taskData.options.option_label !== 'hidden'"
+                class="answer-option-key !flex"
+              >
+                {{
+                  taskData.options.option_label === "with_letters"
+                    ? letters[answerIndex]
+                    : answerIndex + 1
+                }}
+              </kbd>
+              <!-- Индикатор выбора: кружок (один ответ) или квадрат (несколько) -->
+              <span
+                v-else-if="isStarted"
+                class="answer-option-check"
+                :class="{ square: realCorrectAnswers.length !== 1, on: answer.is_selected }"
+                aria-hidden="true"
+              ></span>
+              <span class="answer-option-text">{{ answer.title }}</span>
+              <i
+                v-if="!isStarted && (answer.is_correct || answer.is_selected)"
+                class="pi answer-option-mark"
+                :class="answer.is_correct ? 'pi-check' : 'pi-times'"
+                aria-hidden="true"
+              ></i>
+            </label>
+          </div>
+        </div>
+
+        <!-- Проверить / Продолжить -->
+        <div class="col-span-12">
+          <div class="task-actions">
+            <button
+              v-if="isStarted"
+              type="button"
+              class="btn btn-primary"
+              @click="checkQuestion(true)"
+            >
+              <i class="pi pi-check" aria-hidden="true"></i>
+              {{ $t("check") }}
+            </button>
+            <button
+              v-else-if="timeIsUp || isWrong || isComplete"
+              type="button"
+              class="btn btn-primary"
+              @click="setQuestion()"
+            >
+              {{ $t("continue") }}
+              <i class="pi pi-arrow-right" aria-hidden="true"></i>
             </button>
           </div>
         </div>
@@ -179,10 +161,10 @@
 </template>
 
 <script setup>
+import { useNotify } from "~/composables/useNotify";
 import alert from "../../../../../ui/alert.vue";
 import { ref, onMounted, inject } from "vue";
 import { useRouter } from "nuxt/app";
-import { useToast } from "vue-toastification";
 import taskLayout from "../../taskLayout.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import {
@@ -197,7 +179,7 @@ import { letters } from "../../../../../../utils/alphabet.js";
 const router = useRouter();
 const config = useRuntimeConfig();
 const { $axiosPlugin } = useNuxtApp();
-const toast = useToast();
+const notify = useNotify();
 const { t } = useI18n();
 
 const errors = ref([]);
@@ -362,6 +344,16 @@ const userProgress = computed(() => {
   return Math.round(percentage); // Округляем до целого числа
 });
 
+// Вид варианта: до проверки — «выбран/нет»; после — верный (зелёный),
+// пропущенный верный (зелёный пунктир), ошибочный (красный), остальные бледные
+const optionClass = (answer) => {
+  if (isStarted.value) return answer.is_selected ? "is-selected" : "is-idle";
+  if (answer.is_correct && answer.is_selected) return "is-correct";
+  if (answer.is_correct) return "is-missed";
+  if (answer.is_selected) return "is-wrong";
+  return "is-locked";
+};
+
 const setQuestion = () => {
   if (questions.value.length > 0) {
     // Устанавливаем текущий вопрос
@@ -396,23 +388,22 @@ const selectAnswer = (selectedAnswer) => {
 const checkQuestion = (by_user) => {
   const current = currentQuestion.value;
   if (!current) return;
+  if (by_user === true && isStarted.value !== true) return;
 
   // 1. Валидация выбора (используем .value из computed)
   if (userSelectedAnswers.value.length > realCorrectAnswers.value.length) {
-    current.answers.forEach((answer) => {
-      answer.is_selected = false;
-    });
+    // Раньше выбор сбрасывался и при нажатии «Проверить» — ученику
+    // приходилось отмечать всё заново. Теперь сбрасываем только по таймеру.
+    if (by_user !== true) {
+      current.answers.forEach((answer) => {
+        answer.is_selected = false;
+      });
+    }
 
     if (by_user === true) {
-      toast(
-        t("pages.questions.answer.select_count", {
+      notify("warning", t("pages.questions.answer.select_count", {
           count: realCorrectAnswers.value.length,
-        }),
-        {
-          toastClassName: ["custom-toast", "warning"],
-          timeout: 10000,
-        },
-      );
+        }));
 
       selectError.value = true;
 
@@ -426,10 +417,7 @@ const checkQuestion = (by_user) => {
 
   if (userSelectedAnswers.value.length === 0) {
     if (by_user === true) {
-      toast(t("pages.questions.answer.select_one"), {
-        toastClassName: ["custom-toast", "danger"],
-        timeout: 10000,
-      });
+      notify("danger", t("pages.questions.answer.select_one"));
 
       selectError.value = true;
 
@@ -504,6 +492,25 @@ const timerIsUp = () => {
 };
 
 const handleKeyPress = (event) => {
+  if (!isFinished.value && isStarted.value === true && currentQuestion.value) {
+    const answers = currentQuestion.value.answers || [];
+    let index = -1;
+    if (/^[1-9]$/.test(event.key)) index = Number(event.key) - 1;
+    else if (/^[a-zA-Z]$/.test(event.key)) {
+      index = letters.findIndex(
+        (l) => String(l).toLowerCase() === event.key.toLowerCase(),
+      );
+    }
+    if (index >= 0 && index < answers.length) {
+      selectAnswer(answers[index]);
+      return;
+    }
+    if (event.key === "Enter") {
+      checkQuestion(true);
+      return;
+    }
+  }
+
   if (event.key === "Enter") {
     if (!isFinished.value) {
       if (

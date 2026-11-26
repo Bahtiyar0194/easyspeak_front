@@ -18,18 +18,18 @@
       :taskResult="taskResult"
     >
       <template v-slot:task_content>
+        <!-- Статус: сколько осталось + таймер -->
         <div class="col-span-12">
-          <p v-if="timeIsUp" class="font-medium text-center text-danger">
-            {{ $t("time_is_up") }}
-          </p>
-          <p v-else-if="words.length > 0" class="text-center">
-            {{ $t("pages.dictionary.words_left") }}:
-            <b>{{ words.length }}</b>
-          </p>
-        </div>
-
-        <div class="col-span-12">
-          <div class="flex justify-center items-center">
+          <div class="task-status-bar">
+            <p v-if="timeIsUp" class="mb-0 font-semibold text-danger flex items-center gap-1.5">
+              <i class="pi pi-clock" aria-hidden="true"></i>
+              {{ $t("time_is_up") }}
+            </p>
+            <p v-else-if="words.length > 0" class="mb-0 text-inactive">
+              {{ $t("pages.dictionary.words_left") }}:
+              <b class="text-active">{{ words.length }}</b>
+            </p>
+            <span v-else></span>
             <countdownCircleTimer
               :totalSeconds="time"
               :startCommand="isStarted"
@@ -38,27 +38,24 @@
           </div>
         </div>
 
+        <!-- Разбор после проверки -->
         <div v-if="timeIsUp || isComplete" class="col-span-12">
-          <div class="flex flex-col gap-y-4">
-            <div
-              class="flex flex-col gap-y-2"
-              v-if="currentStudiedWords.length > 0"
-            >
-              <p class="text-xl font-medium mb-0 text-success">
-                {{
-                  currentReStudyWords.length > 0
-                    ? $t("right_answers")
-                    : $t("right")
-                }}
+          <div class="flex flex-col gap-5">
+            <section v-if="currentStudiedWords.length > 0" class="result-section">
+              <p class="result-head ok">
+                <span class="result-head-dot" aria-hidden="true"></span>
+                {{ currentReStudyWords.length > 0 ? $t("right_answers") : $t("right") }}
+                <span class="result-head-count">{{ currentStudiedWords.length }}</span>
               </p>
 
-              <ul class="list-group nowrap" ref="rightAnswers">
+              <ul class="result-list" ref="rightAnswers">
                 <li
                   v-for="(word, sIndex) in currentStudiedWords"
                   :key="sIndex"
-                  class="flex justify-between items-center gap-x-2"
+                  class="result-item ok"
                 >
-                  <div class="flex flex-col">
+                  <div class="flex-1 min-w-0 flex flex-col">
+                    <!-- Содержимое этого блока сохраняется как HTML ответа -->
                     <div :id="'right_answer_' + word.task_word_id">
                       <div class="flex gap-x-0.5">
                         <div
@@ -66,15 +63,9 @@
                           :key="letterIndex"
                           class="font-medium text-xl"
                         >
+                          <div v-if="letter === ' ' || letter === ''" class="mx-1"></div>
                           <div
-                            v-if="letter === ' ' || letter === ''"
-                            class="mx-1"
-                          ></div>
-                          <div
-                            :class="
-                              word.missingLetters.includes(letterIndex + 1) &&
-                              'text-success'
-                            "
+                            :class="word.missingLetters.includes(letterIndex + 1) && 'text-success'"
                             v-else
                           >
                             {{ letter }}
@@ -82,40 +73,33 @@
                         </div>
                       </div>
                     </div>
-                    <span class="text-xs text-inactive">{{
-                      word.word_translate
-                    }}</span>
+                    <span class="text-sm text-inactive">{{ word.word_translate }}</span>
                   </div>
 
-                  <div class="step-item xs completed">
-                    <div class="step-icon">
-                      <i class="pi pi-check"></i>
-                    </div>
-                  </div>
+                  <span class="result-status ok shrink-0" aria-hidden="true">
+                    <i class="pi pi-check"></i>
+                  </span>
                 </li>
               </ul>
-            </div>
+            </section>
 
-            <div
-              class="flex flex-col gap-y-2"
-              v-if="currentReStudyWords.length > 0"
-            >
-              <p class="text-xl font-medium mb-0 text-danger">
+            <section v-if="currentReStudyWords.length > 0" class="result-section">
+              <p class="result-head bad">
+                <span class="result-head-dot" aria-hidden="true"></span>
                 {{ $t("for_re_examination") }}
+                <span class="result-head-count">{{ currentReStudyWords.length }}</span>
               </p>
 
-              <ul class="list-group nowrap" ref="wrongAnswers">
+              <ul class="result-list" ref="wrongAnswers">
                 <li
                   v-for="(word, rIndex) in currentReStudyWords"
                   :key="rIndex"
-                  class="flex justify-between items-center gap-x-2"
+                  class="result-item bad"
                 >
-                  <div class="flex flex-wrap gap-4">
+                  <div class="flex-1 min-w-0 flex flex-wrap gap-x-6 gap-y-2">
                     <div>
-                      <p class="mb-0 text-inactive font-normal text-xs">
-                        {{ $t("your_answer") }}:
-                      </p>
-
+                      <p class="result-label">{{ $t("your_answer") }}</p>
+                      <!-- Содержимое этого блока сохраняется как HTML ответа -->
                       <div :id="'user_answer_' + word.task_word_id">
                         <div class="flex gap-x-0.5">
                           <div
@@ -123,15 +107,10 @@
                             :key="letterIndex"
                             class="font-medium text-xl"
                           >
-                            <div
-                              v-if="letter === ' ' || letter === ''"
-                              class="mx-1"
-                            ></div>
+                            <div v-if="letter === ' ' || letter === ''" class="mx-1"></div>
                             <div
                               class="text-danger"
-                              v-else-if="
-                                word.missingLetters.includes(letterIndex + 1)
-                              "
+                              v-else-if="word.missingLetters.includes(letterIndex + 1)"
                             >
                               {{
                                 word.userInput[letterIndex] === "" ||
@@ -149,10 +128,8 @@
                     </div>
 
                     <div>
-                      <p class="mb-0 text-inactive font-normal text-xs">
-                        {{ $t("right_answer") }}:
-                      </p>
-
+                      <p class="result-label">{{ $t("right_answer") }}</p>
+                      <!-- Содержимое этого блока сохраняется как HTML ответа -->
                       <div :id="'right_answer_' + word.task_word_id">
                         <div class="flex gap-x-0.5">
                           <div
@@ -160,15 +137,9 @@
                             :key="letterIndex"
                             class="font-medium text-xl"
                           >
+                            <div v-if="letter === ' ' || letter === ''" class="mx-1"></div>
                             <div
-                              v-if="letter === ' ' || letter === ''"
-                              class="mx-1"
-                            ></div>
-                            <div
-                              :class="
-                                word.missingLetters.includes(letterIndex + 1) &&
-                                'text-success'
-                              "
+                              :class="word.missingLetters.includes(letterIndex + 1) && 'text-success'"
                               v-else
                             >
                               {{ letter }}
@@ -179,134 +150,111 @@
                     </div>
                   </div>
 
-                  <div class="step-item xs failed">
-                    <div class="step-icon">
-                      <i class="pi pi-replay"></i>
-                    </div>
-                  </div>
+                  <span class="result-status bad shrink-0" aria-hidden="true">
+                    <i class="pi pi-replay"></i>
+                  </span>
                 </li>
               </ul>
-            </div>
+            </section>
 
-            <div class="btn-wrap right">
-              <button type="button"
+            <div class="task-actions">
+              <button
+                type="button"
                 v-if="words.length > 0"
-                class="btn btn-outline-primary"
+                class="btn btn-primary"
                 @click="setWords()"
               >
-                <i class="pi pi-arrow-right"></i> {{ $t("continue") }}
+                {{ $t("continue") }}
+                <i class="pi pi-arrow-right" aria-hidden="true"></i>
               </button>
-              <button type="button" v-else class="btn btn-light" @click="isFinished = true">
-                <i class="pi pi-check"></i>
+              <button type="button" v-else class="btn btn-success" @click="isFinished = true">
+                <i class="pi pi-check" aria-hidden="true"></i>
                 {{ $t("pages.tasks.complete_the_task") }}
               </button>
             </div>
           </div>
         </div>
 
+        <!-- Выполнение -->
         <div v-else class="col-span-12">
-          <div class="custom-grid">
-            <div class="col-span-12">
-              <ul class="list-group nowrap">
-                <li
-                  v-for="(word, wordIndex) in currentWords"
-                  :key="wordIndex"
-                  class="col-span-12"
-                >
-                  <div class="flex gap-3 flex-wrap">
-                    <audioButton
-                      v-if="
-                        word.audio_file && taskData.options.show_audio_button
-                      "
-                      :src="
-                        config.public.apiBase + '/media/get/' + word.audio_file
-                      "
-                    />
-                    <div
-                      v-if="word.image_file && taskData.options.show_image"
-                      :style="{
-                        backgroundImage:
-                          'url(' +
-                          config.public.apiBase +
-                          '/media/get/' +
-                          word.image_file +
-                          ')',
-                      }"
-                      class="h-10 w-10 bg-cover bg-no-repeat bg-center"
-                    ></div>
-                    <div class="flex flex-col gap-y-2">
-                      <div class="flex flex-wrap gap-0.5">
-                        <div
-                          v-for="(letter, letterIndex) in word.word"
-                          :key="letterIndex"
-                          class="font-medium"
-                        >
-                          <div
-                            v-if="letter === ' ' || letter === ''"
-                            class="mx-1"
-                          ></div>
-                          <div
-                            @click="focusInput($event)"
-                            v-else-if="
-                              word.missingLetters.includes(letterIndex + 1)
-                            "
-                            class="btn btn-square btn-sm flex justify-center items-center"
-                            :class="
-                              checkingStatus === true &&
-                              word.userInput[letterIndex] === ''
-                                ? 'pulse btn-danger'
-                                : 'btn-outline-primary'
-                            "
-                          >
-                            <input
-                              v-model="word.userInput[letterIndex]"
-                              @input="changeFocus($event)"
-                              @keydown.backspace="backFocus($event)"
-                              type="text"
-                              class="letter_input"
-                              style="width: 1.5ch; text-align: center"
-                              maxlength="1"
-                            />
-                          </div>
+          <div class="flex flex-col gap-3">
+            <div
+              v-for="(word, wordIndex) in currentWords"
+              :key="wordIndex"
+              class="blank-card"
+            >
+              <!-- Подсказки: картинка и озвучка -->
+              <div
+                v-if="word.image_file && taskData.options.show_image"
+                class="letters-thumb"
+                :style="{
+                  backgroundImage:
+                    'url(' + config.public.apiBase + '/media/get/' + word.image_file + ')',
+                }"
+                aria-hidden="true"
+              ></div>
 
-                          <div
-                            class="btn btn-square btn-sm pointer-events-none btn-light"
-                            v-else
-                          >
-                            {{ letter }}
-                          </div>
-                        </div>
-                      </div>
-                      <div class="flex gap-x-2">
-                        <span
-                          v-if="taskData.options.show_transcription"
-                          class="text-xs"
-                        >
-                          [{{ word.transcription }}]
-                        </span>
-                        <span
-                          v-if="taskData.options.show_translate"
-                          class="text-inactive text-xs"
-                        >
-                          {{ word.word_translate }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              </ul>
-            </div>
-            <div class="col-span-12">
-              <div class="btn-wrap right">
-                <button type="button"
-                  class="btn btn-outline-primary"
-                  :class="checkingStatus && 'disabled'"
-                  @click="acceptAnswers()"
+              <div class="flex-1 min-w-0 flex flex-col gap-2">
+                <div class="letter-tiles">
+                  <template v-for="(letter, letterIndex) in word.word" :key="letterIndex">
+                    <span v-if="letter === ' ' || letter === ''" class="letter-gap"></span>
+                    <label
+                      v-else-if="word.missingLetters.includes(letterIndex + 1)"
+                      class="letter-tile input"
+                      :class="{
+                        error: checkingStatus === true && word.userInput[letterIndex] === '',
+                        filled: word.userInput[letterIndex],
+                      }"
+                    >
+                      <input
+                        v-model="word.userInput[letterIndex]"
+                        @input="changeFocus($event)"
+                        @keydown.backspace="backFocus($event)"
+                        @focus="$event.target.select()"
+                        type="text"
+                        class="letter_input"
+                        maxlength="1"
+                        autocomplete="off"
+                        autocorrect="off"
+                        autocapitalize="none"
+                        spellcheck="false"
+                        :aria-label="$t('pages.tasks.letter_n', { n: letterIndex + 1 })"
+                      />
+                    </label>
+                    <span v-else class="letter-tile" aria-hidden="true">{{ letter }}</span>
+                  </template>
+                </div>
+
+                <div
+                  v-if="taskData.options.show_transcription || taskData.options.show_translate"
+                  class="flex flex-wrap gap-x-3 text-sm"
                 >
-                  <i class="pi pi-check"></i>
-                  {{ $t("check") }}
-                </button>
+                  <span v-if="taskData.options.show_transcription" class="text-inactive">
+                    [{{ word.transcription }}]
+                  </span>
+                  <span v-if="taskData.options.show_translate" class="text-inactive">
+                    {{ word.word_translate }}
+                  </span>
+                </div>
               </div>
+
+              <audioButton
+                v-if="word.audio_file && taskData.options.show_audio_button"
+                :src="config.public.apiBase + '/media/get/' + word.audio_file"
+              />
+            </div>
+
+            <div class="task-actions">
+              <button
+                type="button"
+                class="btn btn-primary"
+                
+                :disabled="checkingStatus"
+                @click="acceptAnswers()"
+              >
+                <i class="pi pi-check" aria-hidden="true"></i>
+                {{ $t("check") }}
+              </button>
             </div>
           </div>
         </div>
@@ -628,14 +576,14 @@ const changeFocus = (event) => {
 const backFocus = (event) => {
   const input = event.target;
 
-  // если поле пустое → предыдущий input
+  // если поле пустое → предыдущее поле ввода (пропуская готовые буквы)
   if (input.value === "") {
-    const prev =
-      input.parentElement.parentElement.previousElementSibling?.querySelector(
-        "input",
-      );
-
-    prev?.focus();
+    const inputs = Array.from(document.getElementsByClassName("letter_input"));
+    const prev = inputs[inputs.indexOf(input) - 1];
+    if (prev) {
+      event.preventDefault();
+      prev.focus();
+    }
   }
 };
 

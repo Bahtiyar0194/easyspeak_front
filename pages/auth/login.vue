@@ -1,17 +1,21 @@
 <template>
-  <div class="col-span-12 lg:col-span-4 lg:col-start-4">
+  <div class="col-span-10 md:col-span-6 md:col-start-3 lg:col-span-4 lg:col-start-4">
     <authCard :pending="pending">
       <template v-slot:header_content>
-        <h2>{{ $t("pages.login.title") }}</h2>
+        <h3>{{ $t("pages.login.title") }}</h3>
       </template>
       <template v-slot:body_content>
-        <form @submit.prevent="signIn" ref="formRef">
-          <p
+        <form @submit.prevent="signIn" ref="formRef" novalidate>
+          <div
             v-if="errors.auth_failed || errors.message"
-            class="text-danger mb-6"
+            class="form-error"
+            role="alert"
           >
-            {{ errors.auth_failed ? errors.auth_failed[0] : errors.message }}
-          </p>
+            <i class="pi pi-exclamation-circle mt-0.5" aria-hidden="true"></i>
+            <span>{{
+              errors.auth_failed ? errors.auth_failed[0] : errors.message
+            }}</span>
+          </div>
           <client-only>
             <div
               v-if="schoolStore.schoolData === null"
@@ -22,6 +26,10 @@
                 type="text"
                 name="school_domain"
                 v-model="schoolDomain"
+                autocomplete="off"
+                autocapitalize="none"
+                autocorrect="off"
+                spellcheck="false"
                 placeholder=" "
               />
               <label :class="{ 'label-error': errors.school_domain }">
@@ -57,9 +65,12 @@
           <div class="form-group-border active mb-5">
             <i class="pi pi-at"></i>
             <input
-              autoComplete="login-email"
+              autocomplete="username"
               name="email"
-              type="text"
+              type="email"
+              inputmode="email"
+              autocapitalize="none"
+              spellcheck="false"
               placeholder=" "
             />
             <label :class="{ 'label-error': errors.email }">
@@ -70,7 +81,7 @@
           <div class="form-group-border active mb-5">
             <i class="pi pi-lock"></i>
             <input
-              autoComplete="login-password"
+              autocomplete="current-password"
               name="password"
               :type="showPassword ? 'text' : 'password'"
               placeholder=" "
@@ -82,9 +93,12 @@
               type="button"
               @click="showPassword = !showPassword"
               class="show-password"
+              :title="$t(showPassword ? 'form.hide_password' : 'form.show_password')"
+              :aria-label="$t(showPassword ? 'form.hide_password' : 'form.show_password')"
+              :aria-pressed="showPassword"
             >
-              <i class="pi pi-eye" v-if="showPassword"></i>
-              <i class="pi pi-eye-slash" v-else></i>
+              <i class="pi pi-eye" v-if="showPassword" aria-hidden="true"></i>
+              <i class="pi pi-eye-slash" v-else aria-hidden="true"></i>
             </button>
           </div>
 
@@ -102,8 +116,13 @@
             </nuxt-link>
           </p>
 
-          <button type="submit" class="btn btn-primary">
-            <i class="pi pi-arrow-right"></i>
+          <button
+            type="submit"
+            class="btn btn-primary full"
+            :class="{ loading: pending }"
+            :disabled="pending"
+          >
+            <i class="pi pi-arrow-right" aria-hidden="true"></i>
             {{ $t("continue") }}
           </button>
 
@@ -121,7 +140,7 @@
               class="btn btn-light !w-full"
               @click="signBy('google')"
             >
-              <img :src="'/images/google/logo.svg'" class="w-5 max-md:w-6" />
+              <img :src="'/images/google/logo.svg'" class="w-5 max-md:w-6" alt="" />
               {{ $t("pages.login.methods.google.title") }}
             </button>
 
@@ -130,7 +149,7 @@
               class="btn btn-light !w-full"
               @click="signBy('telegram')"
             >
-              <img :src="'/images/telegram/logo.svg'" class="w-5 max-md:w-6" />
+              <img :src="'/images/telegram/logo.svg'" class="w-5 max-md:w-6" alt="" />
               {{ $t("pages.login.methods.telegram.title") }}
             </button>
           </div>
@@ -143,7 +162,6 @@
 <script setup>
 import authCard from "../../components/auth/authCard.vue";
 import { useCookie, useRoute, useRouter } from "nuxt/app";
-import { useToast } from "vue-toastification";
 import { useRuntimeConfig } from "nuxt/app";
 import { isSubdomain } from "../../utils/isSubdomain";
 
@@ -153,7 +171,6 @@ const { login } = useSanctumAuth();
 const route = useRoute();
 const router = useRouter();
 const config = useRuntimeConfig();
-const toast = useToast();
 
 const gtm = ref(null);
 
@@ -194,6 +211,8 @@ onMounted(() => {
 });
 
 async function signIn() {
+  // Повторный Enter во время входа не отправляет форму второй раз.
+  if (pending.value) return;
   pending.value = true;
 
   const formData = new FormData(formRef.value);
@@ -232,8 +251,11 @@ async function signIn() {
       router.push(redirectPath);
     });
   } catch (err) {
-    if (err.response.status) {
+    if (err.response?.status) {
       errors.value = err.response._data;
+    } else {
+      // Нет ответа сервера (нет сети и т.п.) — раньше ошибка терялась молча.
+      errors.value = { message: t("an_error_occurred") };
     }
   } finally {
     pending.value = false;
@@ -263,7 +285,7 @@ const signBy = async (method) => {
 
     })
     .catch((err) => {
-      errors.value = err.response.data;
+      errors.value = err.response?.data || { message: t("an_error_occurred") };
       pending.value = false;
       return;
     });
@@ -307,7 +329,7 @@ const otCodeHandle = async () => {
       window.location.href = "/dashboard";
     })
     .catch((err) => {
-      errors.value = err.response.data;
+      errors.value = err.response?.data || { message: t("an_error_occurred") };
       pending.value = false;
       return;
     });
@@ -352,7 +374,7 @@ const handleTelegramData = async (data, school_id) => {
       window.location.href = "/dashboard";
     })
     .catch((err) => {
-      errors.value = err.response.data;
+      errors.value = err.response?.data || { message: t("an_error_occurred") };
       pending.value = false;
       return;
     });
