@@ -7272,3 +7272,71 @@ a.lesson-pager-item:hover{
     @apply col-start-1;
   }
 }
+
+/* ---------- Профиль ---------- */
+.profile-head{
+  @apply flex flex-wrap items-center gap-5 p-5 rounded-2xl border bg-active;
+  border-color: var(--surface-border);
+}
+
+.profile-avatar{
+  @apply flex items-center gap-3;
+}
+
+.role-chip.active{
+  @apply bg-corp text-white;
+}
+
+.profile-section{
+  @apply p-5 rounded-2xl border bg-active;
+  border-color: var(--surface-border);
+}
+
+.profile-section-title{
+  @apply flex items-center gap-2 mb-4 text-base;
+}
+
+.profile-section-title > i{
+  @apply text-corp;
+}
+
+/* Обрезка аватара */
+.avatar-cropper{
+  @apply flex flex-col items-center gap-3;
+}
+
+.avatar-cropper-viewport{
+  @apply relative w-full max-w-[320px] aspect-square overflow-hidden rounded-2xl bg-slate-900 select-none cursor-grab;
+  touch-action: none;
+}
+
+.avatar-cropper-viewport.dragging{
+  @apply cursor-grabbing;
+}
+
+.avatar-cropper-viewport:focus-visible{
+  @apply outline-none;
+  box-shadow: var(--shadow-focus);
+}
+
+.avatar-cropper-img{
+  @apply absolute left-0 top-0 max-w-none pointer-events-none;
+  transform-origin: 0 0;
+}
+
+/* Затемнение вокруг круга — так аватар выглядит в приложении */
+.avatar-cropper-mask{
+  @apply absolute inset-0 pointer-events-none rounded-full;
+  box-shadow: 0 0 0 9999px rgb(15 23 42 / 0.55);
+  outline: 2px solid rgb(255 255 255 / 0.85);
+  outline-offset: -2px;
+}
+
+.avatar-cropper-zoom{
+  @apply flex items-center gap-3 w-full max-w-[320px];
+}
+
+.avatar-cropper-zoom input[type="range"]{
+  @apply flex-1;
+  accent-color: theme('colors.corp.DEFAULT');
+}
