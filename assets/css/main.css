@@ -456,8 +456,8 @@
 
 .scroll-fade {
   overflow-y: auto;
-  /* прокрутка до конца не «перескакивает» на страницу */
-  overscroll-behavior: contain;
+  /* упёрлись в край — прокрутка переходит к родителю (колесо — useScrollChain) */
+  overscroll-behavior-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgb(148 163 184 / 0.5) transparent;
   border-radius: inherit;

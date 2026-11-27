@@ -19,6 +19,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, nextTick } from "vue";
+import { useScrollChain } from "~/composables/useScrollChain";
 
 const props = defineProps({
   maxHeight: {
@@ -38,6 +39,9 @@ const isAtBottom = ref(true);
 
 let resizeObserver = null;
 let rafId = null;
+
+// Упёрлись в край — колесо сразу прокручивает родителя
+useScrollChain(container);
 
 /* ---------- scroll helpers ---------- */
 
