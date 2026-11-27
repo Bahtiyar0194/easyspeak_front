@@ -1,14 +1,14 @@
 <template>
   <dropdownMenu :dropdown-arrow="false">
     <template v-slot:btn_content>
+      <!-- Квадратная кнопка с кодом языка — того же размера, что и соседние -->
       <button
         type="button"
-        class="header-icon-btn !w-auto px-2.5 gap-1.5"
+        class="header-icon-btn header-locale-btn"
         :title="$t('choose_your_language')"
-        :aria-label="$t('choose_your_language')"
+        :aria-label="$t('choose_your_language') + ': ' + localeProperties.name"
       >
-        <i class="bi bi-globe2 text-base" aria-hidden="true"></i>
-        <span class="text-sm font-semibold">{{ localeProperties.short_name }}</span>
+        {{ localeProperties.short_name }}
       </button>
     </template>
 

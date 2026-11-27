@@ -17,9 +17,11 @@
           </nuxt-link>
         </div>
 
-        <div class="btn-wrap items-center">
-          <themeSwitcher />
-          <selectLocale />
+        <div class="flex items-center gap-2 sm:gap-3">
+          <div class="db__header__tools">
+            <themeSwitcher />
+            <selectLocale />
+          </div>
           <authUserMenu :showAuthMenu="false" />
         </div>
       </div>

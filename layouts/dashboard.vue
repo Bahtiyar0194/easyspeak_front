@@ -11,10 +11,12 @@
       </div>
 
       <div class="db__header__actions">
-        <themeSwitcher />
-        <selectLocale />
-        <notifications />
-        <span class="db__header__divider" aria-hidden="true"></span>
+        <!-- Тема, язык, уведомления — одной «капсулой» одинаковых кнопок -->
+        <div class="db__header__tools">
+          <themeSwitcher />
+          <selectLocale />
+          <notifications />
+        </div>
         <authUserMenu />
       </div>
     </div>
@@ -165,6 +167,7 @@ const fetchLiveStatus = async (force = true) => {
     conferenceLive.value = {
       live: response.data?.live === true,
       key: current.join(","),
+      notificationsUnread: Number(response.data?.notifications_unread) || 0,
     };
   } catch (e) {
     // Индикатор вспомогательный: при ошибке просто не показываем точку,

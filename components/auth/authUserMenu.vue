@@ -1,6 +1,7 @@
 <template>
   <template v-if="authUser">
-    <dropdownMenu :dropdown-arrow="true">
+    <!-- Плашка пользователя: аватар, имя, роль и стрелка — одним элементом -->
+    <dropdownMenu :dropdown-arrow="false">
       <template v-slot:btn_content>
         <div
           class="user-menu-btn"
@@ -8,19 +9,20 @@
         >
           <userAvatar
             v-if="authUser"
-            :padding="0.5"
+            :padding="0"
             :className="'w-8 h-8 text-xs'"
             :user="authUser"
           />
-          <div class="hidden sm:flex flex-col text-left leading-tight">
-            <span class="font-medium text-sm">{{ authUser.first_name }}</span>
+          <div class="hidden sm:flex flex-col text-left leading-tight min-w-0">
+            <span class="font-semibold text-sm truncate max-w-[9rem]">{{ authUser.first_name }}</span>
             <span
               v-if="props.showAuthMenu === true"
-              class="text-inactive text-[11px]"
+              class="text-inactive text-[11px] truncate max-w-[9rem]"
             >
               {{ authUser.current_role_name }}
             </span>
           </div>
+          <i class="pi pi-chevron-down user-menu-chevron" aria-hidden="true"></i>
         </div>
       </template>
 

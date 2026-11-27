@@ -6,8 +6,9 @@ import { watch } from "vue";
 //
 // live — идёт ли сейчас конференция (зелёная точка в меню);
 // key  — ключ набора «текущих» конференций (null — ещё ни разу не проверяли).
+// notificationsUnread — непрочитанные уведомления (колокольчик) тем же опросом.
 export const useConferenceLive = () =>
-  useState("conferenceLive", () => ({ live: false, key: null }));
+  useState("conferenceLive", () => ({ live: false, key: null, notificationsUnread: 0 }));
 
 // Внеочередная проверка — вызывать после действий, которые меняют текущие
 // конференции: создание, удаление, перенос. Счётчик слушает layouts/dashboard.vue

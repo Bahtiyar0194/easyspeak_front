@@ -2603,17 +2603,43 @@ img.img-loading{
   @apply flex items-center gap-2 sm:gap-3;
 }
 
+/* Тема, язык, уведомления — одна «капсула» одинаковых квадратных кнопок */
+.db__header__tools{
+  @apply flex items-center gap-0.5 p-1 rounded-2xl border;
+  border-color: var(--surface-border);
+  background-color: var(--cell-tint);
+}
+
+.db__header__tools .header-icon-btn:hover,
+.db__header__tools .header-icon-btn.active,
+.db__header__tools .dropdown [aria-expanded="true"] .header-icon-btn{
+  @apply bg-active text-corp;
+  box-shadow: 0 2px 8px -4px rgb(15 23 42 / 0.25);
+}
+
 .db__header__divider{
   @apply hidden sm:block w-px h-7 bg-gray-200 dark:bg-slate-700;
 }
 
 /* Меню пользователя */
+/* Плашка пользователя: та же высота, что у «капсулы» кнопок */
 .user-menu-btn{
-  @apply flex items-center gap-2 select-none rounded-xl py-1 pl-1 pr-1.5 duration-200;
+  @apply flex items-center gap-2.5 select-none rounded-2xl border py-1 pl-1 pr-2.5 duration-200;
+  border-color: var(--surface-border);
 }
 
-.user-menu-btn:hover{
-  background-color: rgb(59 130 246 / 0.07);
+.user-menu-btn:hover,
+.dropdown [aria-expanded="true"] .user-menu-btn{
+  border-color: rgb(59 130 246 / 0.35);
+  background-color: rgb(59 130 246 / 0.06);
+}
+
+.user-menu-chevron{
+  @apply text-[10px] text-inactive transition-transform duration-200;
+}
+
+.dropdown [aria-expanded="true"] .user-menu-chevron{
+  transform: rotate(180deg);
 }
 
 .user-menu{
@@ -4997,6 +5023,11 @@ a:focus-visible > .cover-card{
   @apply w-9 h-9 rounded-xl flex items-center justify-center text-lg text-active duration-200;
 }
 
+/* Код языка вместо иконки — в том же квадрате */
+.header-locale-btn{
+  @apply text-xs font-bold uppercase tracking-wide;
+}
+
 .header-icon-btn:hover{
   @apply text-corp;
   background-color: rgb(59 130 246 / 0.08);
@@ -6889,4 +6920,120 @@ a:focus-visible > .cover-card{
 
 .file-preview-other > i{
   @apply text-2xl text-inactive;
+}
+
+/* ===== Уведомления: колокольчик в шапке и панель ===== */
+.notif{
+  @apply relative;
+}
+
+.notif-bell{
+  @apply relative;
+}
+
+.notif-bell:focus-visible{
+  @apply outline-none;
+  box-shadow: var(--shadow-focus);
+}
+
+.notif-badge{
+  @apply absolute -top-1 -right-1 min-w-[1.15rem] h-[1.15rem] px-1 flex items-center justify-center rounded-full bg-danger text-white text-[10px] font-bold leading-none border-2 border-white dark:border-slate-800;
+}
+
+/* Пришло новое — колокольчик качнётся один раз */
+.notif-bell.ring > i{
+  animation: notif-ring 0.9s ease-in-out;
+  transform-origin: 50% 10%;
+}
+
+@keyframes notif-ring{
+  0%, 100% { transform: rotate(0); }
+  15% { transform: rotate(16deg); }
+  30% { transform: rotate(-14deg); }
+  45% { transform: rotate(10deg); }
+  60% { transform: rotate(-6deg); }
+  75% { transform: rotate(3deg); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .notif-bell.ring > i{ animation: none; }
+}
+
+.notif-panel{
+  @apply absolute right-0 top-full mt-2 z-50 flex flex-col w-[24rem] rounded-2xl border bg-active overflow-hidden;
+  border-color: var(--surface-border);
+  box-shadow: var(--shadow-strong);
+  max-height: min(70vh, 34rem);
+}
+
+/* Телефон: панель на всю ширину под шапкой */
+@media (max-width: 639px){
+  .notif-panel{
+    @apply fixed left-2 right-2 w-auto mt-0;
+    top: 84px;
+    max-height: calc(100dvh - 96px);
+  }
+}
+
+.notif-head{
+  @apply flex items-center gap-2 px-4 py-3 border-b;
+  border-color: var(--surface-border);
+}
+
+.notif-body{
+  @apply flex-1 min-h-0 overflow-y-auto;
+  overscroll-behavior: contain;
+}
+
+.notif-list{
+  @apply list-none p-0 m-0;
+}
+
+.notif-item{
+  @apply relative w-full flex items-start gap-3 px-4 py-3 text-left transition-colors;
+}
+
+.notif-list > li + li .notif-item{
+  border-top: 1px solid var(--surface-border);
+}
+
+.notif-item.clickable:hover{
+  background-color: var(--cell-tint);
+}
+
+.notif-item:not(.clickable){
+  @apply cursor-default;
+}
+
+.notif-item.unread{
+  background-color: rgb(59 130 246 / 0.05);
+}
+
+.notif-item:focus-visible{
+  @apply outline-none;
+  box-shadow: inset var(--shadow-focus);
+}
+
+.notif-dot{
+  @apply shrink-0 mt-1.5 w-2 h-2 rounded-full bg-corp;
+}
+
+.notif-icon{
+  @apply shrink-0 flex items-center justify-center w-9 h-9 rounded-xl text-base;
+  color: rgb(var(--tone));
+  background-color: rgb(var(--tone) / 0.12);
+}
+
+.notif-icon.tone-blue{ --tone: 59 130 246; }
+.notif-icon.tone-green{ --tone: 34 197 94; }
+.notif-icon.tone-amber{ --tone: 245 158 11; }
+.notif-icon.tone-red{ --tone: 239 68 68; }
+.notif-icon.tone-violet{ --tone: 139 92 246; }
+
+.notif-empty{
+  @apply flex flex-col items-center gap-2 px-6 py-10 text-center text-sm text-inactive;
+}
+
+.notif-empty > i{
+  @apply text-3xl;
 }
