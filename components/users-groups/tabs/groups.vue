@@ -360,20 +360,36 @@
           {{ currentGroup.group_description }}
         </p>
 
-        <!-- Что дальше по группе: ближайший урок и сколько уже прошло -->
-        <div v-if="groupSchedule.total" class="group-progress">
-          <div class="flex-1 min-w-0 flex flex-col gap-1">
-            <p class="mb-0 text-sm">
-              <i class="pi pi-calendar text-corp text-xs" aria-hidden="true"></i>
-              <template v-if="groupSchedule.next">
-                {{ $t("pages.groups.next_lesson") }}:
-                <b>{{ groupSchedule.next.start_time_formatted }}</b>
-                <span class="text-inactive"> · {{ groupSchedule.next.lesson_name }}</span>
-              </template>
-              <template v-else>{{ $t("pages.groups.all_lessons_gone") }}</template>
-            </p>
-            <div class="unit-progress !mt-1">
-              <div :style="{ width: groupSchedule.percent + '%' }"></div>
+        <!-- Что сейчас и дальше по группе. Считаем только уроки расписания:
+             разовые запущенные вручную конференции (forced) не в счёт -->
+        <div v-if="groupSchedule.total || groupSchedule.live" class="group-progress">
+          <p v-if="groupSchedule.live" class="group-progress-line">
+            <span class="live-dot" aria-hidden="true"></span>
+            <span>
+              {{ $t("pages.conference.card_live") }}:
+              <b>{{ groupSchedule.live.lesson_name }}</b>
+              <span class="text-inactive">
+                · {{ groupSchedule.live.time }}–{{ groupSchedule.live.time_end }}</span
+              >
+            </span>
+          </p>
+
+          <p v-if="groupSchedule.total" class="group-progress-line">
+            <i class="pi pi-calendar text-corp" aria-hidden="true"></i>
+            <span v-if="groupSchedule.next">
+              {{ $t("pages.groups.next_lesson") }}:
+              <b>{{ groupSchedule.next.start_time_formatted }}</b>
+              <span class="text-inactive"> · {{ groupSchedule.next.lesson_name }}</span>
+            </span>
+            <span v-else>{{ $t("pages.groups.all_lessons_gone") }}</span>
+          </p>
+
+          <div v-if="groupSchedule.total" class="flex flex-col gap-1">
+            <div class="flex items-center gap-3">
+              <div class="group-progress-bar">
+                <div :style="{ width: groupSchedule.percent + '%' }"></div>
+              </div>
+              <span class="text-sm font-semibold tabular-nums">{{ groupSchedule.percent }}%</span>
             </div>
             <p class="mb-0 text-xs text-inactive">
               {{
@@ -389,7 +405,7 @@
         <dl class="info-list">
           <div>
             <dt>
-              <i class="pi pi-book"></i> {{ $t("pages.groups.group_category") }}
+              <i class="pi pi-book"></i> {{ $t("pages.groups.level") }}
             </dt>
             <dd>{{ currentGroup.level.level_name }}</dd>
           </div>
@@ -891,15 +907,32 @@ const formatMoney = (value) =>
   " " +
   ($contacts?.bank?.currency?.symbol || "");
 
-// Ближайший урок группы и сколько уроков уже прошло
+// Идущий сейчас урок, ближайший урок по плану и сколько уроков прошло.
+// Разовые конференции, запущенные вручную (forced = 1), в прогресс и «следующий
+// урок» не входят — иначе «Прошло 14 из 18» вместо реальных 6 из 10
 const groupSchedule = computed(() => {
-  const schedule = currentGroup.value?.schedule || [];
-  const gone = schedule.filter((l) => l.is_gone === true).length;
+  const all = currentGroup.value?.schedule || [];
+  const planned = all.filter((l) => Number(l.forced) !== 1);
+  const now = Date.now();
+  // «2026-11-27» + «23:33» — ISO-вид, его разбирают все браузеры (Safari не
+  // понимает «2026-11-27 23:33:05» из start_time)
+  const startMs = (l) =>
+    l.date && l.time
+      ? new Date(`${l.date}T${String(l.time).slice(0, 5)}`).getTime()
+      : new Date(String(l.start_time).replace(" ", "T")).getTime();
+  const started = (l) => startMs(l) <= now;
+
+  // Идёт сейчас — любой урок группы, включая разовый
+  const live = all.find((l) => l.is_gone === false && started(l)) || null;
+  const gone = planned.filter((l) => l.is_gone === true).length;
+
   return {
-    total: schedule.length,
+    total: planned.length,
     gone,
-    percent: schedule.length ? Math.round((gone / schedule.length) * 100) : 0,
-    next: schedule.find((l) => l.is_gone === false) || null,
+    percent: planned.length ? Math.round((gone / planned.length) * 100) : 0,
+    live,
+    // Следующий — ещё не начавшийся урок по плану
+    next: planned.find((l) => l.is_gone === false && !started(l)) || null,
   };
 });
 
