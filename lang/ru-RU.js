@@ -467,6 +467,7 @@ export default {
     errors: {
         error_code: 'Код ошибки',
         page_is_not_available: "Эта страница недоступна для данной роли",
+        no_permission: 'Недостаточно прав для этого действия',
         show_error: "Показать ошибку",
         hide_error: "Скрыть ошибку",
         media: {

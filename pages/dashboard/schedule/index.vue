@@ -280,10 +280,13 @@
         <roleProvider :roles="[1, 2, 3, 4]">
           <div class="col-span-12">
             <div class="btn-wrap">
+              <!-- Переносить могут учитель урока, его создатель, а также
+                   владелец / администратор школы — так же проверяет бэкенд -->
               <button type="button"
                 v-if="
                   currentEvent.mentor_id === authUser.user_id ||
-                  currentEvent.operator_id === authUser.user_id
+                  currentEvent.operator_id === authUser.user_id ||
+                  [1, 2, 3].includes(authUser.current_role_id)
                 "
                 class="btn btn-outline-primary"
                 @click="openEditModal()"
@@ -561,6 +564,7 @@ import userTag from "../../../components/ui/userTag.vue";
 import note from "../../../components/ui/note.vue";
 import userAvatar from "../../../components/ui/userAvatar.vue";
 import { useConfirm } from "~/composables/useConfirm";
+import { useNotify } from "~/composables/useNotify";
 import { checkConferenceLiveNow } from "~/composables/useConferenceLive";
 import { useScheduleLoader } from "~/composables/useScheduleLoader";
 
@@ -577,6 +581,7 @@ const editFormRef = ref(null);
 const searchFilter = ref(false);
 
 const { t } = useI18n();
+const notify = useNotify();
 
 const currentEvent = ref(null);
 
@@ -673,6 +678,10 @@ const editEventSubmit = async () => {
         if (err.response.status == 422) {
           errors.value = err.response.data;
           pendingEdit.value = false;
+        } else if (err.response.status == 403) {
+          // Нет прав переносить этот урок — сообщение, без ухода на /error
+          pendingEdit.value = false;
+          notify("danger", t("errors.no_permission"));
         } else {
           router.push({
             path: "/error",

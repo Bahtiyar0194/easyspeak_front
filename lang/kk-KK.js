@@ -466,6 +466,7 @@ export default {
     errors: {
         error_code: 'Қатенің коды',
         page_is_not_available: "Бұл бет осы рөлге қол жетімді емес",
+        no_permission: 'Бұл әрекетке құқық жеткіліксіз',
         show_error: "Қатені көрсету",
         hide_error: "Қатені жасыру",
         media: {
