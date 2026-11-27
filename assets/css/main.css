@@ -7340,3 +7340,217 @@ a.lesson-pager-item:hover{
   @apply flex-1;
   accent-color: theme('colors.corp.DEFAULT');
 }
+
+/* ---------- Группы ---------- */
+/* Только что созданная / изменённая группа в списке */
+.row-highlight,
+tr.row-highlight > td{
+  animation: row-highlight 4s ease-out;
+}
+
+@keyframes row-highlight{
+  0%, 40%{ background-color: rgb(59 130 246 / 0.16); }
+  100%{ background-color: transparent; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .row-highlight,
+  tr.row-highlight > td{
+    animation: none;
+    background-color: rgb(59 130 246 / 0.12);
+  }
+}
+
+/* Окно группы: ближайший урок и сколько прошло */
+.group-progress{
+  @apply flex items-center gap-3 p-3 rounded-xl;
+  background-color: rgb(59 130 246 / 0.06);
+}
+
+/* Оплаты: массовая отметка по ученику */
+.payments-bulk{
+  @apply flex flex-col gap-2 p-3 rounded-xl border;
+  border-color: var(--surface-border);
+}
+
+/* ---------- Мастер группы ---------- */
+/* Вариант выбора карточкой: радиокнопка + заголовок + пояснение */
+.choice-card{
+  @apply flex items-start gap-3 p-3 rounded-xl border cursor-pointer duration-200;
+  border-color: var(--surface-border);
+}
+
+.choice-card:hover{
+  border-color: rgb(59 130 246 / 0.4);
+}
+
+.choice-card > input{
+  @apply mt-1 shrink-0;
+  accent-color: theme('colors.corp.DEFAULT');
+}
+
+.choice-card.active{
+  border-color: theme('colors.corp.DEFAULT');
+  background-color: rgb(59 130 246 / 0.06);
+}
+
+.choice-card.danger.active{
+  border-color: theme('colors.red.500');
+  background-color: rgb(239 68 68 / 0.06);
+}
+
+.choice-card:focus-within{
+  box-shadow: var(--shadow-focus);
+}
+
+/* Дни недели кнопками */
+/* Семь дней — на всю ширину строки */
+.day-chips{
+  @apply grid grid-cols-7 gap-2;
+}
+
+.day-chip{
+  @apply w-full h-11 rounded-xl border text-sm font-semibold bg-active text-inactive duration-200;
+  border-color: var(--surface-border);
+}
+
+.day-chip:hover{
+  @apply text-active;
+  border-color: rgb(59 130 246 / 0.4);
+}
+
+.day-chip.active{
+  @apply bg-corp text-white border-transparent;
+}
+
+/* Сводка перед сохранением */
+.summary-block{
+  @apply flex flex-col gap-3 p-4 rounded-2xl border;
+  border-color: var(--surface-border);
+}
+
+.summary-block-head{
+  @apply flex items-center justify-between gap-3;
+}
+
+/* ---------- Оплаты: итог и ведомость ---------- */
+.payments-summary{
+  @apply flex flex-wrap gap-x-8 gap-y-2 px-4 py-3 rounded-xl;
+  background-color: rgb(59 130 246 / 0.06);
+}
+
+.payments-summary > div{
+  @apply flex flex-col;
+}
+
+.payments-summary b{
+  @apply text-lg leading-tight;
+}
+
+.payments-matrix-wrap{
+  @apply overflow-auto rounded-xl border max-h-[60vh];
+  border-color: var(--surface-border);
+}
+
+.payments-matrix{
+  @apply border-separate text-sm;
+  border-spacing: 0;
+  min-width: 100%;
+}
+
+.payments-matrix th,
+.payments-matrix td{
+  @apply px-2 py-1.5 text-center align-middle border-b bg-active;
+  border-color: var(--surface-border);
+}
+
+/* Имена учеников закреплены слева, заголовки уроков — сверху */
+.payments-matrix .pm-name{
+  @apply sticky left-0 z-10 text-left min-w-[13rem] max-w-[16rem] border-r;
+}
+
+.payments-matrix thead th{
+  @apply sticky top-0 z-20;
+}
+
+.payments-matrix thead .pm-name{
+  @apply z-30;
+}
+
+.pm-lesson{
+  @apply min-w-[5.5rem] max-w-[7rem] font-normal;
+}
+
+.pm-lesson.gone{
+  @apply opacity-70;
+}
+
+.pm-date{
+  @apply block font-semibold text-xs whitespace-nowrap;
+}
+
+.pm-lesson-name{
+  @apply block text-[11px] text-inactive truncate;
+}
+
+.pm-bulk{
+  @apply inline-flex items-center justify-center w-7 h-7 mt-1 rounded-lg text-inactive duration-200;
+}
+
+.pm-bulk:hover{
+  @apply text-corp;
+  background-color: rgb(59 130 246 / 0.1);
+}
+
+.pm-cell{
+  @apply relative inline-flex items-center justify-center w-8 h-8 rounded-lg border text-xs duration-200;
+}
+
+.pm-cell:not(:disabled):not(.static):hover{
+  transform: scale(1.08);
+}
+
+.pm-cell:disabled{
+  @apply cursor-not-allowed;
+}
+
+.pm-cell.paid{
+  @apply text-white border-transparent bg-green-600;
+}
+
+.pm-cell.learner{
+  @apply text-white border-transparent bg-green-700;
+}
+
+.pm-cell.free{
+  @apply text-white border-transparent bg-corp;
+}
+
+.pm-cell.unpaid{
+  @apply text-red-600 dark:text-red-400;
+  border-color: rgb(239 68 68 / 0.35);
+  background-color: rgb(239 68 68 / 0.06);
+}
+
+/* Изменено, но ещё не сохранено — точка в углу */
+.pm-cell.changed::after{
+  content: "";
+  @apply absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-500;
+  box-shadow: 0 0 0 2px var(--bg-active, #fff);
+}
+
+.pm-empty{
+  @apply text-inactive;
+}
+
+.pm-legend{
+  @apply flex flex-wrap gap-x-4 gap-y-2 mt-3 mb-0 p-0 list-none text-xs text-inactive;
+}
+
+.pm-legend li{
+  @apply inline-flex items-center gap-1.5;
+}
+
+.pm-legend .pm-cell{
+  @apply w-5 h-5 text-[10px];
+}

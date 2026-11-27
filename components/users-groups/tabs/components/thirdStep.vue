@@ -1,19 +1,32 @@
 <template>
   <div class="custom-grid">
     <div class="col-span-12">
-      <div class="btn-wrap">
+      <div class="list-toolbar">
         <button
           type="button"
           @click="showHideUserSearchFilter"
-          class="btn btn-light"
+          class="btn"
+          :class="searchFilter ? 'btn-outline-primary' : 'btn-light'"
+          :aria-pressed="searchFilter"
         >
-          <i class="pi pi-search"></i>
-          {{
-            searchFilter === true
-              ? $t("hide_search_filter")
-              : $t("show_search_filter")
-          }}
+          <i class="pi pi-filter" aria-hidden="true"></i>
+          {{ $t("filter") }}
         </button>
+        <span class="text-sm text-inactive">
+          {{ $t("pages.groups.added_members_count") }}:
+          <b class="text-active">{{ groupMembers.length }}</b>
+        </span>
+      </div>
+
+      <!-- Выбранные ученики — сверху, сразу видно, кто уже в группе -->
+      <div v-if="groupMembers.length > 0" class="btn-wrap mt-3">
+        <userTag
+          v-for="member in groupMembers"
+          :key="member.user_id"
+          :user="member"
+          :onDelete="(user_id) => deleteFromGroup(user_id)"
+          :closable="true"
+        />
       </div>
     </div>
     <div
@@ -93,16 +106,10 @@
             </div>
 
             <div class="col-span-12">
-              <div class="btn-wrap">
-                <button
-                  type="button"
-                  @click="debounceReset"
-                  class="btn btn-sm btn-outline-primary"
-                >
-                  <i class="pi pi-undo"></i>
-                  {{ $t("reset_search_filter") }}
-                </button>
-              </div>
+              <button type="button" @click="debounceReset" class="btn btn-light full">
+                <i class="pi pi-filter-slash" aria-hidden="true"></i>
+                {{ $t("reset_search_filter") }}
+              </button>
             </div>
           </div>
         </div>
@@ -185,7 +192,7 @@
                     </td>
                     <td>{{ user.email }}</td>
                     <td>{{ user.phone }}</td>
-                    <td>{{ new Date(user.created_at).toLocaleString() }}</td>
+                    <td class="whitespace-nowrap">{{ new Date(user.created_at).toLocaleDateString() }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -205,38 +212,12 @@
         </div>
         <div class="col-span-12">
           <p
-            :class="{
-              'text-danger': errors.members_count && !groupMembers.length,
-            }"
+            v-if="errors.members_count && !groupMembers.length"
+            class="mb-0 text-danger"
           >
-            <span v-if="errors.members_count && !groupMembers.length">{{
-              errors.members_count[0]
-            }}</span>
-            <span v-else>
-              {{ $t("pages.groups.added_members_count") }}:
-              <b>{{ groupMembers.length }}</b></span
-            >
+            {{ errors.members_count[0] }}
           </p>
 
-          <div v-if="groupMembers.length > 0" class="btn-wrap">
-            <userTag
-              v-for="(member, index) in groupMembers"
-              :key="index"
-              :user="member"
-              :onDelete="(user_id) => deleteFromGroup(user_id)"
-              :closable="true"
-              v-motion="{
-                initial: {
-                  y: -100,
-                  opacity: 0,
-                },
-                enter: {
-                  y: 0,
-                  opacity: 1,
-                },
-              }"
-            />
-          </div>
 
           <ul v-if="errors && errors.members" class="list-group nowrap mt-4">
             <li class="text-danger font-bold">
@@ -328,10 +309,8 @@ const addToGroup = (user) => {
     newArr.push(user);
     groupMembers.value = newArr;
   } else {
-    //var 1
-    //groupMembers.value = groupMembers.value.filter((member) => member.user_id !== user.user_id);
-    //var 2
-    notify("success", t("pages.groups.warning_1"));
+    // Повторный клик — убрать ученика из группы
+    deleteFromGroup(user.user_id);
   }
 };
 

@@ -13,6 +13,7 @@
         >
           <i class="pi pi-filter" aria-hidden="true"></i>
           {{ $t("filter") }}
+          <span v-if="activeFilters > 0" class="chip-count">{{ activeFilters }}</span>
         </button>
         <span v-if="groups.total" class="text-sm text-inactive">
           {{ $t("found") }}: <b class="text-active">{{ groups.total }}</b>
@@ -196,7 +197,7 @@
       >
         <span v-if="pending" class="sr-only">{{ $t("loading") }}</span>
         <div class="table table-striped table-sm selectable max-md:!hidden">
-          <table ref="tableRef">
+          <table>
             <thead>
               <tr>
                 <sortTableHead
@@ -218,31 +219,21 @@
               <tr
                 v-for="group in groups.data"
                 :key="group.group_id"
+                :class="{ 'row-highlight': highlightGroupId === group.group_id }"
                 @click="getGroup(group.group_id)"
               >
                 <td class="font-medium">{{ group.group_name }}</td>
-                <td>{{ group.course_name }}</td>
-                <td>{{ group.level_name }}</td>
                 <td>
-                  <div class="flex gap-x-2 items-center">
-                    <userAvatar
-                      :padding="0.5"
-                      :className="'w-6 h-6'"
-                      :user="{
-                        last_name: group.operator_last_name,
-                        first_name: group.operator_first_name,
-                        avatar: group.operator_avatar,
-                      }"
-                    />
-                    {{ group.operator_last_name }}
-                    {{ group.operator_first_name }}
-                  </div>
+                  <span class="flex flex-col min-w-0">
+                    <span>{{ group.course_name }}</span>
+                    <span class="text-xs text-inactive">{{ group.level_name }}</span>
+                  </span>
                 </td>
                 <td>
-                  <div class="flex gap-x-2 items-center">
+                  <div class="flex gap-x-2 items-center whitespace-nowrap">
                     <userAvatar
                       :padding="0.5"
-                      :className="'w-6 h-6'"
+                      :className="'w-6 h-6 text-[9px]'"
                       :user="{
                         last_name: group.mentor_last_name,
                         first_name: group.mentor_first_name,
@@ -253,26 +244,13 @@
                   </div>
                 </td>
                 <td>{{ group.members_count }}</td>
-                <td>
-                  {{
-                    new Date(group.started_at).toLocaleString(undefined, {
-                      year: "numeric",
-                      month: "2-digit",
-                      day: "2-digit",
-                    })
-                  }}
-                </td>
-                <td>
-                  {{
-                    new Date(group.created_at).toLocaleString(undefined, {
-                      year: "numeric",
-                      month: "2-digit",
-                      day: "2-digit",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: false, // можно убрать или поставить true, если нужен 12-часовой формат
-                    })
-                  }}
+                <td class="whitespace-nowrap">
+                  <span class="flex flex-col">
+                    <span>{{ formatDate(group.started_at) }}</span>
+                    <span class="text-xs text-inactive"
+                      >{{ $t("created_at") }}: {{ formatDate(group.created_at) }}</span
+                    >
+                  </span>
                 </td>
                 <td>
                   <span class="status-pill" :class="group.status_color">
@@ -290,6 +268,7 @@
             <button
               type="button"
               class="entity-card !items-start"
+              :class="{ 'row-highlight': highlightGroupId === group.group_id }"
               @click="getGroup(group.group_id)"
             >
               <span class="task-icon !w-10 !h-10 !text-lg" aria-hidden="true">
@@ -330,7 +309,20 @@
           </li>
         </ul>
       </div>
-      <emptyState v-else :text="$t('nothing_was_found_for_your_query')" icon="bi bi-search" />
+      <emptyState
+        v-else-if="activeFilters > 0"
+        :text="$t('nothing_was_found_for_your_query')"
+        icon="bi bi-search"
+      />
+      <!-- Групп нет совсем — сразу предлагаем создать -->
+      <emptyState v-else :text="$t('pages.groups.no_groups')" icon="bi bi-people">
+        <roleProvider :roles="[1, 2, 3]">
+          <button type="button" class="btn btn-primary" @click="openCreateModal()">
+            <i class="pi pi-plus" aria-hidden="true"></i>
+            {{ $t("pages.groups.create_group") }}
+          </button>
+        </roleProvider>
+      </emptyState>
 
       <!-- Вне блока списка: при переходе по страницам остаётся на месте
            под скелетоном; пока идёт загрузка — неактивна -->
@@ -367,6 +359,32 @@
         >
           {{ currentGroup.group_description }}
         </p>
+
+        <!-- Что дальше по группе: ближайший урок и сколько уже прошло -->
+        <div v-if="groupSchedule.total" class="group-progress">
+          <div class="flex-1 min-w-0 flex flex-col gap-1">
+            <p class="mb-0 text-sm">
+              <i class="pi pi-calendar text-corp text-xs" aria-hidden="true"></i>
+              <template v-if="groupSchedule.next">
+                {{ $t("pages.groups.next_lesson") }}:
+                <b>{{ groupSchedule.next.start_time_formatted }}</b>
+                <span class="text-inactive"> · {{ groupSchedule.next.lesson_name }}</span>
+              </template>
+              <template v-else>{{ $t("pages.groups.all_lessons_gone") }}</template>
+            </p>
+            <div class="unit-progress !mt-1">
+              <div :style="{ width: groupSchedule.percent + '%' }"></div>
+            </div>
+            <p class="mb-0 text-xs text-inactive">
+              {{
+                $t("pages.groups.lessons_gone_of", {
+                  done: groupSchedule.gone,
+                  total: groupSchedule.total,
+                })
+              }}
+            </p>
+          </div>
+        </div>
 
         <dl class="info-list">
           <div>
@@ -422,13 +440,28 @@
           </p>
           <div class="btn-wrap">
             <userTag
-              v-for="(member, index) in currentGroup.group_members"
-              :key="index"
+              v-for="member in visibleMembers"
+              :key="member.user_id"
               :user="member"
               :selectable="true"
               :title="$t('pages.education-program.get_grade')"
               @click="getGrade(member)"
             />
+            <button
+              v-if="currentGroup.group_members.length > MEMBERS_PREVIEW"
+              type="button"
+              class="btn btn-sm btn-light"
+              :aria-expanded="showAllMembers"
+              @click="showAllMembers = !showAllMembers"
+            >
+              {{
+                showAllMembers
+                  ? $t("pages.schedule.members_collapse")
+                  : $t("pages.schedule.members_more", {
+                      count: currentGroup.group_members.length - MEMBERS_PREVIEW,
+                    })
+              }}
+            </button>
           </div>
           <p class="mb-0 text-xs text-inactive">
             <i class="pi pi-info-circle" aria-hidden="true"></i>
@@ -461,7 +494,7 @@
   <modal
     :show="createModalIsVisible"
     :onClose="() => closeModal('create')"
-    :className="currentStep != 3 ? 'modal-4xl' : ''"
+    :className="wizardModalClass"
     :showLoader="pendingCreate"
     :showPendingText="true"
     :closeOnClickSelf="false"
@@ -523,7 +556,7 @@
   <modal
     :show="editModalIsVisible"
     :onClose="() => closeModal('edit')"
-    :className="currentStep != 3 ? 'modal-4xl' : ''"
+    :className="wizardModalClass"
     :showLoader="pendingEdit"
     :showPendingText="true"
     :closeOnClickSelf="false"
@@ -613,20 +646,49 @@
     </template>
     <template v-if="currentGroup" v-slot:body_content>
       <div class="custom-grid">
+        <!-- Итог по группе: сколько уроков оплачено и сколько денег не хватает -->
+        <div v-if="paymentsSummary.total" class="col-span-12">
+          <div class="payments-summary">
+            <div>
+              <span class="text-xs text-inactive">{{ $t("pages.groups.summary_paid") }}</span>
+              <b class="text-success">{{ paymentsSummary.paid }} / {{ paymentsSummary.total }}</b>
+            </div>
+            <div>
+              <span class="text-xs text-inactive">{{ $t("pages.groups.summary_unpaid") }}</span>
+              <b :class="paymentsSummary.unpaid ? 'text-danger' : ''">{{ paymentsSummary.unpaid }}</b>
+            </div>
+            <div v-if="paymentsSummary.debt">
+              <span class="text-xs text-inactive">{{ $t("pages.groups.summary_debt") }}</span>
+              <b>≈ {{ formatMoney(paymentsSummary.debt) }}</b>
+            </div>
+          </div>
+        </div>
+
         <tabs
           v-if="upcomingLessons.length || goneLessons.length"
           :tabs="tabs_data"
           :activeTabIndex="1"
         />
+        <!-- Сохранение прямо здесь; вопрос «сохранить?» — только при
+             закрытии окна с несохранёнными изменениями -->
         <div class="col-span-12">
-          <div class="btn-wrap justify-end">
-            <button type="button"
+          <div class="btn-wrap justify-end items-center">
+            <span v-if="newPayments.length" class="text-sm text-inactive mr-auto">
+              {{ $t("pages.groups.payments_changed", { count: newPayments.length }) }}
+            </span>
+            <button
+              type="button"
               class="btn btn-primary"
-              :class="!newPayments.length ? 'disabled' : ''"
-              @click="closeModal('payments')"
+              :class="{ loading: pendingPaymentStatus }"
+              :disabled="!newPayments.length || pendingPaymentStatus"
+              @click="savePayments()"
             >
-              <i class="pi pi-arrow-right"></i>
-              {{ $t("continue") }}
+              <i class="pi pi-check" aria-hidden="true"></i>
+              {{
+                newPayments.length
+                  ? $t("pages.groups.save_payments", { count: newPayments.length })
+                  : $t("save")
+              }}
             </button>
           </div>
         </div>
@@ -690,235 +752,15 @@
     <template v-if="currentGroup && currentMember" v-slot:body_content>
       <h2>{{ currentMember.last_name }} {{ currentMember.first_name }}</h2>
 
-      <template v-if="userGrade">
-        <div class="custom-grid">
-          <div class="col-span-12">
-            <ul class="breadcrumb">
-              <li>
-                <button type="button"
-                  @click="goToSections()"
-                  :class="!activeSection ? 'inactive' : ''"
-                >
-                  <span>{{ currentGroup.level.level_name }}</span>
-                </button>
-              </li>
-              <li v-if="activeSection">
-                <button type="button"
-                  @click="goToLessons()"
-                  :class="!activeLesson ? 'inactive' : ''"
-                >
-                  <span>{{ activeSection.section_name }}</span>
-                </button>
-              </li>
-              <li v-if="activeLesson">
-                <button type="button"
-                  @click="goToTasks()"
-                  :class="!activeTask ? 'inactive' : ''"
-                >
-                  <span>{{ activeLesson.lesson_name }}</span>
-                </button>
-              </li>
-              <li v-if="activeTask">
-                <span>{{ activeTask.task_slug }}</span>
-              </li>
-            </ul>
-          </div>
-          <div class="col-span-12">
-            <div class="custom-grid">
-              <template v-if="activeTask">
-                <div class="col-span-12">
-                  <button type="button" class="btn btn-light" @click="goToTasks()">
-                    <i class="pi pi-arrow-left"></i>
-                    {{ $t("back") }}
-                  </button>
-                </div>
-
-                <div class="col-span-12">
-                  <taskResultChart :taskResult="activeTask.task_result" />
-                </div>
-              </template>
-              <template v-else-if="activeLesson">
-                <div class="col-span-12">
-                  <button type="button" class="btn btn-light" @click="goToLessons()">
-                    <i class="pi pi-arrow-left"></i>
-                    {{ $t("back") }}
-                  </button>
-                </div>
-
-                <div class="col-span-12">
-                  <h3 class="mb-2">{{ activeLesson.lesson_name }}</h3>
-                  <div class="flex flex-wrap gap-1 mb-1">
-                    <span> {{ $t("pages.tasks.count") }}: </span>
-                    <b>{{ activeLesson.tasks.length }}</b>
-                  </div>
-
-                  <div class="flex flex-wrap gap-1 mb-1">
-                    <span> {{ $t("passed") }}: </span>
-                    <b>{{ activeLesson.completed_tasks_count }}</b>
-                  </div>
-
-                  <progressBar
-                    :progressPercentage="activeLesson.completed_tasks_percent"
-                    :wrapClass="'!my-0'"
-                    :showPercentage="true"
-                    :className="'sm success'"
-                  />
-                </div>
-
-                <div class="col-span-12">
-                  <ul class="list-group nowrap">
-                    <li
-                      v-for="taskItem in activeLesson.tasks"
-                      :key="taskItem.task_id"
-                    >
-                      <button type="button"
-                        class="w-full"
-                        :class="
-                          taskItem.task_result.completed === false
-                            ? 'cursor-auto'
-                            : 'cursor-pointer'
-                        "
-                        @click="
-                          taskItem.task_result.completed === true
-                            ? selectTask(taskItem)
-                            : null
-                        "
-                      >
-                        <div class="flex items-center justify-between gap-4">
-                          <div class="flex gap-2 items-center w-full">
-                            <i class="text-4xl" :class="taskItem.icon"></i>
-                            <div class="flex flex-col gap-y-0.5">
-                              <span class="font-medium text-left">{{
-                                taskItem.task_slug
-                              }}</span>
-                              <span class="text-inactive text-xs text-left">{{
-                                taskItem.task_type_name
-                              }}</span>
-                              <span
-                                v-if="
-                                  taskItem.task_result &&
-                                  taskItem.task_result.completed === true
-                                "
-                                class="text-xs text-success text-left"
-                                >{{ $t("pages.tasks.is_completed") }}</span
-                              >
-                              <span
-                                v-else-if="
-                                  taskItem.task_result &&
-                                  taskItem.task_result.answers &&
-                                  taskItem.task_result.completed === false
-                                "
-                                class="text-xs text-warning text-left"
-                                >{{ $t("pages.tasks.is_being_reviewed") }}</span
-                              >
-
-                              <span
-                                v-else
-                                class="text-xs text-danger text-left"
-                                >{{
-                                  $t("pages.tasks.not_been_completed_yet")
-                                }}</span
-                              >
-                            </div>
-                          </div>
-
-                          <circleProgressBar
-                            v-if="
-                              taskItem.task_result &&
-                              taskItem.task_result.completed === true
-                            "
-                            :progress="taskItem.task_result.percentage"
-                          />
-                        </div>
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-              </template>
-              <template v-else-if="activeSection">
-                <div class="col-span-12">
-                  <button type="button" class="btn btn-light" @click="goToSections()">
-                    <i class="pi pi-arrow-left"></i>
-                    {{ $t("back") }}
-                  </button>
-                </div>
-
-                <div class="col-span-12">
-                  <progressBar
-                    :progressPercentage="activeSection.completed_percent"
-                    :wrapClass="'!my-0'"
-                    :showPercentage="true"
-                    :className="'sm success'"
-                  />
-                </div>
-                <div class="col-span-12">
-                  <ul class="list-group nowrap">
-                    <li
-                      v-for="(lesson, lessonIndex) in activeSection.lessons"
-                      :key="lessonIndex"
-                    >
-                      <button type="button" class="w-full" @click="selectLesson(lesson)">
-                        <div class="flex gap-2 justify-between items-center">
-                          <div class="flex flex-col gap-y-1.5">
-                            <p class="mb-0 leading-none font-bold text-left">
-                              {{ lessonIndex + 1 }}. {{ lesson.lesson_name }}
-                              <span class="text-inactive font-normal"
-                                >({{ lesson.lesson_type_name }})</span
-                              >
-                            </p>
-                            <span class="text-xs text-left"
-                              >{{ $t("pages.tasks.count") }}:
-                              <b>{{ lesson.tasks_count }}</b></span
-                            >
-                          </div>
-                          <circleProgressBar
-                            :progress="lesson.completed_tasks_percent"
-                          />
-                        </div>
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-              </template>
-              <template v-else>
-                <div class="col-span-12">
-                  <progressBar
-                    :progressPercentage="userGrade.completed_percent"
-                    :wrapClass="'!my-0'"
-                    :showPercentage="true"
-                    :className="'sm success'"
-                  />
-                </div>
-                <div class="col-span-12">
-                  <ul class="list-group nowrap">
-                    <li
-                      v-for="(section, sectionIndex) in userGrade.sections"
-                      :key="sectionIndex"
-                    >
-                      <button type="button" class="w-full" @click="selectSection(section)">
-                        <div class="flex gap-2 justify-between items-center">
-                          <div class="flex flex-col gap-y-1.5">
-                            <p class="mb-0 leading-none font-bold text-left">
-                              {{ section.section_name }}
-                            </p>
-                            <span class="text-xs"
-                              >{{ $t("pages.lessons.lessons_count") }}:
-                              <b>{{ section.lessons.length }}</b></span
-                            >
-                          </div>
-                          <circleProgressBar
-                            :progress="section.completed_percent"
-                          />
-                        </div>
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-              </template>
-            </div>
-          </div>
-        </div>
-      </template>
+      <!-- Та же разметка, что во вкладке «Пользователи», но сразу с уровня группы -->
+      <learnerGrade
+        v-if="userGrade"
+        mode="level"
+        :level="{ ...userGrade, level_name: currentGroup.level.level_name }"
+        :userId="currentMember.user_id"
+        @size="(size) => (gradeModalClass = size)"
+        @pending="(value) => (pendingGrade = value)"
+      />
     </template>
   </modal>
 </template>
@@ -935,10 +777,8 @@ import stickyBox from "../../ui/stickyBox.vue";
 import pagination from "../../ui/pagination.vue";
 import { debounceHandler } from "../../../utils/debounceHandler";
 import steps from "../../ui/steps.vue";
-import createFirstStep from "./components/createFirstStep.vue";
-import createSecondStep from "./components/createSecondStep.vue";
-import editFirstStep from "./components/editFirstStep.vue";
-import editSecondStep from "./components/editSecondStep.vue";
+import groupDetailsStep from "./components/groupDetailsStep.vue";
+import groupScheduleStep from "./components/groupScheduleStep.vue";
 import thirdStep from "./components/thirdStep.vue";
 import fourthStep from "./components/fourthStep.vue";
 import roleProvider from "../../ui/roleProvider.vue";
@@ -946,14 +786,14 @@ import multipleSelect from "../../ui/multipleSelect.vue";
 import sortTableHead from "../../ui/sortTableHead.vue";
 import tabs from "../../ui/tabs.vue";
 import paymentsGrid from "./components/paymentsGrid.vue";
-import progressBar from "../../ui/progressBar.vue";
-import circleProgressBar from "../../ui/circleProgressBar.vue";
-import taskResultChart from "../../lesson/components/tasks/taskResultChart.vue";
+import learnerGrade from "../learnerGrade.vue";
+import { useNotify } from "~/composables/useNotify";
 
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
 const schoolStore = useSchoolStore();
-const { t } = useI18n();
+const { t, locale } = useI18n();
+const notify = useNotify();
 const pending = ref(true);
 const pendingGroup = ref(false);
 const pendingCreate = ref(false);
@@ -963,7 +803,6 @@ const pendingGrade = ref(false);
 const newPayments = ref([]);
 const groupData = ref([]);
 const userGrade = ref(null);
-const tableRef = ref(null);
 const searchFormRef = ref(null);
 const createFormRef = ref(null);
 const editFormRef = ref(null);
@@ -993,14 +832,76 @@ const gradeModalIsVisible = ref(false);
 const gradeModalDefaultClass = "modal-lg";
 const gradeModalClass = ref(gradeModalDefaultClass);
 
-const activeCourse = ref(null);
-const activeLevel = ref(null);
-const activeSection = ref(null);
-const activeLesson = ref(null);
-const activeTask = ref(null);
+// Новые группы сверху
+const sortKey = ref("groups.created_at");
+const sortDirection = ref("desc");
 
-const sortKey = ref("groups.created_at"); // Ключ сортировки
-const sortDirection = ref("asc"); // Направление сортировки: asc или desc
+// Только что созданная / изменённая группа — подсвечиваем в списке
+const highlightGroupId = ref(null);
+let highlightTimer = null;
+const highlightGroup = (id) => {
+  highlightGroupId.value = id || null;
+  clearTimeout(highlightTimer);
+  highlightTimer = setTimeout(() => (highlightGroupId.value = null), 4000);
+};
+
+// Сколько условий фильтра заполнено — число на кнопке «Фильтр»
+const activeFilters = ref(0);
+const countFilters = () => {
+  const names = new Set();
+  if (searchFormRef.value) {
+    for (const [name, value] of new FormData(searchFormRef.value).entries()) {
+      if (typeof value === "string" && value.trim() !== "") names.add(name);
+    }
+  }
+  activeFilters.value = names.size;
+};
+
+const intlLocale = computed(() => String(locale.value || "ru").split("-")[0]);
+const formatDate = (value) =>
+  value ? new Date(value).toLocaleDateString(intlLocale.value) : "";
+
+// Окно группы: первые участники, остальные по кнопке
+const MEMBERS_PREVIEW = 10;
+const showAllMembers = ref(false);
+const visibleMembers = computed(() => {
+  const members = currentGroup.value?.group_members || [];
+  return showAllMembers.value ? members : members.slice(0, MEMBERS_PREVIEW);
+});
+
+// Итог оплат по всем урокам группы (переключатели в ведомости меняют те же
+// объекты, поэтому итог обновляется сразу)
+const paymentsSummary = computed(() => {
+  let total = 0;
+  let paid = 0;
+  for (const lesson of currentGroup.value?.schedule || []) {
+    for (const m of lesson.members || []) {
+      total++;
+      if (m.is_bought === true) paid++;
+    }
+  }
+  const unpaid = total - paid;
+  const price = Number(currentGroup.value?.current_price) || 0;
+  return { total, paid, unpaid, debt: unpaid * price };
+});
+
+const { $contacts } = useNuxtApp();
+const formatMoney = (value) =>
+  Number(value || 0).toLocaleString(intlLocale.value) +
+  " " +
+  ($contacts?.bank?.currency?.symbol || "");
+
+// Ближайший урок группы и сколько уроков уже прошло
+const groupSchedule = computed(() => {
+  const schedule = currentGroup.value?.schedule || [];
+  const gone = schedule.filter((l) => l.is_gone === true).length;
+  return {
+    total: schedule.length,
+    gone,
+    percent: schedule.length ? Math.round((gone / schedule.length) * 100) : 0,
+    next: schedule.find((l) => l.is_gone === false) || null,
+  };
+});
 
 const daysArray = [
   { id: 1, name: t("weekdays.monday.even"), start_time: "", selected: false },
@@ -1020,62 +921,35 @@ const daysArray = [
 const selectedDays = ref([]);
 
 const groupsTableHeads = [
-  {
-    title: t("pages.groups.group_name"),
-    keyName: "groups.group_name",
-    sortType: "alpha",
-  },
-  {
-    title: t("pages.courses.course"),
-    keyName: "courses_lang.course_name",
-    sortType: "alpha",
-  },
-  {
-    title: t("pages.groups.group_category"),
-    keyName: "course_levels_lang.level_name",
-    sortType: "alpha",
-  },
-  {
-    title: t("operator"),
-    keyName: "operator.last_name",
-    sortType: "alpha",
-  },
-  {
-    title: t("mentor"),
-    keyName: "mentor.last_name",
-    sortType: "alpha",
-  },
-  {
-    title: t("pages.groups.members_count"),
-    keyName: "members_count",
-    sortType: "numeric",
-  },
-  {
-    title: t("pages.schedule.start_date"),
-    keyName: "groups.started_at",
-    sortType: "numeric",
-  },
-  {
-    title: t("created_at"),
-    keyName: "groups.created_at",
-    sortType: "numeric",
-  },
-  {
-    title: t("status"),
-    keyName: "types_of_status_lang.status_type_name",
-    sortType: "alpha",
-  },
+  { title: t("pages.groups.group_name"), keyName: "groups.group_name", sortType: "alpha" },
+  { title: t("pages.courses.course"), keyName: "courses_lang.course_name", sortType: "alpha" },
+  { title: t("mentor"), keyName: "mentor.last_name", sortType: "alpha" },
+  { title: t("pages.groups.members_count"), keyName: "members_count", sortType: "numeric" },
+  { title: t("pages.schedule.start_date"), keyName: "groups.started_at", sortType: "numeric" },
+  { title: t("status"), keyName: "types_of_status_lang.status_type_name", sortType: "alpha" },
 ];
+
+const goToStep = (step) => {
+  currentStep.value = step;
+};
+
+// Ширина окна мастера по шагу: расписание — узкое (поля в одну колонку,
+// справа оставалось пустое место), участники — во всю ширину, остальное — 4xl
+const wizardModalClass = computed(() => {
+  if (currentStep.value === 2) return "modal-2xl";
+  if (currentStep.value === 3) return "";
+  return "modal-4xl";
+});
 
 const newGroupSteps = [
   {
     title: t("pages.groups.group_description"),
-    component: createFirstStep,
+    component: groupDetailsStep,
     props: { errors, attributes },
   },
   {
     title: t("pages.schedule.title"),
-    component: createSecondStep,
+    component: groupScheduleStep,
     props: { errors, selectedDays },
   },
   {
@@ -1086,19 +960,19 @@ const newGroupSteps = [
   {
     title: t("pages.groups.saving_a_group"),
     component: fourthStep,
-    props: { errors, groupData },
+    props: { errors, groupData, goToStep },
   },
 ];
 
 const editGroupSteps = [
   {
     title: t("pages.groups.group_description"),
-    component: editFirstStep,
+    component: groupDetailsStep,
     props: { errors, attributes, currentGroup },
   },
   {
     title: t("pages.schedule.title"),
-    component: editSecondStep,
+    component: groupScheduleStep,
     props: { errors, currentGroup, selectedDays },
   },
   {
@@ -1109,9 +983,30 @@ const editGroupSteps = [
   {
     title: t("pages.groups.saving_a_group"),
     component: fourthStep,
-    props: { errors, groupData },
+    props: { errors, groupData, goToStep },
   },
 ];
+
+// Сводка перед сохранением: то, чего нет в ответе сервера, берём из формы
+const buildSummary = (formEl) => {
+  const form = new FormData(formEl || undefined);
+  const courseId = String(form.get("course_id") || "");
+  const course = (attributes.value?.courses || []).find(
+    (c) => String(c.course_id) === courseId,
+  );
+  return {
+    course_name: course?.course_name || "",
+    start_date: form.get("start_date") || "",
+    lesson_price: form.get("lesson_price") ?? "",
+    is_legal: String(form.get("is_legal") ?? "0"),
+    first_lesson_free: form.has("first_lesson_free"),
+    all_lessons_is_conference: form.has("all_lessons_is_conference"),
+    schedule_option: form.get("schedule_option") || "",
+    days: (selectedDays.value || [])
+      .filter((d) => d.selected)
+      .map((d) => ({ id: d.id, name: d.name, start_time: d.start_time })),
+  };
+};
 
 const tabs_data = computed(() => [
   {
@@ -1161,7 +1056,8 @@ const getGroups = async (url) => {
     }
   }
 
-  const formData = new FormData(searchFormRef.value);
+  countFilters();
+  const formData = new FormData(searchFormRef.value || undefined);
   formData.append("per_page", perPage.value);
   formData.append("sort_key", sortKey.value); // Добавляем ключ сортировки
   formData.append("sort_direction", sortDirection.value); // Добавляем направление сортировки
@@ -1193,27 +1089,30 @@ const getGroups = async (url) => {
     });
 };
 
-const getGroup = async (group_id) => {
+const getGroup = async (group_id, open = true) => {
   pendingGroup.value = true;
-  groupModalIsVisible.value = true;
+  if (open) {
+    groupModalIsVisible.value = true;
+    showAllMembers.value = false;
+  }
   await $axiosPlugin
     .get("groups/get/" + group_id)
-    .then((response) => {
+    .then(async (response) => {
       errors.value = [];
       currentGroup.value = response.data;
       groupMembers.value = response.data.group_members;
 
+      // Сначала пустой массив, на следующем кадре — дни группы: шаги
+      // мастера заново берут расписание (раньше для этого ждали 300 мс)
       selectedDays.value = [];
+      await nextTick();
+      selectedDays.value = response.data.days.map((day) => ({
+        ...day,
+        // Применяем локализацию t() к ключам, полученным с сервера
+        name: t(day.name),
+      }));
 
-      setTimeout(() => {
-        selectedDays.value = response.data.days.map((day) => ({
-          ...day,
-          // Применяем локализацию t() к ключам, полученным с сервера
-          name: t(day.name),
-        }));
-
-        pendingGroup.value = false;
-      }, 300);
+      pendingGroup.value = false;
     })
     .catch((err) => {
       if (err.response) {
@@ -1276,11 +1175,12 @@ const createGroupSubmit = async () => {
       if (res.data.step) {
         currentStep.value = res.data.step + 1;
         if (currentStep.value === 4) {
-          groupData.value = res.data.data;
+          groupData.value = { ...res.data.data, summary: buildSummary(createFormRef.value) };
         }
       } else {
         closeModal("create");
-        getGroups();
+        notify("success", t("pages.groups.created"));
+        getGroups().then(() => highlightGroup(res.data?.group_id));
       }
       errors.value = [];
     })
@@ -1321,11 +1221,14 @@ const editGroupSubmit = async () => {
       if (res.data.step) {
         currentStep.value = res.data.step + 1;
         if (currentStep.value === 4) {
-          groupData.value = res.data.data;
+          groupData.value = { ...res.data.data, summary: buildSummary(editFormRef.value) };
         }
       } else {
+        const editedId = currentGroup.value.group_id;
         getGroups().then(() => {
           closeModal("edit");
+          notify("success", t("pages.groups.saved"));
+          highlightGroup(editedId);
         });
       }
       errors.value = [];
@@ -1384,8 +1287,12 @@ const changePaymentStatus = (userId, lessonId, checked) => {
   }
 };
 
+// Сохранение оплат: из окна оплат (кнопка «Сохранить») или из вопроса при
+// закрытии окна с несохранёнными изменениями
 const savePayments = async () => {
+  if (pendingPaymentStatus.value || !newPayments.value.length) return;
   pendingPaymentStatus.value = true;
+  const fromCloseDialog = savePaymentsModalIsVisible.value;
 
   const formData = new FormData();
   formData.append("payments_count", newPayments.value.length);
@@ -1394,19 +1301,24 @@ const savePayments = async () => {
 
   await $axiosPlugin
     .post("groups/save_payments", formData)
-    .then((res) => {
-      pendingPaymentStatus.value = false;
-      savePaymentsModalIsVisible.value = false;
-      upcomingLessons.value = [];
-      goneLessons.value = [];
-      getGroup(currentGroup.value.group_id);
+    .then(async () => {
       errors.value = [];
+      notify("success", t("pages.groups.payments_saved"));
+      if (fromCloseDialog) {
+        // Окно оплат уже закрыто — возвращаемся к группе
+        savePaymentsModalIsVisible.value = false;
+        newPayments.value = [];
+        await getGroup(currentGroup.value.group_id);
+      } else {
+        // Остаёмся в окне оплат со свежими данными
+        await getGroup(currentGroup.value.group_id, false);
+        openPaymentsModal();
+      }
     })
     .catch((err) => {
       if (err.response) {
         if (err.response.status == 422) {
           errors.value = err.response.data;
-          pendingPaymentStatus.value = false;
         } else {
           router.push({
             path: "/error",
@@ -1420,6 +1332,9 @@ const savePayments = async () => {
       } else {
         router.push("/error");
       }
+    })
+    .finally(() => {
+      pendingPaymentStatus.value = false;
     });
 };
 
@@ -1456,6 +1371,11 @@ const getGrade = async (user) => {
 };
 
 const openCreateModal = () => {
+  // Раньше сюда переходили участники прошлой открытой / созданной группы
+  groupMembers.value = [];
+  groupData.value = [];
+  errors.value = [];
+  currentStep.value = 1;
   createModalIsVisible.value = true;
   selectedDays.value = [];
   setTimeout(() => {
@@ -1503,14 +1423,8 @@ const closeModal = (action) => {
     currentMember.value = null;
     pendingGrade.value = false;
     userGrade.value = null;
-
-    activeCourse.value = null;
-    activeLevel.value = null;
-    activeSection.value = null;
-    activeLesson.value = null;
-    activeTask.value = null;
-
-    getGroup(currentGroup.value.group_id);
+    // Успеваемость ничего не меняет — группу не перезагружаем
+    groupModalIsVisible.value = true;
   } else {
     groupModalIsVisible.value = false;
     groupData.value = [];
@@ -1552,73 +1466,6 @@ const selectedCourse = computed(() =>
 // Сброс значений при изменении выбора
 const onCourseChange = () => {
   debounceGroups();
-};
-
-const selectSection = (section) => {
-  pendingGrade.value = true;
-
-  setTimeout(() => {
-    gradeModalClass.value = "modal-2xl";
-    activeSection.value = section;
-    pendingGrade.value = false;
-  }, 200);
-};
-
-const goToSections = () => {
-  gradeModalClass.value = gradeModalDefaultClass;
-  activeSection.value = null;
-  activeLesson.value = null;
-  activeTask.value = null;
-};
-
-const selectLesson = async (lesson) => {
-  pendingGrade.value = true;
-
-  await $axiosPlugin
-    .post("courses/get_lesson_grade", {
-      lesson_id: lesson.lesson_id,
-      user_id: currentMember.value.user_id,
-    })
-    .then((response) => {
-      gradeModalClass.value = "modal-2xl";
-      activeLesson.value = response.data;
-      pendingGrade.value = false;
-    })
-    .catch((err) => {
-      if (err.response) {
-        router.push({
-          path: "/error",
-          query: {
-            status: err.response.status,
-            message: err.response.data.message,
-            url: err.request.responseURL,
-          },
-        });
-      } else {
-        router.push("/error");
-      }
-    });
-};
-
-const goToLessons = () => {
-  gradeModalClass.value = gradeModalDefaultClass;
-  activeLesson.value = null;
-  activeTask.value = null;
-};
-
-const selectTask = (task) => {
-  pendingGrade.value = true;
-
-  setTimeout(() => {
-    gradeModalClass.value = "modal-2xl";
-    activeTask.value = task;
-    pendingGrade.value = false;
-  }, 200);
-};
-
-const goToTasks = () => {
-  gradeModalClass.value = "modal-2xl";
-  activeTask.value = null;
 };
 
 onMounted(() => {
