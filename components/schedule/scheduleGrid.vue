@@ -6,8 +6,8 @@
         <button
           type="button"
           class="btn btn-light btn-square"
-          :title="$t('back')"
-          :aria-label="$t('back')"
+          :title="navLabels.prev"
+          :aria-label="navLabels.prev"
           @click="prev"
         >
           <i class="pi pi-chevron-left" aria-hidden="true"></i>
@@ -18,13 +18,13 @@
         <button
           type="button"
           class="btn btn-light btn-square"
-          :title="$t('continue')"
-          :aria-label="$t('continue')"
+          :title="navLabels.next"
+          :aria-label="navLabels.next"
           @click="next"
         >
           <i class="pi pi-chevron-right" aria-hidden="true"></i>
         </button>
-        <h3 class="sg-title">{{ title }}</h3>
+        <h3 class="sg-title" aria-live="polite">{{ title }}</h3>
       </div>
 
       <div class="sg-right">
@@ -43,6 +43,29 @@
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- Цвета групп: плашки окрашены по группе — подсказка, какая какая -->
+    <ul v-if="legend.length > 1 && mode !== 'year'" class="sg-legend">
+      <li v-for="item in legend" :key="item.id" :style="{ '--hue': item.hue }">
+        <span class="sg-legend-dot" aria-hidden="true"></span>
+        {{ item.name }}
+      </li>
+    </ul>
+
+    <!-- Пустой период: подпись, а при включённом фильтре — кнопка сброса -->
+    <div v-if="periodEmpty" class="sg-empty" role="status">
+      <i class="pi pi-calendar-times" aria-hidden="true"></i>
+      <span>{{ emptyText }}</span>
+      <button
+        v-if="props.filtered"
+        type="button"
+        class="btn btn-sm btn-light"
+        @click="emit('reset-filter')"
+      >
+        <i class="pi pi-filter-slash" aria-hidden="true"></i>
+        {{ $t("reset_search_filter") }}
+      </button>
     </div>
 
     <!-- Сетка календаря от данных не зависит: при первой загрузке рисуем её
@@ -98,9 +121,10 @@
             <div
               v-else
               class="sg-day"
-              :class="dayClasses(cell.date)"
+              :class="[dayClasses(cell.date), { selected: isSelectedOnPhone(cell.date) }]"
               role="button"
               tabindex="0"
+              :aria-label="dayAriaLabel(cell.date)"
               @click="selectDay(cell.date)"
               @keydown.enter="selectDay(cell.date)"
             >
@@ -140,18 +164,26 @@
                   :key="e.uuid"
                   class="sg-chip"
                   :class="chipClass(e, cell.date)"
-                  :title="`${hhmm(e.time)} ${eventTitle(e)}`"
+                  :style="chipStyle(e)"
+                  :title="chipTitle(e)"
                   @click.stop="openEvent(e, cell.date)"
                 >
                   <b>{{ hhmm(e.time) }}</b>
                   <span class="truncate">{{ eventTitle(e) }}</span>
+                  <i
+                    v-if="e.moved"
+                    class="pi pi-replay sg-chip-moved"
+                    aria-hidden="true"
+                  ></i>
                 </button>
-                <span
+                <button
                   v-if="eventsOn(cell.date).length > 3"
+                  type="button"
                   class="sg-more"
+                  @click.stop="openDay(cell.date)"
                 >
                   + {{ $t("yet_another") }} {{ eventsOn(cell.date).length - 3 }}
-                </span>
+                </button>
               </div>
 
               <!-- Телефон: точки по числу занятий -->
@@ -166,6 +198,36 @@
               </div>
             </div>
           </template>
+        </div>
+
+        <!-- Телефон: уроки выбранного дня прямо под месяцем, месяц не пропадает -->
+        <div v-if="!skeleton" class="sg-agenda md:hidden">
+          <p class="sg-agenda-title">{{ agendaTitle }}</p>
+          <ul v-if="dayEvents.length" class="sg-agenda-list">
+            <li v-for="e in dayEvents" :key="e.uuid">
+              <button
+                type="button"
+                class="sg-agenda-item"
+                :class="chipClass(e, currentDate)"
+                :style="chipStyle(e)"
+                @click="openEvent(e, currentDate, true)"
+              >
+                <span class="sg-agenda-time">
+                  <b>{{ hhmm(e.time) }}</b>
+                  <span v-if="e.time_end" class="text-inactive">{{ hhmm(e.time_end) }}</span>
+                </span>
+                <span class="flex-1 min-w-0 flex flex-col text-left">
+                  <span class="font-medium truncate">{{ eventTitle(e) }}</span>
+                  <span v-if="e.group_name" class="text-xs text-inactive truncate">
+                    {{ e.group_name }}
+                  </span>
+                </span>
+                <i v-if="e.moved" class="pi pi-replay text-xs text-inactive" aria-hidden="true"></i>
+                <i class="pi pi-chevron-right text-xs text-inactive" aria-hidden="true"></i>
+              </button>
+            </li>
+          </ul>
+          <p v-else class="mb-0 text-sm text-inactive">{{ $t("no_events") }}</p>
         </div>
       </div>
 
@@ -198,9 +260,14 @@
               :key="e.uuid"
               class="sg-chip tall"
               :class="chipClass(e, d)"
+              :style="chipStyle(e)"
+              :title="chipTitle(e)"
               @click="openEvent(e, d)"
             >
-              <b>{{ hhmm(e.time) }}</b>
+              <b>
+                {{ hhmm(e.time) }}
+                <i v-if="e.moved" class="pi pi-replay sg-chip-moved" aria-hidden="true"></i>
+              </b>
               <span class="sg-chip-title">{{ eventTitle(e) }}</span>
             </button>
           </div>
@@ -248,6 +315,7 @@
 <script setup>
 import emptyState from "~/components/ui/emptyState.vue";
 import scheduleTable from "./scheduleTable.vue";
+import { useRoute, useRouter } from "nuxt/app";
 
 import dayjs from "dayjs";
 import "dayjs/locale/ru";
@@ -286,11 +354,33 @@ const props = defineProps({
     type: Array,
     default: null,
   },
+
+  // Включён фильтр — в пустом периоде показываем «Сбросить фильтр»
+  filtered: {
+    type: Boolean,
+    default: false,
+  },
+
+  // Режим и дата в адресе (?view=week&date=2026-11-27): обновление страницы
+  // и «Назад» в браузере возвращают туда же. Только для страницы расписания
+  syncRoute: {
+    type: Boolean,
+    default: false,
+  },
+
+  // ← / → — соседний период, T — сегодня
+  keyboard: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // Видимый период — для помесячной загрузки:
 // { mode, year, months: ["YYYY-MM", ...] }
-const emit = defineEmits(["range"]);
+const emit = defineEmits(["range", "reset-filter"]);
+
+const route = useRoute();
+const router = useRouter();
 
 const { schedule, pendingSchedule } = toRefs(props);
 
@@ -328,9 +418,78 @@ const modeLabels = computed(() => ({
   day: t("day"),
 }));
 
-const mode = ref("month");
-const currentDate = ref(dayjs());
+// Начальные режим и дата: из адреса (если включено), иначе — месяц, сегодня
+const initialFromRoute = () => {
+  if (!props.syncRoute) return { mode: "month", date: dayjs() };
+  const view = modes.includes(route.query.view) ? route.query.view : "month";
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(String(route.query.date || ""))
+    ? dayjs(route.query.date)
+    : null;
+  return { mode: view, date: date && date.isValid() ? date : dayjs() };
+};
+const initial = initialFromRoute();
+
+const mode = ref(initial.mode);
+const currentDate = ref(initial.date);
 const today = dayjs();
+
+if (props.syncRoute) {
+  watch([mode, currentDate], () => {
+    const view = mode.value;
+    const date = currentDate.value.format("YYYY-MM-DD");
+    if (route.query.view === view && route.query.date === date) return;
+    router.replace({ query: { ...route.query, view, date } });
+  });
+}
+
+// Подписи стрелок по режиму: «Предыдущий месяц» / «Следующая неделя»…
+const navLabels = computed(() => ({
+  prev: t(`pages.schedule.nav.prev_${mode.value}`),
+  next: t(`pages.schedule.nav.next_${mode.value}`),
+}));
+
+// Телефон: в режиме «Месяц» нажатие на день показывает его уроки под сеткой
+const isPhone = ref(false);
+let phoneQuery = null;
+const onPhoneChange = (e) => (isPhone.value = e.matches);
+
+onMounted(() => {
+  phoneQuery = window.matchMedia("(max-width: 767px)");
+  isPhone.value = phoneQuery.matches;
+  phoneQuery.addEventListener?.("change", onPhoneChange);
+  if (props.keyboard) window.addEventListener("keydown", onKeydown);
+});
+
+onBeforeUnmount(() => {
+  phoneQuery?.removeEventListener?.("change", onPhoneChange);
+  window.removeEventListener("keydown", onKeydown);
+});
+
+const isSelectedOnPhone = (d) =>
+  mode.value === "month" && d.isSame(currentDate.value, "day");
+
+// Клавиатура: не мешаем вводу текста и открытым окнам
+const onKeydown = (e) => {
+  if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+  const target = e.target;
+  if (
+    target?.isContentEditable ||
+    ["INPUT", "TEXTAREA", "SELECT"].includes(target?.tagName) ||
+    document.querySelector(".modal-backdrop.show")
+  ) {
+    return;
+  }
+  if (e.key === "ArrowLeft") {
+    e.preventDefault();
+    prev();
+  } else if (e.key === "ArrowRight") {
+    e.preventDefault();
+    next();
+  } else if (e.code === "KeyT") {
+    // По коду клавиши — работает и в русской раскладке («Е»)
+    goToday();
+  }
+};
 
 const localeCode = computed(() => localeProperties.value.code.split("-")[0]);
 
@@ -447,10 +606,70 @@ const dayClasses = (d) => ({
   weekend: d.isoWeekday() >= 6,
 });
 
-const chipClass = (e, d) => ({
-  live: e.is_active === true,
-  past: d.isBefore(today, "day"),
+const chipClass = (e, d) => {
+  const live = e.is_active === true;
+  const past = d.isBefore(today, "day");
+  // Цвет группы — только у предстоящих: идущие зелёные, прошедшие серые
+  return { live, past, grp: Boolean(e.group_id) && !live && !past };
+};
+
+// Стабильный оттенок для группы: золотой угол разносит соседние id по кругу
+const groupHue = (id) => Math.round((Number(id) * 137.508) % 360);
+
+const chipStyle = (e) => (e.group_id ? { "--hue": groupHue(e.group_id) } : {});
+
+const chipTitle = (e) =>
+  [
+    `${hhmm(e.time)}${e.time_end ? "–" + hhmm(e.time_end) : ""} ${eventTitle(e)}`,
+    e.group_name,
+    e.moved ? t("pages.schedule.moved") : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+// Занятия видимого периода — для подсказки цветов и «уроков нет»
+const visibleEvents = computed(() => {
+  if (mode.value === "month") {
+    const key = currentDate.value.format("YYYY-MM");
+    return (schedule.value || []).filter((e) => dayjs(e.date).format("YYYY-MM") === key);
+  }
+  if (mode.value === "week") return currentWeek.value.flatMap((d) => eventsOn(d));
+  if (mode.value === "day") return dayEvents.value;
+  return schedule.value || [];
 });
+
+const legend = computed(() => {
+  const seen = new Map();
+  for (const e of visibleEvents.value) {
+    if (e.group_id && !seen.has(e.group_id)) {
+      seen.set(e.group_id, { id: e.group_id, name: e.group_name, hue: groupHue(e.group_id) });
+    }
+  }
+  return [...seen.values()].slice(0, 10);
+});
+
+const periodEmpty = computed(
+  () =>
+    !pendingSchedule.value &&
+    loadedOnce.value &&
+    props.rangeLoaded &&
+    (mode.value === "month" || mode.value === "week") &&
+    visibleEvents.value.length === 0,
+);
+
+const emptyText = computed(() =>
+  mode.value === "week" ? t("pages.schedule.empty_week") : t("pages.schedule.empty_month"),
+);
+
+const agendaTitle = computed(() =>
+  capitalize(currentDate.value.locale(localeCode.value).format("dddd, D MMMM")),
+);
+
+const dayAriaLabel = (d) => {
+  const count = eventsOn(d).length;
+  const date = d.locale(localeCode.value).format("D MMMM");
+  return count ? `${date}: ${t("pages.schedule.lessons_count", { count })}` : date;
+};
 
 const step = { year: "year", month: "month", week: "week", day: "day" };
 
@@ -471,15 +690,26 @@ const selectMonth = (monthIndex) => {
   mode.value = "month";
 };
 
-const selectDay = (d) => {
+// Открыть день целиком (режим «День»)
+const openDay = (d) => {
   currentDate.value = d;
   mode.value = "day";
+};
+
+// Нажатие на день: на телефоне в «Месяце» — уроки дня под сеткой,
+// в остальных случаях — режим «День»
+const selectDay = (d) => {
+  if (isPhone.value && mode.value === "month") {
+    currentDate.value = d;
+    return;
+  }
+  openDay(d);
 };
 
 // Клик по занятию: если есть обработчик — сразу открываем подробности,
 // иначе переходим к этому дню.
 const openEvent = (e, d) => {
   if (props.openEventModal) props.openEventModal(e.uuid);
-  else selectDay(d);
+  else openDay(d);
 };
 </script>

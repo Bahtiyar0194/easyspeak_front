@@ -143,7 +143,11 @@
           :rangeLoaded="scheduleHasData"
           :monthCounts="monthCounts"
           :openEventModal="openEventModal"
+          :filtered="activeFilters > 0"
+          :syncRoute="true"
+          :keyboard="true"
           @range="setScheduleRange"
+          @reset-filter="resetScheduleSearchFilter"
         >
           <template #actions>
             <roleProvider :roles="[1, 2, 3, 4]">
@@ -161,6 +165,9 @@
               >
                 <i class="pi pi-filter" aria-hidden="true"></i>
                 {{ $t("filter") }}
+                <span v-if="activeFilters > 0" class="chip-count">{{
+                  activeFilters
+                }}</span>
               </button>
             </roleProvider>
           </template>
@@ -169,6 +176,7 @@
     </div>
   </div>
 
+  <!-- Окно урока -->
   <modal
     :show="eventModalIsVisible"
     :onClose="() => closeEventModal()"
@@ -177,141 +185,154 @@
     :closeOnClickSelf="true"
   >
     <template v-slot:header_content>
-      <h4>{{ currentEvent?.lesson_name || currentEvent?.topic }}</h4>
+      <h4 class="mb-0">{{ currentEvent?.lesson_name || currentEvent?.topic }}</h4>
     </template>
     <template v-if="currentEvent" v-slot:body_content>
-      <div class="custom-grid">
-        <div class="col-span-12">
-          <dl class="info-list">
-            <template v-if="!schoolStore.isAiSchoolDomain">
-              <div>
-                <dt><i class="pi pi-book"></i> {{ $t("pages.courses.course") }}</dt>
-                <dd>
-                  {{ currentEvent.course_name }}
-                  <template v-if="currentEvent.level_name"
-                    >· {{ currentEvent.level_name }}</template
-                  >
-                </dd>
-              </div>
-              <div>
-                <dt><i class="pi pi-users"></i> {{ $t("pages.groups.group") }}</dt>
-                <dd>{{ currentEvent.group_name }}</dd>
-              </div>
-              <div v-if="currentEvent.lesson_type_name">
-                <dt>
-                  <i class="pi pi-tag"></i> {{ $t("pages.lessons.lesson_type") }}
-                </dt>
-                <dd>{{ currentEvent.lesson_type_name }}</dd>
-              </div>
-            </template>
-            <div v-else>
-              <dt><i class="pi pi-book"></i> {{ $t("pages.courses.title") }}</dt>
-              <dd>
-                <span class="text-list">
-                  <span
-                    v-for="(level, lIndex) in currentEvent.levels"
-                    :key="lIndex"
-                  >
-                    {{ level.level_name }}
-                  </span>
-                </span>
-              </dd>
-            </div>
-
-            <div>
-              <dt><i class="pi pi-user"></i> {{ $t("mentor") }}</dt>
-              <dd class="flex items-center gap-1.5">
-                <userAvatar
-                  :padding="0.5"
-                  :className="'w-6 h-6 text-[10px]'"
-                  :user="{
-                    last_name:
-                      currentEvent.mentor_last_name ||
-                      currentEvent.moderator_last_name ||
-                      '',
-                    first_name:
-                      currentEvent.mentor_first_name ||
-                      currentEvent.moderator_first_name ||
-                      '',
-                    avatar:
-                      currentEvent.mentor_avatar ||
-                      currentEvent.moderator_avatar ||
-                      '',
-                  }"
-                />
-                {{
-                  currentEvent.mentor_last_name ||
-                  currentEvent.moderator_last_name ||
-                  ""
-                }}
-                {{
-                  currentEvent.mentor_first_name ||
-                  currentEvent.moderator_first_name ||
-                  ""
-                }}
-              </dd>
-            </div>
-            <div>
-              <dt><i class="pi pi-clock"></i> {{ $t("start_time") }}</dt>
-              <dd>{{ currentEvent.start_time_formatted }}</dd>
-            </div>
-            <div>
-              <dt><i class="pi pi-clock"></i> {{ $t("end_time") }}</dt>
-              <dd>{{ currentEvent.end_time_formatted }}</dd>
-            </div>
-          </dl>
+      <div class="flex flex-col gap-4">
+        <!-- Когда + метки состояния -->
+        <div class="flex flex-wrap items-center gap-2">
+          <p class="mb-0 font-semibold text-active">
+            <i class="pi pi-clock text-sm text-inactive" aria-hidden="true"></i>
+            {{ whenLabel(currentEvent) }}
+          </p>
+          <span v-if="currentEvent.is_active" class="status-pill text-success">
+            <span class="live-dot mr-1.5" aria-hidden="true"></span>
+            {{ $t("pages.conference.card_live") }}
+          </span>
+          <span v-if="currentEvent.moved" class="status-pill text-warning">
+            <i class="pi pi-replay text-[10px] mr-1" aria-hidden="true"></i>
+            {{ $t("pages.schedule.moved") }}
+          </span>
         </div>
-        <div class="col-span-12">
-          <p class="font-medium">
+
+        <dl class="school-dl">
+          <template v-if="!schoolStore.isAiSchoolDomain">
+            <dt>{{ $t("pages.courses.course") }}</dt>
+            <dd>
+              {{ currentEvent.course_name }}
+              <template v-if="currentEvent.level_name">· {{ currentEvent.level_name }}</template>
+            </dd>
+
+            <template v-if="currentEvent.section_name">
+              <dt>{{ $t("pages.courses.course_section") }}</dt>
+              <dd>{{ currentEvent.section_name }}</dd>
+            </template>
+
+            <dt>{{ $t("pages.groups.group") }}</dt>
+            <dd>{{ currentEvent.group_name }}</dd>
+
+            <template v-if="currentEvent.lesson_type_name">
+              <dt>{{ $t("pages.lessons.lesson_type") }}</dt>
+              <dd>{{ currentEvent.lesson_type_name }}</dd>
+            </template>
+          </template>
+          <template v-else>
+            <dt>{{ $t("pages.courses.title") }}</dt>
+            <dd>
+              <span class="text-list">
+                <span v-for="(level, lIndex) in currentEvent.levels" :key="lIndex">
+                  {{ level.level_name }}
+                </span>
+              </span>
+            </dd>
+          </template>
+
+          <dt>{{ $t("mentor") }}</dt>
+          <dd class="flex items-center gap-1.5">
+            <userAvatar
+              :padding="0.5"
+              :className="'w-6 h-6 text-[10px]'"
+              :user="mentorOf(currentEvent)"
+            />
+            {{ mentorOf(currentEvent).last_name }}
+            {{ mentorOf(currentEvent).first_name }}
+          </dd>
+        </dl>
+
+        <!-- Участники: первые несколько, остальные по кнопке -->
+        <div>
+          <p class="mb-2 font-medium">
             {{ $t("pages.groups.members") }}:
             <b>{{ currentEvent.members.length }}</b>
           </p>
-
           <div v-if="currentEvent.members.length > 0" class="btn-wrap">
             <userTag
-              v-for="(member, index) in currentEvent.members"
-              :key="index"
+              v-for="member in visibleMembers"
+              :key="member.user_id"
               :user="member"
               :closable="false"
             />
+            <button
+              v-if="currentEvent.members.length > MEMBERS_PREVIEW"
+              type="button"
+              class="btn btn-sm btn-light"
+              :aria-expanded="showAllMembers"
+              @click="showAllMembers = !showAllMembers"
+            >
+              {{
+                showAllMembers
+                  ? $t("pages.schedule.members_collapse")
+                  : $t("pages.schedule.members_more", {
+                      count: currentEvent.members.length - MEMBERS_PREVIEW,
+                    })
+              }}
+            </button>
           </div>
         </div>
 
-        <roleProvider :roles="[1, 2, 3, 4]">
-          <div class="col-span-12">
-            <div class="btn-wrap">
-              <!-- Переносить могут учитель урока, его создатель, а также
-                   владелец / администратор школы — так же проверяет бэкенд -->
-              <button type="button"
-                v-if="
-                  currentEvent.mentor_id === authUser.user_id ||
-                  currentEvent.operator_id === authUser.user_id ||
-                  [1, 2, 3].includes(authUser.current_role_id)
-                "
-                class="btn btn-outline-primary"
-                @click="openEditModal()"
-              >
-                <i class="pi pi-pencil"></i>{{ $t("edit") }}
-              </button>
+        <div class="btn-wrap">
+          <!-- Урок идёт — войти может участник, учитель и сотрудники школы -->
+          <nuxt-link
+            v-if="currentEvent.is_active && canJoin(currentEvent)"
+            class="btn btn-success"
+            :to="localePath('/dashboard/conference/' + currentEvent.uuid)"
+          >
+            <i class="pi pi-video" aria-hidden="true"></i>
+            {{ $t("pages.conference.join") }}
+          </nuxt-link>
 
-              <button type="button"
-                v-if="
-                  schoolStore.isAiSchoolDomain &&
-                  (currentEvent.mentor_id === authUser.user_id ||
-                    currentEvent.operator_id === authUser.user_id)
-                "
-                class="btn btn-outline-danger"
-                @click="confirmDeleteConference()"
-              >
-                <i class="pi pi-trash"></i>{{ $t("delete") }}
-              </button>
-            </div>
-          </div>
-        </roleProvider>
+          <roleProvider :roles="[1, 2, 3, 4]">
+            <!-- Ссылка нужна только на предстоящий или идущий урок -->
+            <button
+              v-if="!currentEvent.is_gone"
+              type="button"
+              class="btn btn-light"
+              @click="copyLink(currentEvent)"
+            >
+              <i class="pi pi-link" aria-hidden="true"></i>
+              {{ $t("pages.conference.copy_link") }}
+            </button>
+
+            <!-- Переносить могут учитель урока, его создатель, а также
+                 владелец / администратор школы — так же проверяет бэкенд -->
+            <button
+              v-if="canEdit(currentEvent)"
+              type="button"
+              class="btn btn-outline-primary"
+              @click="openEditModal()"
+            >
+              <i class="pi pi-pencil" aria-hidden="true"></i>{{ $t("edit") }}
+            </button>
+
+            <button
+              v-if="
+                schoolStore.isAiSchoolDomain &&
+                (currentEvent.mentor_id === authUser.user_id ||
+                  currentEvent.operator_id === authUser.user_id)
+              "
+              type="button"
+              class="btn btn-outline-danger"
+              @click="confirmDeleteConference()"
+            >
+              <i class="pi pi-trash" aria-hidden="true"></i>{{ $t("delete") }}
+            </button>
+          </roleProvider>
+        </div>
       </div>
     </template>
   </modal>
 
+  <!-- Перенос урока -->
   <modal
     :show="editModalIsVisible"
     :onClose="() => closeEditModal(false)"
@@ -320,10 +341,10 @@
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
-      <h4>{{ currentEvent?.lesson_name || currentEvent?.topic }}</h4>
+      <h4 class="mb-0">{{ currentEvent?.lesson_name || currentEvent?.topic }}</h4>
     </template>
     <template v-if="currentEvent" v-slot:body_content>
-      <form @submit.prevent="editEventSubmit" class="mt-2" ref="editFormRef">
+      <form @submit.prevent="editEventSubmit()" class="mt-2" ref="editFormRef">
         <div class="custom-grid">
           <div class="col-span-12">
             <div class="form-group-border select active">
@@ -341,7 +362,7 @@
                 </option>
               </select>
               <label :class="{ 'label-error': errors.mentor_id }">{{
-                errors.mentor_id ? errors.mentor_id[0] : $t("mentor")
+                fieldError("mentor_id") || $t("mentor")
               }}</label>
             </div>
           </div>
@@ -396,11 +417,7 @@
                   placeholder=" "
                 />
                 <label :class="{ 'label-error': errors.conf_topic }">
-                  {{
-                    errors.conf_topic
-                      ? errors.conf_topic[0]
-                      : $t("pages.conference.topic.title")
-                  }}
+                  {{ fieldError("conf_topic") || $t("pages.conference.topic.title") }}
                 </label>
               </div>
             </div>
@@ -418,20 +435,36 @@
             </div>
           </template>
 
-          <div class="col-span-12">
+          <!-- Дата и время рядом -->
+          <div class="col-span-12 sm:col-span-6">
             <div class="form-group-border active">
               <i class="pi pi-calendar"></i>
               <input
                 type="date"
                 v-model="currentEvent.date"
                 name="start_date"
+                :min="dateLimits.min"
+                :max="dateLimits.max"
               />
               <label :class="{ 'label-error': errors.start_date }">
-                {{
-                  errors.start_date
-                    ? errors.start_date
-                    : $t("pages.lessons.start_date")
-                }}
+                {{ fieldError("start_date") || $t("pages.lessons.start_date") }}
+              </label>
+            </div>
+          </div>
+
+          <div class="col-span-12 sm:col-span-6">
+            <div class="form-group-border active">
+              <i class="pi pi-clock"></i>
+              <!-- При сдвиге расписания меняется только дата, время уроков то же -->
+              <input
+                type="time"
+                v-model="currentEvent.time"
+                name="start_time"
+                :readonly="shiftsSchedule"
+                :class="{ 'opacity-60': shiftsSchedule }"
+              />
+              <label :class="{ 'label-error': errors.start_time }">
+                {{ fieldError("start_time") || $t("pages.lessons.start_time") }}
               </label>
             </div>
           </div>
@@ -458,29 +491,13 @@
                 <span>{{ $t("pages.lessons.date_shift_by_week") }}</span>
               </label>
 
-              <note
-                v-if="dateShiftByWeek === 1"
-                :message="$t('pages.lessons.date_shift_by_week_note')"
-                :className="'outline-danger'"
-              />
-            </div>
-          </div>
-
-          <div class="col-span-12">
-            <div class="form-group-border active">
-              <i class="pi pi-clock"></i>
-              <input
-                type="time"
-                v-model="currentEvent.time"
-                name="start_time"
-              />
-              <label :class="{ 'label-error': errors.start_time }">
+              <p class="mb-0 text-xs text-inactive">
                 {{
-                  errors.start_time
-                    ? errors.start_time[0]
-                    : $t("pages.lessons.start_time")
+                  shiftsSchedule
+                    ? $t("pages.schedule.shift_hint")
+                    : $t("pages.schedule.range_hint")
                 }}
-              </label>
+              </p>
             </div>
           </div>
 
@@ -495,61 +512,37 @@
             </label>
           </div>
 
+          <!-- Что изменится -->
+          <div v-if="moveSummary" class="col-span-12">
+            <div class="move-summary" :class="{ danger: shiftsSchedule }">
+              <p class="mb-0">
+                <span class="text-inactive">{{ $t("pages.schedule.was") }}:</span>
+                <b>{{ moveSummary.from }}</b>
+                <i class="pi pi-arrow-right text-xs mx-1" aria-hidden="true"></i>
+                <span class="text-inactive">{{ $t("pages.schedule.becomes") }}:</span>
+                <b>{{ moveSummary.to }}</b>
+              </p>
+              <p v-if="shiftsSchedule" class="mb-0 text-sm">
+                {{ $t("pages.schedule.shift_summary") }}
+              </p>
+            </div>
+          </div>
+
           <div class="col-span-12">
-            <button class="btn btn-primary" type="submit">
-              <i class="pi pi-check"></i>
+            <button
+              class="btn btn-primary"
+              :class="{ loading: pendingEdit }"
+              :disabled="pendingEdit"
+              type="submit"
+            >
+              <i class="pi pi-check" aria-hidden="true"></i>
               {{ $t("save") }}
             </button>
           </div>
         </div>
       </form>
-      <!-- <div class="custom-grid">
-        <div class="col-span-12">
-          <p class="text-inactive">
-            <i class="pi pi-book"></i> {{ $t("pages.courses.course") }}:
-            <b class="text-active"
-              >{{ currentEvent.course_name }} - {{ currentEvent.level_name }}</b
-            >
-          </p>
-          <p class="text-inactive">
-            <i class="pi pi-users"></i> {{ $t("pages.groups.group") }}:
-            <b class="text-active">{{ currentEvent.group_name }}</b>
-          </p>
-          <p class="text-inactive">
-            <i class="pi pi-user"></i> {{ $t("mentor") }}:
-            <b class="text-active"
-              >{{ currentEvent.mentor_last_name }}
-              {{ currentEvent.mentor_first_name }}</b
-            >
-          </p>
-          <p class="text-inactive">
-            <i class="pi pi-clock"></i> {{ $t("start_time") }}:
-            <b class="text-active">{{ currentEvent.start_time_formatted }}</b>
-          </p>
-          <p class="text-inactive mb-0">
-            <i class="pi pi-clock"></i> {{ $t("end_time") }}:
-            <b class="text-active">{{ currentEvent.end_time_formatted }}</b>
-          </p>
-        </div>
-        <div class="col-span-12">
-          <p>
-            {{ $t("pages.groups.members") }}:
-            <b>{{ currentEvent.members.length }}</b>
-          </p>
-
-          <div v-if="currentEvent.members.length > 0" class="btn-wrap">
-            <userTag
-              v-for="(member, index) in currentEvent.members"
-              :key="index"
-              :user="member"
-              :closable="false"
-            />
-          </div>
-        </div>
-      </div> -->
     </template>
   </modal>
-
 </template>
 <script setup>
 import { ref, computed } from "vue";
@@ -569,6 +562,7 @@ import { checkConferenceLiveNow } from "~/composables/useConferenceLive";
 import { useScheduleLoader } from "~/composables/useScheduleLoader";
 
 const router = useRouter();
+const localePath = useLocalePath();
 const errors = ref([]);
 const { $axiosPlugin } = useNuxtApp();
 const schoolStore = useSchoolStore();
@@ -580,16 +574,22 @@ const searchFormRef = ref(null);
 const editFormRef = ref(null);
 const searchFilter = ref(false);
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const notify = useNotify();
+const confirm = useConfirm();
 
 const currentEvent = ref(null);
+// Исходные дата и время — для сводки «Было → Станет» и границ переноса
+const originalEvent = ref(null);
 
 const eventModalIsVisible = ref(false);
 const editModalIsVisible = ref(false);
 
 const mentorOnlyForThisLesson = ref(1);
 const dateShiftByWeek = ref(0);
+
+const MEMBERS_PREVIEW = 10;
+const showAllMembers = ref(false);
 
 useHead({
   title: t("pages.schedule.title"),
@@ -601,26 +601,43 @@ definePageMeta({
   middleware: ["sanctum:auth"],
 });
 
+const goToError = (err) => {
+  if (err.response) {
+    router.push({
+      path: "/error",
+      query: {
+        status: err.response.status,
+        message: err.response.data?.message,
+        url: err.request?.responseURL,
+      },
+    });
+  } else {
+    router.push("/error");
+  }
+};
+
 const getScheduleAttributes = async () => {
   await $axiosPlugin
     .get("schedule/get_attributes")
     .then((response) => {
       attributes.value = response.data;
     })
-    .catch((err) => {
-      if (err.response) {
-        router.push({
-          path: "/error",
-          query: {
-            status: err.response.status,
-            message: err.response.data.message,
-            url: err.request.responseURL,
-          },
-        });
-      } else {
-        router.push("/error");
-      }
-    });
+    .catch(goToError);
+};
+
+// Сколько условий фильтра заполнено — число на кнопке «Фильтр»
+const activeFilters = ref(0);
+
+const countFilters = () => {
+  if (!searchFormRef.value) {
+    activeFilters.value = 0;
+    return;
+  }
+  const names = new Set();
+  for (const [name, value] of new FormData(searchFormRef.value).entries()) {
+    if (typeof value === "string" && value.trim() !== "") names.add(name);
+  }
+  activeFilters.value = names.size;
 };
 
 // Расписание грузится помесячно — только то, что видно в календаре
@@ -634,71 +651,178 @@ const {
   refresh: refreshSchedule,
 } = useScheduleLoader({
   getFormData: () => new FormData(searchFormRef.value || undefined),
-  onError: (err) => {
-    if (err.response) {
-      router.push({
-        path: "/error",
-        query: {
-          status: err.response.status,
-          message: err.response.data.message,
-          url: err.request.responseURL,
-        },
-      });
-    } else {
-      router.push("/error");
-    }
-  },
+  onError: goToError,
 });
 
 // Фильтр изменился / урок перенесён или удалён — перезагружаем видимый период
 const getSchedule = async () => {
+  countFilters();
   await refreshSchedule();
 
-  if (currentEvent.value) {
+  if (currentEvent.value && eventModalIsVisible.value) {
     openEventModal(currentEvent.value.uuid);
   }
 };
 
-const editEventSubmit = async () => {
+/* ---------- Окно урока ---------- */
+
+const intlLocale = computed(() => String(locale.value || "ru").split("-")[0]);
+
+// «Пн, 24 ноября · 10:00–11:00»
+const whenLabel = (event) => {
+  if (!event?.date) return event?.start_time_formatted || "";
+  const day = new Date(`${event.date}T00:00:00`).toLocaleDateString(intlLocale.value, {
+    weekday: "short",
+    day: "numeric",
+    month: "long",
+  });
+  const time = [event.time, event.time_end].filter(Boolean).join("–");
+  return `${day.charAt(0).toUpperCase()}${day.slice(1)} · ${time}`;
+};
+
+const mentorOf = (event) => ({
+  last_name: event.mentor_last_name || event.moderator_last_name || "",
+  first_name: event.mentor_first_name || event.moderator_first_name || "",
+  avatar: event.mentor_avatar || event.moderator_avatar || "",
+});
+
+const visibleMembers = computed(() => {
+  const members = currentEvent.value?.members || [];
+  return showAllMembers.value ? members : members.slice(0, MEMBERS_PREVIEW);
+});
+
+const isStaffRole = () => [1, 2, 3].includes(Number(authUser.value?.current_role_id));
+
+const canEdit = (event) =>
+  event.mentor_id === authUser.value?.user_id ||
+  event.operator_id === authUser.value?.user_id ||
+  isStaffRole();
+
+const canJoin = (event) => event.is_member === true || canEdit(event);
+
+const requestUrl = useRequestURL();
+
+const writeToClipboard = async (text) => {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    if (!document.execCommand("copy")) throw new Error("copy failed");
+  } finally {
+    document.body.removeChild(textarea);
+  }
+};
+
+const copyLink = async (event) => {
+  const url = `${requestUrl.origin}${localePath("/dashboard/conference/" + event.uuid)}`;
+  try {
+    await writeToClipboard(url);
+    notify("success", t("pages.conference.link_copied"));
+  } catch (e) {
+    // Браузер не дал скопировать — показываем ссылку, чтобы скопировать вручную
+    notify("warning", url, { timeout: 15000 });
+  }
+};
+
+/* ---------- Перенос урока ---------- */
+
+const shiftsSchedule = computed(
+  () => !schoolStore.isAiSchoolDomain && dateShiftByWeek.value === 1,
+);
+
+// Бэкенд разрешает переносить на ±2 дня; при сдвиге расписания — не раньше −2
+const dateLimits = computed(() => {
+  const base = originalEvent.value?.date;
+  if (!base || schoolStore.isAiSchoolDomain) return { min: undefined, max: undefined };
+  const shift = (days) => {
+    const d = new Date(`${base}T00:00:00`);
+    d.setDate(d.getDate() + days);
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  };
+  return { min: shift(-2), max: shiftsSchedule.value ? undefined : shift(2) };
+});
+
+// При сдвиге расписания время не меняется — возвращаем исходное
+watch(shiftsSchedule, (shift) => {
+  if (shift && currentEvent.value && originalEvent.value) {
+    currentEvent.value.time = originalEvent.value.time;
+  }
+});
+
+const moveSummary = computed(() => {
+  const from = originalEvent.value;
+  const to = currentEvent.value;
+  if (!from || !to?.date || !to?.time) return null;
+  if (from.date === to.date && from.time === to.time) return null;
+  return {
+    from: whenLabel({ date: from.date, time: from.time }),
+    to: whenLabel({ date: to.date, time: to.time }),
+  };
+});
+
+// Ошибка поля: сервер присылает и строку, и массив строк
+const fieldError = (name) => {
+  const value = errors.value?.[name];
+  if (!value) return "";
+  return Array.isArray(value) ? value[0] : String(value);
+};
+
+const editEventSubmit = async (force = false) => {
+  if (pendingEdit.value) return;
   pendingEdit.value = true;
   const formData = new FormData(editFormRef.value);
+  if (force) formData.append("force", 1);
   const uuid = currentEvent.value.uuid;
 
   await $axiosPlugin
     .post("schedule/update/" + uuid, formData)
-    .then((res) => {
+    .then(() => {
       pendingEdit.value = false;
+      notify("success", t("pages.schedule.moved_success"));
       closeEditModal(true);
       getSchedule();
       // Перенос мог сделать урок текущим или убрать его — обновим меню сразу
       checkConferenceLiveNow();
     })
-    .catch((err) => {
-      if (err.response) {
-        if (err.response.status == 422) {
-          errors.value = err.response.data;
-          pendingEdit.value = false;
-        } else if (err.response.status == 403) {
-          // Нет прав переносить этот урок — сообщение, без ухода на /error
-          pendingEdit.value = false;
-          notify("danger", t("errors.no_permission"));
-        } else {
-          router.push({
-            path: "/error",
-            query: {
-              status: err.response.status,
-              message: err.response.data.message,
-              url: err.request.responseURL,
-            },
-          });
-        }
+    .catch(async (err) => {
+      pendingEdit.value = false;
+      const code = err.response?.status;
+      if (code === 422) {
+        errors.value = err.response.data;
+      } else if (code === 409 && err.response.data?.message === "mentor_busy") {
+        // У учителя в это время другой урок — решает пользователь
+        const c = err.response.data.conflict || {};
+        const start = c.start_time ? new Date(c.start_time) : null;
+        const end = c.end_time ? new Date(c.end_time) : null;
+        const fmt = (d) =>
+          d ? d.toLocaleTimeString(intlLocale.value, { hour: "2-digit", minute: "2-digit" }) : "";
+        const ok = await confirm({
+          title: t("pages.schedule.conflict_title"),
+          message: t("pages.schedule.conflict_message", {
+            lesson: [c.title, c.group_name].filter(Boolean).join(" · "),
+            date: start ? start.toLocaleDateString(intlLocale.value, { day: "numeric", month: "long" }) : "",
+            time: [fmt(start), fmt(end)].filter(Boolean).join("–"),
+          }),
+          confirmText: t("pages.schedule.conflict_confirm"),
+        });
+        if (ok) editEventSubmit(true);
+      } else if (code === 403) {
+        // Нет прав переносить этот урок — сообщение, без ухода на /error
+        notify("danger", t("errors.no_permission"));
       } else {
-        router.push("/error");
+        goToError(err);
       }
     });
 };
-
-const confirm = useConfirm();
 
 const confirmDeleteConference = async () => {
   const ok = await confirm({
@@ -725,30 +849,26 @@ const deleteConferenceSubmit = async () => {
       checkConferenceLiveNow();
     })
     .catch((err) => {
-      if (err.response) {
-        if (err.response.status == 422) {
-          errors.value = err.response.data;
-          pendingDelete.value = false;
-        } else {
-          router.push({
-            path: "/error",
-            query: {
-              status: err.response.status,
-              message: err.response.data.message,
-              url: err.request.responseURL,
-            },
-          });
-        }
+      if (err.response?.status == 422) {
+        errors.value = err.response.data;
+        pendingDelete.value = false;
       } else {
-        router.push("/error");
+        goToError(err);
       }
     });
 };
 
 const openEventModal = (uuid) => {
+  const found = schedule.value.find((e) => e.uuid === uuid);
+  if (!found) {
+    eventModalIsVisible.value = false;
+    currentEvent.value = null;
+    return;
+  }
   eventModalIsVisible.value = true;
-  currentEvent.value = null;
-  currentEvent.value = { ...schedule.value.find((e) => e.uuid === uuid) };
+  currentEvent.value = { ...found };
+  originalEvent.value = { ...found };
+  showAllMembers.value = false;
   mentorOnlyForThisLesson.value = 1;
   dateShiftByWeek.value = 0;
 };
@@ -767,7 +887,7 @@ const closeEditModal = (state) => {
   editModalIsVisible.value = false;
   errors.value = [];
 
-  if (state === false) {
+  if (state === false && currentEvent.value) {
     openEventModal(currentEvent.value.uuid);
   }
 };
@@ -775,14 +895,14 @@ const closeEditModal = (state) => {
 const showHideScheduleSearchFilter = () => {
   if (searchFilter.value === true) {
     searchFilter.value = false;
-    resetScheduleSearchFilter();
+    if (activeFilters.value > 0) resetScheduleSearchFilter();
   } else {
     searchFilter.value = true;
   }
 };
 
 const resetScheduleSearchFilter = () => {
-  searchFormRef.value.reset();
+  searchFormRef.value?.reset();
   selectedCourseId.value = "";
   getSchedule();
 };
@@ -790,17 +910,14 @@ const resetScheduleSearchFilter = () => {
 const debounceSchedule = debounceHandler(() => getSchedule(), 1000);
 const debounceReset = debounceHandler(() => resetScheduleSearchFilter(), 500);
 
-// Реактивные свойства для отслеживания выбранных значений
 const selectedCourseId = ref("");
 
-// Вычисляемые свойства для получения выбранных данных
 const selectedCourse = computed(() =>
   attributes?.value?.courses?.find(
     (course) => course.course_id === Number(selectedCourseId.value),
   ),
 );
 
-// Сброс значений при изменении выбора
 const onCourseChange = () => {
   debounceSchedule();
 };

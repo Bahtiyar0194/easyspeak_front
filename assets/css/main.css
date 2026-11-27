@@ -2820,6 +2820,8 @@ img.img-loading{
 
 .conf-modes{
   @apply inline-flex shrink-0 p-1 rounded-xl bg-inactive gap-1;
+  /* На светлом фоне страницы подложка сливалась — нужна видимая рамка */
+  border: 1px solid var(--cell-border);
 }
 
 .conf-mode{
@@ -2831,7 +2833,8 @@ img.img-loading{
 }
 
 .conf-mode.active{
-  @apply bg-active text-corp shadow-sm;
+  @apply bg-active text-corp;
+  box-shadow: 0 0 0 1px var(--cell-border), 0 1px 3px rgb(15 23 42 / 0.12);
 }
 
 /* Экраны состояний: ожидание, завершена, ошибка, запрос доступа */
@@ -7104,4 +7107,98 @@ a:focus-visible > .cover-card{
 .checking-footer{
   @apply flex flex-wrap items-center justify-end gap-2 pt-4 border-t;
   border-color: var(--surface-border);
+}
+
+/* ---------- Расписание: цвета групп, перенесённые, пустой период, день на телефоне ---------- */
+.sg-chip.grp{
+  color: hsl(var(--hue) 60% 38%);
+  background-color: hsl(var(--hue) 75% 50% / 0.12);
+  border-left-color: hsl(var(--hue) 65% 50%);
+}
+
+.sg-chip.grp:hover{
+  background-color: hsl(var(--hue) 75% 50% / 0.22);
+}
+
+.dark .sg-chip.grp{
+  color: hsl(var(--hue) 75% 72%);
+  background-color: hsl(var(--hue) 70% 55% / 0.16);
+}
+
+.sg-chip-moved{
+  @apply shrink-0 ml-auto text-[10px] opacity-70;
+}
+
+.sg-legend{
+  @apply flex flex-wrap gap-x-4 gap-y-1 mt-3 mb-0 p-0 list-none text-xs text-inactive;
+}
+
+.sg-legend li{
+  @apply inline-flex items-center gap-1.5;
+}
+
+.sg-legend-dot{
+  @apply w-2.5 h-2.5 rounded-full;
+  background-color: hsl(var(--hue) 65% 50%);
+}
+
+.sg-empty{
+  @apply flex flex-wrap items-center gap-2 mt-3 px-4 py-2.5 rounded-xl text-sm text-inactive border;
+  border-color: var(--surface-border);
+}
+
+button.sg-more{
+  @apply text-left hover:underline;
+}
+
+@media (max-width: 767px){
+  .sg-day.selected{
+    border-color: theme('colors.corp.DEFAULT');
+    box-shadow: inset 0 0 0 1px theme('colors.corp.DEFAULT');
+  }
+}
+
+.sg-agenda{
+  @apply mt-3 flex flex-col gap-2;
+}
+
+.sg-agenda-title{
+  @apply mb-0 font-semibold text-sm;
+}
+
+.sg-agenda-list{
+  @apply m-0 p-0 list-none flex flex-col gap-2;
+}
+
+.sg-agenda-item{
+  @apply w-full flex items-center gap-3 p-2.5 rounded-xl border bg-active text-active text-sm;
+  border-color: var(--surface-border);
+  border-left: 3px solid theme('colors.corp.DEFAULT');
+}
+
+.sg-agenda-item.grp{
+  border-left-color: hsl(var(--hue) 65% 50%);
+}
+
+.sg-agenda-item.live{
+  border-left-color: theme('colors.success.DEFAULT');
+}
+
+.sg-agenda-item.past{
+  @apply opacity-75;
+  border-left-color: rgb(148 163 184 / 0.6);
+}
+
+.sg-agenda-time{
+  @apply shrink-0 flex flex-col items-start leading-tight text-xs w-11;
+}
+
+/* Перенос урока: «Было → Станет» */
+.move-summary{
+  @apply flex flex-col gap-1 px-4 py-3 rounded-xl text-sm;
+  background-color: rgb(59 130 246 / 0.08);
+}
+
+.move-summary.danger{
+  background-color: rgb(239 68 68 / 0.08);
 }
