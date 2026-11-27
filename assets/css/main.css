@@ -6806,3 +6806,87 @@ a:focus-visible > .cover-card{
 .library-picker.has-error .participants-search{
   border-color: rgb(239 68 68 / 0.6);
 }
+
+/* ===== Предпросмотр файла (previewFileInput) ===== */
+.file-preview{
+  @apply flex flex-col gap-3;
+}
+
+/* «Текущий файл» при редактировании: рамка, заголовок и «Заменить» */
+.file-preview-current{
+  @apply p-3 rounded-2xl border bg-active;
+  border-color: var(--surface-border);
+}
+
+.file-preview-head{
+  @apply flex items-center gap-2.5;
+}
+
+.file-preview-icon{
+  @apply shrink-0 flex items-center justify-center w-8 h-8 rounded-lg text-base;
+  --kind: 100 116 139;
+  color: rgb(var(--kind));
+  background-color: rgb(var(--kind) / 0.12);
+}
+
+.file-preview-icon.kind-image{ --kind: 34 197 94; }
+.file-preview-icon.kind-audio{ --kind: 168 85 247; }
+.file-preview-icon.kind-video{ --kind: 239 68 68; }
+
+/* Картинка: целиком, по центру, не выше ~60% экрана; клик — оригинал */
+.file-preview-image{
+  @apply relative flex justify-center items-center rounded-xl overflow-hidden;
+  background-color: var(--cell-tint);
+  min-height: 6rem;
+}
+
+.file-preview-image img{
+  @apply block max-w-full w-auto h-auto object-contain;
+  max-height: 60vh;
+}
+
+.file-preview-image.compact img{
+  max-height: 12rem;
+}
+
+.file-preview-zoom{
+  @apply absolute top-2 right-2 flex items-center justify-center w-8 h-8 rounded-lg bg-white/90 text-slate-700 text-sm opacity-0 transition-opacity;
+  box-shadow: 0 6px 16px -8px rgb(15 23 42 / 0.5);
+}
+
+.file-preview-image:hover .file-preview-zoom,
+.file-preview-image:focus-visible .file-preview-zoom{
+  @apply opacity-100;
+}
+
+@media (hover: none){
+  .file-preview-zoom{
+    @apply opacity-100;
+  }
+}
+
+.file-preview-image:focus-visible{
+  @apply outline-none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* Файл не загрузился */
+.file-preview-missing{
+  @apply flex items-center gap-3 p-4 rounded-xl text-sm;
+  color: rgb(217 119 6);
+  background-color: rgb(245 158 11 / 0.1);
+}
+
+.file-preview-missing > i{
+  @apply text-xl;
+}
+
+/* Прочие типы файлов */
+.file-preview-other{
+  @apply flex items-center gap-3 p-3 rounded-xl;
+  background-color: var(--cell-tint);
+}
+
+.file-preview-other > i{
+  @apply text-2xl text-inactive;
+}
