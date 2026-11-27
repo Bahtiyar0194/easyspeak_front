@@ -1658,7 +1658,20 @@ export default {
         },
 
         'checking-tasks': {
-            title: 'Проверка заданий'
+            title: 'Проверка заданий',
+            task: 'Задание',
+            tabs: {
+                pending: 'Ждут проверки',
+                checked: 'Проверенные'
+            },
+            all_checked: 'Все задания проверены',
+            all_checked_hint: 'Новые работы учеников появятся здесь, а вы получите уведомление.',
+            left_to_check: 'Ждут проверки: {count}',
+            save_and_next: 'Сохранить и следующее',
+            saved: 'Результат сохранён',
+            already_checked: 'Эта работа уже проверена',
+            only_mentor_can_check: 'Проверить эту работу может учитель {name}',
+            not_found: 'Работа не найдена или недоступна'
         },
 
         training: {

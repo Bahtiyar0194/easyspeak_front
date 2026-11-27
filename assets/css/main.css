@@ -7084,3 +7084,24 @@ a:focus-visible > .cover-card{
   @apply flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl;
   background-color: rgb(245 158 11 / 0.08);
 }
+
+/* ---------- Проверка заданий ---------- */
+.chip-count{
+  @apply inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full text-[11px] font-bold leading-none;
+  background-color: rgb(245 158 11 / 0.18);
+  color: rgb(217 119 6);
+}
+
+.type-chip.active .chip-count{
+  @apply bg-white/25 text-white;
+}
+
+.checking-head{
+  @apply flex flex-col gap-2 pb-4 mb-1 border-b;
+  border-color: var(--surface-border);
+}
+
+.checking-footer{
+  @apply flex flex-wrap items-center justify-end gap-2 pt-4 border-t;
+  border-color: var(--surface-border);
+}
