@@ -6524,3 +6524,95 @@ a:focus-visible > .cover-card{
 .chat-send:not(:disabled):hover{
   @apply opacity-90;
 }
+
+/* ===== Страница «Школа» ===== */
+.school-hero{
+  @apply flex items-center gap-4 p-5 rounded-2xl border bg-active;
+  border-color: var(--surface-border);
+  box-shadow: var(--shadow-soft);
+}
+
+.school-avatar{
+  @apply shrink-0 flex items-center justify-center w-16 h-16 rounded-2xl text-xl font-bold text-white;
+  background-image: linear-gradient(135deg, #3b82f6, #8b5cf6);
+}
+
+.school-card{
+  @apply relative flex flex-col gap-4 h-full p-5 rounded-2xl border bg-active overflow-hidden;
+  border-color: var(--surface-border);
+  box-shadow: var(--shadow-soft);
+  --accent: 59 130 246;
+}
+
+/* Цветная полоска сверху — по состоянию подписки / для счёта */
+.school-card.sub-active,
+.school-card.sub-expiring,
+.school-card.sub-expired,
+.school-card.invoice{
+  border-top-width: 3px;
+  border-top-color: rgb(var(--accent));
+}
+
+.school-card.sub-active{ --accent: 34 197 94; }
+.school-card.sub-expiring{ --accent: 245 158 11; }
+.school-card.sub-expired{ --accent: 239 68 68; }
+.school-card.invoice{ --accent: 245 158 11; }
+
+.school-card-head{
+  @apply flex flex-wrap items-center gap-3;
+}
+
+.school-card-icon{
+  @apply shrink-0 flex items-center justify-center w-9 h-9 rounded-xl text-lg;
+  color: rgb(var(--accent));
+  background-color: rgb(var(--accent) / 0.12);
+}
+
+.school-progress{
+  @apply h-2 rounded-full overflow-hidden;
+  background-color: var(--cell-tint);
+}
+
+.school-progress > div{
+  @apply h-full rounded-full transition-[width] duration-500;
+  background-color: rgb(var(--accent));
+}
+
+/* Реквизиты: подпись слева, значение справа (на телефоне — друг под другом) */
+.school-dl{
+  @apply grid gap-x-4 gap-y-2.5 m-0 text-sm;
+  grid-template-columns: minmax(8rem, auto) 1fr;
+}
+
+.school-dl dt{
+  @apply text-inactive;
+}
+
+.school-dl dd{
+  @apply m-0 font-medium text-active break-words min-w-0;
+}
+
+@media (max-width: 479px){
+  .school-dl{
+    grid-template-columns: 1fr;
+    @apply gap-y-0.5;
+  }
+
+  .school-dl dd{
+    @apply mb-2;
+  }
+}
+
+.copy-btn{
+  @apply inline-flex items-center justify-center w-7 h-7 rounded-lg text-inactive transition-colors;
+}
+
+.copy-btn:hover{
+  @apply text-corp;
+  background-color: rgb(59 130 246 / 0.1);
+}
+
+.copy-btn:focus-visible{
+  @apply outline-none;
+  box-shadow: var(--shadow-focus);
+}

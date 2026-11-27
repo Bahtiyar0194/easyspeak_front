@@ -1,177 +1,210 @@
 <template>
   <client-only>
-    <div v-if="schoolStore.schoolData" class="col-span-12">
-      <h2>{{ schoolStore.schoolData.full_school_name }}</h2>
-
-      <div class="card p-4">
-        <div class="custom-grid !gap-y-8">
-          <div class="col-span-12 md:col-span-6">
-            <div class="bg-inactive px-3 py-2 rounded-xl">
-              <h4 class="mb-0">
-                {{ $t("pages.school.title") }}
-              </h4>
-            </div>
-
-            <div class="pt-4">
-              <p class="mb-3">
-                {{ $t("form.school_name") }}:
-                <b>{{ schoolStore.schoolData.school_name }}</b>
-              </p>
-              <p class="mb-3">
-                {{ $t("form.full_school_name") }}:
-                <b>{{ schoolStore.schoolData.full_school_name }}</b>
-              </p>
-              <p class="mb-3">
-                {{ $t("form.school_domain") }}:
-                <b class="text-corp">{{
-                  schoolStore.schoolData.school_domain
-                }}</b>
-              </p>
-              <p class="mb-3">
-                {{ $t("form.fact_address") }}:
-                <b
-                  >{{ schoolStore.schoolData.location_full }},
-                  {{ schoolStore.schoolData.street }},
-                  {{ schoolStore.schoolData.house }}</b
-                >
-              </p>
-              <p class="mb-3">
-                {{ $t("form.bin") }}:
-                <b>{{ schoolStore.schoolData.bin }}</b>
-              </p>
-              <p class="mb-3">
-                {{ $t("registered_at") }}:
-                <b>{{
-                  new Date(
-                    schoolStore.schoolData.created_at,
-                  ).toLocaleDateString()
-                }}</b>
-              </p>
-
-              <p class="mb-0">
-                {{ $t("pages.users.users_count") }}:
-
-                <b class="text-corp"
-                  >{{ schoolStore.schoolData.active_users_count }}
-                </b>
-              </p>
-            </div>
-          </div>
-
-          <div class="col-span-12 md:col-span-6">
-            <div class="bg-corp-100 px-3 py-2 rounded-xl">
-              <h4 class="mb-0 text-corp">
-                {{ $t("pages.subscription.plan") }}
-              </h4>
-            </div>
-
-            <div class="pt-4">
-              <p class="mb-3">
-                {{ $t("pages.subscription.your_plan") }}:
-                <b class="text-corp">{{
-                  schoolStore.schoolData.subscription_plan_name
-                }}</b>
-              </p>
-              <p class="mb-3">
-                {{ $t("pages.subscription.expired_at") }}:
-                <b class="text-corp">{{
-                  new Date(
-                    schoolStore.schoolData.subscription_expiration_at,
-                  ).toLocaleDateString()
-                }}</b>
-              </p>
-
-              <button type="button"
-                class="btn btn-primary"
-                @click="subscriptionModalIsVisible = true"
+    <div v-if="school" class="col-span-12 flex flex-col gap-5">
+      <!-- Шапка: аватар, название, адрес платформы -->
+      <div class="school-hero">
+        <div class="school-avatar" aria-hidden="true">{{ schoolInitials }}</div>
+        <div class="min-w-0 flex-1">
+          <h2 class="mb-1 leading-tight">{{ school.full_school_name }}</h2>
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-inactive">
+            <span v-if="school.school_name !== school.full_school_name">
+              {{ school.school_name }}
+            </span>
+            <span v-if="school.school_domain" class="inline-flex items-center gap-1.5">
+              <i class="pi pi-globe" aria-hidden="true"></i>
+              <a :href="schoolUrl" target="_blank" rel="noopener noreferrer" class="font-medium">{{
+                school.school_domain
+              }}</a>
+              <button
+                type="button"
+                class="copy-btn"
+                :title="$t('copy')"
+                :aria-label="$t('copy') + ': ' + school.school_domain"
+                @click="copy(schoolUrl)"
               >
-                <i class="pi pi-refresh"></i>
-                {{ $t("pages.subscription.prolongation") }}
+                <i :class="copiedValue === schoolUrl ? 'pi pi-check text-success' : 'pi pi-copy'" aria-hidden="true"></i>
               </button>
+            </span>
+            <span v-if="school.created_at" class="inline-flex items-center gap-1.5">
+              <i class="pi pi-calendar" aria-hidden="true"></i>
+              {{ $t("registered_at") }}: {{ formatDate(school.created_at) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="custom-grid">
+        <!-- Подписка: тариф, статус, дни, продление -->
+        <section class="col-span-12 lg:col-span-6 school-card" :class="'sub-' + subscription.state">
+          <div class="school-card-head">
+            <span class="school-card-icon"><i class="pi pi-star" aria-hidden="true"></i></span>
+            <h4 class="mb-0">{{ $t("pages.subscription.plan") }}</h4>
+            <span class="status-pill ml-auto" :class="subscription.pill">
+              {{ $t("pages.subscription.status_" + subscription.state) }}
+            </span>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <span class="text-sm text-inactive">{{ $t("pages.subscription.your_plan") }}</span>
+            <b class="text-xl leading-tight">{{ school.subscription_plan_name || "—" }}</b>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <div class="flex flex-wrap items-baseline justify-between gap-2 text-sm">
+              <span class="text-inactive">
+                {{ $t("pages.subscription.expired_at") }}:
+                <b class="text-active">{{ formatDate(school.subscription_expiration_at) }}</b>
+              </span>
+              <b :class="subscription.textClass">{{ subscription.label }}</b>
+            </div>
+            <!-- Чем меньше осталось, тем короче и краснее полоса (шкала — 30 дней) -->
+            <div class="school-progress" aria-hidden="true">
+              <div :style="{ width: subscription.percent + '%' }"></div>
             </div>
           </div>
 
-          <div
-            v-if="schoolStore.schoolData.invoice"
-            class="col-span-12 md:col-span-6"
-          >
-            <div class="bg-danger-100 px-3 py-2 rounded-xl">
-              <h4 class="mb-0 text-danger">
-                {{ $t("pages.payment.methods.invoice.invoices") }}
-              </h4>
-            </div>
+          <p v-if="subscription.state !== 'active'" class="mb-0 text-sm" :class="subscription.textClass">
+            <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+            {{ $t("pages.subscription.renew_now") }}
+          </p>
 
-            <div class="card p-4 mt-4">
-              <p class="mb-1">
-                {{ $t("pages.payment.methods.invoice.document.num") }}:
+          <div class="mt-auto">
+            <button
+              type="button"
+              class="btn"
+              :class="subscription.state === 'active' ? 'btn-light' : 'btn-primary'"
+              @click="subscriptionModalIsVisible = true"
+            >
+              <i class="pi pi-refresh" aria-hidden="true"></i>
+              {{ $t("pages.subscription.prolongation") }}
+            </button>
+          </div>
+        </section>
 
-                <b>{{
-                  formatToInvoiceNumber(
-                    schoolStore.schoolData.invoice.payment_id,
-                  )
-                }}</b>
-              </p>
+        <!-- Неоплаченный счёт -->
+        <section v-if="school.invoice" class="col-span-12 lg:col-span-6 school-card invoice">
+          <div class="school-card-head">
+            <span class="school-card-icon"><i class="pi pi-receipt" aria-hidden="true"></i></span>
+            <h4 class="mb-0">
+              {{ $t("pages.payment.methods.invoice.title") }}
+              № {{ formatToInvoiceNumber(school.invoice.payment_id) }}
+            </h4>
+            <span class="status-pill text-amber-600 dark:text-amber-400 ml-auto">{{ $t("pages.school.invoice_pending") }}</span>
+          </div>
 
-              <p class="mb-1">
-                {{ $t("pages.payment.methods.invoice.document.created_at") }}:
+          <div class="flex flex-col gap-0.5">
+            <span class="text-sm text-inactive">{{ $t("pages.payment.methods.invoice.document.summ") }}</span>
+            <b class="text-2xl leading-tight tabular-nums">
+              {{ formatMoney(school.invoice.sum) }} {{ $contacts.bank.currency.iso }}
+            </b>
+          </div>
 
-                <b>{{
-                  new Date(
-                    schoolStore.schoolData.invoice.created_at,
-                  ).toLocaleDateString("ru-RU")
-                }}</b>
-              </p>
+          <dl class="school-dl">
+            <dt>{{ $t("pages.payment.methods.invoice.document.created_at") }}</dt>
+            <dd>{{ formatDate(school.invoice.created_at) }}</dd>
+            <dt>{{ $t("pages.subscription.plan") }}</dt>
+            <dd>{{ school.invoice.subscription_plan_name }}</dd>
+            <template v-if="school.invoice.description">
+              <dt>{{ $t("description") }}</dt>
+              <dd>{{ school.invoice.description }}</dd>
+            </template>
+          </dl>
 
-              <p class="mb-1">
-                {{ $t("pages.subscription.plan") }}:
+          <p class="mb-0 text-sm text-inactive">{{ $t("pages.school.invoice_hint") }}</p>
 
-                <b
-                  >{{ schoolStore.schoolData.invoice.subscription_plan_name }}
-                </b>
-              </p>
+          <div class="mt-auto">
+            <button type="button" class="btn btn-outline-primary" @click="generateInvoice(school.invoice)">
+              <i class="pi pi-file-pdf" aria-hidden="true"></i>
+              {{ $t("pages.payment.methods.invoice.document.download_pdf") }}
+            </button>
+          </div>
+        </section>
 
-              <p class="mb-1">
-                {{ $t("description") }}:
+        <!-- Реквизиты -->
+        <section class="col-span-12 lg:col-span-6 school-card">
+          <div class="school-card-head">
+            <span class="school-card-icon"><i class="pi pi-building-columns" aria-hidden="true"></i></span>
+            <h4 class="mb-0">{{ $t("pages.school.details") }}</h4>
+          </div>
 
-                <b>{{ schoolStore.schoolData.invoice.description }} </b>
-              </p>
+          <dl class="school-dl">
+            <dt>{{ $t("form.school_name") }}</dt>
+            <dd>{{ school.school_name }}</dd>
 
-              <p class="mb-4">
-                {{ $t("pages.payment.methods.invoice.document.summ") }}:
+            <dt>{{ $t("form.full_school_name") }}</dt>
+            <dd>{{ school.full_school_name }}</dd>
 
-                <b
-                  >{{
-                    schoolStore.schoolData.invoice.sum.toLocaleString("ru-RU", {
-                      minimumFractionDigits: 2,
-                    })
-                  }}
-                  {{ $contacts.bank.currency.iso }}</b
+            <template v-if="school.bin">
+              <dt>{{ $t("form.bin") }}</dt>
+              <dd class="flex items-center gap-1.5">
+                <span class="tabular-nums">{{ school.bin }}</span>
+                <button
+                  type="button"
+                  class="copy-btn"
+                  :title="$t('copy')"
+                  :aria-label="$t('copy') + ': ' + school.bin"
+                  @click="copy(school.bin)"
                 >
-              </p>
-
-              <div class="btn-wrap justify-end">
-                <button type="button"
-                  class="btn btn-outline-danger btn-sm"
-                  @click="generateInvoice(schoolStore.schoolData.invoice)"
-                >
-                  <i class="pi pi-file-pdf"></i>
-                  {{
-                    $t("pages.payment.methods.invoice.document.download_pdf")
-                  }}
+                  <i :class="copiedValue === school.bin ? 'pi pi-check text-success' : 'pi pi-copy'" aria-hidden="true"></i>
                 </button>
-              </div>
-            </div>
+              </dd>
+            </template>
+
+            <template v-if="address">
+              <dt>{{ $t("form.fact_address") }}</dt>
+              <dd>{{ address }}</dd>
+            </template>
+
+            <template v-if="school.school_domain">
+              <dt>{{ $t("pages.school.site") }}</dt>
+              <dd>
+                <a :href="schoolUrl" target="_blank" rel="noopener noreferrer">{{ school.school_domain }}</a>
+              </dd>
+            </template>
+          </dl>
+        </section>
+
+        <!-- Пользователи -->
+        <section class="col-span-12 lg:col-span-6 school-card">
+          <div class="school-card-head">
+            <span class="school-card-icon"><i class="pi pi-users" aria-hidden="true"></i></span>
+            <h4 class="mb-0">{{ $t("pages.school.users_link") }}</h4>
           </div>
 
-          <!-- <div class="col-span-12 md:col-span-6">
-            <div class="bg-inactive px-3 py-2 rounded-xl">
-              <h4 class="mb-0">
-                {{ $t("pages.courses.title") }}
-              </h4>
-            </div>
+          <div class="flex flex-col gap-0.5">
+            <span class="text-sm text-inactive">{{ $t("pages.school.active_users") }}</span>
+            <b class="text-3xl leading-tight tabular-nums text-corp">{{ school.active_users_count ?? 0 }}</b>
+          </div>
 
+          <div class="mt-auto">
+            <nuxt-link class="btn btn-light" :to="localePath('/dashboard/users-groups')">
+              {{ $t("pages.school.open_users") }}
+              <i class="pi pi-arrow-right" aria-hidden="true"></i>
+            </nuxt-link>
+          </div>
+        </section>
+      </div>
+    </div>
 
-          </div> -->
+    <!-- Данные школы ещё грузятся — скелетон той же формы -->
+    <div v-else class="col-span-12 flex flex-col gap-5" aria-busy="true">
+      <span class="sr-only">{{ $t("loading") }}</span>
+      <div class="school-hero" aria-hidden="true">
+        <div class="skeleton w-16 h-16 !rounded-2xl shrink-0"></div>
+        <div class="flex-1 flex flex-col gap-2">
+          <div class="skeleton h-7 w-2/3 max-w-md"></div>
+          <div class="skeleton h-4 w-1/2 max-w-sm"></div>
+        </div>
+      </div>
+      <div class="custom-grid" aria-hidden="true">
+        <div v-for="n in 4" :key="n" class="col-span-12 lg:col-span-6 school-card">
+          <div class="flex items-center gap-3">
+            <div class="skeleton w-9 h-9 !rounded-xl"></div>
+            <div class="skeleton h-5 w-40"></div>
+          </div>
+          <div class="skeleton h-6 w-1/2"></div>
+          <div class="skeleton h-3 w-full"></div>
+          <div class="skeleton h-10 w-32 !rounded-xl"></div>
         </div>
       </div>
     </div>
@@ -263,6 +296,7 @@ import firstStep from "../../../components/payment/school/firstStep.vue";
 import secondStep from "../../../components/payment/school/secondStep.vue";
 import thirdStep from "../../../components/payment/school/thirdStep.vue";
 import modal from "../../../components/ui/modal.vue";
+import { useNotify } from "~/composables/useNotify";
 const config = useRuntimeConfig();
 const { $axiosPlugin, $pdfMake, $contacts } = useNuxtApp();
 const schoolStore = useSchoolStore();
@@ -271,8 +305,103 @@ const router = useRouter();
 const { t, localeProperties } = useI18n();
 
 const checkout = ref(null);
+const notify = useNotify();
+const localePath = useLocalePath();
 
 const subscriptionModalIsVisible = ref(false);
+
+// ===== Данные страницы =====
+const school = computed(() => schoolStore.schoolData);
+
+const schoolInitials = computed(() =>
+  String(school.value?.school_name || school.value?.full_school_name || "?")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join(""),
+);
+
+const schoolUrl = computed(() => {
+  const domain = school.value?.school_domain;
+  if (!domain) return "";
+  return /^https?:\/\//.test(domain) ? domain : `https://${domain}`;
+});
+
+// Адрес без пустых частей («Алматы, , » / «undefined»)
+const address = computed(() =>
+  [school.value?.location_full, school.value?.street, school.value?.house]
+    .map((part) => (part == null ? "" : String(part).trim()))
+    .filter(Boolean)
+    .join(", "),
+);
+
+// Даты и суммы — в формате выбранного языка
+const dateLocale = computed(() => localeProperties.value?.iso || localeProperties.value?.code || undefined);
+
+const formatDate = (value) =>
+  value ? new Date(value).toLocaleDateString(dateLocale.value) : "—";
+
+const formatMoney = (value) =>
+  Number(value || 0).toLocaleString(dateLocale.value, { minimumFractionDigits: 2 });
+
+// Состояние подписки: активна / скоро закончится (7 дней и меньше) / истекла
+const DAY = 24 * 60 * 60 * 1000;
+const EXPIRING_DAYS = 7;
+const SCALE_DAYS = 30; // полоса: полная при 30 днях и больше
+
+const subscription = computed(() => {
+  const end = school.value?.subscription_expiration_at
+    ? new Date(school.value.subscription_expiration_at)
+    : null;
+  if (!end || isNaN(end)) {
+    return { state: "expired", pill: "text-danger", textClass: "text-danger", label: "", percent: 0 };
+  }
+
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  const endDay = new Date(end);
+  endDay.setHours(0, 0, 0, 0);
+  const days = Math.round((endDay - startOfToday) / DAY);
+
+  if (days < 0) {
+    return {
+      state: "expired",
+      pill: "text-danger",
+      textClass: "text-danger",
+      label: t("pages.subscription.expired_ago", { date: formatDate(end) }),
+      percent: 0,
+    };
+  }
+
+  const expiring = days <= EXPIRING_DAYS;
+  return {
+    state: expiring ? "expiring" : "active",
+    pill: expiring ? "text-amber-600 dark:text-amber-400" : "text-success",
+    textClass: expiring ? "text-amber-600 dark:text-amber-400" : "text-success",
+    label:
+      days === 0
+        ? t("pages.subscription.ends_today")
+        : t("pages.subscription.days_left", { n: days }),
+    percent: Math.max(4, Math.min(100, (days / SCALE_DAYS) * 100)),
+  };
+});
+
+// Копирование (домен, БИН) с отметкой «скопировано» на 2 секунды
+const copiedValue = ref(null);
+let copiedTimer = null;
+
+const copy = async (value) => {
+  try {
+    await navigator.clipboard.writeText(String(value));
+    copiedValue.value = value;
+    notify("success", t("copied"));
+    clearTimeout(copiedTimer);
+    copiedTimer = setTimeout(() => (copiedValue.value = null), 2000);
+  } catch (e) {
+    notify("warning", String(value), { timeout: 15000 });
+  }
+};
 
 const pending = ref(true);
 const selectedPlan = ref("");
@@ -347,17 +476,25 @@ const closeSubscriptionModal = () => {
   cryptogram.value = "";
 };
 
+// Платёжный модуль создаём, только когда он нужен (оплата картой): скрипт
+// подключается с defer и при открытии страницы может ещё не загрузиться,
+// а форма в окне — ещё не отрисоваться. Раньше из-за этого страница
+// могла уйти на /error
+const ensureCheckout = () => {
+  if (checkout.value) return checkout.value;
+  const publicId = schoolStore.schoolData?.tiptoppay?.public_id;
+  if (!window.tiptop?.Checkout || !publicId || !paymentFormRef.value) return null;
+  checkout.value = new window.tiptop.Checkout({
+    publicId,
+    container: paymentFormRef.value,
+  });
+  return checkout.value;
+};
+
 const getPaymentAttributes = async () => {
   try {
     const response = await $axiosPlugin.get("payment/get_attributes");
     pending.value = false;
-
-    // Теперь объект tiptop гарантированно доступен
-    checkout.value = new tiptop.Checkout({
-      publicId: schoolStore.schoolData.tiptoppay.public_id,
-      container: paymentFormRef.value,
-    });
-
     plans.value = response.data.plans;
   } catch (err) {
     if (err.response) {
@@ -376,8 +513,14 @@ const getPaymentAttributes = async () => {
 };
 
 const createCryptogram = async () => {
+  const cardCheckout = ensureCheckout();
+  if (!cardCheckout) {
+    notify("danger", t("pages.school.payment_unavailable"), 12000);
+    return;
+  }
+
   pending.value = true;
-  await checkout.value
+  await cardCheckout
     .createPaymentCryptogram()
     .then((c) => {
       cryptogram.value = c;
