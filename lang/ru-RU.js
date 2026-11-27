@@ -1611,6 +1611,7 @@ export default {
             task_materials: 'Материалы задания',
             try_again: 'Пройти заново',
             next_task: 'Следующее задание',
+            to_skipped_task: 'К пропущенному заданию',
             run: {
                 title: 'Запустить задание',
                 self: 'Запустить для себя',

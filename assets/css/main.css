@@ -7554,3 +7554,24 @@ tr.row-highlight > td{
 .pm-legend .pm-cell{
   @apply w-5 h-5 text-[10px];
 }
+
+.group-progress{
+  @apply flex-col items-stretch gap-2;
+}
+
+.group-progress-line{
+  @apply flex items-center gap-2 mb-0 text-sm;
+}
+
+.group-progress-line > i{
+  @apply text-xs shrink-0;
+}
+
+/* Полоса прогресса группы — на всю ширину блока */
+.group-progress-bar{
+  @apply flex-1 h-2 rounded-full overflow-hidden bg-gray-200 dark:bg-slate-700;
+}
+
+.group-progress-bar > div{
+  @apply h-full rounded-full bg-success;
+}

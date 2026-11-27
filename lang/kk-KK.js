@@ -1610,6 +1610,7 @@ export default {
             task_materials: 'Тапсырманың материалдары',
             try_again: 'Қайта орындау',
             next_task: 'Келесі тапсырма',
+            to_skipped_task: 'Өткізіп алған тапсырмаға',
             run: {
                 title: 'Тапсырманы іске қосу',
                 self: 'Маған іске қосу',

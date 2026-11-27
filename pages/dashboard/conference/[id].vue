@@ -1322,7 +1322,12 @@
           <h5>{{ task ? task.task_slug : $t("pages.tasks.adding_a_task") }}</h5>
         </template>
         <template v-slot:body_content>
-          <component :is="currentTaskModal" v-bind="taskModalProps" />
+          <taskSkeleton v-if="taskBooting" />
+          <component
+            :is="currentTaskModal"
+            v-bind="taskModalProps"
+            @vue:mounted="handleTaskMounted"
+          />
         </template>
       </modal>
 
@@ -2389,7 +2394,25 @@ const showMaterialForLearners = () => {
   }
 };
 
+import taskSkeleton from "../../../components/lesson/components/tasks/taskSkeleton.vue";
+import {
+  loadTaskComponent,
+  prefetchTaskComponents,
+  useTaskBooting,
+} from "~/composables/useTaskComponents";
+
+// Скелетон, пока открывается задание (компонент + данные)
+const {
+  booting: taskBooting,
+  start: startTaskBooting,
+  handlePending: handleTaskPending,
+  handleMounted: handleTaskMounted,
+  stop: stopTaskBooting,
+} = useTaskBooting();
+
 const onPending = (state) => {
+  // Первая загрузка задания — скелетон вместо общего лоадера
+  if (handleTaskPending(state)) return;
   pendingTaskModal.value = state;
 };
 
@@ -2425,12 +2448,9 @@ const openTask = (currentTask) => {
   task.value = currentTask;
   taskModalIsVisible.value = true;
 
-  currentTaskModal.value = defineAsyncComponent(
-    () =>
-      import(
-        `../../../components/lesson/components/tasks/actions/execution/${task.value.task_type_component}.vue`
-      ),
-  );
+  pendingTaskModal.value = false;
+  startTaskBooting();
+  currentTaskModal.value = loadTaskComponent("execution", task.value.task_type_component);
 
   taskModalProps.value = {
     task: currentTask,
@@ -2486,6 +2506,7 @@ const closeTaskModal = async () => {
   taskModalIsVisible.value = false;
   tasksModalIsVisible.value = true;
   pendingTaskModal.value = false;
+  stopTaskBooting();
   currentTaskModal.value = null;
   taskModalProps.value = null;
   task.value = null;
@@ -2745,6 +2766,11 @@ const getConferenceTasks = async () => {
     }
 
     tasks.value = response.data.tasks;
+    // Компоненты заданий урока — заранее, пока открыт список
+    prefetchTaskComponents(
+      "execution",
+      (response.data.tasks || []).map((item) => item.task_type_component),
+    );
 
     if (task.value !== null) {
       task.value = tasks.value.find((t) => t.task_id === task.value.task_id);

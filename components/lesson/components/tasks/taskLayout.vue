@@ -81,16 +81,33 @@
             >
               <div class="col-span-12">
                 <div class="btn-wrap justify-end">
+                  <!-- Только если после этого задания есть ещё задания -->
                   <button type="button"
                     v-if="
                       props.lessonType === 'file_test' &&
-                      completedTasksCount < tasks.length
+                      completedTasksCount < tasks.length &&
+                      tasks[props.task.taskIndex + 1]
                     "
                     class="btn btn-primary"
                     @click="openTask(tasks[props.task.taskIndex + 1])"
                   >
                     <i class="pi pi-arrow-right"></i>
                     {{ $t("pages.tasks.next_task") }}
+                  </button>
+
+                  <!-- Последнее задание, но раньше по списку есть пропущенные -->
+                  <button type="button"
+                    v-if="
+                      props.lessonType === 'file_test' &&
+                      completedTasksCount < tasks.length &&
+                      !tasks[props.task.taskIndex + 1] &&
+                      firstSkippedTask
+                    "
+                    class="btn btn-primary"
+                    @click="openTask(firstSkippedTask)"
+                  >
+                    <i class="pi pi-replay"></i>
+                    {{ $t("pages.tasks.to_skipped_task") }}
                   </button>
 
                   <button type="button"
@@ -201,6 +218,16 @@ const tasks = inject("tasks");
 const completedTasksCount = inject("completedTasksCount");
 const openTask = inject("openTask");
 const closeModal = inject("closeModal");
+
+// Первое пропущенное задание теста (без отправленных ответов), кроме текущего:
+// список может ещё не обновиться после только что выполненного задания
+const firstSkippedTask = computed(
+  () =>
+    (unref(tasks) || []).find(
+      (item) =>
+        item.task_id !== props.task?.task_id && !item.task_result?.answers,
+    ) || null,
+);
 
 const showConfetti = (items) => {
   if (items && items.length === 0) {

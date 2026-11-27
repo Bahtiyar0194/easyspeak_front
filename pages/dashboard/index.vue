@@ -906,7 +906,12 @@
         <h5>{{ task ? task.task_slug : "" }}</h5>
       </template>
       <template v-slot:body_content>
-        <component :is="currentTaskModal" v-bind="taskModalProps" />
+        <taskSkeleton v-if="taskBooting" />
+        <component
+          :is="currentTaskModal"
+          v-bind="taskModalProps"
+          @vue:mounted="handleTaskMounted"
+        />
       </template>
     </modal>
   </client-only>
@@ -1164,7 +1169,25 @@ const taskModalProps = ref({});
 const taskModalIsVisible = ref(false);
 const currentTaskModal = shallowRef(null);
 
+import taskSkeleton from "../../components/lesson/components/tasks/taskSkeleton.vue";
+import {
+  loadTaskComponent,
+  prefetchTaskComponents,
+  useTaskBooting,
+} from "~/composables/useTaskComponents";
+
+// Скелетон, пока открывается задание (компонент + данные)
+const {
+  booting: taskBooting,
+  start: startTaskBooting,
+  handlePending: handleTaskPending,
+  handleMounted: handleTaskMounted,
+  stop: stopTaskBooting,
+} = useTaskBooting();
+
 const onPending = (state) => {
+  // Первая загрузка задания — скелетон вместо общего лоадера
+  if (handleTaskPending(state)) return;
   pendingTaskModal.value = state;
 };
 
@@ -1184,12 +1207,14 @@ const changeModalSize = (size) => {
 const closeModal = () => {
   taskModalIsVisible.value = false;
   pendingTaskModal.value = false;
+  stopTaskBooting();
   task.value = null;
 };
 
 const closeModalByUser = () => {
   taskModalIsVisible.value = false;
   pendingTaskModal.value = false;
+  stopTaskBooting();
   currentTaskModal.value = null;
   task.value = null;
 };
@@ -1205,12 +1230,9 @@ const openTask = (currentTask) => {
 
 const openTaskModal = (component, action, props = {}) => {
   taskModalIsVisible.value = true;
-  currentTaskModal.value = defineAsyncComponent(
-    () =>
-      import(
-        `../../components/lesson/components/tasks/actions/${action}/${component}.vue`
-      ),
-  );
+  pendingTaskModal.value = false;
+  startTaskBooting();
+  currentTaskModal.value = loadTaskComponent(action, component);
   taskModalProps.value = props;
 };
 
@@ -1615,6 +1637,12 @@ const selectLevel = (lesson_id) => {
     }
 
     if (tasks.value.length > 0) {
+      // Компоненты заданий теста — заранее, до «Начать тест»
+      prefetchTaskComponents(
+        "execution",
+        tasks.value.map((item) => item.task_type_component),
+      );
+
       for (let taskIndex = 0; taskIndex < tasks.value.length; taskIndex++) {
         const task = tasks.value[taskIndex];
         task.taskIndex = taskIndex;

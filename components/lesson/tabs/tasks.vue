@@ -165,6 +165,8 @@
                 :disabled="isLocked(taskItem)"
                 :title="isLocked(taskItem) ? $t('pages.tasks.locked_hint') : ''"
                 @click="onTaskClick(taskItem)"
+                @pointerenter="prefetchTaskComponent('execution', taskItem.task_type_component)"
+                @focus="prefetchTaskComponent('execution', taskItem.task_type_component)"
               >
                 <span class="task-icon" aria-hidden="true">
                   <i :class="taskItem.icon"></i>
@@ -262,7 +264,13 @@
       <h5>{{ task ? task.task_slug : $t("pages.tasks.adding_a_task") }}</h5>
     </template>
     <template v-slot:body_content>
-      <component :is="currentModal" v-bind="modalProps" />
+      <!-- Пока грузится компонент и данные задания — скелетон -->
+      <taskSkeleton v-if="taskBooting" />
+      <component
+        :is="currentModal"
+        v-bind="modalProps"
+        @vue:mounted="handleTaskMounted"
+      />
     </template>
   </modal>
 
@@ -284,16 +292,32 @@
         >
           <div class="col-span-12">
             <div class="btn-wrap justify-end">
+              <!-- Только если после этого задания есть ещё задания -->
               <button type="button"
                 v-if="
                   props.lessonData.lesson_type_slug === 'file_test' &&
-                  completedTasksCount < tasks.length
+                  completedTasksCount < tasks.length &&
+                  tasks[task.taskIndex + 1]
                 "
                 class="btn btn-primary"
                 @click="openTask(tasks[task.taskIndex + 1])"
               >
                 <i class="pi pi-arrow-right"></i>
                 {{ $t("pages.tasks.next_task") }}
+              </button>
+              <!-- Последнее задание, но раньше по списку есть пропущенные -->
+              <button type="button"
+                v-if="
+                  props.lessonData.lesson_type_slug === 'file_test' &&
+                  completedTasksCount < tasks.length &&
+                  !tasks[task.taskIndex + 1] &&
+                  firstSkippedTask
+                "
+                class="btn btn-primary"
+                @click="openTask(firstSkippedTask)"
+              >
+                <i class="pi pi-replay"></i>
+                {{ $t("pages.tasks.to_skipped_task") }}
               </button>
               <button type="button"
                 v-if="props.lessonData.lesson_type_slug !== 'file_test'"
@@ -325,6 +349,22 @@ import circleProgressBar from "../../ui/circleProgressBar.vue";
 import stickyBox from "../../ui/stickyBox.vue";
 import { useConfirm } from "~/composables/useConfirm";
 import { useNotify } from "~/composables/useNotify";
+import taskSkeleton from "../components/tasks/taskSkeleton.vue";
+import {
+  loadTaskComponent,
+  prefetchTaskComponent,
+  prefetchTaskComponents,
+  useTaskBooting,
+} from "~/composables/useTaskComponents";
+
+// Скелетон, пока открывается задание (компонент + данные)
+const {
+  booting: taskBooting,
+  start: startTaskBooting,
+  handlePending: handleTaskPending,
+  handleMounted: handleTaskMounted,
+  stop: stopTaskBooting,
+} = useTaskBooting();
 
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
@@ -392,12 +432,23 @@ const startNext = () => {
   else if (nextTask.value) openTask(nextTask.value);
 };
 
+// Первое пропущенное задание теста (без отправленных ответов), кроме открытого
+const firstSkippedTask = computed(
+  () =>
+    (tasks.value || []).find(
+      (item) =>
+        item.task_id !== task.value?.task_id && !item.task_result?.answers,
+    ) || null,
+);
+
 const onTaskClick = (taskItem) => {
   if (taskItem.task_result?.answers) openTaskResult(taskItem);
   else if (!isLocked(taskItem)) openTask(taskItem);
 };
 
 const onPending = (state) => {
+  // Первая загрузка задания — скелетон вместо общего лоадера
+  if (handleTaskPending(state)) return;
   pendingModal.value = state;
 };
 
@@ -416,6 +467,7 @@ const changeModalSize = (size) => {
 const closeModal = () => {
   modalIsVisible.value = false;
   pendingModal.value = false;
+  stopTaskBooting();
   task.value = null;
   getTaskAttributes();
   getLessonTasks();
@@ -424,6 +476,7 @@ const closeModal = () => {
 const closeModalByUser = () => {
   modalIsVisible.value = false;
   pendingModal.value = false;
+  stopTaskBooting();
   currentModal.value = null;
   task.value = null;
 };
@@ -452,9 +505,9 @@ const openEditTask = (currentTask) => {
 
 const openTaskModal = (component, action, props = {}) => {
   modalIsVisible.value = true;
-  currentModal.value = defineAsyncComponent(
-    () => import(`../components/tasks/actions/${action}/${component}.vue`),
-  );
+  pendingModal.value = false;
+  startTaskBooting();
+  currentModal.value = loadTaskComponent(action, component);
   modalProps.value = props;
 };
 
@@ -492,6 +545,11 @@ const getLessonTasks = async () => {
     .get("tasks/get_lesson_tasks/" + props.lesson_id)
     .then((response) => {
       tasks.value = response.data;
+      // Компоненты заданий урока — заранее, пока ученик смотрит список
+      prefetchTaskComponents(
+        "execution",
+        (response.data || []).map((item) => item.task_type_component),
+      );
       pendingTasks.value = false;
 
       if (firstRequest.value === true) {
