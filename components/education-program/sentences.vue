@@ -1,24 +1,33 @@
 <template>
   <div class="custom-grid">
+    <!-- Панель: фильтр и счётчик слева, главное действие справа -->
     <div class="col-span-12">
-      <div class="btn-wrap">
+      <div class="list-toolbar">
+        <button
+          type="button"
+          @click="showHideSentenceSearchFilter"
+          class="btn"
+          :class="searchFilter ? 'btn-outline-primary' : 'btn-light'"
+          :aria-pressed="searchFilter"
+          :title="searchFilter ? $t('hide_search_filter') : $t('show_search_filter')"
+        >
+          <i class="pi pi-filter" aria-hidden="true"></i>
+          {{ $t("filter") }}
+        </button>
+        <span v-if="sentences.total" class="text-sm text-inactive">
+          {{ $t("found") }}: <b class="text-active">{{ sentences.total }}</b>
+        </span>
+
         <roleProvider :roles="[1]">
-          <button type="button"
-            class="btn btn-outline-primary"
+          <button
+            type="button"
+            class="btn btn-primary ml-auto"
             @click="addModalIsVisible = true"
           >
-            <i class="pi pi-plus"></i>
-            {{ $t("add") }}
+            <i class="pi pi-plus" aria-hidden="true"></i>
+            {{ $t("pages.sentences.add_sentence") }}
           </button>
         </roleProvider>
-        <button type="button" @click="showHideSentenceSearchFilter" class="btn btn-light">
-          <i class="pi pi-search"></i>
-          {{
-            searchFilter === true
-              ? $t("hide_search_filter")
-              : $t("show_search_filter")
-          }}
-        </button>
       </div>
     </div>
 
@@ -38,6 +47,7 @@
                     type="text"
                     name="sentence"
                     placeholder=" "
+                    autocomplete="off"
                     @input="debounceSentences"
                   />
                   <label>{{ $t("pages.sentences.sentence") }}</label>
@@ -111,12 +121,10 @@
               </div>
 
               <div class="col-span-12">
-                <div class="btn-wrap">
-                  <button type="submit" class="btn btn-sm btn-outline-primary">
-                    <i class="pi pi-undo"></i>
-                    {{ $t("reset_search_filter") }}
-                  </button>
-                </div>
+                <button type="submit" class="btn btn-light full">
+                  <i class="pi pi-filter-slash" aria-hidden="true"></i>
+                  {{ $t("reset_search_filter") }}
+                </button>
               </div>
             </div>
           </form>
@@ -124,14 +132,30 @@
       </stickyBox>
     </div>
 
-    <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
-      <template v-if="sentences.data?.length > 0">
-        <div class="table table-striped table-sm selectable">
-          <loader
-            v-if="pending"
-            :className="'overlay'"
-            :showPendingText="true"
-          />
+    <div
+      ref="listTopRef"
+      class="col-span-12 relative scroll-mt-24"
+      :class="searchFilter && 'lg:col-span-9'"
+    >
+      <!-- Скелетон: первая загрузка или переход на другую страницу -->
+      <listSkeleton
+        v-if="pending && (paging || !sentences.data?.length)"
+        :columns="sentenceTableHeads.length + 1"
+        :avatar="false"
+        :statusColumn="false"
+        :rows="paging ? skeletonRows : 8"
+      />
+
+      <!-- Фильтр / сортировка / сохранение: список на месте, по нему перелив -->
+      <div
+        v-else-if="sentences.data?.length"
+        :class="{ 'list-refreshing': pending }"
+        :aria-busy="pending || undefined"
+      >
+        <span v-if="pending" class="sr-only">{{ $t("loading") }}</span>
+
+        <!-- Компьютер: таблица -->
+        <div class="table table-striped table-sm selectable max-md:!hidden">
           <table ref="tableRef">
             <thead>
               <tr>
@@ -153,81 +177,136 @@
 
             <tbody>
               <tr
-                v-for="sentence in sentences.data"
-                :key="sentence.sentence_id"
-                @click="getSentence(sentence.sentence_id)"
+                v-for="item in sentences.data"
+                :key="item.sentence_id"
+                @click="getSentence(item.sentence_id)"
               >
-                <td>{{ sentence.sentence }}</td>
-                <td>{{ sentence.course_name }}</td>
+                <td class="font-medium">{{ item.sentence }}</td>
+                <td>{{ item.course_name }}</td>
                 <td>
                   <div class="flex gap-x-2 items-center">
                     <userAvatar
                       :padding="0.5"
                       :className="'w-6 h-6'"
                       :user="{
-                        last_name: sentence.operator_last_name,
-                        first_name: sentence.operator_first_name,
-                        avatar: sentence.operator_avatar,
+                        last_name: item.operator_last_name,
+                        first_name: item.operator_first_name,
+                        avatar: item.operator_avatar,
                       }"
                     />
-                    {{ sentence.operator_last_name }}
-                    {{ sentence.operator_first_name }}
+                    {{ item.operator_last_name }}
+                    {{ item.operator_first_name }}
                   </div>
                 </td>
-                <td>{{ new Date(sentence.created_at).toLocaleString() }}</td>
-                <td :class="sentence.status_color">
-                  {{ sentence.status_type_name }}
+                <td class="whitespace-nowrap">{{ formatDate(item.created_at) }}</td>
+                <td>
+                  <span class="status-pill" :class="item.status_color">
+                    {{ item.status_type_name }}
+                  </span>
                 </td>
                 <td>
-                  <div class="flex items-center gap-x-4">
-                    <audioButton
-                      v-if="sentence.audio_file"
-                      :src="
-                        config.public.apiBase +
-                        '/media/get/' +
-                        sentence.audio_file
-                      "
-                      @click.stop
-                    />
-                    <div
-                      v-if="sentence.audio_file"
-                      :style="{
-                        backgroundImage:
-                          'url(' +
-                          config.public.apiBase +
-                          '/media/get/' +
-                          sentence.audio_file +
-                          ')',
-                      }"
-                      class="h-9 w-9 bg-cover bg-no-repeat bg-center rounded-lg"
-                    ></div>
-                  </div>
+                  <!-- Раньше здесь же рисовалась «картинка» из аудиофайла -->
+                  <audioButton
+                    v-if="item.audio_file"
+                    :src="mediaUrl(item.audio_file)"
+                    @click.stop
+                  />
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div class="btn-wrap mt-4">
-          <pagination
-            :items="sentences"
-            :setItems="getSentences"
-            :onSelect="(count) => (perPage = count)"
-          />
-          <client-only>
-            <tableToExcelButton
-              :table="tableRef"
-              :fileName="
-                $t('pages.sentences.title') +
-                ' - ' +
-                new Date().toLocaleString()
-              "
-              :className="'btn-sm'"
-            />
-          </client-only>
-        </div>
-      </template>
 
-      <emptyState v-else :pending="pending" :text="$t('nothing_was_found_for_your_query')" icon="bi bi-search" />
+        <!-- Телефон: карточки вместо широкой таблицы -->
+        <ul class="entity-list md:hidden">
+          <li v-for="item in sentences.data" :key="item.sentence_id">
+            <div
+              class="entity-card cursor-pointer"
+              role="button"
+              tabindex="0"
+              @click="getSentence(item.sentence_id)"
+              @keydown.enter.self="getSentence(item.sentence_id)"
+            >
+              <span class="task-icon !w-11 !h-11 !text-lg" aria-hidden="true">
+                <i class="pi pi-comment"></i>
+              </span>
+              <span class="flex-1 min-w-0 flex flex-col gap-0.5 text-left">
+                <span class="font-semibold leading-snug line-clamp-2">{{
+                  item.sentence
+                }}</span>
+                <span class="text-xs text-inactive truncate">{{
+                  item.course_name
+                }}</span>
+                <span class="status-pill wrap mt-1" :class="item.status_color">
+                  {{ item.status_type_name }}
+                </span>
+              </span>
+              <audioButton
+                v-if="item.audio_file"
+                :src="mediaUrl(item.audio_file)"
+                @click.stop
+              />
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Ничего не нашлось по фильтру -->
+      <emptyState
+        v-else-if="filtered"
+        :text="$t('nothing_was_found_for_your_query')"
+        icon="bi bi-search"
+      >
+        <button
+          type="button"
+          class="btn btn-light"
+          @click="resetSentenceSearchFilter"
+        >
+          <i class="pi pi-filter-slash" aria-hidden="true"></i>
+          {{ $t("reset_search_filter") }}
+        </button>
+      </emptyState>
+
+      <!-- Фраз ещё нет -->
+      <emptyState
+        v-else
+        :text="$t('pages.sentences.empty_title')"
+        :hint="$t('pages.sentences.empty_hint')"
+        icon="pi pi-comment"
+      >
+        <roleProvider :roles="[1]">
+          <button
+            type="button"
+            class="btn btn-primary"
+            @click="addModalIsVisible = true"
+          >
+            <i class="pi pi-plus" aria-hidden="true"></i>
+            {{ $t("pages.sentences.add_sentence") }}
+          </button>
+        </roleProvider>
+      </emptyState>
+
+      <!-- Вне блока списка: при переходе по страницам остаётся на месте -->
+      <div
+        v-if="sentences.data?.length"
+        class="btn-wrap mt-4"
+        :class="{ 'pointer-events-none opacity-60': pending }"
+      >
+        <pagination
+          :items="sentences"
+          :setItems="getSentences"
+          :onSelect="(count) => (perPage = count)"
+        />
+        <client-only>
+          <tableToExcelButton
+            :table="tableRef"
+            :fileName="
+              $t('pages.sentences.title') + ' - ' + new Date().toLocaleString()
+            "
+            :className="'btn-sm'"
+          />
+        </client-only>
+      </div>
     </div>
   </div>
 
@@ -250,11 +329,11 @@
                 <i class="pi pi-align-left"></i>
                 <input
                   autoComplete="new-sentence"
-                  ref="new_sentence"
+                  v-model="newSentence.sentence"
                   name="sentence"
                   type="text"
                   placeholder=" "
-                  @change="handleNewSentence($event)"
+                  @change="translateNew()"
                 />
                 <label :class="{ 'label-error': errors.sentence }">
                   {{
@@ -264,6 +343,27 @@
                   }}
                 </label>
               </div>
+
+              <!-- Автоперевод: что происходит и «Перевести заново» -->
+              <div class="auto-translate-hint" aria-live="polite">
+                <span v-if="auto.translating" class="text-corp">
+                  <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+                  {{ $t("auto_translate.translating_short") }}
+                </span>
+                <template v-else-if="newSentence.sentence.trim()">
+                  <span v-if="auto.manual.size" class="text-inactive">{{
+                    $t("auto_translate.manual_kept")
+                  }}</span>
+                  <button
+                    type="button"
+                    class="auto-translate-btn"
+                    @click="translateNew(true)"
+                  >
+                    <i class="bi bi-stars" aria-hidden="true"></i>
+                    {{ $t("auto_translate.retranslate") }}
+                  </button>
+                </template>
+              </div>
             </div>
 
             <div class="col-span-12">
@@ -271,10 +371,11 @@
                 <i class="pi pi-align-left"></i>
                 <input
                   autoComplete="new-sentence-kk-translate"
-                  ref="new_sentence_kk"
+                  v-model="newSentence.kk"
                   name="sentence_kk"
                   type="text"
                   placeholder=" "
+                  @input="auto.markManual('kk')"
                 />
                 <label :class="{ 'label-error': errors.sentence_kk }">
                   {{
@@ -291,10 +392,11 @@
                 <i class="pi pi-align-left"></i>
                 <input
                   autoComplete="new-sentence-ru-translate"
-                  ref="new_sentence_ru"
+                  v-model="newSentence.ru"
                   name="sentence_ru"
                   type="text"
                   placeholder=" "
+                  @input="auto.markManual('ru')"
                 />
                 <label :class="{ 'label-error': errors.sentence_ru }">
                   {{
@@ -337,7 +439,7 @@
                 <div class="custom-grid">
                   <uploadOrSelectFile
                     :allowGenerate="true"
-                    :generateText="new_sentence?.value"
+                    :generateText="newSentence.sentence"
                     :generateFileInputName="'generate_new_sentence_audio_file'"
                     :generateFileError="$t('pages.sentences.required')"
                     :radioName="'upload_new_sentence_audio_file'"
@@ -355,7 +457,12 @@
 
             <div class="col-span-12">
               <div class="btn-wrap justify-end">
-                <button class="btn btn-primary" type="submit">
+                <!-- Пока ИИ заполняет поля — не отправляем полуготовую форму -->
+                <button
+                  class="btn btn-primary"
+                  type="submit"
+                  :disabled="auto.translating"
+                >
                   <i class="pi pi-check"></i>
                   {{ $t("add") }}
                 </button>
@@ -370,7 +477,7 @@
   <modal
     :show="sentenceModalIsVisible"
     :onClose="() => (sentenceModalIsVisible = false)"
-    :className="sentence?.audio_file ? 'modal-3xl' : 'modal-lg'"
+    :className="'modal-lg'"
     :showLoader="pendingSentence"
     :closeOnClickSelf="true"
   >
@@ -383,8 +490,10 @@
       <div class="custom-grid">
         <div class="col-span-12">
           <div class="flex flex-col gap-y-3">
+            <!-- Плеер — только если у фразы есть озвучка -->
             <audioPlayerWithWave
-              :src="config.public.apiBase + '/media/get/' + sentence.audio_file"
+              v-if="sentence.audio_file"
+              :src="mediaUrl(sentence.audio_file)"
               :key="sentence.audio_file"
             />
 
@@ -452,7 +561,6 @@
                   name="sentence"
                   type="text"
                   placeholder=" "
-                  @change="handleEditSentence()"
                 />
                 <label :class="{ 'label-error': errors.sentence }">
                   {{
@@ -461,6 +569,37 @@
                       : $t("pages.sentences.sentence")
                   }}
                 </label>
+              </div>
+
+              <!-- При редактировании переводы не перезаписываются молча:
+                   фразу изменили — предлагаем обновить -->
+              <div class="auto-translate-hint" aria-live="polite">
+                <span v-if="editAuto.translating" class="text-corp">
+                  <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+                  {{ $t("auto_translate.translating_short") }}
+                </span>
+                <template v-else-if="editSentenceChanged">
+                  <span class="text-amber-600 dark:text-amber-400">{{
+                    $t("auto_translate.changed_short")
+                  }}</span>
+                  <button
+                    type="button"
+                    class="auto-translate-btn"
+                    @click="translateEdit()"
+                  >
+                    <i class="bi bi-stars" aria-hidden="true"></i>
+                    {{ $t("auto_translate.update") }}
+                  </button>
+                </template>
+                <button
+                  v-else-if="sentence.sentence?.trim()"
+                  type="button"
+                  class="auto-translate-btn"
+                  @click="translateEdit()"
+                >
+                  <i class="bi bi-stars" aria-hidden="true"></i>
+                  {{ $t("auto_translate.retranslate") }}
+                </button>
               </div>
             </div>
 
@@ -521,9 +660,7 @@
               <previewFileInput
                 v-if="current_sentence_audio"
                 :fileType="'audio'"
-                :previewUrl="
-                  config.public.apiBase + '/media/get/' + sentence.audio_file
-                "
+                :previewUrl="mediaUrl(sentence.audio_file)"
                 :onChange="() => (current_sentence_audio = false)"
               />
               <div v-else class="card p-4">
@@ -549,7 +686,11 @@
 
             <div class="col-span-12">
               <div class="btn-wrap justify-end">
-                <button class="btn btn-primary" type="submit">
+                <button
+                  class="btn btn-primary"
+                  type="submit"
+                  :disabled="editAuto.translating"
+                >
                   <i class="pi pi-check"></i>
                   {{ $t("save") }}
                 </button>
@@ -571,8 +712,8 @@ import audioPlayerWithWave from "../ui/audioPlayerWithWave.vue";
 import userAvatar from "../ui/userAvatar.vue";
 import userTag from "../ui/userTag.vue";
 import modal from "../ui/modal.vue";
-import loader from "../ui/loader.vue";
 import emptyState from "~/components/ui/emptyState.vue";
+import listSkeleton from "../ui/listSkeleton.vue";
 import stickyBox from "../ui/stickyBox.vue";
 import pagination from "../ui/pagination.vue";
 import tableToExcelButton from "../ui/tableToExcelButton.vue";
@@ -580,6 +721,7 @@ import { debounceHandler } from "../../utils/debounceHandler";
 import roleProvider from "../ui/roleProvider.vue";
 import multipleSelect from "../ui/multipleSelect.vue";
 import sortTableHead from "../ui/sortTableHead.vue";
+import { useAutoTranslate } from "~/composables/useAutoTranslate";
 
 const router = useRouter();
 const config = useRuntimeConfig();
@@ -600,18 +742,28 @@ const sentences = ref([]);
 const sentence = ref(null);
 const attributes = ref([]);
 
-const new_sentence = ref(null);
-const new_sentence_kk = ref(null);
-const new_sentence_ru = ref(null);
-
 const current_sentence_audio = ref(false);
 
 const addModalIsVisible = ref(false);
 const sentenceModalIsVisible = ref(false);
 const editModalIsVisible = ref(false);
 
+// Новые фразы — сверху
 const sortKey = ref("sentences.created_at"); // Ключ сортировки
-const sortDirection = ref("asc"); // Направление сортировки: asc или desc
+const sortDirection = ref("desc"); // Направление сортировки: asc или desc
+
+const mediaUrl = (file) => config.public.apiBase + "/media/get/" + file;
+
+const formatDate = (value) =>
+  value
+    ? new Date(value).toLocaleString(undefined, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
 
 const sentenceTableHeads = [
   {
@@ -641,10 +793,44 @@ const sentenceTableHeads = [
   },
 ];
 
+const goToError = (err) => {
+  if (err.response) {
+    router.push({
+      path: "/error",
+      query: {
+        status: err.response.status,
+        message: err.response.data.message,
+        url: err.request.responseURL,
+      },
+    });
+  } else {
+    router.push("/error");
+  }
+};
+
+// ===== Список =====
+// Переход по страницам (пагинация передаёт url) — скелетон; фильтр,
+// сортировка, сохранение — перелив по текущему списку
+const paging = ref(false);
+const skeletonRows = ref(8);
+const listTopRef = ref(null);
+// Заполнен ли фильтр — чтобы отличать «ничего не найдено» от «фраз нет»
+const filtered = ref(false);
+
 const getSentences = async (url) => {
   pending.value = true;
+  paging.value = Boolean(url);
 
-  const formData = new FormData(searchFormRef.value);
+  if (paging.value) {
+    skeletonRows.value = sentences.value.data?.length || 8;
+    const top = listTopRef.value?.getBoundingClientRect().top;
+    if (top !== undefined && top < 0) {
+      listTopRef.value.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  const formData = new FormData(searchFormRef.value || undefined);
+  filtered.value = [...formData.values()].some((v) => String(v).trim() !== "");
   formData.append("per_page", perPage.value);
   formData.append("sort_key", sortKey.value); // Добавляем ключ сортировки
   formData.append("sort_direction", sortDirection.value); // Добавляем направление сортировки
@@ -658,21 +844,9 @@ const getSentences = async (url) => {
     .then((response) => {
       sentences.value = response.data;
       pending.value = false;
+      paging.value = false;
     })
-    .catch((err) => {
-      if (err.response) {
-        router.push({
-          path: "/error",
-          query: {
-            status: err.response.status,
-            message: err.response.data.message,
-            url: err.request.responseURL,
-          },
-        });
-      } else {
-        router.push("/error");
-      }
-    });
+    .catch(goToError);
 };
 
 const getSentence = async (sentence_id) => {
@@ -689,116 +863,66 @@ const getSentence = async (sentence_id) => {
 
       pendingSentence.value = false;
     })
-    .catch((err) => {
-      if (err.response) {
-        router.push({
-          path: "/error",
-          query: {
-            status: err.response.status,
-            message: err.response.data.message,
-            url: err.request.responseURL,
-          },
-        });
-      } else {
-        router.push("/error");
-      }
-    });
+    .catch(goToError);
 };
 
+// ===== Автоперевод =====
+const auto = reactive(useAutoTranslate());
+const editAuto = reactive(useAutoTranslate());
+
+// Добавление: поля формы — реактивные, name остаются для FormData
+const newSentence = reactive({ sentence: "", kk: "", ru: "" });
+
+// Фразу ввели — ИИ заполняет переводы, кроме полей, которые уже поправили
+// вручную. force — «Перевести заново»: все поля
+const translateNew = (force = false) =>
+  auto.translate(
+    newSentence.sentence,
+    (result) => {
+      if (result.kk != null) newSentence.kk = result.kk;
+      if (result.ru != null) newSentence.ru = result.ru;
+    },
+    { force },
+  );
+
+// Редактирование: переводы молча не перезаписываем. Если фразу изменили —
+// предлагаем обновить, по кнопке
+const editOriginalSentence = ref("");
+
+const editSentenceChanged = computed(
+  () =>
+    Boolean(sentence.value) &&
+    (sentence.value.sentence || "").trim() !== editOriginalSentence.value.trim(),
+);
+
+const translateEdit = () =>
+  editAuto.translate(
+    sentence.value.sentence,
+    (result) => {
+      sentence.value.translates.forEach((translate) => {
+        if (result[translate.lang_tag] != null) {
+          translate.sentence_translate = result[translate.lang_tag];
+        }
+      });
+      editOriginalSentence.value = sentence.value.sentence;
+    },
+    { force: true },
+  );
+
 const getEditSentence = async () => {
+  editAuto.reset();
+  editOriginalSentence.value = sentence.value?.sentence || "";
   sentenceModalIsVisible.value = false;
   editModalIsVisible.value = true;
 };
 
 const getSentenceAttributes = async () => {
-  pending.value = true;
   await $axiosPlugin
     .get("sentences/get_sentence_attributes")
     .then((response) => {
       attributes.value = response.data;
-      pending.value = false;
     })
-    .catch((err) => {
-      if (err.response) {
-        router.push({
-          path: "/error",
-          query: {
-            status: err.response.status,
-            message: err.response.data.message,
-            url: err.request.responseURL,
-          },
-        });
-      } else {
-        router.push("/error");
-      }
-    });
-};
-
-const handleNewSentence = async (event) => {
-  pendingAdd.value = true;
-
-  await $axiosPlugin
-    .get("openai/translate", {
-      params: { text: event.target.value },
-    })
-    .then((response) => {
-      new_sentence_kk.value.value = response.data.kk;
-      new_sentence_ru.value.value = response.data.ru;
-      pendingAdd.value = false;
-    })
-    .catch((err) => {
-      if (err.response) {
-        if (err.response.status == 422) {
-          errors.value = err.response.data;
-          pendingAdd.value = false;
-        } else {
-          router.push({
-            path: "/error",
-            query: {
-              status: err.response.status,
-              message: err.response.data.message,
-              url: err.request.responseURL,
-            },
-          });
-        }
-      } else {
-        router.push("/error");
-      }
-    });
-};
-
-const handleEditSentence = async () => {
-  pendingEdit.value = true;
-
-  await $axiosPlugin
-    .get("openai/translate", {
-      params: { text: sentence.value.sentence },
-    })
-    .then((response) => {
-      sentence.value.translates.forEach((translate) => {
-        translate.sentence_translate = response.data[translate.lang_tag];
-      });
-      pendingEdit.value = false;
-    })
-    .catch((err) => {
-      if (err.response) {
-        if (err.response.status == 422) {
-          errors.value = err.response.data;
-          pendingEdit.value = false;
-        } else {
-          router.push({
-            path: "/error",
-            query: {
-              status: err.response.status,
-              message: err.response.data.message,
-              url: err.request.responseURL,
-            },
-          });
-        }
-      } else {
-        router.push("/error");
-      }
-    });
+    .catch(goToError);
 };
 
 const addSentenceSubmit = async () => {
@@ -809,27 +933,16 @@ const addSentenceSubmit = async () => {
 
   await $axiosPlugin
     .post("sentences/add", formData)
-    .then((response) => {
+    .then(() => {
       getSentences();
       closeAddModal();
     })
     .catch((err) => {
-      if (err.response) {
-        if (err.response.status == 422) {
-          errors.value = err.response.data;
-          pendingAdd.value = false;
-        } else {
-          router.push({
-            path: "/error",
-            query: {
-              status: err.response.status,
-              message: err.response.data.message,
-              url: err.request.responseURL,
-            },
-          });
-        }
+      if (err.response?.status == 422) {
+        errors.value = err.response.data;
+        pendingAdd.value = false;
       } else {
-        router.push("/error");
+        goToError(err);
       }
     });
 };
@@ -844,29 +957,18 @@ const editSentenceSubmit = async () => {
   await $axiosPlugin
     .post("sentences/update/" + sentence.value.sentence_id, formData)
     .then((response) => {
-      errors.value = false;
+      errors.value = [];
       getSentence(response.data.sentence_id);
-      sentences.value = [];
+      // Список не очищаем: обновится на месте (перелив)
       getSentences();
       pendingEdit.value = false;
     })
     .catch((err) => {
-      if (err.response) {
-        if (err.response.status == 422) {
-          errors.value = err.response.data;
-          pendingEdit.value = false;
-        } else {
-          router.push({
-            path: "/error",
-            query: {
-              status: err.response.status,
-              message: err.response.data.message,
-              url: err.request.responseURL,
-            },
-          });
-        }
+      if (err.response?.status == 422) {
+        errors.value = err.response.data;
+        pendingEdit.value = false;
       } else {
-        router.push("/error");
+        goToError(err);
       }
     });
 };
@@ -874,11 +976,14 @@ const editSentenceSubmit = async () => {
 const closeAddModal = () => {
   addModalIsVisible.value = false;
   pendingAdd.value = false;
-  addFormRef.value.reset();
+  addFormRef.value?.reset();
+  Object.assign(newSentence, { sentence: "", kk: "", ru: "" });
+  auto.reset();
   errors.value = [];
 };
 
 const closeEditModal = () => {
+  editAuto.reset();
   editModalIsVisible.value = false;
   sentenceModalIsVisible.value = true;
 };
@@ -893,7 +998,7 @@ const showHideSentenceSearchFilter = () => {
 };
 
 const resetSentenceSearchFilter = () => {
-  searchFormRef.value.reset();
+  searchFormRef.value?.reset();
   getSentences();
 };
 

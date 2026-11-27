@@ -33,7 +33,7 @@
     :show="addModalIsVisible"
     :onClose="() => closeAddModal()"
     :className="'modal-lg'"
-    :showLoader="pendingAdd"
+    :showLoader="pendingAdd || attributesLoading"
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
@@ -81,6 +81,7 @@
 </template>
 
 <script setup>
+import { unref, computed } from "vue";
 import { useRouter } from "nuxt/app";
 import currentConferenceCard from "../currentConferenceCard.vue";
 import roleProvider from "../../ui/roleProvider.vue";
@@ -116,9 +117,16 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  // Атрибуты формы ещё грузятся — окно создания показывает лоадер
+  attributesPending: {
+    type: [Boolean, Object],
+    default: false,
+  },
 });
 
 const { attributes } = toRefs(props);
+// Может прийти как значение или как ref (так страница передаёт props во вкладки)
+const attributesLoading = computed(() => unref(props.attributesPending) === true);
 
 let scheduleLoadedAt = 0;
 

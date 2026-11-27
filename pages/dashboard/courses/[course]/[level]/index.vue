@@ -11,7 +11,6 @@
   </template>
 
   <template v-else-if="isAvailable">
-    <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
 
     <!-- Шапка -->
     <div class="col-span-12">
@@ -90,8 +89,15 @@
       </div>
     </div>
 
-    <!-- Разделы -->
-    <div v-if="sections.length" class="col-span-12">
+    <!-- Разделы. Перезагрузка (после добавления раздела): карточки на месте,
+         по ним перелив -->
+    <div
+      v-if="sections.length"
+      class="col-span-12"
+      :class="{ 'list-refreshing': pending }"
+      :aria-busy="pending || undefined"
+    >
+      <span v-if="pending" class="sr-only">{{ $t("loading") }}</span>
       <div class="grid lg:grid-cols-2 gap-3">
         <nuxt-link
           v-for="(section, sectionIndex) in sections"
@@ -214,7 +220,6 @@
 
 <script setup>
 import roleProvider from "../../../../../components/ui/roleProvider.vue";
-import loader from "../../../../../components/ui/loader.vue";
 import modal from "../../../../../components/ui/modal.vue";
 import emptyState from "~/components/ui/emptyState.vue";
 import circleProgressBar from "../../../../../components/ui/circleProgressBar.vue";

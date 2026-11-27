@@ -20,7 +20,17 @@
     </div>
 
     <div class="col-span-12">
-      <div v-if="conferences.length > 0" class="custom-grid">
+      <!-- Первая загрузка — скелетон карточки (раньше: «Сейчас занятий нет»
+           с лоадером поверх) -->
+      <conferenceCardSkeleton v-if="pending && !conferences.length" />
+
+      <!-- Обновление (например, после удаления): карточки на месте, перелив -->
+      <div
+        v-else-if="conferences.length > 0"
+        class="custom-grid"
+        :class="{ 'list-refreshing': pending }"
+        :aria-busy="pending || undefined"
+      >
         <div
           v-for="conference in conferences"
           :key="conference.uuid"
@@ -37,7 +47,6 @@
 
       <emptyState
         v-else
-        :pending="pending"
         :text="$t('pages.conference.no_current_title')"
         :hint="$t('pages.conference.no_current_hint')"
         image="/images/calendar-search.svg"
@@ -64,7 +73,7 @@
     :show="addModalIsVisible"
     :onClose="() => closeAddModal()"
     :className="'modal-lg'"
-    :showLoader="pendingAdd"
+    :showLoader="pendingAdd || attributesLoading"
     :closeOnClickSelf="false"
   >
     <template v-slot:header_content>
@@ -103,12 +112,13 @@
 </template>
 
 <script setup>
+import { unref, computed } from "vue";
 import { useRouter } from "nuxt/app";
 import conferenceStructureForm from "../conferenceStructureForm.vue";
 import currentConferenceCard from "../currentConferenceCard.vue";
 import modal from "../../ui/modal.vue";
 import subscription from "../../ui/subscription.vue";
-import loader from "../../ui/loader.vue";
+import conferenceCardSkeleton from "../conferenceCardSkeleton.vue";
 import emptyState from "~/components/ui/emptyState.vue";
 import roleProvider from "../../ui/roleProvider.vue";
 import { useConfirm } from "~/composables/useConfirm";
@@ -142,9 +152,16 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  // Атрибуты формы ещё грузятся — окно создания показывает лоадер
+  attributesPending: {
+    type: [Boolean, Object],
+    default: false,
+  },
 });
 
 const { attributes } = toRefs(props);
+// Может прийти как значение или как ref (так страница передаёт props во вкладки)
+const attributesLoading = computed(() => unref(props.attributesPending) === true);
 
 let conferencesLoadedAt = 0;
 

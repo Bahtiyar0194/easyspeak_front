@@ -1,24 +1,33 @@
 <template>
   <div class="custom-grid">
+    <!-- Панель: фильтр и счётчик слева, главное действие справа -->
     <div class="col-span-12">
-      <div class="btn-wrap">
+      <div class="list-toolbar">
+        <button
+          type="button"
+          @click="showHideWordSearchFilter"
+          class="btn"
+          :class="searchFilter ? 'btn-outline-primary' : 'btn-light'"
+          :aria-pressed="searchFilter"
+          :title="searchFilter ? $t('hide_search_filter') : $t('show_search_filter')"
+        >
+          <i class="pi pi-filter" aria-hidden="true"></i>
+          {{ $t("filter") }}
+        </button>
+        <span v-if="words.total" class="text-sm text-inactive">
+          {{ $t("found") }}: <b class="text-active">{{ words.total }}</b>
+        </span>
+
         <roleProvider :roles="[1]">
-          <button type="button"
-            class="btn btn-outline-primary"
+          <button
+            type="button"
+            class="btn btn-primary ml-auto"
             @click="addModalIsVisible = true"
           >
-            <i class="pi pi-plus"></i>
-            {{ $t("add") }}
+            <i class="pi pi-plus" aria-hidden="true"></i>
+            {{ $t("pages.dictionary.add_word") }}
           </button>
         </roleProvider>
-        <button type="button" @click="showHideWordSearchFilter" class="btn btn-light">
-          <i class="pi pi-search"></i>
-          {{
-            searchFilter === true
-              ? $t("hide_search_filter")
-              : $t("show_search_filter")
-          }}
-        </button>
       </div>
     </div>
 
@@ -38,6 +47,7 @@
                     type="text"
                     name="word"
                     placeholder=" "
+                    autocomplete="off"
                     @input="debounceWords"
                   />
                   <label>{{ $t("pages.dictionary.word") }}</label>
@@ -51,6 +61,7 @@
                     type="text"
                     name="transcription"
                     placeholder=" "
+                    autocomplete="off"
                     @input="debounceWords"
                   />
                   <label>{{ $t("pages.dictionary.transcription") }}</label>
@@ -124,12 +135,10 @@
               </div>
 
               <div class="col-span-12">
-                <div class="btn-wrap">
-                  <button type="submit" class="btn btn-sm btn-outline-primary">
-                    <i class="pi pi-undo"></i>
-                    {{ $t("reset_search_filter") }}
-                  </button>
-                </div>
+                <button type="submit" class="btn btn-light full">
+                  <i class="pi pi-filter-slash" aria-hidden="true"></i>
+                  {{ $t("reset_search_filter") }}
+                </button>
               </div>
             </div>
           </form>
@@ -137,14 +146,30 @@
       </stickyBox>
     </div>
 
-    <div class="col-span-12" :class="searchFilter && 'lg:col-span-9'">
-      <template v-if="words.data?.length > 0">
-        <div class="table table-striped table-sm selectable">
-          <loader
-            v-if="pending"
-            :className="'overlay'"
-            :showPendingText="true"
-          />
+    <div
+      ref="listTopRef"
+      class="col-span-12 relative scroll-mt-24"
+      :class="searchFilter && 'lg:col-span-9'"
+    >
+      <!-- Скелетон: первая загрузка или переход на другую страницу -->
+      <listSkeleton
+        v-if="pending && (paging || !words.data?.length)"
+        :columns="wordTableHeads.length + 1"
+        :avatar="false"
+        :statusColumn="false"
+        :rows="paging ? skeletonRows : 8"
+      />
+
+      <!-- Фильтр / сортировка / сохранение: список на месте, по нему перелив -->
+      <div
+        v-else-if="words.data?.length"
+        :class="{ 'list-refreshing': pending }"
+        :aria-busy="pending || undefined"
+      >
+        <span v-if="pending" class="sr-only">{{ $t("loading") }}</span>
+
+        <!-- Компьютер: таблица -->
+        <div class="table table-striped table-sm selectable max-md:!hidden">
           <table ref="tableRef">
             <thead>
               <tr>
@@ -166,77 +191,154 @@
 
             <tbody>
               <tr
-                v-for="word in words.data"
-                :key="word.word_id"
-                @click="getWord(word.word_id)"
+                v-for="item in words.data"
+                :key="item.word_id"
+                @click="getWord(item.word_id)"
               >
-                <td>{{ word.word }}</td>
-                <td>[{{ word.transcription }}]</td>
-                <td>{{ word.course_name }}</td>
+                <td class="font-medium">{{ item.word }}</td>
+                <td class="text-inactive">
+                  <template v-if="item.transcription"
+                    >[{{ item.transcription }}]</template
+                  >
+                </td>
+                <td>{{ item.course_name }}</td>
                 <td>
                   <div class="flex gap-x-2 items-center">
                     <userAvatar
                       :padding="0.5"
                       :className="'w-6 h-6'"
                       :user="{
-                        last_name: word.operator_last_name,
-                        first_name: word.operator_first_name,
-                        avatar: word.operator_avatar,
+                        last_name: item.operator_last_name,
+                        first_name: item.operator_first_name,
+                        avatar: item.operator_avatar,
                       }"
                     />
-                    {{ word.operator_last_name }} {{ word.operator_first_name }}
+                    {{ item.operator_last_name }} {{ item.operator_first_name }}
                   </div>
                 </td>
-                <td>{{ new Date(word.created_at).toLocaleString() }}</td>
-                <td :class="word.status_color">{{ word.status_type_name }}</td>
+                <td class="whitespace-nowrap">{{ formatDate(item.created_at) }}</td>
                 <td>
-                  <div class="flex items-center gap-x-4">
+                  <span class="status-pill" :class="item.status_color">
+                    {{ item.status_type_name }}
+                  </span>
+                </td>
+                <td>
+                  <div class="flex items-center gap-x-3">
                     <audioButton
-                      v-if="word.audio_file"
-                      :src="
-                        config.public.apiBase + '/media/get/' + word.audio_file
-                      "
+                      v-if="item.audio_file"
+                      :src="mediaUrl(item.audio_file)"
                       @click.stop
                     />
-                    <div
-                      v-if="word.image_file"
-                      :style="{
-                        backgroundImage:
-                          'url(' +
-                          config.public.apiBase +
-                          '/media/get/' +
-                          word.image_file +
-                          ')',
-                      }"
-                      class="h-9 w-9 bg-cover bg-no-repeat bg-center rounded-lg"
-                    ></div>
+                    <img
+                      v-if="item.image_file"
+                      v-skeleton="'1/1'"
+                      :src="mediaUrl(item.image_file)"
+                      class="media-thumb"
+                      loading="lazy"
+                      alt=""
+                    />
                   </div>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div class="btn-wrap mt-4">
-          <pagination
-            :items="words"
-            :setItems="getWords"
-            :onSelect="(count) => (perPage = count)"
-          />
-          <client-only>
-            <tableToExcelButton
-              :table="tableRef"
-              :fileName="
-                $t('pages.dictionary.title') +
-                ' - ' +
-                new Date().toLocaleString()
-              "
-              :className="'btn-sm'"
-            />
-          </client-only>
-        </div>
-      </template>
 
-      <emptyState v-else :pending="pending" :text="$t('nothing_was_found_for_your_query')" icon="bi bi-search" />
+        <!-- Телефон: карточки вместо широкой таблицы -->
+        <ul class="entity-list md:hidden">
+          <li v-for="item in words.data" :key="item.word_id">
+            <div
+              class="entity-card cursor-pointer"
+              role="button"
+              tabindex="0"
+              @click="getWord(item.word_id)"
+              @keydown.enter.self="getWord(item.word_id)"
+            >
+              <img
+                v-if="item.image_file"
+                v-skeleton="'1/1'"
+                :src="mediaUrl(item.image_file)"
+                class="media-thumb !w-11 !h-11"
+                loading="lazy"
+                alt=""
+              />
+              <span v-else class="task-icon !w-11 !h-11 !text-lg" aria-hidden="true">
+                <i class="bi bi-alphabet"></i>
+              </span>
+              <span class="flex-1 min-w-0 flex flex-col gap-0.5 text-left">
+                <span class="font-semibold truncate">{{ item.word }}</span>
+                <span v-if="item.transcription" class="text-xs text-inactive truncate"
+                  >[{{ item.transcription }}]</span
+                >
+                <span class="text-xs text-inactive truncate">{{
+                  item.course_name
+                }}</span>
+                <span class="status-pill wrap mt-1" :class="item.status_color">
+                  {{ item.status_type_name }}
+                </span>
+              </span>
+              <audioButton
+                v-if="item.audio_file"
+                :src="mediaUrl(item.audio_file)"
+                @click.stop
+              />
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Ничего не нашлось по фильтру -->
+      <emptyState
+        v-else-if="filtered"
+        :text="$t('nothing_was_found_for_your_query')"
+        icon="bi bi-search"
+      >
+        <button type="button" class="btn btn-light" @click="resetWordSearchFilter">
+          <i class="pi pi-filter-slash" aria-hidden="true"></i>
+          {{ $t("reset_search_filter") }}
+        </button>
+      </emptyState>
+
+      <!-- Словарь пуст -->
+      <emptyState
+        v-else
+        :text="$t('pages.dictionary.empty_title')"
+        :hint="$t('pages.dictionary.empty_hint')"
+        icon="bi bi-alphabet"
+      >
+        <roleProvider :roles="[1]">
+          <button
+            type="button"
+            class="btn btn-primary"
+            @click="addModalIsVisible = true"
+          >
+            <i class="pi pi-plus" aria-hidden="true"></i>
+            {{ $t("pages.dictionary.add_word") }}
+          </button>
+        </roleProvider>
+      </emptyState>
+
+      <!-- Вне блока списка: при переходе по страницам остаётся на месте -->
+      <div
+        v-if="words.data?.length"
+        class="btn-wrap mt-4"
+        :class="{ 'pointer-events-none opacity-60': pending }"
+      >
+        <pagination
+          :items="words"
+          :setItems="getWords"
+          :onSelect="(count) => (perPage = count)"
+        />
+        <client-only>
+          <tableToExcelButton
+            :table="tableRef"
+            :fileName="
+              $t('pages.dictionary.title') + ' - ' + new Date().toLocaleString()
+            "
+            :className="'btn-sm'"
+          />
+        </client-only>
+      </div>
     </div>
   </div>
 
@@ -261,17 +363,38 @@
                 <i class="pi pi-align-left"></i>
                 <input
                   autoComplete="new-word"
-                  ref="new_word"
+                  v-model="newWord.word"
                   name="word"
                   type="text"
                   placeholder=" "
-                  @change="handleNewWord($event)"
+                  @change="translateNew()"
                 />
                 <label :class="{ 'label-error': errors.word }">
                   {{
                     errors.word ? errors.word[0] : $t("pages.dictionary.word")
                   }}
                 </label>
+              </div>
+
+              <!-- Автоперевод: что происходит и «Перевести заново» -->
+              <div class="auto-translate-hint" aria-live="polite">
+                <span v-if="auto.translating" class="text-corp">
+                  <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+                  {{ $t("auto_translate.translating") }}
+                </span>
+                <template v-else-if="newWord.word.trim()">
+                  <span v-if="auto.manual.size" class="text-inactive">{{
+                    $t("auto_translate.manual_kept")
+                  }}</span>
+                  <button
+                    type="button"
+                    class="auto-translate-btn"
+                    @click="translateNew(true)"
+                  >
+                    <i class="bi bi-stars" aria-hidden="true"></i>
+                    {{ $t("auto_translate.retranslate") }}
+                  </button>
+                </template>
               </div>
             </div>
 
@@ -280,10 +403,11 @@
                 <i class="bi bi-braces"></i>
                 <input
                   autoComplete="new-word-transcription"
-                  ref="new_word_transcription"
+                  v-model="newWord.transcription"
                   name="transcription"
                   type="text"
                   placeholder=" "
+                  @input="auto.markManual('transcription')"
                 />
                 <label :class="{ 'label-error': errors.transcription }">
                   {{
@@ -300,10 +424,11 @@
                 <i class="pi pi-align-left"></i>
                 <input
                   autoComplete="new-word-kk-translate"
-                  ref="new_word_kk"
+                  v-model="newWord.kk"
                   name="word_kk"
                   type="text"
                   placeholder=" "
+                  @input="auto.markManual('kk')"
                 />
                 <label :class="{ 'label-error': errors.word_kk }">
                   {{
@@ -320,10 +445,11 @@
                 <i class="pi pi-align-left"></i>
                 <input
                   autoComplete="new-word-ru-translate"
-                  ref="new_word_ru"
+                  v-model="newWord.ru"
                   name="word_ru"
                   type="text"
                   placeholder=" "
+                  @input="auto.markManual('ru')"
                 />
                 <label :class="{ 'label-error': errors.word_ru }">
                   {{
@@ -384,7 +510,7 @@
                 <div class="custom-grid">
                   <uploadOrSelectFile
                     :allowGenerate="true"
-                    :generateText="new_word?.value"
+                    :generateText="newWord.word"
                     :generateFileInputName="'generate_new_word_audio_file'"
                     :generateFileError="$t('pages.dictionary.required')"
                     :radioName="'upload_new_word_audio_file'"
@@ -401,7 +527,12 @@
             </div>
 
             <div class="col-span-12">
-              <button class="btn btn-primary" type="submit">
+              <!-- Пока ИИ заполняет поля — не отправляем полуготовую форму -->
+              <button
+                class="btn btn-primary"
+                type="submit"
+                :disabled="auto.translating"
+              >
                 <i class="pi pi-check"></i>
                 {{ $t("add") }}
               </button>
@@ -425,19 +556,23 @@
     <template v-if="word" v-slot:body_content>
       <div class="custom-grid">
         <div v-if="word.image_file" class="col-span-3 lg:col-span-4">
-          <img v-skeleton="'1/1'"
+          <img
+            v-skeleton="'1/1'"
             class="w-full h-auto rounded-xl"
-            :src="config.public.apiBase + '/media/get/' + word.image_file"
+            :src="mediaUrl(word.image_file)"
+            alt=""
           />
         </div>
         <div
           :class="word.image_file ? 'col-span-9 lg:col-span-8' : 'col-span-12'"
         >
           <div class="flex flex-col gap-y-3">
+            <!-- Плеер — только если у слова есть озвучка -->
             <audioPlayerWithWave
-              :src="config.public.apiBase + '/media/get/' + word.audio_file"
+              v-if="word.audio_file"
+              :src="mediaUrl(word.audio_file)"
             />
-            <p class="mb-0">
+            <p v-if="word.transcription" class="mb-0">
               <span class="text-inactive"
                 >{{ $t("pages.dictionary.transcription") }}:
               </span>
@@ -507,13 +642,43 @@
                   name="word"
                   type="text"
                   placeholder=" "
-                  @change="handleEditWord()"
                 />
                 <label :class="{ 'label-error': errors.word }">
                   {{
                     errors.word ? errors.word[0] : $t("pages.dictionary.word")
                   }}
                 </label>
+              </div>
+
+              <!-- При редактировании переводы не перезаписываются молча:
+                   слово изменилось — предлагаем обновить -->
+              <div class="auto-translate-hint" aria-live="polite">
+                <span v-if="editAuto.translating" class="text-corp">
+                  <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
+                  {{ $t("auto_translate.translating") }}
+                </span>
+                <template v-else-if="editWordChanged">
+                  <span class="text-amber-600 dark:text-amber-400">{{
+                    $t("auto_translate.changed")
+                  }}</span>
+                  <button
+                    type="button"
+                    class="auto-translate-btn"
+                    @click="translateEdit()"
+                  >
+                    <i class="bi bi-stars" aria-hidden="true"></i>
+                    {{ $t("auto_translate.update") }}
+                  </button>
+                </template>
+                <button
+                  v-else-if="word.word?.trim()"
+                  type="button"
+                  class="auto-translate-btn"
+                  @click="translateEdit()"
+                >
+                  <i class="bi bi-stars" aria-hidden="true"></i>
+                  {{ $t("auto_translate.retranslate") }}
+                </button>
               </div>
             </div>
 
@@ -592,9 +757,7 @@
               <previewFileInput
                 v-if="current_word_image"
                 :fileType="'image'"
-                :previewUrl="
-                  config.public.apiBase + '/media/get/' + word.image_file
-                "
+                :previewUrl="mediaUrl(word.image_file)"
                 :onChange="() => (current_word_image = false)"
               />
               <div v-else class="card p-4">
@@ -618,9 +781,7 @@
               <previewFileInput
                 v-if="current_word_audio"
                 :fileType="'audio'"
-                :previewUrl="
-                  config.public.apiBase + '/media/get/' + word.audio_file
-                "
+                :previewUrl="mediaUrl(word.audio_file)"
                 :onChange="() => (current_word_audio = false)"
               />
               <div v-else class="card p-4">
@@ -645,7 +806,11 @@
             </div>
 
             <div class="col-span-12">
-              <button class="btn btn-primary" type="submit">
+              <button
+                class="btn btn-primary"
+                type="submit"
+                :disabled="editAuto.translating"
+              >
                 <i class="pi pi-check"></i>
                 {{ $t("save") }}
               </button>
@@ -666,8 +831,8 @@ import audioPlayerWithWave from "../ui/audioPlayerWithWave.vue";
 import userAvatar from "../ui/userAvatar.vue";
 import userTag from "../ui/userTag.vue";
 import modal from "../ui/modal.vue";
-import loader from "../ui/loader.vue";
 import emptyState from "~/components/ui/emptyState.vue";
+import listSkeleton from "../ui/listSkeleton.vue";
 import stickyBox from "../ui/stickyBox.vue";
 import pagination from "../ui/pagination.vue";
 import tableToExcelButton from "../ui/tableToExcelButton.vue";
@@ -675,6 +840,7 @@ import { debounceHandler } from "../../utils/debounceHandler";
 import roleProvider from "../ui/roleProvider.vue";
 import multipleSelect from "../ui/multipleSelect.vue";
 import sortTableHead from "../ui/sortTableHead.vue";
+import { useAutoTranslate } from "~/composables/useAutoTranslate";
 
 const router = useRouter();
 const config = useRuntimeConfig();
@@ -695,11 +861,6 @@ const words = ref([]);
 const word = ref(null);
 const attributes = ref([]);
 
-const new_word = ref(null);
-const new_word_transcription = ref(null);
-const new_word_kk = ref(null);
-const new_word_ru = ref(null);
-
 const current_word_image = ref(false);
 const current_word_audio = ref(false);
 
@@ -707,8 +868,22 @@ const addModalIsVisible = ref(false);
 const wordModalIsVisible = ref(false);
 const editModalIsVisible = ref(false);
 
+// Новые слова — сверху
 const sortKey = ref("dictionary.created_at"); // Ключ сортировки
-const sortDirection = ref("asc"); // Направление сортировки: asc или desc
+const sortDirection = ref("desc"); // Направление сортировки: asc или desc
+
+const mediaUrl = (file) => config.public.apiBase + "/media/get/" + file;
+
+const formatDate = (value) =>
+  value
+    ? new Date(value).toLocaleString(undefined, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
 
 const wordTableHeads = [
   {
@@ -743,10 +918,44 @@ const wordTableHeads = [
   },
 ];
 
+const goToError = (err) => {
+  if (err.response) {
+    router.push({
+      path: "/error",
+      query: {
+        status: err.response.status,
+        message: err.response.data.message,
+        url: err.request.responseURL,
+      },
+    });
+  } else {
+    router.push("/error");
+  }
+};
+
+// ===== Список =====
+// Переход по страницам (пагинация передаёт url) — скелетон; фильтр,
+// сортировка, сохранение — перелив по текущему списку
+const paging = ref(false);
+const skeletonRows = ref(8);
+const listTopRef = ref(null);
+// Заполнен ли фильтр — чтобы отличать «ничего не найдено» от «словарь пуст»
+const filtered = ref(false);
+
 const getWords = async (url) => {
   pending.value = true;
+  paging.value = Boolean(url);
 
-  const formData = new FormData(searchFormRef.value);
+  if (paging.value) {
+    skeletonRows.value = words.value.data?.length || 8;
+    const top = listTopRef.value?.getBoundingClientRect().top;
+    if (top !== undefined && top < 0) {
+      listTopRef.value.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  const formData = new FormData(searchFormRef.value || undefined);
+  filtered.value = [...formData.values()].some((v) => String(v).trim() !== "");
   formData.append("per_page", perPage.value);
   formData.append("sort_key", sortKey.value); // Добавляем ключ сортировки
   formData.append("sort_direction", sortDirection.value); // Добавляем направление сортировки
@@ -760,21 +969,9 @@ const getWords = async (url) => {
     .then((response) => {
       words.value = response.data;
       pending.value = false;
+      paging.value = false;
     })
-    .catch((err) => {
-      if (err.response) {
-        router.push({
-          path: "/error",
-          query: {
-            status: err.response.status,
-            message: err.response.data.message,
-            url: err.request.responseURL,
-          },
-        });
-      } else {
-        router.push("/error");
-      }
-    });
+    .catch(goToError);
 };
 
 const getWord = async (word_id) => {
@@ -793,118 +990,68 @@ const getWord = async (word_id) => {
 
       pendingWord.value = false;
     })
-    .catch((err) => {
-      if (err.response) {
-        router.push({
-          path: "/error",
-          query: {
-            status: err.response.status,
-            message: err.response.data.message,
-            url: err.request.responseURL,
-          },
-        });
-      } else {
-        router.push("/error");
-      }
-    });
+    .catch(goToError);
 };
 
+// ===== Автоперевод =====
+const auto = reactive(useAutoTranslate({ transcription: true }));
+const editAuto = reactive(useAutoTranslate({ transcription: true }));
+
+// Добавление: поля формы — реактивные, name остаются для FormData
+const newWord = reactive({ word: "", transcription: "", kk: "", ru: "" });
+
+// Слово ввели — ИИ заполняет транскрипцию и переводы, кроме полей,
+// которые уже поправили вручную. force — «Перевести заново»: все поля
+const translateNew = (force = false) =>
+  auto.translate(
+    newWord.word,
+    (result) => {
+      if (result.transcription != null) newWord.transcription = result.transcription;
+      if (result.kk != null) newWord.kk = result.kk;
+      if (result.ru != null) newWord.ru = result.ru;
+    },
+    { force },
+  );
+
+// Редактирование: переводы молча не перезаписываем. Если слово изменили —
+// предлагаем обновить, по кнопке
+const editOriginalWord = ref("");
+
+const editWordChanged = computed(
+  () =>
+    Boolean(word.value) &&
+    (word.value.word || "").trim() !== editOriginalWord.value.trim(),
+);
+
+const translateEdit = () =>
+  editAuto.translate(
+    word.value.word,
+    (result) => {
+      if (result.transcription != null) word.value.transcription = result.transcription;
+      word.value.translates.forEach((translate) => {
+        if (result[translate.lang_tag] != null) {
+          translate.word_translate = result[translate.lang_tag];
+        }
+      });
+      editOriginalWord.value = word.value.word;
+    },
+    { force: true },
+  );
+
 const getEditWord = async () => {
+  editAuto.reset();
+  editOriginalWord.value = word.value?.word || "";
   wordModalIsVisible.value = false;
   editModalIsVisible.value = true;
 };
 
 const getDictionaryAttributes = async () => {
-  pending.value = true;
   await $axiosPlugin
     .get("dictionary/get_dictionary_attributes")
     .then((response) => {
       attributes.value = response.data;
-      pending.value = false;
     })
-    .catch((err) => {
-      if (err.response) {
-        router.push({
-          path: "/error",
-          query: {
-            status: err.response.status,
-            message: err.response.data.message,
-            url: err.request.responseURL,
-          },
-        });
-      } else {
-        router.push("/error");
-      }
-    });
-};
-
-const handleNewWord = async (event) => {
-  pendingAdd.value = true;
-
-  await $axiosPlugin
-    .get("openai/translate", {
-      params: { text: event.target.value, transcription: true },
-    })
-    .then((response) => {
-      new_word_transcription.value.value = response.data.transcription;
-      new_word_kk.value.value = response.data.kk;
-      new_word_ru.value.value = response.data.ru;
-      pendingAdd.value = false;
-    })
-    .catch((err) => {
-      if (err.response) {
-        if (err.response.status == 422) {
-          errors.value = err.response.data;
-          pendingAdd.value = false;
-        } else {
-          router.push({
-            path: "/error",
-            query: {
-              status: err.response.status,
-              message: err.response.data.message,
-              url: err.request.responseURL,
-            },
-          });
-        }
-      } else {
-        router.push("/error");
-      }
-    });
-};
-
-const handleEditWord = async () => {
-  pendingEdit.value = true;
-
-  await $axiosPlugin
-    .get("openai/translate", {
-      params: { text: word.value.word, transcription: true },
-    })
-    .then((response) => {
-      word.value.transcription = response.data.transcription;
-      word.value.translates.forEach((translate) => {
-        translate.word_translate = response.data[translate.lang_tag];
-      });
-      pendingEdit.value = false;
-    })
-    .catch((err) => {
-      if (err.response) {
-        if (err.response.status == 422) {
-          errors.value = err.response.data;
-          pendingEdit.value = false;
-        } else {
-          router.push({
-            path: "/error",
-            query: {
-              status: err.response.status,
-              message: err.response.data.message,
-              url: err.request.responseURL,
-            },
-          });
-        }
-      } else {
-        router.push("/error");
-      }
-    });
+    .catch(goToError);
 };
 
 const addWordSubmit = async () => {
@@ -915,27 +1062,16 @@ const addWordSubmit = async () => {
 
   await $axiosPlugin
     .post("dictionary/add", formData)
-    .then((response) => {
+    .then(() => {
       getWords();
       closeAddModal();
     })
     .catch((err) => {
-      if (err.response) {
-        if (err.response.status == 422) {
-          errors.value = err.response.data;
-          pendingAdd.value = false;
-        } else {
-          router.push({
-            path: "/error",
-            query: {
-              status: err.response.status,
-              message: err.response.data.message,
-              url: err.request.responseURL,
-            },
-          });
-        }
+      if (err.response?.status == 422) {
+        errors.value = err.response.data;
+        pendingAdd.value = false;
       } else {
-        router.push("/error");
+        goToError(err);
       }
     });
 };
@@ -954,27 +1090,16 @@ const editWordSubmit = async () => {
     .then((response) => {
       errors.value = [];
       getWord(response.data.word_id);
-      words.value = [];
+      // Список не очищаем: обновится на месте (перелив)
       getWords();
       pendingEdit.value = false;
     })
     .catch((err) => {
-      if (err.response) {
-        if (err.response.status == 422) {
-          errors.value = err.response.data;
-          pendingEdit.value = false;
-        } else {
-          router.push({
-            path: "/error",
-            query: {
-              status: err.response.status,
-              message: err.response.data.message,
-              url: err.request.responseURL,
-            },
-          });
-        }
+      if (err.response?.status == 422) {
+        errors.value = err.response.data;
+        pendingEdit.value = false;
       } else {
-        router.push("/error");
+        goToError(err);
       }
     });
 };
@@ -982,11 +1107,14 @@ const editWordSubmit = async () => {
 const closeAddModal = () => {
   addModalIsVisible.value = false;
   pendingAdd.value = false;
-  addFormRef.value.reset();
+  addFormRef.value?.reset();
+  Object.assign(newWord, { word: "", transcription: "", kk: "", ru: "" });
+  auto.reset();
   errors.value = [];
 };
 
 const closeEditModal = () => {
+  editAuto.reset();
   editModalIsVisible.value = false;
   wordModalIsVisible.value = true;
 };
@@ -1001,7 +1129,7 @@ const showHideWordSearchFilter = () => {
 };
 
 const resetWordSearchFilter = () => {
-  searchFormRef.value.reset();
+  searchFormRef.value?.reset();
   getWords();
 };
 

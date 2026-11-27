@@ -11,7 +11,6 @@
   </template>
 
   <template v-else-if="lessonsData.level?.available_status?.is_available === true">
-    <loader v-if="pending" :className="'full-overlay'" :showPendingText="true" />
 
     <!-- Шапка -->
     <div class="col-span-12">
@@ -110,8 +109,15 @@
       </div>
     </div>
 
-    <!-- Уроки -->
-    <div v-if="lessons.length" class="col-span-12">
+    <!-- Уроки. Перезагрузка (после добавления урока): строки на месте,
+         по ним перелив -->
+    <div
+      v-if="lessons.length"
+      class="col-span-12"
+      :class="{ 'list-refreshing': pending }"
+      :aria-busy="pending || undefined"
+    >
+      <span v-if="pending" class="sr-only">{{ $t("loading") }}</span>
       <ol class="lesson-path">
         <li
           v-for="(lesson, lessonIndex) in lessons"
@@ -380,7 +386,6 @@ import { useRoute } from "vue-router";
 import { debounceHandler } from "../../../../../../utils/debounceHandler";
 import modal from "../../../../../../components/ui/modal.vue";
 import emptyState from "~/components/ui/emptyState.vue";
-import loader from "../../../../../../components/ui/loader.vue";
 import { NuxtLink } from "#components";
 import circleProgressBar from "../../../../../../components/ui/circleProgressBar.vue";
 import roleProvider from "../../../../../../components/ui/roleProvider.vue";

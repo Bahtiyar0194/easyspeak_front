@@ -374,14 +374,19 @@
           <span class="ctrl-label">{{ $t("pages.conference.board") }}</span>
         </button>
 
+        <!-- Всегда видна: если материалов нет, в окне так и написано -->
         <button
           type="button"
-          v-if="conference.materials && conference.materials.length > 0"
           class="ctrl"
           :title="$t('materials.title')"
           @click="materialsModalIsVisible = true"
         >
-          <span class="ctrl-icon"><i class="bi bi-book"></i></span>
+          <span class="ctrl-icon">
+            <i class="bi bi-book"></i>
+            <span v-if="conference.materials?.length" class="ctrl-badge muted">{{
+              conference.materials.length
+            }}</span>
+          </span>
           <span class="ctrl-label">{{ $t("materials.title") }}</span>
         </button>
 
@@ -629,109 +634,168 @@
         </template>
       </modal>
 
+      <!-- Доска — на весь экран, без прокрутки окна -->
       <modal
         :show="drawingBoardModalIsVisible"
         :onClose="() => (drawingBoardModalIsVisible = false)"
+        :className="'modal-full board-modal'"
         :closeOnClickSelf="false"
       >
         <template v-slot:header_content>
           <h5>{{ $t("pages.conference.board") }}</h5>
         </template>
         <template v-slot:body_content>
-          <drawingBoard :streams_length="streams.length" />
+          <drawingBoard
+            :streams_length="streams.length"
+            :active="drawingBoardModalIsVisible"
+            :materials="conference?.materials || []"
+          />
         </template>
       </modal>
 
+      <!-- Чат: высота фиксирована, сообщения прокручиваются, поле ввода
+           всегда внизу. На телефоне — на весь экран -->
       <modal
         :show="messagesModalIsVisible"
         :onClose="() => (messagesModalIsVisible = false)"
-        :className="'modal-2xl'"
+        :className="'modal-2xl chat-modal'"
         :closeOnClickSelf="true"
       >
         <template v-slot:header_content>
-          <h5>{{ $t("pages.conference.chat") }}</h5>
+          <h5>
+            {{ $t("pages.conference.chat") }}
+            <span v-if="messages.length" class="text-inactive font-normal"
+              >· {{ messages.length }}</span
+            >
+          </h5>
         </template>
         <template v-slot:body_content>
-          <div
-            v-if="messages.length > 0"
-            ref="chatScrollRef"
-            class="max-h-[50vh] overflow-y-auto pr-1"
-          >
-            <div class="flex flex-col gap-y-1.5">
-              <div
-                v-for="(item, index) in messages"
-                :key="index"
-                class="flex"
-                :class="
-                  item.user_id === authUser.user_id
-                    ? 'justify-end'
-                    : 'justify-start'
-                "
+          <div class="chat-panel">
+            <div
+              ref="chatScrollRef"
+              class="chat-scroll"
+              role="log"
+              aria-live="polite"
+              @scroll="onChatScroll"
+            >
+              <emptyState
+                v-if="!messages.length"
+                class="m-auto"
+                :text="$t('pages.conference.no_messages')"
+                icon="bi bi-chat-dots"
+              />
+
+              <template
+                v-for="row in chatRows"
+                :key="row.m.id || row.m.client_id || row.index"
               >
-                <div class="flex gap-x-2">
-                  <userAvatar
-                    v-if="item.user_id !== authUser.user_id"
-                    :padding="0.5"
-                    :className="'w-8 h-8'"
-                    :user="{
-                      last_name: item.userInfo.last_name,
-                      first_name: item.userInfo.first_name,
-                      avatar: item.userInfo.avatar,
-                    }"
-                  />
-                  <div
-                    class="chat"
-                    :class="
-                      item.user_id === authUser.user_id
-                        ? 'my_mess'
-                        : 'user_mess'
-                    "
-                  >
+                <div v-if="row.unreadDivider" class="chat-divider" data-unread>
+                  <span>{{ $t("pages.conference.new_messages") }}</span>
+                </div>
+
+                <div
+                  class="chat-row"
+                  :class="{
+                    mine: row.mine,
+                    'group-start': row.groupStart,
+                    'group-end': row.groupEnd,
+                  }"
+                >
+                  <!-- Аватар — у последнего сообщения в группе -->
+                  <div v-if="!row.mine" class="chat-avatar">
+                    <userAvatar
+                      v-if="row.groupEnd"
+                      :padding="0.5"
+                      :className="'w-8 h-8 text-[11px]'"
+                      :user="{
+                        last_name: row.m.userInfo?.last_name,
+                        first_name: row.m.userInfo?.first_name,
+                        avatar: row.m.userInfo?.avatar,
+                      }"
+                    />
+                  </div>
+
+                  <div class="chat-bubble" :class="{ pending: row.m.pending }">
                     <p
-                      v-if="item.user_id !== authUser.user_id"
-                      class="font-medium mb-0.5 text-corp"
+                      v-if="!row.mine && row.groupStart"
+                      class="chat-author"
+                      :class="'author-' + authorColor(row.m.user_id)"
                     >
-                      {{ item.userInfo.first_name }}
+                      {{ row.m.userInfo?.first_name }}
+                      {{ row.m.userInfo?.last_name }}
+                      <span
+                        v-if="row.m.user_id === conference.mentor_id"
+                        class="role-chip mentor"
+                        >{{ $t("mentor") }}</span
+                      >
                     </p>
-                    <p class="mb-0.5">{{ item.message }}</p>
-                    <div class="flex justify-end">
-                      <span class="mb-0 text-xs">{{ item.time }}</span>
-                    </div>
+                    <p class="chat-text">
+                      <template
+                        v-for="(part, partIndex) in messageParts(row.m.message)"
+                        :key="partIndex"
+                        ><a
+                          v-if="partIndex % 2 === 1"
+                          :href="part"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          >{{ part }}</a
+                        ><template v-else>{{ part }}</template></template
+                      ><span class="chat-meta">
+                        <i
+                          v-if="row.m.pending"
+                          class="pi pi-clock"
+                          aria-hidden="true"
+                        ></i>
+                        {{ formatChatTime(row.m) }}
+                      </span>
+                    </p>
                   </div>
                 </div>
-              </div>
+              </template>
             </div>
-          </div>
-          <emptyState
-            v-else
-            :text="$t('pages.conference.no_messages')"
-            icon="bi bi-chat-dots"
-          />
-          <!-- Enter — отправить -->
-          <form class="flex mt-5" @submit.prevent="sendMessage">
-            <div
-              class="form-group-border active w-full !border-r-0 !rounded-tr-none !rounded-br-none"
-            >
-              <i class="pi pi-envelope"></i>
-              <input
-                v-model="message"
-                type="text"
-                placeholder=" "
-                autocomplete="off"
-                enterkeyhint="send"
-              />
-              <label>{{ $t("message") }}</label>
-            </div>
+
+            <!-- Листаете историю, а пришло новое — не утаскиваем вниз -->
             <button
-              type="submit"
-              :disabled="!message.trim()"
-              :title="$t('pages.conference.send')"
-              :aria-label="$t('pages.conference.send')"
-              class="btn btn-square btn-success !h-auto !w-12 !rounded-tl-none !rounded-bl-none"
+              v-if="chatNewBelow > 0"
+              type="button"
+              class="chat-new-below"
+              @click="scrollChatToBottom(true)"
             >
-              <i class="pi pi-send" aria-hidden="true"></i>
+              <i class="pi pi-arrow-down" aria-hidden="true"></i>
+              {{ $t("pages.conference.new_messages") }}
+              <b>{{ chatNewBelow }}</b>
             </button>
-          </form>
+
+            <!-- Enter — отправить, Shift+Enter — новая строка -->
+            <form class="chat-composer" @submit.prevent="sendMessage">
+              <textarea
+                ref="chatInputRef"
+                v-model="message"
+                rows="1"
+                :maxlength="CHAT_MAX_LENGTH"
+                :placeholder="$t('pages.conference.message_placeholder')"
+                :aria-label="$t('message')"
+                :title="$t('pages.conference.message_hint')"
+                enterkeyhint="send"
+                @keydown.enter="onChatEnter"
+                @input="autoGrowChatInput"
+              ></textarea>
+              <span
+                v-if="message.length > CHAT_MAX_LENGTH - 200"
+                class="chat-counter"
+                >{{ CHAT_MAX_LENGTH - message.length }}</span
+              >
+              <button
+                type="submit"
+                class="chat-send"
+                :disabled="!message.trim()"
+                :title="$t('pages.conference.send')"
+                :aria-label="$t('pages.conference.send')"
+              >
+                <i class="pi pi-send" aria-hidden="true"></i>
+              </button>
+            </form>
+          </div>
         </template>
       </modal>
 
@@ -743,43 +807,79 @@
         :closeOnClickSelf="false"
       >
         <template v-slot:header_content>
-          <h5>{{ $t("materials.title") }}</h5>
+          <h5>
+            {{ $t("materials.title") }}
+            <span
+              v-if="conference?.materials?.length"
+              class="text-inactive font-normal"
+              >· {{ conference.materials.length }}</span
+            >
+          </h5>
         </template>
-        <template
-          v-slot:body_content
-          v-if="
-            conference &&
-            conference.materials &&
-            conference.materials.length > 0
-          "
-        >
-          <ul class="list-group nowrap lg overflow-hidden">
+        <template v-slot:body_content>
+          <!-- Список материалов: превью/иконка по типу, учитель может сразу
+               показать материал всем -->
+          <ul v-if="conference?.materials?.length" class="material-list">
             <li
               v-for="material in conference.materials"
               :key="material.lesson_material_id"
             >
-              <div class="flex items-center justify-between gap-4">
-                <div
-                  class="flex gap-2 items-center link w-full"
+              <div class="material-row">
+                <button
+                  type="button"
+                  class="material-row-main"
                   @click="openMaterial(material)"
                 >
+                  <span
+                    class="material-thumb"
+                    :class="'kind-' + materialKind(material)"
+                  >
+                    <img
+                      v-if="materialKind(material) === 'image' && material.target"
+                      v-skeleton="'1/1'"
+                      :src="config.public.apiBase + '/media/get/' + material.target"
+                      alt=""
+                      loading="lazy"
+                    />
+                    <i
+                      v-else
+                      :class="material.file_icon || material.block_icon"
+                      aria-hidden="true"
+                    ></i>
+                  </span>
+                  <span class="flex-1 min-w-0 flex flex-col gap-0.5 text-left">
+                    <span class="font-semibold leading-snug line-clamp-2">{{
+                      material.annotation || materialTypeName(material)
+                    }}</span>
+                    <span class="text-xs text-inactive">{{
+                      materialTypeName(material)
+                    }}</span>
+                  </span>
                   <i
-                    class="text-3xl text-active"
-                    :class="material.file_icon || material.block_icon"
+                    class="pi pi-chevron-right text-inactive text-xs shrink-0"
+                    aria-hidden="true"
                   ></i>
-                  <div class="flex flex-col gap-y-0.5">
-                    <span class="font-bold text-active">{{
-                      material.annotation
-                    }}</span>
-                    <span class="text-inactive text-xs">{{
-                      material.file_material_type_name ||
-                      material.block_material_type_name
-                    }}</span>
-                  </div>
-                </div>
+                </button>
+                <button
+                  v-if="isConferenceMentor"
+                  type="button"
+                  class="btn btn-sm btn-light shrink-0"
+                  :title="$t('materials.display_title')"
+                  @click="showMaterialNow(material)"
+                >
+                  <i class="pi pi-eye" aria-hidden="true"></i>
+                  <span class="max-sm:hidden">{{ $t("materials.show_short") }}</span>
+                </button>
               </div>
             </li>
           </ul>
+
+          <emptyState
+            v-else
+            :text="$t('materials.no_materials')"
+            :hint="$t('materials.no_materials_hint')"
+            icon="bi bi-folder2-open"
+          />
         </template>
       </modal>
 
@@ -2053,15 +2153,110 @@ const drawingBoardModalIsVisible = ref(false);
 const messagesModalIsVisible = ref(false);
 const chatScrollRef = ref(null);
 
-// Чат всегда прокручен к последнему сообщению: при открытии и при новых.
-const scrollChatToBottom = () => {
+// ===== Окно чата =====
+const CHAT_MAX_LENGTH = 2000;
+const CHAT_GROUP_GAP = 3 * 60 * 1000; // подряд от одного автора — одна группа
+const chatInputRef = ref(null);
+const chatAtBottom = ref(true);
+const chatNewBelow = ref(0); // пришло, пока листали историю
+const firstUnreadIndex = ref(-1); // где поставить «Новые сообщения»
+
+const isMineMessage = (m) => m.user_id === authUser.value?.user_id;
+
+const sameGroup = (a, b) =>
+  Boolean(a && b) &&
+  a.user_id === b.user_id &&
+  Math.abs((b.sent_at || 0) - (a.sent_at || 0)) <= CHAT_GROUP_GAP;
+
+const chatRows = computed(() =>
+  messages.value.map((m, index) => {
+    const prev = messages.value[index - 1];
+    const next = messages.value[index + 1];
+    const divider = index === firstUnreadIndex.value;
+    return {
+      m,
+      index,
+      mine: isMineMessage(m),
+      unreadDivider: divider,
+      groupStart: divider || !sameGroup(prev, m),
+      groupEnd: index + 1 === firstUnreadIndex.value || !sameGroup(m, next),
+    };
+  }),
+);
+
+// Цвет имени автора — стабильный для каждого человека
+const authorColor = (userId) => Math.abs(Number(userId) || 0) % 6;
+
+// Ссылки в тексте — кликабельные (без v-html: нечётные части — ссылки)
+const URL_PATTERN = /(https?:\/\/[^\s<]+[^\s<.,;:!?)\]'"])/;
+const messageParts = (text) => String(text || "").split(URL_PATTERN);
+
+const scrollChatToBottom = (smooth = false) => {
   nextTick(() => {
     const el = chatScrollRef.value;
-    if (el) el.scrollTop = el.scrollHeight;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: smooth ? "smooth" : "auto" });
+    chatNewBelow.value = 0;
   });
 };
-watch(() => messages.value.length, scrollChatToBottom);
-watch(messagesModalIsVisible, (visible) => visible && scrollChatToBottom());
+
+const onChatScroll = () => {
+  const el = chatScrollRef.value;
+  if (!el) return;
+  chatAtBottom.value = el.scrollHeight - el.scrollTop - el.clientHeight < 60;
+  if (chatAtBottom.value) chatNewBelow.value = 0;
+};
+
+// Новое сообщение: своё или когда и так внизу — прокручиваем; листаете
+// историю — не дёргаем, показываем «↓ Новые сообщения»
+watch(
+  () => messages.value.length,
+  (length, prevLength) => {
+    if (!messagesModalIsVisible.value) return;
+    const added = length - (prevLength || 0);
+    if (added <= 0) return;
+    const last = messages.value[length - 1];
+    if (chatAtBottom.value || (last && isMineMessage(last)) || added > 5) {
+      scrollChatToBottom();
+    } else {
+      chatNewBelow.value += added;
+    }
+  },
+);
+
+// Открыли чат: сбрасываем непрочитанные (раньше счётчик только рос),
+// ставим разделитель и прокручиваем к первому новому (или вниз)
+watch(messagesModalIsVisible, (visible) => {
+  if (!visible) return;
+  const unread = unReadMessages.value;
+  firstUnreadIndex.value = unread > 0 ? messages.value.length - unread : -1;
+  unReadMessages.value = 0;
+  chatNewBelow.value = 0;
+
+  nextTick(() => {
+    const el = chatScrollRef.value;
+    const divider = el?.querySelector("[data-unread]");
+    if (el && divider) el.scrollTop = divider.offsetTop - 12;
+    else scrollChatToBottom();
+    onChatScroll();
+    // На компьютере сразу в поле ввода (на телефоне не открываем клавиатуру)
+    if (window.matchMedia?.("(pointer: fine)").matches) chatInputRef.value?.focus();
+  });
+});
+
+const autoGrowChatInput = () => {
+  const el = chatInputRef.value;
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight, 128) + "px";
+};
+
+// Enter — отправить, Shift+Enter — новая строка (и не во время набора IME)
+const onChatEnter = (event) => {
+  if (event.shiftKey || event.isComposing) return;
+  event.preventDefault();
+  sendMessage();
+};
 const materialsModalIsVisible = ref(false);
 const materialModalIsVisible = ref(false);
 
@@ -2160,6 +2355,22 @@ const closeMaterialModal = (showMaterialsModal) => {
       materialsModalIsVisible.value = showMaterialsModal;
     }, 100);
   }
+};
+
+// Тип материала — для цвета иконки в списке
+const materialKind = (material) =>
+  material.file_material_type_slug || material.block_material_type_slug || "file";
+
+const materialTypeName = (material) =>
+  material.file_material_type_name || material.block_material_type_name || "";
+
+// «Показать» прямо из списка: открыть материал и сразу показать ученикам
+const showMaterialNow = (material) => {
+  openMaterial(material);
+  // openMaterial открывает окно с задержкой — показываем после неё
+  setTimeout(() => {
+    if (currentMaterial.value === material) showMaterialForLearners();
+  }, 250);
 };
 
 const showMaterialForLearners = () => {
@@ -2799,7 +3010,14 @@ const releaseLocalMedia = () => {
   );
 };
 
+let startStreamInProgress = false;
+
 const startStream = async () => {
+  // Уже в эфире или запуск идёт (например, повторный getConference после
+  // таймера) — второй пир дал бы вторую плитку своего видео
+  if (startStreamInProgress || (myPeer && !myPeer.destroyed)) return;
+  startStreamInProgress = true;
+
   try {
     const stream = await acquireLocalMedia();
     hasCamera.value = stream.getVideoTracks().length > 0;
@@ -2812,7 +3030,8 @@ const startStream = async () => {
     startSpeakingMonitor();
 
     setTimeout(() => {
-      rawVideoRef.value.srcObject = stream;
+      // За секунду страницу могли покинуть (или компонент пересоздан)
+      if (rawVideoRef.value) rawVideoRef.value.srcObject = stream;
     }, 1000);
 
     loadMicrophones();
@@ -2984,8 +3203,8 @@ const startStream = async () => {
     $socketPlugin.on("force-disconnect", handleForceDisconnect);
 
     $socketPlugin.on("new-message", (data) => {
-      messages.value.push(data);
-      if (messagesModalIsVisible.value === false) {
+      // Без дублей (например, если история пришла чуть позже сообщения)
+      if (addIncomingMessage(data) && messagesModalIsVisible.value === false) {
         unReadMessages.value++;
       }
     });
@@ -3120,6 +3339,10 @@ const startStream = async () => {
   } catch (error) {
     console.error("startStream error:", error);
     notify("danger", mediaErrorMessage(error), 15000);
+  } finally {
+    // Дальше от повторного запуска защищает живой myPeer; после ошибки
+    // (нет доступа к камере и т.п.) можно попробовать снова
+    startStreamInProgress = false;
   }
 };
 
@@ -3412,6 +3635,8 @@ const joinToRoom = () =>
           errorMessage.value = null;
           hasJoinedRoom = true;
           finishReconnecting();
+          // Переписка до нас / пока были без связи
+          loadChatHistory();
 
           $socketPlugin.emit("get-room-info", (roomInfo) => {
             roomInfo.forEach((user) => {
@@ -3719,7 +3944,17 @@ const addStream = (
   isStream,
   isMuted,
 ) => {
-  const index = streams.value.findIndex((item) => item.peer_id === peer_id);
+  // Одна плитка на человека. Свою — всегда одну (пир мог пересоздаться с
+  // новым id), чужую — по user_id (участник переподключился с новым пиром)
+  let index = streams.value.findIndex((item) => item.peer_id === peer_id);
+  if (index === -1) {
+    index = streams.value.findIndex((item) =>
+      remote
+        ? item.remote && user_id != null && item.user_id === user_id
+        : !item.remote,
+    );
+    if (index !== -1) streams.value[index].peer_id = peer_id;
+  }
 
   if (index === -1) {
 
@@ -4075,6 +4310,12 @@ const limitVideoBitrate = (peerConnection, maxBitrateKbps = 400) => {
 
 const toggleScreenSharing = async () => {
   if (!isScreenSharing.value) {
+    // Телефоны и часть браузеров демонстрацию экрана не поддерживают
+    if (!navigator.mediaDevices?.getDisplayMedia) {
+      notify("danger", t("errors.media.screen_sharing_error"), 10000);
+      return;
+    }
+
     try {
       screenStream.value = await navigator.mediaDevices.getDisplayMedia({
         video: {
@@ -4093,6 +4334,18 @@ const toggleScreenSharing = async () => {
 
       screenStream.value.getVideoTracks()[0].onended = stopScreenSharing;
     } catch (error) {
+      const name = error?.name;
+      const message = String(error?.message || "").toLowerCase();
+
+      // Запрет на уровне системы (например, в macOS не разрешена запись экрана)
+      if (name === "NotAllowedError" && message.includes("system")) {
+        notify("warning", t("errors.media.screen_sharing_system_denied"), 12000);
+        return;
+      }
+
+      // Пользователь сам нажал «Отмена» в окне выбора экрана — это не ошибка
+      if (name === "NotAllowedError" || name === "AbortError") return;
+
       notify("danger", t("errors.media.screen_sharing_error"), 10000);
     }
   } else {
@@ -4102,9 +4355,10 @@ const toggleScreenSharing = async () => {
 
 const stopScreenSharing = () => {
   isScreenSharing.value = false;
-  replaceTrackInConnections(localStream.value.getVideoTracks()[0], "video");
+  const cameraTrack = localStream.value?.getVideoTracks()[0];
+  if (cameraTrack) replaceTrackInConnections(cameraTrack, "video");
 
-  screenStream.value.getTracks().forEach((track) => track.stop());
+  screenStream.value?.getTracks().forEach((track) => track.stop());
   screenStream.value = null;
 };
 
@@ -4538,24 +4792,86 @@ const stopSpeakingMonitor = () => {
   Object.keys(lastLoudAt).forEach((key) => delete lastLoudAt[key]);
 };
 
+// ===== Чат =====
+// История хранится на сервере сокетов (в комнате): после перезагрузки,
+// переподключения или для вошедшего позже она подгружается (chat:history).
+// id и время ставит сервер; client_id — наш id, по нему сверяем, дошло ли
+// сообщение, и досылаем недошедшие после переподключения без дублей.
+const newClientId = () =>
+  (globalThis.crypto?.randomUUID?.() ||
+    Date.now().toString(36) + Math.random().toString(36).slice(2)).slice(0, 36);
+
+// Время — в часовом поясе того, кто читает (старые сообщения — строкой time)
+const formatChatTime = (item) => {
+  if (!item.sent_at) return item.time || "";
+  const d = new Date(item.sent_at);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+};
+
+const emitChatMessage = (local) => {
+  $socketPlugin.emit(
+    "message",
+    {
+      client_id: local.client_id,
+      user_id: local.user_id,
+      userInfo: local.userInfo,
+      message: local.message,
+    },
+    // Сервер подтвердил — заменяем черновик сохранённым (с id и временем)
+    (saved) => {
+      const index = messages.value.findIndex(
+        (m) => m.client_id === saved?.client_id,
+      );
+      if (index !== -1) messages.value[index] = saved;
+    },
+  );
+};
+
 const sendMessage = () => {
   const text = message.value.trim();
-  if (text !== "") {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
+  if (text === "") return;
 
-    const messageData = {
-      user_id: authUser.value.user_id,
-      userInfo: authUserInfo,
-      message: text,
-      time: `${hours}:${minutes}`,
-    };
+  const local = {
+    client_id: newClientId(),
+    user_id: authUser.value.user_id,
+    userInfo: authUserInfo,
+    message: text,
+    sent_at: Date.now(),
+    pending: true,
+  };
 
-    messages.value.push(messageData);
-    $socketPlugin.emit("message", messageData);
-    message.value = "";
-  }
+  messages.value.push(local);
+  emitChatMessage(local);
+  message.value = "";
+  nextTick(autoGrowChatInput);
+  scrollChatToBottom();
+};
+
+const addIncomingMessage = (data) => {
+  if (!data) return false;
+  const duplicate = messages.value.some(
+    (m) => (data.id && m.id === data.id) || (data.client_id && m.client_id === data.client_id),
+  );
+  if (duplicate) return false;
+  messages.value.push(data);
+  return true;
+};
+
+// История с сервера — после входа в комнату (в т.ч. повторного)
+const loadChatHistory = () => {
+  $socketPlugin.emit("chat:history", (res) => {
+    if (!res || res.joined === false) return;
+    const history = Array.isArray(res.messages) ? res.messages : [];
+    const known = new Set(history.map((m) => m.client_id).filter(Boolean));
+
+    // Свои, которые сервер так и не получил (связь пропадала), — дошлём
+    const unsent = messages.value.filter(
+      (m) => m.pending && !known.has(m.client_id),
+    );
+
+    messages.value = [...history, ...unsent];
+    unsent.forEach(emitChatMessage);
+  });
 };
 
 const debounceConferenceSettings = debounceHandler(
