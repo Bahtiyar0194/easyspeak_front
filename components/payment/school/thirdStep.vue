@@ -7,7 +7,7 @@
       <div class="bg-corp text-white p-4 rounded-xl mb-4">
         <p class="mb-2">
           {{ $t("form.full_school_name") }}:
-          <b>{{ schoolStore.schoolData.full_school_name }}</b>
+          <b>{{ decodeEntities(schoolStore.schoolData.full_school_name) }}</b>
         </p>
         <p class="mb-2">
           {{ $t("form.fact_address") }}:
@@ -79,6 +79,7 @@
 
 <script setup>
 import cardPayment from "../cardPayment.vue";
+import { decodeEntities } from "../../../utils/decodeEntities";
 const schoolStore = useSchoolStore();
 
 const props = defineProps({

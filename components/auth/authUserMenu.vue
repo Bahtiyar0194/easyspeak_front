@@ -60,10 +60,9 @@
                       <i class="pi pi-building-columns"></i>
                     </span>
                     <span class="min-w-0 flex flex-col">
-                      <span
-                        class="font-semibold text-sm truncate"
-                        v-html="schoolStore.schoolData.full_school_name"
-                      ></span>
+                      <span class="font-semibold text-sm truncate">{{
+                        decodeEntities(schoolStore.schoolData.full_school_name)
+                      }}</span>
                       <span class="text-xs text-inactive">
                         {{ $t("pages.subscription.expired_at") }}:
                         <b class="text-active">{{
@@ -151,6 +150,7 @@ import { useRouter } from "nuxt/app";
 import dropdownMenu from "../ui/dropdownMenu.vue";
 import userAvatar from "../ui/userAvatar.vue";
 import roleProvider from "../ui/roleProvider.vue";
+import { decodeEntities } from "../../utils/decodeEntities";
 
 const { $axiosPlugin } = useNuxtApp();
 const { refreshIdentity } = useSanctumAuth();

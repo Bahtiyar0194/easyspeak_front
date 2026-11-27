@@ -5,10 +5,10 @@
       <div class="school-hero">
         <div class="school-avatar" aria-hidden="true">{{ schoolInitials }}</div>
         <div class="min-w-0 flex-1">
-          <h2 class="mb-1 leading-tight">{{ school.full_school_name }}</h2>
+          <h2 class="mb-1 leading-tight">{{ decodeEntities(school.full_school_name) }}</h2>
           <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-inactive">
             <span v-if="school.school_name !== school.full_school_name">
-              {{ school.school_name }}
+              {{ decodeEntities(school.school_name) }}
             </span>
             <span v-if="school.school_domain" class="inline-flex items-center gap-1.5">
               <i class="pi pi-globe" aria-hidden="true"></i>
@@ -129,10 +129,10 @@
 
           <dl class="school-dl">
             <dt>{{ $t("form.school_name") }}</dt>
-            <dd>{{ school.school_name }}</dd>
+            <dd>{{ decodeEntities(school.school_name) }}</dd>
 
             <dt>{{ $t("form.full_school_name") }}</dt>
-            <dd>{{ school.full_school_name }}</dd>
+            <dd>{{ decodeEntities(school.full_school_name) }}</dd>
 
             <template v-if="school.bin">
               <dt>{{ $t("form.bin") }}</dt>
@@ -292,6 +292,7 @@ import { useRoute, useRouter } from "nuxt/app";
 import steps from "../../../components/ui/steps.vue";
 import { formatAmountToWords } from "../../../utils/amountToWords";
 import { formatToInvoiceNumber } from "../../../utils/formatToInvoiceNumber";
+import { decodeEntities } from "../../../utils/decodeEntities";
 import firstStep from "../../../components/payment/school/firstStep.vue";
 import secondStep from "../../../components/payment/school/secondStep.vue";
 import thirdStep from "../../../components/payment/school/thirdStep.vue";
@@ -314,7 +315,7 @@ const subscriptionModalIsVisible = ref(false);
 const school = computed(() => schoolStore.schoolData);
 
 const schoolInitials = computed(() =>
-  String(school.value?.school_name || school.value?.full_school_name || "?")
+  decodeEntities(school.value?.school_name || school.value?.full_school_name || "?")
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
@@ -449,7 +450,7 @@ const backToStep = (step) => {
 const today = new Date().toISOString().slice(0, 10);
 
 useHead({
-  title: schoolStore.schoolData?.full_school_name,
+  title: decodeEntities(schoolStore.schoolData?.full_school_name),
   meta: [{ name: "description", content: t("pages.home.description") }],
 
   script: [
@@ -834,7 +835,7 @@ const generateInvoice = async (data) => {
               [
                 {
                   text: `${t("form.bin")} ${schoolStore.schoolData.bin}, ${
-                    schoolStore.schoolData.full_school_name
+                    decodeEntities(schoolStore.schoolData.full_school_name)
                   }.`,
                   bold: true,
                 },

@@ -121,8 +121,8 @@
                       v-for="school in schools"
                       :key="school.school_id"
                       :value="school.school_id"
-                      v-html="
-                        `${school.school_name} (${school.full_school_name})`
+                      v-text="
+                        decodeEntities(`${school.school_name} (${school.full_school_name})`)
                       "
                     />
                   </select>
@@ -163,6 +163,7 @@
 import modal from "../../../components/ui/modal.vue";
 import loader from "../../../../components/ui/loader.vue";
 import { isSubdomain } from "../../../utils/isSubdomain";
+import { decodeEntities } from "../../../utils/decodeEntities";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
 const authUser = useSanctumUser();
