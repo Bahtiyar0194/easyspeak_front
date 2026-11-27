@@ -6616,3 +6616,87 @@ a:focus-visible > .cover-card{
   @apply outline-none;
   box-shadow: var(--shadow-focus);
 }
+
+/* ===== Страница «Файлы» ===== */
+/* Место на диске — компактная полоса в панели */
+.disk-meter{
+  @apply flex items-center gap-2.5 px-3 py-1.5 rounded-xl border bg-active text-inactive;
+  border-color: var(--surface-border);
+  --meter: 59 130 246;
+}
+
+.disk-meter.low{
+  --meter: 239 68 68;
+  border-color: rgb(239 68 68 / 0.4);
+}
+
+.disk-meter > i{
+  color: rgb(var(--meter));
+}
+
+.disk-meter-bar{
+  @apply h-1.5 w-36 max-w-full rounded-full overflow-hidden;
+  background-color: var(--cell-tint);
+}
+
+.disk-meter-bar > div{
+  @apply h-full rounded-full;
+  background-color: rgb(var(--meter));
+}
+
+/* Быстрый фильтр по типу */
+.type-chips{
+  @apply flex gap-2 overflow-x-auto pb-1;
+  scrollbar-width: none;
+}
+
+.type-chips::-webkit-scrollbar{
+  display: none;
+}
+
+.type-chip{
+  @apply shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium bg-active text-inactive transition-colors;
+  border-color: var(--surface-border);
+}
+
+.type-chip:hover{
+  @apply text-active;
+  border-color: rgb(59 130 246 / 0.4);
+}
+
+.type-chip.active{
+  @apply bg-corp text-white border-transparent;
+}
+
+/* Иконка типа / миниатюра в списке — цвет как у материалов урока */
+.file-thumb{
+  @apply shrink-0 w-9 h-9 rounded-lg overflow-hidden flex items-center justify-center text-lg;
+  --kind: 100 116 139;
+  color: rgb(var(--kind));
+  background-color: rgb(var(--kind) / 0.12);
+}
+
+.file-thumb img{
+  @apply w-full h-full object-cover;
+}
+
+.file-thumb.kind-video,
+.type-chip.kind-video:not(.active) i{ --kind: 239 68 68; color: rgb(var(--kind)); }
+.file-thumb.kind-audio,
+.type-chip.kind-audio:not(.active) i{ --kind: 168 85 247; color: rgb(var(--kind)); }
+.file-thumb.kind-image,
+.type-chip.kind-image:not(.active) i{ --kind: 34 197 94; color: rgb(var(--kind)); }
+
+@media (max-width: 639px){
+  .disk-meter{
+    @apply order-last w-full;
+  }
+
+  .disk-meter-bar{
+    @apply w-full;
+  }
+
+  .disk-meter > div{
+    @apply flex-1;
+  }
+}
