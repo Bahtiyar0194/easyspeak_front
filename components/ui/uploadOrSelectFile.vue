@@ -1,41 +1,27 @@
 <template>
-  <div class="col-span-12">
-    <div class="flex flex-col gap-y-2">
-      <label v-if="props.allowGenerate === true" class="custom-radio">
-        <input
-          type="radio"
-          :checked="uploadingNewFileMethod === 'generate'"
-          :value="uploadingNewFileMethod"
-          :name="props.radioName"
-          @change="uploadingNewFileMethod = 'generate'"
-        />
-        <span>{{ $t("file.generate") }}</span>
-      </label>
-
-      <label class="custom-radio">
-        <input
-          type="radio"
-          :checked="uploadingNewFileMethod === 'true'"
-          :value="uploadingNewFileMethod"
-          :name="props.radioName"
-          @change="uploadingNewFileMethod = 'true'"
-        />
-        <span>{{ $t("file.uploading_a_new_file") }}</span>
-      </label>
-
-      <label class="custom-radio">
-        <input
-          type="radio"
-          :checked="uploadingNewFileMethod === 'false'"
-          :value="uploadingNewFileMethod"
-          :name="props.radioName"
-          @change="uploadingNewFileMethod = 'false'"
-        />
-        <span>{{ $t("file.upload_from_media") }}</span>
-      </label>
+  <!-- Откуда взять файл: сгенерировать / загрузить новый / из медиатеки.
+       Переключатель с иконками; выбранный режим уходит на бэкенд тем же
+       полем props.radioName, что и раньше: 'generate' | 'true' | 'false' -->
+  <div ref="switchRef" class="col-span-12">
+    <input type="hidden" :name="props.radioName" :value="mode" />
+    <div class="source-switch" role="tablist">
+      <button
+        v-for="option in modes"
+        :key="option.value"
+        type="button"
+        role="tab"
+        class="source-switch-btn"
+        :class="{ active: mode === option.value }"
+        :aria-selected="mode === option.value"
+        @click="mode = option.value"
+      >
+        <i :class="option.icon" aria-hidden="true"></i>
+        <span>{{ option.label }}</span>
+      </button>
     </div>
   </div>
-  <div v-if="uploadingNewFileMethod === 'generate'" class="col-span-12">
+
+  <div v-if="mode === 'generate'" class="col-span-12">
     <fileGenerate
       :accept="props.accept"
       :error="errors[props.generateFileInputName]"
@@ -44,7 +30,7 @@
       :generateFileError="props.generateFileError"
     />
   </div>
-  <div v-else-if="uploadingNewFileMethod === 'true'" class="col-span-12">
+  <div v-else-if="mode === 'true'" class="col-span-12">
     <div class="custom-grid">
       <div v-if="props.showFileInputName === true" class="col-span-12">
         <div class="form-group-border active">
@@ -75,7 +61,7 @@
       </div>
     </div>
   </div>
-  <div v-else-if="uploadingNewFileMethod === 'false'" class="col-span-12">
+  <div v-else-if="mode === 'false'" class="col-span-12">
     <selectFileFromLibrary
       :name="props.libraryFileName"
       :fileType="props.accept"
@@ -87,6 +73,8 @@
 import fileGenerate from "./fileGenerate.vue";
 import fileUploadButton from "./fileUploadButton.vue";
 import selectFileFromLibrary from "./selectFileFromLibrary.vue";
+
+const { t } = useI18n();
 
 const props = defineProps({
   radioName: {
@@ -151,7 +139,31 @@ const props = defineProps({
 
 const { errors } = toRefs(props);
 
-const uploadingNewFileMethod = ref(
-  props.allowGenerate === true ? "generate" : "true"
-);
+// Значения — как ждёт бэкенд: 'generate' | 'true' (новый файл) | 'false' (медиатека)
+const modes = computed(() => [
+  ...(props.allowGenerate
+    ? [{ value: "generate", icon: "bi bi-stars", label: t("file.mode.generate") }]
+    : []),
+  { value: "true", icon: "pi pi-upload", label: t("file.mode.upload") },
+  { value: "false", icon: "pi pi-images", label: t("file.mode.library") },
+]);
+
+const defaultMode = () => (props.allowGenerate === true ? "generate" : "true");
+const mode = ref(defaultMode());
+
+// Форму сбросили (окно закрыли) — возвращаем режим по умолчанию
+const switchRef = ref(null);
+let formElement = null;
+const handleFormReset = () => {
+  mode.value = defaultMode();
+};
+
+onMounted(() => {
+  formElement = switchRef.value?.closest("form") || null;
+  formElement?.addEventListener("reset", handleFormReset);
+});
+
+onBeforeUnmount(() => {
+  formElement?.removeEventListener("reset", handleFormReset);
+});
 </script>

@@ -1,15 +1,14 @@
 <template>
-  <div ref="inputWrapper">
-    <loader v-if="pending" :className="'overlay'" :showPendingText="true" />
-    <div class="form-group-border select active label-active mb-4">
+  <div ref="inputWrapper" class="flex flex-col gap-3">
+    <div class="form-group-border select active label-active">
       <i class="pi pi-microphone"></i>
-      <select v-model="currentVoice">
+      <select v-model="currentVoice" :disabled="voicesLoading || !voices.length">
         <option disabled value="">
-          {{ $t("file.audio.choose_a_voice") }}
+          {{ voicesLoading ? $t("loading") : $t("file.audio.choose_a_voice") }}
         </option>
         <option
-          v-for="(voice, voiceIndex) in voices"
-          :key="voiceIndex"
+          v-for="voice in voices"
+          :key="voice.voice_id"
           :value="voice.voice_id"
         >
           {{ voice.name }}
@@ -20,50 +19,60 @@
       </label>
     </div>
 
-    <div
-      v-if="props.accept === 'image'"
-      class="form-group-border active label-active mb-2"
-    >
-      <i class="pi pi-list"></i>
-      <textarea v-model="instructions"></textarea>
-      <label>{{ $t("instructions") }}</label>
-    </div>
-
-    <button
-      v-if="file === null"
-      @click="generateFile()"
-      type="button"
-      class="btn btn-sm btn-outline-primary mb-2"
-    >
-      <i class="pi pi-asterisk"></i>
-      {{ $t("generate") }}
-    </button>
-
-    <div v-if="file">
-      <audioPlayerWithWave
-        v-if="props.accept === 'audio'"
-        :key="'audio_' + file"
-        :src="'data:audio/mpeg;base64,' + file"
-      />
-    </div>
-
-    <p v-if="(error || props.error) && !file" class="text-danger mb-0">
-      {{ error.error.detail.message || error || props.error[0] }}
+    <!-- Сервис голосов не ответил — сообщение здесь, без ухода со страницы -->
+    <p v-if="voicesError" class="mb-0 text-sm text-danger flex flex-wrap items-center gap-2">
+      <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+      {{ $t("file.voices_failed") }}
+      <button type="button" class="auto-translate-btn" @click="loadVoices(true)">
+        {{ $t("file.try_again") }}
+      </button>
     </p>
 
-    <input type="hidden" :name="props.generateFileInputName" :value="file" />
+    <div>
+      <button
+        type="button"
+        class="btn btn-sm"
+        :class="file ? 'btn-light' : 'btn-outline-primary'"
+        :disabled="pending"
+        @click="generateFile()"
+      >
+        <i
+          :class="pending ? 'pi pi-spin pi-spinner' : file ? 'pi pi-refresh' : 'bi bi-stars'"
+          aria-hidden="true"
+        ></i>
+        {{ file ? $t("file.regenerate") : $t("generate") }}
+      </button>
+    </div>
+
+    <audioPlayerWithWave
+      v-if="file && props.accept === 'audio'"
+      :key="'audio_' + fileKey"
+      :src="'data:audio/mpeg;base64,' + file"
+    />
+
+    <p v-if="errorText && !file" class="text-danger text-sm mb-0">
+      {{ errorText }}
+    </p>
+
+    <input type="hidden" :name="props.generateFileInputName" :value="file || ''" />
   </div>
 </template>
 
+<script>
+// Список голосов один на всё приложение: раньше каждый компонент
+// (их бывает несколько на странице) запрашивал его заново
+let voicesRequest = null;
+</script>
+
 <script setup>
-import loader from "./loader.vue";
-import { useRouter } from "nuxt/app";
 import audioPlayerWithWave from "./audioPlayerWithWave.vue";
+
+const { t } = useI18n();
 const inputWrapper = ref(null);
-const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
 const pending = ref(false);
 const file = ref(null);
+const fileKey = ref(0);
 const error = ref(null);
 
 const props = defineProps({
@@ -72,7 +81,7 @@ const props = defineProps({
     required: true,
   },
   error: {
-    type: Object,
+    type: [Object, Array, String],
     required: false,
   },
   generateText: {
@@ -92,41 +101,60 @@ const props = defineProps({
   },
 });
 
-const instructions = ref("");
 const currentVoice = ref("");
 const voices = ref([]);
+const voicesLoading = ref(false);
+const voicesError = ref(false);
 
-const getVoices = async () => {
-  pending.value = true;
+// Текст ошибки из любого вида ответа. Раньше обращение к
+// error.error.detail.message падало, если ошибка была строкой или null
+const errorText = computed(() => {
+  const local = error.value;
+  if (typeof local === "string" && local) return local;
+  if (local && typeof local === "object") {
+    return (
+      local.error?.detail?.message ||
+      local.detail?.message ||
+      local.message ||
+      (typeof local.error === "string" ? local.error : "") ||
+      t("file.generate_failed")
+    );
+  }
+  const fromForm = props.error;
+  if (Array.isArray(fromForm)) return fromForm[0] || "";
+  if (typeof fromForm === "string") return fromForm;
+  return "";
+});
 
-  await $axiosPlugin
-    .get("elevenlabs/list_voices")
-    .then((response) => {
-      voices.value = response.data.voices;
-    })
-    .catch((err) => {
-      if (err.response) {
-        router.push({
-          path: "/error",
-          query: {
-            status: err.response.status,
-            message: err.response.data.message,
-            url: err.request.responseURL,
-          },
-        });
-      } else {
-        router.push("/error");
-      }
-    })
-    .finally(() => {
-      pending.value = false;
-    });
+const selectFirstVoice = () => {
+  if (!currentVoice.value && voices.value.length) {
+    currentVoice.value = voices.value[0].voice_id;
+  }
+};
+
+const loadVoices = async (force = false) => {
+  voicesLoading.value = true;
+  voicesError.value = false;
+  try {
+    if (!voicesRequest || force) {
+      voicesRequest = $axiosPlugin
+        .get("elevenlabs/list_voices")
+        .then((response) => response.data?.voices || []);
+    }
+    voices.value = await voicesRequest;
+    selectFirstVoice();
+  } catch (e) {
+    voicesRequest = null; // следующая попытка — новым запросом
+    voicesError.value = true;
+  } finally {
+    voicesLoading.value = false;
+  }
 };
 
 const generateFile = async () => {
   error.value = null;
-  if (props.generateText == "") {
-    error.value = props.generateFileError;
+  if (!props.generateText || !props.generateText.trim()) {
+    error.value = props.generateFileError || t("file.generate_failed");
     return;
   }
   pending.value = true;
@@ -140,70 +168,48 @@ const generateFile = async () => {
     })
     .then((response) => {
       file.value = response.data.base64;
+      fileKey.value++;
     })
     .catch((err) => {
-      if (err.response) {
-        if (err.response.status) {
-          error.value = err.response.data;
-        } else {
-          router.push({
-            path: "/error",
-            query: {
-              status: err.response.status,
-              message: err.response.data.message,
-              url: err.request.responseURL,
-            },
-          });
-        }
-      } else {
-        router.push("/error");
-      }
+      // Ошибка сервиса — сообщение здесь, форма не теряется
+      error.value = err.response?.data || t("file.generate_failed");
     })
     .finally(() => {
       pending.value = false;
     });
 };
 
+// Текст или голос поменялись — прежний результат больше не подходит
 watch(
   () => props.generateText,
   (newVal) => {
-    if (newVal) {
-      file.value = null;
-    }
+    if (newVal) file.value = null;
   },
 );
 
-watch(
-  () => currentVoice.value,
-  (newVal) => {
-    if (newVal) {
-      file.value = null;
-    }
-  },
-);
+watch(currentVoice, (newVal, oldVal) => {
+  if (newVal && oldVal) file.value = null;
+});
 
 const handleFormReset = () => {
   file.value = null;
   error.value = null;
-  currentVoice.value = "";
-  instructions.value = "";
   pending.value = false;
+  currentVoice.value = "";
+  selectFirstVoice();
 };
+
+let formElement = null;
 
 onMounted(() => {
   // Отслеживаем сброс формы
-  const formElement = inputWrapper.value.closest("form");
-  if (formElement) {
-    formElement.addEventListener("reset", handleFormReset); // Слушаем сброс формы
-  }
+  formElement = inputWrapper.value?.closest("form") || null;
+  formElement?.addEventListener("reset", handleFormReset);
 
-  getVoices();
+  loadVoices();
 });
 
 onBeforeUnmount(() => {
-  const formElement = inputWrapper.value.closest("form");
-  if (formElement) {
-    formElement.removeEventListener("reset", handleFormReset); // Слушаем сброс формы
-  }
+  formElement?.removeEventListener("reset", handleFormReset);
 });
 </script>

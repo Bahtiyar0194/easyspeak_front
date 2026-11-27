@@ -1,6 +1,15 @@
 <template>
-  <div class="form-group-file" :class="props.className" ref="inputWrapper">
+  <div
+    class="form-group-file"
+    :class="[props.className, { dragging }]"
+    ref="inputWrapper"
+    @dragenter.prevent="onDragEnter"
+    @dragover.prevent
+    @dragleave.prevent="onDragLeave"
+    @drop.prevent="onDrop"
+  >
     <input
+      ref="fileInput"
       :id="props.id"
       type="file"
       :name="props.name"
@@ -9,13 +18,13 @@
       placeholder=" "
     />
     <label :for="props.id" :class="{ 'label-error': props.error }">
-      <!-- Preview for image or audio files -->
+      <!-- Предпросмотр картинки / аудио / видео -->
       <template v-if="previewUrl">
         <img
           v-if="selectedFile.type.startsWith('image/')"
           :key="'img_' + previewUrl"
           :src="previewUrl"
-          alt="Preview"
+          alt=""
           class="w-auto h-14 mx-auto rounded-lg mb-2"
         />
         <audioPlayerWithWave
@@ -32,25 +41,36 @@
         />
       </template>
 
-      <i v-else-if="props.icon" :class="props.icon"></i>
+      <i v-else-if="props.icon" :class="props.icon" aria-hidden="true"></i>
 
-      <div v-if="selectedFile" class="mt-4">
-        <p v-if="props.error" class="text-danger">
+      <div v-if="selectedFile" class="mt-3 flex flex-col items-center gap-1">
+        <p v-if="props.error" class="text-danger mb-0">
           {{ props.error[0] || props.error }}
         </p>
-        <p v-if="selectedFile.name" class="text-xs mb-0">
-          {{ $t("file.name") }}: <i>{{ selectedFile.name }}</i>
-        </p>
-        <p v-if="selectedFile.size" class="text-xs mb-0">
-          {{ $t("file.size") }}:
-          <i
-            >{{ (selectedFile.size / 1048576).toFixed(2) }}
-            {{ $t("file.megabyte") }}</i
-          >
+        <p class="text-sm font-medium mb-0 break-all">{{ selectedFile.name }}</p>
+        <p v-if="selectedFile.size" class="text-xs text-inactive mb-0">
+          {{ formatSize(selectedFile.size) }}
         </p>
       </div>
-      <p v-else class="mb-0">{{ props.label }}</p>
+      <template v-else>
+        <p class="mb-0 mt-2 font-medium">{{ props.label }}</p>
+        <p class="mb-0 mt-1 text-xs text-inactive">
+          {{ dragging ? $t("file.drop_release") : $t("file.drop_here") }}
+        </p>
+      </template>
     </label>
+
+    <!-- Убрать выбранный файл (раньше — только выбрать другой) -->
+    <button
+      v-if="selectedFile"
+      type="button"
+      class="file-clear-btn"
+      :title="$t('file.remove')"
+      :aria-label="$t('file.remove')"
+      @click="clearFile"
+    >
+      <i class="pi pi-times" aria-hidden="true"></i>
+    </button>
   </div>
 </template>
 
@@ -58,7 +78,9 @@
 import audioPlayerWithWave from "./audioPlayerWithWave.vue";
 import videoPlayer from "./videoPlayer.vue";
 
+const { t } = useI18n();
 const inputWrapper = ref(null);
+const fileInput = ref(null);
 
 const props = defineProps({
   id: {
@@ -74,7 +96,7 @@ const props = defineProps({
     required: true,
   },
   error: {
-    type: Object,
+    type: [Object, Array, String],
     required: false,
   },
   icon: {
@@ -91,17 +113,29 @@ const props = defineProps({
   },
 });
 
-// Define a ref to handle the selected file
 const selectedFile = ref(null);
 const previewUrl = ref(null);
+const dragging = ref(false);
+let dragDepth = 0;
 
-// Watch for file selection and emit the file object
-const handleFileChange = (event) => {
-  selectedFile.value = null;
-  const file = event.target.files[0];
-  selectedFile.value = file;
+// Размер — в КБ / МБ / ГБ
+const formatSize = (bytes) => {
+  const kb = bytes / 1024;
+  if (kb < 1024) return `${kb.toFixed(1)} ${t("file.kilobyte")}`;
+  const mb = kb / 1024;
+  if (mb < 1024) return `${mb.toFixed(1)} ${t("file.megabyte")}`;
+  return `${(mb / 1024).toFixed(2)} ${t("file.gigabyte")}`;
+};
 
-  // Generate a preview URL for the image
+// Старую ссылку предпросмотра освобождаем (раньше — утечка при каждом выборе)
+const revokePreview = () => {
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
+  previewUrl.value = null;
+};
+
+const setFile = (file) => {
+  revokePreview();
+  selectedFile.value = file || null;
   if (
     file &&
     (file.type.startsWith("image/") ||
@@ -109,33 +143,72 @@ const handleFileChange = (event) => {
       file.type.startsWith("video/"))
   ) {
     previewUrl.value = URL.createObjectURL(file);
-  } else {
-    previewUrl.value = null;
   }
+};
+
+const handleFileChange = (event) => {
+  setFile(event.target.files[0]);
+};
+
+// Подходит ли файл под accept («image/*», «audio/*», «.pdf» …)
+const matchesAccept = (file) => {
+  const rules = String(props.accept || "")
+    .split(",")
+    .map((r) => r.trim().toLowerCase())
+    .filter(Boolean);
+  if (!rules.length) return true;
+  const type = (file.type || "").toLowerCase();
+  const name = (file.name || "").toLowerCase();
+  return rules.some((rule) => {
+    if (rule.endsWith("/*")) return type.startsWith(rule.slice(0, -1));
+    if (rule.startsWith(".")) return name.endsWith(rule);
+    return type === rule;
+  });
+};
+
+// Перетаскивание файла на поле
+const onDragEnter = () => {
+  dragDepth++;
+  dragging.value = true;
+};
+
+const onDragLeave = () => {
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (dragDepth === 0) dragging.value = false;
+};
+
+const onDrop = (event) => {
+  dragDepth = 0;
+  dragging.value = false;
+  const file = event.dataTransfer?.files?.[0];
+  if (!file || !matchesAccept(file) || !fileInput.value) return;
+  // Кладём файл в сам input — он уйдёт с формой как обычно
+  const transfer = new DataTransfer();
+  transfer.items.add(file);
+  fileInput.value.files = transfer.files;
+  setFile(file);
+};
+
+const clearFile = () => {
+  if (fileInput.value) fileInput.value.value = "";
+  setFile(null);
 };
 
 const handleFormReset = () => {
+  revokePreview();
   selectedFile.value = null;
-  previewUrl.value = null;
 };
+
+let formElement = null;
 
 onMounted(() => {
   // Отслеживаем сброс формы
-  const formElement = inputWrapper.value.closest("form");
-  if (formElement) {
-    formElement.addEventListener("reset", handleFormReset); // Слушаем сброс формы
-  }
+  formElement = inputWrapper.value?.closest("form") || null;
+  formElement?.addEventListener("reset", handleFormReset);
 });
 
-// Clean up the preview URL when the component is unmounted
 onBeforeUnmount(() => {
-  if (previewUrl.value) {
-    URL.revokeObjectURL(previewUrl.value);
-  }
-
-  const formElement = inputWrapper.value.closest("form");
-  if (formElement) {
-    formElement.removeEventListener("reset", handleFormReset); // Слушаем сброс формы
-  }
+  revokePreview();
+  formElement?.removeEventListener("reset", handleFormReset);
 });
 </script>

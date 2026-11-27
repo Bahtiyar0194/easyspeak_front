@@ -6700,3 +6700,109 @@ a:focus-visible > .cover-card{
     @apply flex-1;
   }
 }
+
+/* ===== Выбор файла: сгенерировать / загрузить / из медиатеки ===== */
+.source-switch{
+  @apply flex gap-1 p-1 rounded-xl overflow-x-auto;
+  background-color: var(--cell-tint);
+  scrollbar-width: none;
+}
+
+.source-switch::-webkit-scrollbar{
+  display: none;
+}
+
+.source-switch-btn{
+  @apply flex-1 min-w-max inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-inactive transition-colors;
+}
+
+.source-switch-btn:hover{
+  @apply text-active;
+}
+
+.source-switch-btn.active{
+  @apply bg-active text-corp;
+  box-shadow: 0 4px 12px -6px rgb(15 23 42 / 0.3);
+}
+
+.source-switch-btn:focus-visible{
+  @apply outline-none;
+  box-shadow: var(--shadow-focus);
+}
+
+/* Поле загрузки: перетаскивание и «Убрать» */
+.form-group-file{
+  @apply relative;
+}
+
+.form-group-file.dragging label{
+  border-color: theme('colors.corp.DEFAULT');
+  background-color: rgb(59 130 246 / 0.08);
+  box-shadow: var(--shadow-focus);
+}
+
+.file-clear-btn{
+  @apply absolute top-2 right-2 flex items-center justify-center w-8 h-8 rounded-lg bg-active text-inactive border transition-colors;
+  border-color: var(--surface-border);
+}
+
+.file-clear-btn:hover{
+  @apply text-danger;
+  border-color: rgb(239 68 68 / 0.4);
+}
+
+/* Медиатека: поиск, сетка с превью, выбранный подсвечен */
+.library-picker{
+  @apply flex flex-col gap-3;
+}
+
+.library-grid{
+  @apply grid gap-2 max-h-80 overflow-y-auto p-0.5;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+}
+
+.library-item{
+  @apply flex flex-col gap-1 p-1.5 rounded-xl border text-left transition-colors;
+  border-color: transparent;
+}
+
+.library-item:hover{
+  @apply bg-inactive;
+}
+
+.library-item.selected{
+  border-color: theme('colors.corp.DEFAULT');
+  background-color: rgb(59 130 246 / 0.08);
+}
+
+.library-item:focus-visible{
+  @apply outline-none;
+  box-shadow: var(--shadow-focus);
+}
+
+.library-thumb{
+  @apply relative w-full aspect-[4/3] rounded-lg overflow-hidden flex items-center justify-center text-2xl;
+  --kind: 100 116 139;
+  color: rgb(var(--kind));
+  background-color: rgb(var(--kind) / 0.12);
+}
+
+.library-thumb.kind-video{ --kind: 239 68 68; }
+.library-thumb.kind-audio{ --kind: 168 85 247; }
+.library-thumb.kind-image{ --kind: 34 197 94; }
+
+.library-thumb img{
+  @apply w-full h-full object-cover;
+}
+
+.library-check{
+  @apply absolute top-1 right-1 flex items-center justify-center w-5 h-5 rounded-full bg-corp text-white text-[10px];
+}
+
+.library-name{
+  @apply text-[11px] leading-tight text-active line-clamp-2 break-words;
+}
+
+.library-picker.has-error .participants-search{
+  border-color: rgb(239 68 68 / 0.6);
+}
