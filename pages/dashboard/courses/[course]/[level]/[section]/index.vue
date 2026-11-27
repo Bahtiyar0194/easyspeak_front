@@ -136,7 +136,7 @@
               done: isLessonAvailable(lesson) && percentOf(lesson) >= 100,
               next: nextLesson && nextLesson.lesson_id === lesson.lesson_id,
             }"
-            @click="!isLessonAvailable(lesson) && onLockedLesson()"
+            @click="!isLessonAvailable(lesson) && onLockedLesson(lesson)"
           >
             <span class="unit-num" aria-hidden="true">
               <i v-if="!isLessonAvailable(lesson)" class="pi pi-lock"></i>
@@ -160,6 +160,14 @@
                 <span>
                   <i class="pi pi-pencil" aria-hidden="true"></i>
                   {{ $t("pages.tasks.tasks_count") }}: {{ lesson.tasks.length }}
+                </span>
+                <!-- Закрытый урок: когда откроется (после урока с учителем) -->
+                <span
+                  v-if="!isLessonAvailable(lesson) && lesson.available_status?.opens_at"
+                  class="text-warning font-medium"
+                >
+                  <i class="pi pi-lock" aria-hidden="true"></i>
+                  {{ $t("pages.lessons.opens_at", { date: formatOpensAt(lesson.available_status.opens_at) }) }}
                 </span>
               </span>
             </div>
@@ -375,12 +383,22 @@
       <h4>{{ $t("pages.lessons.is_unavailable") }}</h4>
     </template>
     <template v-slot:body_content>
-      <p class="mb-0">{{ $t("pages.lessons.is_unavailable_desc") }}</p>
+      <p class="mb-0">
+        {{
+          lockedLesson?.available_status?.opens_at
+            ? $t("pages.lessons.opens_at_desc", {
+                lesson: lockedLesson.lesson_name,
+                date: formatOpensAt(lockedLesson.available_status.opens_at),
+              })
+            : $t("pages.lessons.is_unavailable_desc")
+        }}
+      </p>
     </template>
   </modal>
 </template>
 
 <script setup>
+import { useCrumbLabels } from "~/composables/useCrumbLabels";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
 import { debounceHandler } from "../../../../../../utils/debounceHandler";
@@ -394,11 +412,14 @@ import firstStep from "../../components/payment/level/firstStep.vue";
 import secondStep from "../../components/payment/level/secondStep.vue";
 import { startConfetti, stopConfetti } from "../../../../../../utils/confetti";
 
+const { setCrumbLabels } = useCrumbLabels();
+
 const config = useRuntimeConfig();
 const router = useRouter();
 const route = useRoute();
 const { t, localeProperties } = useI18n();
 const schoolStore = useSchoolStore();
+const authUser = useSanctumUser();
 
 const errors = ref([]);
 const course_slug = route.params.course;
@@ -446,8 +467,24 @@ const lessonLink = (lesson) =>
   );
 
 // Недоступный урок: в AI-школе — окно покупки, иначе — пояснение.
-const onLockedLesson = () =>
+const onLockedLesson = (lesson) => {
+  lockedLesson.value = lesson;
   schoolStore.isAiSchoolDomain ? openPaymentModal() : openUnAvailableModal();
+};
+
+// Закрытый урок, по которому нажали, — для пояснения «когда откроется»
+const lockedLesson = ref(null);
+
+// «4 декабря, 17:00» на языке интерфейса
+const formatOpensAt = (iso) =>
+  iso
+    ? new Date(iso).toLocaleString(String(localeProperties.value.code || "ru").split("-")[0], {
+        day: "numeric",
+        month: "long",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
 const pending = ref(true);
 const pendingAddLesson = ref(false);
 
@@ -464,7 +501,6 @@ const selectedSubscriptionId = ref("");
 
 const checkout = ref(null);
 const paymentModalIsVisible = ref(false);
-const paymentModalSize = ref("modal-lg");
 const pendingPayment = ref(false);
 const paymentFormRef = ref(null);
 const cryptogram = ref("");
@@ -561,7 +597,6 @@ const currentStep = ref(1);
 
 const backToStep = (step) => {
   currentStep.value = step;
-  paymentModalSize.value = "modal-" + paymentSteps[step - 1].modalSize;
 };
 
 const showAddLessonModal = () => {
@@ -574,35 +609,12 @@ const getSection = async () => {
   await $axiosPlugin
     .get("courses/" + course_slug + "/" + level_slug + "/" + section_id)
     .then((response) => {
-      const courseCrumbItem = document.querySelector(
-        'span[data-crumb="[course]"]',
-      );
-
-      // Проверить, найден ли элемент
-      if (courseCrumbItem) {
-        // Изменить текст внутри элемента
-        courseCrumbItem.textContent = response.data.course.course_name;
-      }
-
-      const levelCrumbItem = document.querySelector(
-        'span[data-crumb="[level]"]',
-      );
-
-      // Проверить, найден ли элемент
-      if (levelCrumbItem) {
-        // Изменить текст внутри элемента
-        levelCrumbItem.textContent = response.data.level.level_name;
-      }
-
-      const sectionCrumbItem = document.querySelector(
-        'span[data-crumb="[section]"]',
-      );
-
-      // Проверить, найден ли элемент
-      if (sectionCrumbItem) {
-        // Изменить текст внутри элемента
-        sectionCrumbItem.textContent = response.data.section.section_name;
-      }
+      // Названия для «хлебных крошек» (components/ui/breadcrumb.vue)
+      setCrumbLabels({
+        course: response.data.course.course_name,
+        level: response.data.level.level_name,
+        section: response.data.section.section_name,
+      });
 
       pageTitle.value = response.data.section.section_name;
 
@@ -704,10 +716,6 @@ const closeAddLessonModal = () => {
   errors.value = [];
 };
 
-const openLesson = (url) => {
-  router.push(url);
-};
-
 const openPaymentModal = () => {
   paymentModalIsVisible.value = true;
   errors.value = [];
@@ -752,8 +760,6 @@ const handlePayment = async () => {
       errors.value = [];
       if (response.data.step) {
         currentStep.value = response.data.step + 1;
-        paymentModalSize.value =
-          "modal-" + paymentSteps[response.data.step].modalSize;
         pendingPayment.value = false;
       } else {
         if (response.data.Success === true) {
@@ -828,7 +834,8 @@ const createCryptogram = async () => {
 };
 
 onMounted(() => {
-  getLessonTypes();
+  // Типы уроков нужны только форме «Добавить урок» (суперадминистратор)
+  if (Number(authUser.value?.current_role_id) === 1) getLessonTypes();
   getSection();
 });
 

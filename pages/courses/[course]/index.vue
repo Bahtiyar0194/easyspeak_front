@@ -160,12 +160,15 @@
 </template>
 
 <script setup>
+import { useCrumbLabels } from "~/composables/useCrumbLabels";
 import modal from "../../../components/ui/modal.vue";
 import loader from "../../../../components/ui/loader.vue";
 import { isSubdomain } from "../../../utils/isSubdomain";
 import { decodeEntities } from "../../../utils/decodeEntities";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
+
+const { setCrumbLabels } = useCrumbLabels();
 const authUser = useSanctumUser();
 const { localeProperties } = useI18n();
 const config = useRuntimeConfig();
@@ -203,15 +206,10 @@ const getLevels = async () => {
   await $axiosPlugin
     .get("courses/get_levels_index/" + course_slug)
     .then((response) => {
-      const courseCrumbItem = document.querySelector(
-        'span[data-crumb="[course]"]',
-      );
-
-      // Проверить, найден ли элемент
-      if (courseCrumbItem) {
-        // Изменить текст внутри элемента
-        courseCrumbItem.textContent = response.data.course.course_name;
-      }
+      // Названия для «хлебных крошек» (components/ui/breadcrumb.vue)
+      setCrumbLabels({
+        course: response.data.course.course_name,
+      });
 
       pageTitle.value = response.data.course.course_name;
 

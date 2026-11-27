@@ -50,10 +50,13 @@
 </template>
 
 <script setup>
+import { useCrumbLabels } from "~/composables/useCrumbLabels";
 import emptyState from "../../../../components/ui/emptyState.vue";
 import levelCard from "../../../../components/levels/levelCard.vue";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
+
+const { setCrumbLabels } = useCrumbLabels();
 
 const router = useRouter();
 const route = useRoute();
@@ -80,15 +83,10 @@ const getLevels = async () => {
   await $axiosPlugin
     .get("courses/get_levels/" + course_slug)
     .then((response) => {
-      const courseCrumbItem = document.querySelector(
-        'span[data-crumb="[course]"]',
-      );
-
-      // Проверить, найден ли элемент
-      if (courseCrumbItem) {
-        // Изменить текст внутри элемента
-        courseCrumbItem.textContent = response.data.course.course_name;
-      }
+      // Названия для «хлебных крошек» (components/ui/breadcrumb.vue)
+      setCrumbLabels({
+        course: response.data.course.course_name,
+      });
 
       pageTitle.value = response.data.course.course_name;
 

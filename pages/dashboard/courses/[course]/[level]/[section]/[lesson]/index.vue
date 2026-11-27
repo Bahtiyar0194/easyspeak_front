@@ -40,6 +40,52 @@
     </div>
 
     <tabs :tabs="tabs_data" :activeTabIndex="1" :showTabHeader="true" />
+
+    <!-- Соседние уроки уровня: не нужно возвращаться в раздел за следующим -->
+    <div v-if="neighbors.prev || neighbors.next" class="col-span-12">
+      <nav class="lesson-pager" :aria-label="$t('pages.lessons.lesson_navigation')">
+        <component
+          v-if="neighbors.prev"
+          :is="neighbors.prev.is_available ? NuxtLink : 'span'"
+          :to="neighbors.prev.is_available ? neighborLink(neighbors.prev) : undefined"
+          class="lesson-pager-item"
+          :class="{ locked: !neighbors.prev.is_available }"
+        >
+          <i class="pi pi-arrow-left" aria-hidden="true"></i>
+          <span class="min-w-0 flex flex-col">
+            <span class="text-xs text-inactive">{{ $t("pages.lessons.prev_lesson") }}</span>
+            <span class="font-semibold truncate">{{ neighbors.prev.lesson_name }}</span>
+          </span>
+        </component>
+        <span v-else></span>
+
+        <component
+          v-if="neighbors.next"
+          :is="neighbors.next.is_available ? NuxtLink : 'span'"
+          :to="neighbors.next.is_available ? neighborLink(neighbors.next) : undefined"
+          class="lesson-pager-item next"
+          :class="{ locked: !neighbors.next.is_available }"
+        >
+          <span class="min-w-0 flex flex-col text-right">
+            <span class="text-xs text-inactive">
+              {{
+                neighbors.next.is_available
+                  ? $t("pages.lessons.next_lesson")
+                  : neighbors.next.opens_at
+                    ? $t("pages.lessons.opens_at", { date: formatOpensAt(neighbors.next.opens_at) })
+                    : $t("pages.lessons.is_unavailable")
+              }}
+            </span>
+            <span class="font-semibold truncate">{{ neighbors.next.lesson_name }}</span>
+          </span>
+          <i
+            class="pi"
+            :class="neighbors.next.is_available ? 'pi-arrow-right' : 'pi-lock'"
+            aria-hidden="true"
+          ></i>
+        </component>
+      </nav>
+    </div>
   </template>
 
   <div v-else class="col-span-12">
@@ -47,7 +93,9 @@
       :text="
         courseIsAvailable === false
           ? $t('pages.courses.course_is_not_available')
-          : $t('pages.lessons.is_unavailable_desc')
+          : opensAt
+            ? $t('pages.lessons.opens_at_desc', { lesson: pageTitle, date: formatOpensAt(opensAt) })
+            : $t('pages.lessons.is_unavailable_desc')
       "
       icon="bi bi-lock"
     >
@@ -60,13 +108,17 @@
 </template>
 
 <script setup>
+import { useCrumbLabels } from "~/composables/useCrumbLabels";
 import emptyState from "../../../../../../../components/ui/emptyState.vue";
 import tabs from "../../../../../../../components/ui/tabs.vue";
 import materials from "../../../../../../../components/lesson/tabs/materials.vue";
 import tasks from "../../../../../../../components/lesson/tabs/tasks.vue";
 import dictionary from "../../../../../../../components/lesson/tabs/dictionary.vue";
 import { useRouter } from "nuxt/app";
+import { NuxtLink } from "#components";
 import { useRoute } from "vue-router";
+
+const { setCrumbLabels } = useCrumbLabels();
 const { t } = useI18n();
 
 const router = useRouter();
@@ -94,6 +146,27 @@ const sectionLink = computed(() =>
 );
 
 const schoolStore = useSchoolStore();
+const { localeProperties } = useI18n();
+
+// Соседние уроки уровня (отдаёт get_lesson) и дата открытия закрытого урока
+const neighbors = ref({ prev: null, next: null });
+const opensAt = ref(null);
+
+const neighborLink = (item) =>
+  localePath(
+    "/dashboard/courses/" + course_slug + "/" + level_slug + "/" + item.section_id + "/" + item.lesson_id,
+  );
+
+// «4 декабря, 17:00» на языке интерфейса
+const formatOpensAt = (iso) =>
+  iso
+    ? new Date(iso).toLocaleString(String(localeProperties.value.code || "ru").split("-")[0], {
+        day: "numeric",
+        month: "long",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "";
 
 provide("pendingLesson", pendingLesson);
 
@@ -105,20 +178,12 @@ useHead(() => ({
 definePageMeta({
   layout: "dashboard",
   middleware: ["sanctum:auth"],
+  // Переход «Следующий урок» — та же страница с другим адресом: пересоздаём её,
+  // чтобы урок, задания и словарь загрузились заново
+  key: (route) => route.path,
 });
 
 const tabs_data = computed(() => [
-  // {
-  //   name: "ai-teacher",
-  //   title: t("ai-teacher"),
-  //   icon: "bi bi-robot",
-  //   component: materials,
-  //   props: {
-  //     lessonData: lessonData.value,
-  //     materialTypes: materialTypes.value,
-  //   },
-  //   className: "primary",
-  // },
   {
     name: "materials",
     title: t("ai_mentor"),
@@ -130,7 +195,7 @@ const tabs_data = computed(() => [
   {
     name: "tasks",
     title: t("pages.tasks.title"),
-    icon: "pi pi-clock",
+    icon: "pi pi-list-check",
     component: tasks,
     props: { lesson_id: lesson_id, lessonData: lessonData.value },
   },
@@ -178,45 +243,13 @@ const getLesson = async () => {
         lesson_id,
     )
     .then((response) => {
-      const courseCrumbItem = document.querySelector(
-        'span[data-crumb="[course]"]',
-      );
-
-      // Проверить, найден ли элемент
-      if (courseCrumbItem) {
-        // Изменить текст внутри элемента
-        courseCrumbItem.textContent = response.data.course.course_name;
-      }
-
-      const levelCrumbItem = document.querySelector(
-        'span[data-crumb="[level]"]',
-      );
-
-      // Проверить, найден ли элемент
-      if (levelCrumbItem) {
-        // Изменить текст внутри элемента
-        levelCrumbItem.textContent = response.data.level.level_name;
-      }
-
-      const sectionCrumbItem = document.querySelector(
-        'span[data-crumb="[section]"]',
-      );
-
-      // Проверить, найден ли элемент
-      if (sectionCrumbItem) {
-        // Изменить текст внутри элемента
-        sectionCrumbItem.textContent = response.data.section.section_name;
-      }
-
-      const lessonCrumbItem = document.querySelector(
-        'span[data-crumb="[lesson]"]',
-      );
-
-      // Проверить, найден ли элемент
-      if (lessonCrumbItem) {
-        // Изменить текст внутри элемента
-        lessonCrumbItem.textContent = response.data.lesson.lesson_name;
-      }
+      // Названия для «хлебных крошек» (components/ui/breadcrumb.vue)
+      setCrumbLabels({
+        course: response.data.course.course_name,
+        level: response.data.level.level_name,
+        section: response.data.section.section_name,
+        lesson: response.data.lesson.lesson_name,
+      });
 
       pageTitle.value = response.data.lesson.lesson_name;
       sectionName.value = response.data.section.section_name;
@@ -226,6 +259,8 @@ const getLesson = async () => {
         response.data.level.available_status.is_available;
       lessonIsAvailable.value =
         response.data.lesson.available_status.is_available;
+      opensAt.value = response.data.lesson.available_status.opens_at || null;
+      neighbors.value = response.data.neighbors || { prev: null, next: null };
       loaded.value = true;
     })
     .catch((err) => {

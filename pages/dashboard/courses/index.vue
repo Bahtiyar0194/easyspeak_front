@@ -1,5 +1,5 @@
 <template>
-  <!-- Шапка: заголовок + число курсов + действие администратора -->
+  <!-- Шапка: заголовок + число курсов -->
   <div class="col-span-12">
     <div class="page-head">
       <h2 class="page-title">
@@ -8,12 +8,6 @@
           courses.length
         }}</span>
       </h2>
-      <roleProvider :roles="[1]" :redirect="false">
-        <button type="button" class="btn btn-primary">
-          <i class="pi pi-plus" aria-hidden="true"></i>
-          {{ $t("add_course") }}
-        </button>
-      </roleProvider>
     </div>
   </div>
 
@@ -46,7 +40,6 @@
 <script setup>
 import { useRouter } from "nuxt/app";
 import courseCard from "../../../components/courses/courseCard.vue";
-import roleProvider from "../../../components/ui/roleProvider.vue";
 import emptyState from "../../../components/ui/emptyState.vue";
 
 const { t } = useI18n();

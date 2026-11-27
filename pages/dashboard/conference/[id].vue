@@ -1877,6 +1877,7 @@
 </template>
 
 <script setup>
+import { useCrumbLabels } from "~/composables/useCrumbLabels";
 import { useRoute, useRouter, onBeforeRouteLeave } from "nuxt/app";
 import {
   ref,
@@ -1907,6 +1908,8 @@ import stickyBox from "~/components/ui/stickyBox.vue";
 import dropdownMenu from "~/components/ui/dropdownMenu.vue";
 import alert from "~/components/ui/alert.vue";
 import levelCard from "~/components/levels/levelCard.vue";
+
+const { setCrumbLabels } = useCrumbLabels();
 
 const router = useRouter();
 const route = useRoute();
@@ -2684,16 +2687,10 @@ const getConference = async () => {
         getConferenceTasks();
       }
 
-      const confCrumbItem = document.querySelector('span[data-crumb="[id]"]');
-
-      if (confCrumbItem) {
-        confCrumbItem.textContent = schoolStore.isAiSchoolDomain
-          ? response.data.conference.topic
-          : response.data.conference.group_name +
-            " (" +
-            response.data.conference.lesson_name +
-            ")";
-      }
+      // Названия для «хлебных крошек» (components/ui/breadcrumb.vue)
+      setCrumbLabels({
+        id: schoolStore.isAiSchoolDomain ? response.data.conference.topic : response.data.conference.group_name + " (" + response.data.conference.lesson_name + ")",
+      });
 
       pageTitle.value =
         t("pages.conference.title") + " - " + schoolStore.isAiSchoolDomain
@@ -2706,8 +2703,12 @@ const getConference = async () => {
     .catch((err) => {
       if (err.response) {
         if (err.response.status == 403) {
+          // Ученик группы без оплаты урока — «урок не оплачен», иначе общий текст
           errorMessage.value = {
-            message: t("pages.conference.messages.access_denied"),
+            message:
+              err.response.data?.reason === "not_bought"
+                ? t("pages.conference.messages.no_paid")
+                : t("pages.conference.messages.access_denied"),
             pending: false,
           };
         } else {

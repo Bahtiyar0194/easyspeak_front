@@ -75,9 +75,10 @@
           </p>
         </div>
         <nuxt-link
-          v-if="nextSection"
+          v-if="continueLink"
           class="btn btn-primary max-sm:w-full"
-          :to="sectionLink(nextSection)"
+          :to="continueLink"
+          :title="sectionsData.next_lesson?.lesson_name || undefined"
         >
           {{
             levelPercent > 0
@@ -219,12 +220,15 @@
 </template>
 
 <script setup>
+import { useCrumbLabels } from "~/composables/useCrumbLabels";
 import roleProvider from "../../../../../components/ui/roleProvider.vue";
 import modal from "../../../../../components/ui/modal.vue";
 import emptyState from "~/components/ui/emptyState.vue";
 import circleProgressBar from "../../../../../components/ui/circleProgressBar.vue";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
+
+const { setCrumbLabels } = useCrumbLabels();
 
 const errors = ref([]);
 const router = useRouter();
@@ -268,6 +272,19 @@ const sectionLink = (section) =>
   localePath(
     "/dashboard/courses/" + course_slug + "/" + level_slug + "/" + section.section_id,
   );
+
+// «Продолжить» — сразу в первый незавершённый урок уровня (если он открыт),
+// иначе в раздел, где он находится
+const continueLink = computed(() => {
+  const next = sectionsData.value?.next_lesson;
+  if (next?.is_available) {
+    return localePath(
+      `/dashboard/courses/${course_slug}/${level_slug}/${next.section_id}/${next.lesson_id}`,
+    );
+  }
+  if (next) return sectionLink({ section_id: next.section_id });
+  return nextSection.value ? sectionLink(nextSection.value) : null;
+});
 const pageTitle = ref("");
 
 const addSectionModalIsVisible = ref(false);
@@ -289,25 +306,11 @@ const getLevel = async () => {
   await $axiosPlugin
     .get("courses/get_level/" + course_slug + "/" + level_slug)
     .then((response) => {
-      const courseCrumbItem = document.querySelector(
-        'span[data-crumb="[course]"]',
-      );
-
-      // Проверить, найден ли элемент
-      if (courseCrumbItem) {
-        // Изменить текст внутри элемента
-        courseCrumbItem.textContent = response.data.course.course_name;
-      }
-
-      const levelCrumbItem = document.querySelector(
-        'span[data-crumb="[level]"]',
-      );
-
-      // Проверить, найден ли элемент
-      if (levelCrumbItem) {
-        // Изменить текст внутри элемента
-        levelCrumbItem.textContent = response.data.level.level_name;
-      }
+      // Названия для «хлебных крошек» (components/ui/breadcrumb.vue)
+      setCrumbLabels({
+        course: response.data.course.course_name,
+        level: response.data.level.level_name,
+      });
 
       pageTitle.value = response.data.level.level_name;
 

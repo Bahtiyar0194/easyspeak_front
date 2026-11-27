@@ -24,10 +24,20 @@
               class="pi pi-home mr-1"
               aria-hidden="true"
             ></i>
-            <span :data-crumb="crumb.label">{{ crumb.label }}</span>
+            <span
+              v-if="crumb.pending"
+              class="skeleton inline-block h-3.5 w-20 align-middle"
+              aria-hidden="true"
+            ></span>
+            <span v-else>{{ crumb.label }}</span>
           </nuxt-link>
           <span v-else class="breadcrumb-current" aria-current="page">
-            <span :data-crumb="crumb.label">{{ crumb.label }}</span>
+            <span
+              v-if="crumb.pending"
+              class="skeleton inline-block h-3.5 w-24 align-middle"
+              aria-hidden="true"
+            ></span>
+            <span v-else>{{ crumb.label }}</span>
           </span>
         </li>
       </ol>
@@ -36,8 +46,14 @@
 </template>
 
 <script setup>
+import { useCrumbLabels } from "~/composables/useCrumbLabels";
+
 const { t } = useI18n();
 const route = useRoute();
+const { labelFor } = useCrumbLabels();
+
+// Параметры адреса, для которых страницы сообщают название (setCrumbLabels)
+const NAMED_PARAMS = new Set(["course", "level", "section", "lesson", "id"]);
 
 const crumbs = computed(() => {
   const fullPath = route.path.split("/").filter((path) => path);
@@ -50,15 +66,20 @@ const crumbs = computed(() => {
     const paramKey = paramKeys[index - (fullPath.length - paramKeys.length)];
 
     if (paramKey && route.params[paramKey] === pathPart) {
-      return `[${paramKey}]`;
+      // Название сообщает страница (useCrumbLabels); пока его нет — скелетон.
+      // Прочие параметры (например, токен в ссылке смены пароля) не показываем
+      if (!NAMED_PARAMS.has(paramKey)) return null;
+      return { label: labelFor(paramKey, pathPart), pending: !labelFor(paramKey, pathPart) };
     }
 
-    return t("pages." + pathPart + ".title");
+    return { label: t("pages." + pathPart + ".title"), pending: false };
   };
 
-  return fullPath.map((_, index) => ({
-    to: "/" + fullPath.slice(0, index + 1).join("/"),
-    label: getTitle(index),
-  }));
+  return fullPath
+    .map((_, index) => {
+      const title = getTitle(index);
+      return title ? { to: "/" + fullPath.slice(0, index + 1).join("/"), ...title } : null;
+    })
+    .filter(Boolean);
 });
 </script>

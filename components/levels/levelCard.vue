@@ -17,7 +17,18 @@
 
     <div v-else class="cover-card-content flex-col !items-stretch gap-2">
       <div class="flex items-end justify-between gap-2">
-        <h4 class="cover-card-title">{{ props.level.level_name }}</h4>
+        <div class="min-w-0">
+          <h4 class="cover-card-title">{{ props.level.level_name }}</h4>
+          <!-- Чем уровни отличаются: картинка у всех уровней курса одна -->
+          <p v-if="props.level.sections_count" class="cover-card-sub">
+            {{
+              $t("pages.courses.level_structure", {
+                sections: props.level.sections_count,
+                lessons: props.level.lessons_count || 0,
+              })
+            }}
+          </p>
+        </div>
         <span
           v-if="showProgress"
           class="text-white font-semibold tabular-nums leading-none"
