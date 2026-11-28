@@ -299,6 +299,11 @@
               </button>
             </div>
 
+            <!-- Прокручивается только список предложений: банк слов сверху и
+                 «Проверить» снизу всегда на месте — слова удобно перетаскивать -->
+            <div ref="sentencesListRef">
+            <scrollFadeContainer :maxHeight="sentencesMaxHeight" :fadeSize="48">
+            <div class="flex flex-col gap-4">
             <div
               v-for="(sentence, sentenceIndex) in currentSentences"
               :key="sentenceIndex"
@@ -475,6 +480,9 @@
                 </div>
               </div>
             </div>
+            </div>
+            </scrollFadeContainer>
+            </div>
 
             <div class="task-actions">
               <button
@@ -510,6 +518,24 @@ import taskLayout from "../../taskLayout.vue";
 import audioButtonMini from "../../../../../ui/audioButtonMini.vue";
 import countdownCircleTimer from "../../../../../ui/countdownCircleTimer.vue";
 import result from "../../results/sentences/result.vue";
+import scrollFadeContainer from "../../../../../ui/scrollFadeContainer.vue";
+
+// Список предложений прокручивается сам: ~45% экрана, от 240 до 520px —
+// чтобы банк слов, список и «Проверить» помещались без прокрутки окна
+const sentencesListRef = ref(null);
+const sentencesMaxHeight = ref(420);
+const updateSentencesHeight = () => {
+  sentencesMaxHeight.value = Math.round(
+    Math.min(520, Math.max(240, window.innerHeight * 0.45)),
+  );
+};
+onMounted(() => {
+  updateSentencesHeight();
+  window.addEventListener("resize", updateSentencesHeight);
+});
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", updateSentencesHeight);
+});
 import {
   endsWithPunctuation,
   removePunctuation,
@@ -911,6 +937,12 @@ const acceptAnswers = () => {
   });
 
   if (unFilledSentences.value.length > 0) {
+    // Незаполненное предложение может быть вне видимой части списка — подводим к нему
+    nextTick(() => {
+      sentencesListRef.value
+        ?.querySelector(".blank-card.shake")
+        ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
     setTimeout(() => {
       unFilledSentences.value = [];
       checkingStatus.value = false;

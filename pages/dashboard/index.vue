@@ -570,25 +570,54 @@
       <!-- 4. Баннер Telegram — компактный, его можно скрыть -->
       <div v-if="showTelegramBanner" class="col-span-12">
         <div class="db-telegram">
-          <img
-            class="db-telegram-logo"
-            src="~/public/images/telegram/telegram.png"
-            alt=""
-          />
-          <div class="flex-1 min-w-0">
-            <h4 class="text-white mb-1">{{ $t("telegram.banner.title") }}</h4>
-            <p class="text-white/90 text-sm mb-0">
-              {{ $t("telegram.banner.description") }}
-            </p>
+          <!-- Декоративный самолётик Telegram -->
+          <svg
+            class="db-telegram-plane"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              fill="currentColor"
+              d="M21.9 4.3 18.7 19.4c-.2 1.1-.9 1.3-1.8.8l-4.9-3.6-2.4 2.3c-.3.3-.5.5-1 .5l.3-5 9.1-8.2c.4-.4-.1-.6-.6-.2L6.2 13l-4.8-1.5c-1-.3-1.1-1 .2-1.5l18.8-7.3c.9-.3 1.7.2 1.5 1.6Z"
+            />
+          </svg>
+
+          <span class="db-telegram-logo" aria-hidden="true">
+            <i class="pi pi-telegram"></i>
+          </span>
+
+          <div class="flex-1 min-w-0 flex flex-col gap-2.5">
+            <div>
+              <h4 class="text-white mb-1">{{ $t("telegram.banner.title") }}</h4>
+              <p class="text-white/85 text-sm mb-0">
+                {{ $t("telegram.banner.subtitle") }}
+              </p>
+            </div>
+            <ul class="db-telegram-perks">
+              <li>
+                <i class="pi pi-bell" aria-hidden="true"></i>
+                {{ $t("telegram.banner.perk_lessons") }}
+              </li>
+              <li>
+                <i class="pi pi-check-circle" aria-hidden="true"></i>
+                {{ $t("telegram.banner.perk_results") }}
+              </li>
+              <li>
+                <i class="pi pi-calendar" aria-hidden="true"></i>
+                {{ $t("telegram.banner.perk_schedule") }}
+              </li>
+            </ul>
           </div>
+
           <a
-            class="btn btn-white shrink-0"
+            class="db-telegram-cta"
             target="_blank"
             rel="noopener"
             :href="`https://t.me/${config.public.telegramBotName}?start=${localeProperties.code}`"
           >
             <i class="pi pi-telegram" aria-hidden="true"></i>
             {{ $t("telegram.connect.connect") }}
+            <i class="pi pi-arrow-right text-xs" aria-hidden="true"></i>
           </a>
           <button
             type="button"

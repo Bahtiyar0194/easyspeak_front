@@ -171,6 +171,8 @@
 }
 
 :root {
+  /* Запас прокручиваемых областей под эффекты наведения (modal, scroll-fade) */
+  --hover-bleed: 8px;
   /* Фон страницы (body::before): базовый цвет, верх и два мягких свечения
      в тонах фирменного градиента синий → фиолетовый */
   --page-bg: #f5f7fb;
@@ -471,6 +473,10 @@
 
 .scroll-fade {
   overflow-y: auto;
+  /* Запас по краям под сдвиг / увеличение элементов при наведении — без него
+     их края обрезались. Отрицательный margin сохраняет раскладку */
+  padding: var(--hover-bleed);
+  margin: calc(var(--hover-bleed) * -1);
   /* упёрлись в край — прокрутка переходит к родителю (колесо — useScrollChain) */
   overscroll-behavior-y: auto;
   scrollbar-width: thin;
@@ -1999,6 +2005,8 @@ img.img-loading{
 
 .custom-toast .Vue-Toastification__toast-body{
   @apply text-sm font-medium leading-snug;
+  /* Многострочные сообщения (например, итог «открыть доску у учеников») */
+  white-space: pre-line;
 }
 
 /* Тост с действием по клику (например, «нажмите, чтобы включить микрофон») */
@@ -2439,6 +2447,11 @@ img.img-loading{
 .modal-body{
   @apply overflow-y-auto overflow-x-hidden min-h-10;
   max-height: 80vh;
+  /* Запас по краям: элементы, которые при наведении сдвигаются или
+     увеличиваются, не обрезаются краем прокручиваемой области. Отрицательный
+     margin возвращает раскладку на место (у .modal хватает своего padding) */
+  padding: var(--hover-bleed);
+  margin: calc(var(--hover-bleed) * -1);
 }
 
 .modal-footer{
@@ -3338,8 +3351,60 @@ img.img-loading{
   max-height: none;
 }
 
-.board-modal .modal-header h5{
-  @apply mb-3;
+/* Шапка окна доски: одна строка 40px — название, управление учителя
+   и крестик на одной линии */
+.board-header{
+  @apply flex flex-wrap items-center gap-3 min-h-10 mb-3 pr-12;
+}
+
+.board-header-title{
+  @apply flex items-center gap-2 mb-0 text-base font-semibold;
+}
+
+.board-header-title > i{
+  @apply text-corp;
+}
+
+.board-header-actions{
+  @apply ml-auto flex items-center gap-2;
+}
+
+/* Обе кнопки шапки — одного размера, высотой с крестик (40px) */
+.board-header-btn{
+  @apply inline-flex items-center justify-center gap-2 min-h-10 px-3.5 py-1.5 rounded-xl border text-sm font-semibold leading-tight text-center;
+}
+
+/* Режим доски для учеников: замок — только смотрят, люди — рисуют */
+.board-access-pill{
+  @apply duration-200 disabled:opacity-60;
+  color: theme('colors.amber.700');
+  border-color: rgb(245 158 11 / 0.35);
+  background-color: rgb(245 158 11 / 0.1);
+}
+
+.board-access-pill.open{
+  color: theme('colors.green.700');
+  border-color: rgb(34 197 94 / 0.35);
+  background-color: rgb(34 197 94 / 0.1);
+}
+
+.dark .board-access-pill{
+  color: theme('colors.amber.300');
+}
+
+.dark .board-access-pill.open{
+  color: theme('colors.green.400');
+}
+
+.board-access-pill:not(:disabled):hover{
+  filter: brightness(0.97);
+}
+
+/* Крестик — по центру строки шапки (окно доски с padding 1rem) */
+.board-modal .modal-close-button{
+  @apply w-10 h-10 text-2xl;
+  top: 1rem;
+  right: 1rem;
 }
 
 /* Телефон: доска на весь экран, без полей вокруг окна — каждый пиксель на счету */
@@ -3353,8 +3418,18 @@ img.img-loading{
     height: 100dvh;
   }
 
-  .board-modal .modal-header h5{
-    @apply mb-2 pl-1 leading-8;
+  /* Телефон: заголовок с крестиком — первой строкой, кнопки — второй,
+     поровну по ширине; подпись переносится, но не прячется */
+  .board-header{
+    @apply mb-2 pl-1 pr-11 gap-2;
+  }
+
+  .board-header-actions{
+    @apply ml-0 w-full -mr-10;
+  }
+
+  .board-header-actions > .board-header-btn{
+    @apply flex-1 min-w-0 px-2;
   }
 
   .board-modal .modal-close-button{
@@ -3752,13 +3827,58 @@ img.img-loading{
 }
 
 /* Баннер Telegram */
+/* Баннер Telegram: фирменный градиент, самолётик, выгоды списком */
 .db-telegram{
-  @apply relative flex flex-wrap md:flex-nowrap items-center gap-4 rounded-xl p-4 pr-12;
-  background-image: linear-gradient(225deg, #3c8ce7 10%, #00eaff 100%);
+  @apply relative overflow-hidden flex flex-wrap md:flex-nowrap items-center gap-4 rounded-2xl p-5 pr-12 text-white;
+  background-image:
+    radial-gradient(120% 140% at 100% 0%, rgb(255 255 255 / 0.18) 0%, transparent 55%),
+    linear-gradient(135deg, #2aabee 0%, #229ed9 55%, #1c8ac2 100%);
+  box-shadow: 0 10px 30px -12px rgb(34 158 217 / 0.6);
+}
+
+.db-telegram > *{
+  @apply relative;
+}
+
+.db-telegram-plane{
+  @apply absolute pointer-events-none;
+  right: 7rem;
+  bottom: -2.5rem;
+  width: 11rem;
+  height: 11rem;
+  color: rgb(255 255 255 / 0.1);
+  transform: rotate(-12deg);
 }
 
 .db-telegram-logo{
-  @apply w-12 h-12 shrink-0 max-sm:hidden;
+  @apply shrink-0 w-14 h-14 rounded-full bg-white flex items-center justify-center text-3xl max-sm:hidden;
+  color: #229ed9;
+  box-shadow: 0 6px 16px -6px rgb(0 0 0 / 0.35);
+}
+
+.db-telegram-perks{
+  @apply flex flex-wrap gap-2 m-0 p-0 list-none;
+}
+
+.db-telegram-perks li{
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  background-color: rgb(255 255 255 / 0.16);
+}
+
+.db-telegram-cta{
+  @apply shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white font-semibold duration-200 max-md:w-full max-md:justify-center;
+  color: #1c8ac2;
+  box-shadow: 0 6px 16px -6px rgb(0 0 0 / 0.35);
+}
+
+.db-telegram-cta:hover{
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px -8px rgb(0 0 0 / 0.4);
+}
+
+.db-telegram-cta:focus-visible{
+  @apply outline-none;
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 0.6);
 }
 
 .db-telegram-close{
@@ -7575,3 +7695,15 @@ tr.row-highlight > td{
 .group-progress-bar > div{
   @apply h-full rounded-full bg-success;
 }
+
+/* ---------- Доска: доступ учеников ---------- */
+/* Метка режима доски */
+.board-access-chip{
+  @apply text-green-700 border-green-200;
+}
+
+.board-access-chip.locked{
+  @apply text-amber-800 border-amber-200;
+  background-color: rgb(255 251 235 / 0.97);
+}
+

@@ -642,13 +642,62 @@
         :closeOnClickSelf="false"
       >
         <template v-slot:header_content>
-          <h5>{{ $t("pages.conference.board") }}</h5>
+          <!-- Одна строка: название слева, управление учителя справа,
+               на одной линии с крестиком -->
+          <div class="board-header">
+            <h5 class="board-header-title">
+              <i class="bi bi-easel" aria-hidden="true"></i>
+              {{ $t("pages.conference.board") }}
+            </h5>
+
+            <div v-if="canManageBoard" class="board-header-actions">
+              <!-- Рисуют ли ученики: нажатие переключает режим -->
+              <button
+                type="button"
+                class="board-header-btn board-access-pill"
+                :class="{ open: boardRef?.learnersCanEdit }"
+                :aria-pressed="Boolean(boardRef?.learnersCanEdit)"
+                :disabled="!boardRef || boardRef.accessPending"
+                :title="
+                  boardRef?.learnersCanEdit
+                    ? $t('board.access.disable')
+                    : $t('board.access.enable')
+                "
+                @click="boardRef?.toggleLearnersAccess()"
+              >
+                <i
+                  :class="boardRef?.learnersCanEdit ? 'bi bi-people-fill' : 'bi bi-lock-fill'"
+                  aria-hidden="true"
+                ></i>
+                <span>{{
+                  boardRef?.learnersCanEdit
+                    ? $t("board.access.teacher_open")
+                    : $t("board.access.teacher_locked")
+                }}</span>
+              </button>
+
+              <!-- Открыть доску у всех учеников, кто не занят заданием -->
+              <button
+                type="button"
+                class="btn btn-light board-header-btn"
+                :class="{ loading: openingBoardForAll }"
+                :disabled="openingBoardForAll"
+                :title="$t('board.open_for_all.button')"
+                @click="openBoardForLearners"
+              >
+                <i class="pi pi-users" aria-hidden="true"></i>
+                <span>{{ $t("board.open_for_all.button") }}</span>
+              </button>
+            </div>
+          </div>
         </template>
         <template v-slot:body_content>
           <drawingBoard
+            ref="boardRef"
             :streams_length="streams.length"
             :active="drawingBoardModalIsVisible"
             :materials="conference?.materials || []"
+            :canManage="canManageBoard"
           />
         </template>
       </modal>
@@ -1073,6 +1122,12 @@
                   </div>
                 </div>
 
+                <!-- Длинный список прокручивается сам: панель учителя и итоги
+                     ученика остаются на месте -->
+                <scrollFadeContainer
+                  :maxHeight="tasksListMaxHeight"
+                  :fadeSize="48"
+                >
                 <ul class="task-list">
                   <li v-for="taskItem in tasks" :key="taskItem.task_id">
                     <!-- Ментор: запуск и результаты учеников -->
@@ -1282,6 +1337,7 @@
                     </div>
                   </li>
                 </ul>
+                </scrollFadeContainer>
               </div>
             </template>
 
@@ -1903,6 +1959,22 @@ import sliderMode from "~/components/conference/modes/sliderMode.vue";
 import drawingBoard from "~/components/conference/drawingBoard.vue";
 import countBadge from "~/components/ui/countBadge.vue";
 import modal from "~/components/ui/modal.vue";
+import scrollFadeContainer from "~/components/ui/scrollFadeContainer.vue";
+
+// Высота списка заданий в окне: ~55% экрана, но не меньше 280 и не больше 560
+const tasksListMaxHeight = ref(480);
+const updateTasksListHeight = () => {
+  tasksListMaxHeight.value = Math.round(
+    Math.min(560, Math.max(280, window.innerHeight * 0.55)),
+  );
+};
+onMounted(() => {
+  updateTasksListHeight();
+  window.addEventListener("resize", updateTasksListHeight);
+});
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", updateTasksListHeight);
+});
 import emptyState from "~/components/ui/emptyState.vue";
 import userAvatar from "~/components/ui/userAvatar.vue";
 import countdownTimer from "~/components/ui/countdownTimer.vue";
@@ -2544,6 +2616,71 @@ const isConferenceMentor = computed(
     conference.value.mentor_id === authUser.value.user_id,
 );
 
+// Доска (её режим и переключатель доступа — для шапки окна)
+const boardRef = ref(null);
+
+// «Открыть у учеников»: сервер рассылает команду и собирает ответы —
+// у кого открылась, кто выполняет задание (не открыли), кто не ответил
+const openingBoardForAll = ref(false);
+
+const participantName = (item) =>
+  [item?.userInfo?.last_name, item?.userInfo?.first_name].filter(Boolean).join(" ") ||
+  t("learner");
+
+const openBoardForLearners = () => {
+  if (openingBoardForAll.value) return;
+  openingBoardForAll.value = true;
+
+  // Сервер ждёт ответы учеников до 5 с — запас на дорогу туда и обратно
+  $socketPlugin.timeout(9000).emit("board:open-for-all", (err, res) => {
+    openingBoardForAll.value = false;
+
+    if (err || !res?.success) {
+      notify("danger", t("board.open_for_all.failed"));
+      return;
+    }
+
+    const opened = res.opened?.length || 0;
+    const busy = res.busy || [];
+    const silent = res.noResponse || [];
+
+    if (!opened && !busy.length && !silent.length) {
+      notify("info", t("board.open_for_all.nobody"));
+      return;
+    }
+
+    const lines = [t("board.open_for_all.opened", { count: opened })];
+    if (busy.length) {
+      lines.push(
+        t("board.open_for_all.busy", { names: busy.map(participantName).join(", ") }),
+      );
+    }
+    if (silent.length) {
+      lines.push(
+        t("board.open_for_all.no_response", {
+          names: silent.map(participantName).join(", "),
+        }),
+      );
+    }
+
+    // Не у всех открылась — предупреждение и подольше, чтобы успеть прочитать
+    const partial = busy.length > 0 || silent.length > 0;
+    // Здесь notify — обёртка страницы: третий аргумент — число мс
+    notify(partial ? "warning" : "success", lines.join("\n"), partial ? 15000 : 6000);
+  });
+};
+
+// Доска: рисует всегда и разрешает ученикам — учитель урока, создатель
+// конференции, владелец / администратор школы
+const canManageBoard = computed(
+  () =>
+    isConferenceMentor.value ||
+    (!!conference.value &&
+      !!authUser.value &&
+      (conference.value.operator_id === authUser.value.user_id ||
+        [1, 2, 3].includes(Number(authUser.value.current_role_id)))),
+);
+
 // Запуск для учеников и «пройти самому» прямо из списка. В ИИ-школе задания
 // выбираются в отдельном окне, а в тесте запускается весь тест целиком.
 const canRunTasks = computed(
@@ -3164,6 +3301,14 @@ const startStream = async () => {
     });
 
     myPeer.on("call", (incomingCall) => {
+      // Звонок от моего же прежнего пира (до перезагрузки) — не отвечаем
+      if (isMyGhost(incomingCall.metadata?.userId, incomingCall.peer)) {
+        try {
+          incomingCall.close();
+        } catch (e) {}
+        return;
+      }
+
       const streamToSend = getActiveStream();
 
       incomingCall.answer(streamToSend);
@@ -3267,6 +3412,29 @@ const startStream = async () => {
 
         notify("danger", t("errors.server.error"), 5000);
       }
+    });
+
+    // Учитель открыл доску у учеников. Выполняю задание — окно задания не
+    // трогаю и отвечаю «занят»; иначе закрываю остальные окна и открываю доску
+    $socketPlugin.off("board:open");
+    $socketPlugin.on("board:open", (data, ack) => {
+      const reply = (status) =>
+        typeof ack === "function" &&
+        ack({
+          userId: authUser.value.user_id,
+          userInfo: authUserInfo,
+          status,
+        });
+
+      if (taskInProgress.value === true) {
+        reply("busy");
+        return;
+      }
+
+      closeAllModals();
+      drawingBoardModalIsVisible.value = true;
+      notify("info", t("board.open_for_all.opened_by_teacher"));
+      reply("opened");
     });
 
     $socketPlugin.on("open_material", (data) => {
@@ -3683,8 +3851,18 @@ const joinToRoom = () =>
     );
   });
 
+// Запись с моим же user_id, но другим пиром — это я сам из прошлой загрузки
+// страницы (после F5 старое соединение ещё до ~45 с числится на сервере).
+// Звонить ей / принимать от неё звонок / рисовать плитку нельзя — иначе на
+// экране появляется вторая «моя» карточка
+const isMyGhost = (userId, peerId) =>
+  userId != null &&
+  String(userId) === String(authUser.value?.user_id) &&
+  peerId !== myPeer?.id;
+
 const callUser = (user) => {
   if (!myPeer || myPeer.destroyed || myPeer.disconnected) return;
+  if (isMyGhost(user.userId, user.peerId)) return;
 
   const outgoingCall = myPeer.call(user.peerId, getActiveStream(), {
     metadata: {
@@ -3971,6 +4149,9 @@ const addStream = (
   isStream,
   isMuted,
 ) => {
+  // «Удалённая» плитка с моим же user_id — призрак прошлой загрузки страницы
+  if (remote && isMyGhost(user_id, peer_id)) return;
+
   // Одна плитка на человека. Свою — всегда одну (пир мог пересоздаться с
   // новым id), чужую — по user_id (участник переподключился с новым пиром)
   let index = streams.value.findIndex((item) => item.peer_id === peer_id);
@@ -4025,6 +4206,7 @@ const leaveConference = async () => {
   $socketPlugin.off("toggle-audio");
   $socketPlugin.off("connect_error");
   $socketPlugin.off("open_material");
+  $socketPlugin.off("board:open");
   $socketPlugin.off("open_task");
   $socketPlugin.off("close_task");
   $socketPlugin.off("start_task");

@@ -8,6 +8,7 @@
 
         <!-- Слева сверху: действия -->
         <div ref="actionsBar" class="board-actions" role="group">
+            <template v-if="!readOnly">
             <button type="button" class="board-btn" :title="$t('board.actions.undo')" :aria-label="$t('board.actions.undo')"
                 :disabled="!undoCount" @click="undo">
                 <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
@@ -22,7 +23,8 @@
                 @click="toggleImages">
                 <i class="bi bi-image" aria-hidden="true"></i>
             </button>
-            <template v-if="hasSelection">
+            </template>
+            <template v-if="hasSelection && !readOnly">
                 <button type="button" class="board-btn" :title="$t('board.actions.to_back')"
                     :aria-label="$t('board.actions.to_back')" @click="sendSelectionToBack">
                     <i class="bi bi-layer-backward" aria-hidden="true"></i>
@@ -58,7 +60,7 @@
                     <i class="bi bi-download" aria-hidden="true"></i>
                     {{ $t('board.actions.save') }}
                 </button>
-                <button type="button" role="menuitem" class="danger" :disabled="!objectCount"
+                <button v-if="!readOnly" type="button" role="menuitem" class="danger" :disabled="!objectCount"
                     @click="moreOpen = false; confirmClear()">
                     <i class="bi bi-trash" aria-hidden="true"></i>
                     {{ $t('board.actions.clear') }}
@@ -88,6 +90,13 @@
 
         <!-- Снизу: подсказка, панели, инструменты -->
         <div ref="dock" class="board-dock">
+            <!-- Режим доски для ученика (у учителя переключатель — в шапке окна) -->
+            <div v-if="!canManage" class="board-status">
+                <span class="board-chip board-access-chip" :class="{ locked: !learnersCanEdit }" role="status">
+                    <i :class="learnersCanEdit ? 'bi bi-people-fill' : 'bi bi-lock-fill'" aria-hidden="true"></i>
+                    <span>{{ accessLabel }}</span>
+                </span>
+            </div>
             <div v-if="loading || imageLoading || showHint" class="board-status" aria-live="polite">
                 <span v-if="loading || imageLoading" class="board-chip">
                     <i class="pi pi-spin pi-spinner" aria-hidden="true"></i>
@@ -103,7 +112,7 @@
             </div>
 
             <!-- Выбор инструмента внутри группы (Рисование, Фигуры) -->
-            <div v-if="groupPanel" class="board-panel board-group-panel" role="menu">
+            <div v-if="groupPanel && !readOnly" class="board-panel board-group-panel" role="menu">
                 <button v-for="name in groupPanel.tools" :key="name" type="button" role="menuitemradio"
                     class="board-group-item" :class="{ active: tool === name }" :aria-checked="tool === name"
                     @click="pickTool(name)">
@@ -112,7 +121,7 @@
                 </button>
             </div>
 
-            <div v-else-if="panelOpen && toolDef.params" class="board-panel">
+            <div v-else-if="panelOpen && toolDef.params && !readOnly" class="board-panel">
                 <div v-if="toolDef.params.stroke">
                     <p class="board-panel-label">
                         {{ tool === 'text' ? $t('board.params.text_color') : $t('board.params.border_color') }}
@@ -147,7 +156,7 @@
 
             <!-- Группы инструментов: в группе видна последняя выбранная,
                  повторное нажатие — выбор внутри группы -->
-            <div class="board-toolbar" role="toolbar">
+            <div v-if="!readOnly" class="board-toolbar" role="toolbar">
                 <button v-for="group in toolGroups" :key="group.key" type="button" class="board-btn"
                     :class="{ active: activeGroup === group.key, grouped: group.tools.length > 1 }"
                     :aria-pressed="activeGroup === group.key"
@@ -196,8 +205,46 @@ const props = defineProps({
     materials: {
         type: Array,
         default: () => []
+    },
+    // Учитель: рисует всегда и разрешает / запрещает рисовать ученикам
+    canManage: {
+        type: Boolean,
+        default: false
     }
 });
+
+// ===== Совместное редактирование =====
+// По умолчанию рисует только учитель. Разрешение хранит сервер сокетов
+// (board:access) и сам отбрасывает правки учеников, пока оно выключено
+const learnersCanEdit = ref(false);
+const accessPending = ref(false);
+const readOnly = computed(() => !props.canManage && !learnersCanEdit.value);
+
+const accessLabel = computed(() => {
+    if (props.canManage) {
+        return learnersCanEdit.value ? t('board.access.teacher_open') : t('board.access.teacher_locked');
+    }
+    return learnersCanEdit.value ? t('board.access.learner_open') : t('board.access.learner_locked');
+});
+
+const toggleLearnersAccess = () => {
+    if (!props.canManage || accessPending.value) return;
+    accessPending.value = true;
+    $socketPlugin.timeout(5000).emit('board:set-access', !learnersCanEdit.value, (err, res) => {
+        accessPending.value = false;
+        if (err || !res?.success) {
+            notify('danger', t('board.access.failed'));
+            return;
+        }
+        learnersCanEdit.value = Boolean(res.learnersCanEdit);
+    });
+};
+
+// Для шапки окна доски: режим и переключатель
+defineExpose({ learnersCanEdit, accessPending, toggleLearnersAccess });
+
+// Сообщаем серверу, кто я на доске (до загрузки доски и после переподключения)
+const sendRole = () => $socketPlugin.emit('board:role', { canManage: props.canManage });
 
 const { $socketPlugin, $hammer } = useNuxtApp();
 const { t } = useI18n();
@@ -527,6 +574,7 @@ const enqueue = (fn) => {
 
 // ===== Сокет =====
 const send = (event, data) => {
+    if (readOnly.value) return;
     if (data === undefined) $socketPlugin.emit(event);
     else $socketPlugin.emit(event, data);
 };
@@ -751,7 +799,7 @@ const onMouseDown = (opt) => {
     const p = opt.scenePoint;
     const middle = e && e.button === 1;
 
-    if (tool.value === 'move' || spacePressed.value || middle) {
+    if (readOnly.value || tool.value === 'move' || spacePressed.value || middle) {
         const v = opt.viewportPoint;
         gesture = { kind: 'pan', last: { x: v.x, y: v.y } };
         panning.value = true;
@@ -1071,6 +1119,25 @@ const updateCursor = () => {
 };
 
 watch(tool, applyMode);
+
+watch(readOnly, (ro) => {
+    if (!canvas) return;
+    if (!ro) {
+        // Разрешили рисовать — сразу карандаш, как при открытии доски
+        if (tool.value === 'move') tool.value = 'pencil';
+        return;
+    }
+    cancelGesture();
+    closePanels();
+    const active = canvas.getActiveObject();
+    if (isText(active) && active.isEditing) active.exitEditing();
+    canvas.discardActiveObject();
+    tool.value = 'move';
+    applyMode();
+});
+
+// Роль могла определиться позже (данные конференции пришли после доски)
+watch(() => props.canManage, () => sendRole());
 watch([panning, spacePressed], updateCursor);
 
 // ===== Очистка и экспорт =====
@@ -1123,6 +1190,7 @@ let loadTimer = null;
 
 const loadBoard = () => {
     clearTimeout(loadTimer);
+    sendRole();
     $socketPlugin.emit('board:get', async (res) => {
         if (!canvas) return;
         if (!res || res.joined === false) {
@@ -1131,6 +1199,7 @@ const loadBoard = () => {
             return;
         }
         loadAttempts = 0;
+        learnersCanEdit.value = Boolean(res.learnersCanEdit);
         const objs = res.objects || [];
         await enqueue(async () => {
             applyClear();
@@ -1154,6 +1223,16 @@ const socketHandlers = {
     'board:draft': (data) => enqueue(() => onRemoteDraft(data)),
     'board:draft-end': (id) => enqueue(() => removeDraft(id)),
     'board:to-back': (ids) => enqueue(() => applyToBack(ids)),
+    // Учитель разрешил / запретил ученикам рисовать
+    'board:access': (data) => {
+        const value = Boolean(data?.learnersCanEdit);
+        if (value === learnersCanEdit.value) return;
+        learnersCanEdit.value = value;
+        if (props.canManage) return;
+        notify(value ? 'success' : 'warning', value ? t('board.access.notify_open') : t('board.access.notify_locked'));
+        // Правку, которую сервер мог уже не принять, сверяем с общей доской
+        if (!value) loadBoard();
+    },
     // Переподключились — доска могла измениться
     connect: () => loadBoard()
 };
@@ -1166,6 +1245,8 @@ const handleKeyDown = (event) => {
     if (!props.active || !canvas || isTypingTarget(event.target)) return;
     const key = event.key.toLowerCase();
     const mod = event.ctrlKey || event.metaKey;
+
+    if (readOnly.value && (mod || key === 'delete' || key === 'backspace')) return;
 
     if (mod && key === 'z' && !event.shiftKey) {
         event.preventDefault();
@@ -1319,6 +1400,8 @@ onMounted(async () => {
     resizeObserver.observe(stage.value);
 
     setupGestures();
+    // Ученик без права рисовать — сразу «перемещение» (курсор-рука)
+    if (readOnly.value) tool.value = 'move';
     applyMode();
     syncViewport();
 
