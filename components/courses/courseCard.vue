@@ -1,10 +1,8 @@
 <template>
   <div class="cover-card group">
-    <img
-      v-skeleton="'3/2'"
-      class="cover-card-img"
-      :src="`/images/courses/${props.course.course_name_slug}.png`"
-      alt=""
+    <courseCover
+      :slug="props.course.course_name_slug"
+      :poster="props.course.course_poster_file"
     />
     <div class="cover-card-shade"></div>
 
@@ -38,6 +36,8 @@
 </template>
 
 <script setup>
+import courseCover from "./courseCover.vue";
+
 const props = defineProps({
   course: {
     type: Object,

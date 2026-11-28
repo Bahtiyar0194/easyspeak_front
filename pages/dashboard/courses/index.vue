@@ -8,6 +8,12 @@
           courses.length
         }}</span>
       </h2>
+      <roleProvider :roles="[1, 2, 7]" :redirect="false">
+        <button type="button" class="btn btn-primary" @click="createModalIsVisible = true">
+          <i class="pi pi-plus" aria-hidden="true"></i>
+          {{ $t("pages.courses.manage.create") }}
+        </button>
+      </roleProvider>
     </div>
   </div>
 
@@ -36,17 +42,34 @@
   <div v-else class="col-span-12">
     <emptyState :text="$t('pages.courses.no_courses')" icon="bi bi-journal-x" />
   </div>
+
+  <roleProvider :roles="[1, 2, 7]" :redirect="false">
+    <courseFormModal
+      :show="createModalIsVisible"
+      :onClose="() => (createModalIsVisible = false)"
+      :onSaved="onCourseCreated"
+    />
+  </roleProvider>
 </template>
 <script setup>
 import { useRouter } from "nuxt/app";
 import courseCard from "../../../components/courses/courseCard.vue";
 import emptyState from "../../../components/ui/emptyState.vue";
+import roleProvider from "../../../components/ui/roleProvider.vue";
+import courseFormModal from "../../../components/courses/courseFormModal.vue";
 
 const { t } = useI18n();
 const router = useRouter();
 const { $axiosPlugin } = useNuxtApp();
 const pending = ref(true);
 const courses = ref([]);
+const localePath = useLocalePath();
+const createModalIsVisible = ref(false);
+
+// Новый курс пуст — сразу на его страницу, добавлять уровни
+const onCourseCreated = (data) => {
+  router.push(localePath("/dashboard/courses/" + data.course_name_slug));
+};
 
 useHead({
   title: t("pages.courses.title"),

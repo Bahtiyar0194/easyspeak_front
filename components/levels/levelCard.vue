@@ -1,10 +1,8 @@
 <template>
   <div class="cover-card group" :class="{ locked: isLocked }">
-    <img
-      v-skeleton="'3/2'"
-      class="cover-card-img"
-      :src="`/images/courses/${props.level.course_name_slug}.png`"
-      alt=""
+    <courseCover
+      :slug="props.level.course_name_slug"
+      :poster="props.level.course_poster_file"
     />
     <div class="cover-card-shade"></div>
 
@@ -47,6 +45,8 @@
 </template>
 
 <script setup>
+import courseCover from "../courses/courseCover.vue";
+
 const schoolStore = useSchoolStore();
 
 const props = defineProps({

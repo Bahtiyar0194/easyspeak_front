@@ -243,7 +243,7 @@ watch(
         icon: "pi pi-home",
         link: "/dashboard",
         is_show: true,
-        roles: [1, 2, 3, 4, 5],
+        roles: [1, 2, 3, 4, 5, 7],
       },
       {
         title: schoolStore.isAiSchoolDomain
@@ -279,7 +279,7 @@ watch(
         icon: "pi pi-book",
         link: "/dashboard/courses",
         is_show: true,
-        roles: [1, 2, 3, 4, 5],
+        roles: [1, 2, 3, 4, 5, 7],
       },
       {
         title: "pages.education-program.title",

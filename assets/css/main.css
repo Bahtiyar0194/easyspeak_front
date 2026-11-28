@@ -4348,6 +4348,28 @@ a:focus-visible > .cover-card{
   transition: transform 0.5s ease;
 }
 
+/* Текущая обложка в форме курса */
+.course-poster-current{
+  @apply flex items-center gap-4 p-3 rounded-2xl border;
+  border-color: var(--surface-border);
+}
+
+.course-poster-current img{
+  @apply w-32 shrink-0 rounded-xl object-cover;
+  aspect-ratio: 3 / 2;
+}
+
+/* Курс без обложки */
+.cover-card-placeholder{
+  @apply flex items-center justify-center text-white/40;
+  background-image: linear-gradient(135deg, #2563eb, #7c3aed);
+}
+
+.cover-card-placeholder i{
+  font-size: 4rem;
+  transform: translateY(-12%);
+}
+
 .cover-card:not(.locked):hover .cover-card-img{
   transform: scale(1.05);
 }

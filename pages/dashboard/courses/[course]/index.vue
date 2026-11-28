@@ -8,6 +8,17 @@
           levels.length
         }}</span>
       </h2>
+      <!-- Курс правит его школа (владелец, методист) или суперадмин -->
+      <div v-if="canEdit" class="flex flex-wrap gap-2">
+        <button type="button" class="btn btn-light" @click="courseModalIsVisible = true">
+          <i class="pi pi-pencil" aria-hidden="true"></i>
+          {{ $t("pages.courses.manage.edit") }}
+        </button>
+        <button type="button" class="btn btn-primary" @click="openLevelModal">
+          <i class="pi pi-plus" aria-hidden="true"></i>
+          {{ $t("pages.courses.manage.add_level") }}
+        </button>
+      </div>
     </div>
   </div>
 
@@ -45,14 +56,39 @@
   </template>
 
   <div v-else class="col-span-12">
-    <emptyState :text="$t('pages.courses.no_levels')" icon="bi bi-journal-x" />
+    <emptyState
+      :text="canEdit ? $t('pages.courses.manage.no_levels_editor') : $t('pages.courses.no_levels')"
+      icon="bi bi-journal-x"
+    >
+      <button v-if="canEdit" type="button" class="btn btn-primary" @click="openLevelModal">
+        <i class="pi pi-plus" aria-hidden="true"></i>
+        {{ $t("pages.courses.manage.add_level") }}
+      </button>
+    </emptyState>
   </div>
+
+  <template v-if="canEdit">
+    <courseFormModal
+      :show="courseModalIsVisible"
+      :courseSlug="course_slug"
+      :onClose="() => (courseModalIsVisible = false)"
+      :onSaved="() => getLevels()"
+    />
+    <levelFormModal
+      :show="levelModalIsVisible"
+      :courseSlug="course_slug"
+      :onClose="() => (levelModalIsVisible = false)"
+      :onSaved="onLevelAdded"
+    />
+  </template>
 </template>
 
 <script setup>
 import { useCrumbLabels } from "~/composables/useCrumbLabels";
 import emptyState from "../../../../components/ui/emptyState.vue";
 import levelCard from "../../../../components/levels/levelCard.vue";
+import courseFormModal from "../../../../components/courses/courseFormModal.vue";
+import levelFormModal from "../../../../components/levels/levelFormModal.vue";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
 
@@ -66,6 +102,17 @@ const { $axiosPlugin } = useNuxtApp();
 const pending = ref(true);
 const levels = ref([]);
 const pageTitle = ref("");
+const canEdit = ref(false);
+const localePath = useLocalePath();
+const courseModalIsVisible = ref(false);
+const levelModalIsVisible = ref(false);
+
+const openLevelModal = () => (levelModalIsVisible.value = true);
+
+// Новый уровень пуст — сразу в него, добавлять разделы
+const onLevelAdded = (data) => {
+  router.push(localePath("/dashboard/courses/" + course_slug + "/" + data.level_slug));
+};
 
 useHead(() => ({
   title: pageTitle.value,
@@ -89,6 +136,7 @@ const getLevels = async () => {
       });
 
       pageTitle.value = response.data.course.course_name;
+      canEdit.value = response.data.course.can_edit === true;
 
       levels.value = response.data.levels;
       pending.value = false;

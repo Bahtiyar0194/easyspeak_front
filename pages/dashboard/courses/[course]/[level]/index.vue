@@ -19,16 +19,27 @@
           {{ sectionsData.level.level_name }}
           <span v-if="sections.length" class="db-count">{{ sections.length }}</span>
         </h2>
-        <roleProvider :roles="[1]" :redirect="false">
+        <div class="flex flex-wrap gap-2">
           <button
+            v-if="canEdit"
             type="button"
-            @click="addSectionModalIsVisible = true"
-            class="btn btn-primary"
+            class="btn btn-light"
+            @click="levelModalIsVisible = true"
           >
-            <i class="pi pi-plus" aria-hidden="true"></i>
-            {{ $t("pages.lessons.add_unit") }}
+            <i class="pi pi-pencil" aria-hidden="true"></i>
+            {{ $t("pages.courses.manage.edit_level") }}
           </button>
-        </roleProvider>
+          <roleProvider :roles="[1]" :redirect="false">
+            <button
+              type="button"
+              @click="addSectionModalIsVisible = true"
+              class="btn btn-primary"
+            >
+              <i class="pi pi-plus" aria-hidden="true"></i>
+              {{ $t("pages.lessons.add_unit") }}
+            </button>
+          </roleProvider>
+        </div>
       </div>
     </div>
 
@@ -166,6 +177,15 @@
     </emptyState>
   </div>
 
+  <levelFormModal
+    v-if="canEdit"
+    :show="levelModalIsVisible"
+    :courseSlug="course_slug"
+    :levelSlug="level_slug"
+    :onClose="() => (levelModalIsVisible = false)"
+    :onSaved="() => getLevel()"
+  />
+
   <roleProvider :roles="[1]" :redirect="false">
     <modal
       :show="addSectionModalIsVisible"
@@ -225,6 +245,7 @@ import roleProvider from "../../../../../components/ui/roleProvider.vue";
 import modal from "../../../../../components/ui/modal.vue";
 import emptyState from "~/components/ui/emptyState.vue";
 import circleProgressBar from "../../../../../components/ui/circleProgressBar.vue";
+import levelFormModal from "../../../../../components/levels/levelFormModal.vue";
 import { useRouter } from "nuxt/app";
 import { useRoute } from "vue-router";
 
@@ -288,6 +309,9 @@ const continueLink = computed(() => {
 const pageTitle = ref("");
 
 const addSectionModalIsVisible = ref(false);
+const levelModalIsVisible = ref(false);
+// Уровень правит школа курса (владелец, методист) или суперадмин
+const canEdit = computed(() => sectionsData.value?.course?.can_edit === true);
 const addSectionFormRef = ref(null);
 
 useHead(() => ({
